@@ -39,6 +39,7 @@ export type ConstructionAction =
   | { type: 'SET_SELECTED_ELEMENT'; elementId: string | null }
   | { type: 'TOGGLE_POINT_LOCK'; pointId: string }
   | { type: 'SET_HIDE_PROPERTIES'; hide: boolean }
+  | { type: 'SET_CONSIGNE'; consigne: string | null }
   | { type: 'UNDO' }
   | { type: 'REDO' }
   | { type: 'NEW_CONSTRUCTION' };
@@ -170,6 +171,11 @@ export function reduce(state: ReducerState, action: ConstructionAction): Reducer
     case 'SET_HIDE_PROPERTIES':
       return {
         undoManager: Undo.updateCurrent(undoManager, { ...current, hideProperties: action.hide }),
+      };
+
+    case 'SET_CONSIGNE':
+      return {
+        undoManager: Undo.updateCurrent(undoManager, { ...current, consigne: action.consigne }),
       };
 
     // ── Undo/Redo ─────────────────────────────────────

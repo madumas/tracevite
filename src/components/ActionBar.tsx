@@ -1,4 +1,4 @@
-import { memo, useState, useEffect, useRef, useCallback } from 'react';
+import { memo } from 'react';
 import {
   ACTION_BAR_HEIGHT,
   UI_PRIMARY,
@@ -14,7 +14,6 @@ import {
   ACTION_UNDO,
   ACTION_REDO,
   ACTION_DELETE,
-  ACTION_DELETE_CONFIRM,
   ACTION_PRINT,
   ACTION_NEW,
   ACTION_SCALE_NOTE,
@@ -24,55 +23,25 @@ interface ActionBarProps {
   readonly canUndo: boolean;
   readonly canRedo: boolean;
   readonly canPrint: boolean;
-  readonly selectedElementId: string | null;
+  readonly deleteMode?: boolean;
   readonly onUndo: () => void;
   readonly onRedo: () => void;
-  readonly onDelete: () => void;
+  readonly onToggleDeleteMode?: () => void;
   readonly onPrint: () => void;
   readonly onNewConstruction: () => void;
 }
-
-const CONFIRM_TIMEOUT_MS = 3000;
 
 export const ActionBar = memo(function ActionBar({
   canUndo,
   canRedo,
   canPrint,
-  selectedElementId,
+  deleteMode,
   onUndo,
   onRedo,
-  onDelete,
+  onToggleDeleteMode,
   onPrint,
   onNewConstruction,
 }: ActionBarProps) {
-  const [confirming, setConfirming] = useState(false);
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  const clearConfirm = useCallback(() => {
-    setConfirming(false);
-    if (timerRef.current) {
-      clearTimeout(timerRef.current);
-      timerRef.current = null;
-    }
-  }, []);
-
-  // Reset confirm state when selection changes
-  useEffect(() => {
-    clearConfirm();
-  }, [selectedElementId, clearConfirm]);
-
-  const handleDeleteClick = useCallback(() => {
-    if (!selectedElementId) return;
-    if (!confirming) {
-      setConfirming(true);
-      timerRef.current = setTimeout(() => setConfirming(false), CONFIRM_TIMEOUT_MS);
-    } else {
-      onDelete();
-      clearConfirm();
-    }
-  }, [selectedElementId, confirming, onDelete, clearConfirm]);
-
-  const canDelete = selectedElementId !== null;
   return (
     <div
       style={{
@@ -128,26 +97,26 @@ export const ActionBar = memo(function ActionBar({
         ↪ {ACTION_REDO}
       </button>
 
-      {/* Delete */}
+      {/* Delete mode toggle */}
       <button
-        onClick={handleDeleteClick}
-        disabled={!canDelete}
+        onClick={onToggleDeleteMode}
         style={{
           minWidth: MIN_BUTTON_SIZE_PX,
           height: MIN_BUTTON_SIZE_PX - 8,
           padding: '0 10px',
-          border: `1px solid ${confirming ? UI_DESTRUCTIVE : UI_BORDER}`,
+          border: `1px solid ${deleteMode ? UI_DESTRUCTIVE : UI_BORDER}`,
           borderRadius: 4,
-          background: confirming ? UI_DESTRUCTIVE : canDelete ? UI_SURFACE : UI_DISABLED_BG,
-          color: confirming ? '#FFFFFF' : canDelete ? UI_TEXT_PRIMARY : UI_DISABLED_TEXT,
-          cursor: canDelete ? 'pointer' : 'default',
+          background: deleteMode ? UI_DESTRUCTIVE : UI_SURFACE,
+          color: deleteMode ? '#FFFFFF' : UI_TEXT_PRIMARY,
+          cursor: 'pointer',
           fontSize: 13,
-          fontWeight: confirming ? 600 : 400,
+          fontWeight: deleteMode ? 600 : 400,
         }}
         aria-label={ACTION_DELETE}
+        aria-pressed={deleteMode}
         data-testid="action-delete"
       >
-        🗑 {confirming ? ACTION_DELETE_CONFIRM : ACTION_DELETE}
+        🗑 {ACTION_DELETE}
       </button>
 
       {/* Spacer */}

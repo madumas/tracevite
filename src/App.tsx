@@ -39,20 +39,45 @@ import {
   CONFIRM_NEW_SUBTITLE,
   CONFIRM_NEW_CANCEL,
   CONFIRM_NEW_CONFIRM,
+  STATUS_DELETE_MODE,
+  STATUS_DELETE_CONFIRM,
 } from '@/config/messages';
+import { hitTestElement } from '@/engine/hit-test';
+import { ConsigneBanner } from '@/components/ConsigneBanner';
 import type { ToolType, GridSize, DisplayUnit, SchoolLevel } from '@/model/types';
 
-function AppContent() {
+interface AppProps {
+  initialConsigne?: string | null;
+  initialLevel?: string | null;
+}
+
+function AppContent({ initialConsigne, initialLevel }: AppProps) {
   const { state, canUndo, canRedo, undoManager } = useConstructionState();
   const dispatch = useConstructionDispatch();
   const containerRef = useRef<HTMLDivElement>(null);
   const { viewport, zoomIn, zoomOut, panUp, panDown, panLeft, panRight } =
     useViewport(containerRef);
   const [showNewConfirm, setShowNewConfirm] = useState(false);
+  const [consigneDismissed, setConsigneDismissed] = useState(false);
+  const initializedRef = useRef(false);
 
   const { saving } = useAutoSave(state, undoManager);
 
   const [pendingDeleteFromKeyboard, setPendingDeleteFromKeyboard] = useState(false);
+  const [deleteMode, setDeleteMode] = useState(false);
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+
+  // Apply URL params once at mount
+  useEffect(() => {
+    if (initializedRef.current) return;
+    initializedRef.current = true;
+    if (initialConsigne) {
+      dispatch({ type: 'SET_CONSIGNE', consigne: initialConsigne });
+    }
+    if (initialLevel === '2e_cycle' || initialLevel === '3e_cycle') {
+      dispatch({ type: 'SET_SCHOOL_LEVEL', schoolLevel: initialLevel });
+    }
+  }, [initialConsigne, initialLevel, dispatch]);
 
   // Tool router — returns unified ToolHookResult
   const tool = useActiveTool({ state, dispatch, viewport });
@@ -65,16 +90,36 @@ function AppContent() {
     activeTool: state.activeTool,
   });
 
-  // Pointer events — route to selection first, then tool
+  // Pointer events — route to delete mode, selection, or tool
   const handleCanvasClick = useCallback(
     (mmPos: { x: number; y: number }) => {
-      // Selection gets first chance (when tool idle)
+      if (deleteMode) {
+        const hit = hitTestElement(mmPos, state);
+        if (hit) {
+          if (deleteConfirmId === hit.id) {
+            // Second click on same element → delete
+            dispatch({ type: 'REMOVE_ELEMENT', elementId: hit.id });
+            setDeleteConfirmId(null);
+            dispatch({ type: 'SET_SELECTED_ELEMENT', elementId: null });
+          } else {
+            // First click → select and ask for confirmation
+            dispatch({ type: 'SET_SELECTED_ELEMENT', elementId: hit.id });
+            setDeleteConfirmId(hit.id);
+          }
+        } else {
+          // Click empty space → clear pending confirmation
+          setDeleteConfirmId(null);
+          dispatch({ type: 'SET_SELECTED_ELEMENT', elementId: null });
+        }
+        return;
+      }
+      // Normal mode: selection first, then tool
       const handled = selection.trySelect(mmPos);
       if (!handled) {
         tool.handleClick(mmPos);
       }
     },
-    [selection, tool],
+    [deleteMode, deleteConfirmId, state, dispatch, selection, tool],
   );
 
   const handleCursorMove = useCallback(
@@ -154,6 +199,10 @@ function AppContent() {
       if (e.key === 'Escape') {
         if (showNewConfirm) {
           setShowNewConfirm(false);
+        } else if (deleteMode) {
+          setDeleteMode(false);
+          setDeleteConfirmId(null);
+          selection.clearSelection();
         } else if (state.selectedElementId) {
           selection.clearSelection();
         } else {
@@ -197,6 +246,7 @@ function AppContent() {
     handlePrint,
     state.selectedElementId,
     selection,
+    deleteMode,
   ]);
 
   const [panelCollapsed, setPanelCollapsed] = useState(false);
@@ -244,6 +294,23 @@ function AppContent() {
       >
         <strong style={{ fontSize: 16 }}>TraceVite</strong>
         <SaveIndicator saving={saving} />
+        {state.consigne && consigneDismissed && (
+          <button
+            onClick={() => setConsigneDismissed(false)}
+            style={{
+              padding: '2px 8px',
+              background: '#E6F1FB',
+              border: '1px solid #C5D8EC',
+              borderRadius: 4,
+              cursor: 'pointer',
+              fontSize: 11,
+              color: '#185FA5',
+            }}
+            data-testid="consigne-show"
+          >
+            Voir la consigne
+          </button>
+        )}
         <div style={{ flex: 1 }} />
         <LevelSelector level={state.schoolLevel} onChange={handleLevelChange} />
         <span style={{ fontSize: 11, color: '#9CA3AF' }}>v0.1.0</span>
@@ -278,7 +345,23 @@ function AppContent() {
         aria-live="polite"
         data-testid="status-bar"
       >
-        {tool.statusMessage}
+        {deleteMode
+          ? deleteConfirmId
+            ? STATUS_DELETE_CONFIRM(
+                (() => {
+                  const pt = state.points.find((p) => p.id === deleteConfirmId);
+                  if (pt) return `le point ${pt.label}`;
+                  const seg = state.segments.find((s) => s.id === deleteConfirmId);
+                  if (seg) {
+                    const s = state.points.find((p) => p.id === seg.startPointId);
+                    const e = state.points.find((p) => p.id === seg.endPointId);
+                    return `le segment ${s?.label ?? ''}${e?.label ?? ''}`;
+                  }
+                  return "l'élément";
+                })(),
+              )
+            : STATUS_DELETE_MODE
+          : tool.statusMessage}
       </div>
 
       {/* Canvas + Panel row */}
@@ -294,13 +377,25 @@ function AppContent() {
           }}
           data-testid="canvas-container"
         >
+          {/* Consigne banner — overlays top of canvas */}
+          {state.consigne && !consigneDismissed && (
+            <ConsigneBanner
+              consigne={state.consigne}
+              onDismiss={() => setConsigneDismissed(true)}
+            />
+          )}
+
           <svg
             width={svgWidth}
             height={svgHeight}
             viewBox={`0 0 ${svgWidth} ${svgHeight}`}
             role="application"
             aria-label="Canevas de construction géométrique"
-            style={{ display: 'block', touchAction: 'none' }}
+            style={{
+              display: 'block',
+              touchAction: 'none',
+              cursor: deleteMode ? 'crosshair' : undefined,
+            }}
             onPointerDown={handlePointerDown}
             onPointerMove={handlePointerMove}
             onPointerUp={handlePointerUp}
@@ -388,13 +483,13 @@ function AppContent() {
         canUndo={canUndo}
         canRedo={canRedo}
         canPrint={hasElements}
-        selectedElementId={state.selectedElementId}
+        deleteMode={deleteMode}
         onUndo={handleUndo}
         onRedo={handleRedo}
-        onDelete={() => {
-          if (state.selectedElementId) {
-            dispatch({ type: 'REMOVE_ELEMENT', elementId: state.selectedElementId });
-          }
+        onToggleDeleteMode={() => {
+          setDeleteMode(!deleteMode);
+          setDeleteConfirmId(null);
+          if (deleteMode) selection.clearSelection();
         }}
         onPrint={handlePrint}
         onNewConstruction={handleNewConstruction}
@@ -414,10 +509,10 @@ function AppContent() {
   );
 }
 
-export function App() {
+export function App({ initialConsigne, initialLevel }: AppProps) {
   return (
     <ConstructionProvider>
-      <AppContent />
+      <AppContent initialConsigne={initialConsigne} initialLevel={initialLevel} />
     </ConstructionProvider>
   );
 }

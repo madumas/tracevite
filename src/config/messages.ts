@@ -35,7 +35,9 @@ export const ACTION_REDO = 'Rétablir';
 export const ACTION_PRINT = 'Imprimer';
 export const ACTION_NEW = 'Nouvelle construction';
 export const ACTION_DELETE = 'Supprimer';
-export const ACTION_DELETE_CONFIRM = 'Confirmer?';
+export const STATUS_DELETE_MODE = 'Supprimer — Clique sur un élément pour le supprimer';
+export const STATUS_DELETE_CONFIRM = (label: string) =>
+  `Supprimer ${label}? Clique à nouveau pour confirmer.`;
 export const ACTION_SCALE_NOTE = 'Échelle 1:1 sur papier';
 
 // ── Confirm dialog — new construction ─────────────────────
