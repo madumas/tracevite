@@ -436,11 +436,14 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
     };
   }, []);
 
-  // Play snap sound when snap type changes (entry into snap zone)
+  // Play snap sound only when snapping to a point or midpoint (not grid/alignment)
   const prevSnapTypeRef = useRef<string>('none');
   useEffect(() => {
     const snapType = tool.snapResult?.snapType ?? 'none';
-    if (snapType !== 'none' && snapType !== prevSnapTypeRef.current) {
+    const isSignificantSnap = snapType === 'point' || snapType === 'midpoint';
+    const wasSignificant =
+      prevSnapTypeRef.current === 'point' || prevSnapTypeRef.current === 'midpoint';
+    if (isSignificantSnap && !wasSignificant) {
       soundEngineRef.current?.playSnap();
     }
     prevSnapTypeRef.current = snapType;
@@ -647,7 +650,7 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
           padding: '0 12px',
           background: '#EDF1F5',
           borderBottom: '1px solid #D1D8E0',
-          fontSize: 13,
+          fontSize: 13 * state.fontScale,
           color: '#4A5568',
         }}
         role="status"
