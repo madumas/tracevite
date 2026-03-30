@@ -13,10 +13,9 @@ const isMac = typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigat
 const undoKey = isMac ? 'Cmd+Z' : 'Ctrl+Z';
 
 const STEP_MESSAGES: Record<number, string> = {
-  1: 'Clique sur la grille pour placer un point.',
-  2: 'Clique encore pour tracer un segment.',
-  3: `Oups? Appuie ${undoKey} ou clique « Annuler » pour revenir en arrière.`,
-  4: "C'est tout! Tu sais construire.",
+  1: 'Clique deux fois sur la grille pour tracer un segment.',
+  2: `Oups? Appuie ${undoKey} ou clique « Annuler » pour revenir en arrière.`,
+  3: "C'est tout! Tu sais construire.",
 };
 
 /**
@@ -111,7 +110,7 @@ export function TutorialOverlay({ step, onSkip, onFinish, onDismissPost }: Tutor
         data-testid="tutorial-banner"
       >
         <div style={{ fontSize: 16, color: UI_TEXT_PRIMARY, fontWeight: 500 }}>{message}</div>
-        {step === 4 && (
+        {step === 3 && (
           <button
             onClick={onFinish}
             style={{
