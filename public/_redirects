@@ -1,1 +1,2 @@
-https://www.tracevite.ca/* https://tracevite.ca/:splat 301
+# www redirect handled via Cloudflare DNS rules, not _redirects
+# (Cloudflare Pages _redirects only supports relative URLs)
