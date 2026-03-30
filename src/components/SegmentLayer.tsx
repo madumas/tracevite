@@ -177,9 +177,9 @@ export const SegmentLayer = memo(function SegmentLayer({
                   // 45° diagonal relative to segment
                   const diagX = (dirX - dirY) * 0.7;
                   const diagY = (dirY + dirX) * 0.7;
-                  // Position at 1/3 of segment (not midpoint, to avoid overlap with congruence marks)
-                  const thirdSx = sx1 + dx * 0.33;
-                  const thirdSy = sy1 + dy * 0.33;
+                  // Position at 1/4 of segment (clearly away from midpoint)
+                  const thirdSx = sx1 + dx * 0.25;
+                  const thirdSy = sy1 + dy * 0.25;
                   const cx = thirdSx + dirX * along;
                   const cy = thirdSy + dirY * along;
                   const halfLen = 5;
@@ -207,9 +207,9 @@ export const SegmentLayer = memo(function SegmentLayer({
                   const centerOffset = -totalWidth / 2 + i * tickSpacing;
                   const perpX = len > 0 ? (-dy / len) * 6 : 0;
                   const perpY = len > 0 ? (dx / len) * 6 : -6;
-                  // Position at 2/3 of segment
-                  const twoThirdSx = sx1 + dx * 0.67;
-                  const twoThirdSy = sy1 + dy * 0.67;
+                  // Position at 3/4 of segment (clearly away from midpoint)
+                  const twoThirdSx = sx1 + dx * 0.75;
+                  const twoThirdSy = sy1 + dy * 0.75;
                   return (
                     <line
                       key={i}
