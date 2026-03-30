@@ -2,7 +2,7 @@ import { memo } from 'react';
 import type { AngleInfo, ViewportState, SchoolLevel } from '@/model/types';
 import { CANVAS_ANGLE, CANVAS_GUIDE } from '@/config/theme';
 import { CSS_PX_PER_MM } from '@/engine/viewport';
-import { MIN_CANVAS_FONT_PX } from '@/config/accessibility';
+import { MIN_CANVAS_FONT_PX, POINT_DISPLAY_RADIUS_MM } from '@/config/accessibility';
 
 interface AngleLayerProps {
   readonly angles: readonly AngleInfo[];
@@ -16,7 +16,7 @@ interface AngleLayerProps {
   readonly selectedFigurePointIds?: readonly string[];
 }
 
-const ARC_RADIUS_PX = 15;
+const ARC_RADIUS_PX = 22;
 const SQUARE_SIZE_PX = 12;
 
 /**
@@ -73,18 +73,21 @@ export const AngleLayer = memo(function AngleLayer({
         const startAngle = Math.atan2(dy1, dx1);
         const endAngle = Math.atan2(dy2, dx2);
 
-        // Right angle: small square
+        // Right angle: square marker offset past the point circle
         if (angle.classification === 'droit') {
           const cos1 = Math.cos(startAngle);
           const sin1 = Math.sin(startAngle);
           const cos2 = Math.cos(endAngle);
           const sin2 = Math.sin(endAngle);
 
+          // Offset so the square starts at the edge of the point circle
+          const pointRadiusPx = POINT_DISPLAY_RADIUS_MM * CSS_PX_PER_MM;
+          const off = pointRadiusPx * 0.7; // slightly inside edge (diagonal)
           const s = SQUARE_SIZE_PX;
           const path = [
-            `M ${sx + cos1 * s} ${sy + sin1 * s}`,
-            `L ${sx + cos1 * s + cos2 * s} ${sy + sin1 * s + sin2 * s}`,
-            `L ${sx + cos2 * s} ${sy + sin2 * s}`,
+            `M ${sx + cos1 * (s + off)} ${sy + sin1 * (s + off)}`,
+            `L ${sx + cos1 * (s + off) + cos2 * (s + off)} ${sy + sin1 * (s + off) + sin2 * (s + off)}`,
+            `L ${sx + cos2 * (s + off)} ${sy + sin2 * (s + off)}`,
           ].join(' ');
 
           return (
