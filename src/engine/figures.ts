@@ -136,15 +136,19 @@ export function detectAllFaces(state: ConstructionState): string[][] {
 
   if (faces.length === 0) return [];
 
-  // Filter exterior face (largest absolute area)
+  // Filter exterior face and degenerate faces.
+  // Exterior face: largest absolute area. Tiebreaker: CW winding (negative signed area).
   const pointMap = new Map(state.points.map((p) => [p.id, p]));
-  let maxArea = -1;
+  let maxScore = -Infinity;
   let maxIdx = -1;
 
   for (let i = 0; i < faces.length; i++) {
-    const area = Math.abs(shoelaceArea(faces[i]!, pointMap));
-    if (area > maxArea) {
-      maxArea = area;
+    const signed = shoelaceArea(faces[i]!, pointMap);
+    const absArea = Math.abs(signed);
+    // Primary: largest absolute area. Tiebreaker: negative signed (CW = exterior)
+    const score = absArea * 1000 + (signed < 0 ? 1 : 0);
+    if (score > maxScore) {
+      maxScore = score;
       maxIdx = i;
     }
   }
@@ -294,14 +298,28 @@ function computeSides(face: string[], pointMap: Map<string, Point>): number[] {
   return sides;
 }
 
+/**
+ * Compute interior angles of a polygon face.
+ * First computes unsigned angles, then checks if any are reflex (> 180°)
+ * by comparing the angle sum against the expected (n-2)×180°.
+ */
 function computeInteriorAngles(face: string[], pointMap: Map<string, Point>): number[] {
-  const angles: number[] = [];
   const n = face.length;
+  const unsignedAngles: number[] = [];
+  const crossSigns: number[] = [];
+
+  // Determine winding via signed area
+  const signedArea = shoelaceArea(face, pointMap);
+
   for (let i = 0; i < n; i++) {
     const prev = pointMap.get(face[(i - 1 + n) % n]!);
     const curr = pointMap.get(face[i]!);
     const next = pointMap.get(face[(i + 1) % n]!);
-    if (!prev || !curr || !next) continue;
+    if (!prev || !curr || !next) {
+      unsignedAngles.push(0);
+      crossSigns.push(0);
+      continue;
+    }
 
     const dx1 = prev.x - curr.x;
     const dy1 = prev.y - curr.y;
@@ -310,13 +328,21 @@ function computeInteriorAngles(face: string[], pointMap: Map<string, Point>): nu
 
     const dot = dx1 * dx2 + dy1 * dy2;
     const cross = dx1 * dy2 - dy1 * dx2;
-    const angle = Math.atan2(Math.abs(cross), dot) * (180 / Math.PI);
-
-    // For convex polygons, interior angle. Use cross product sign and winding.
-    // Simplified: use unsigned angle (works for convex polygons and classification)
-    angles.push(angle);
+    unsignedAngles.push(Math.atan2(Math.abs(cross), dot) * (180 / Math.PI));
+    crossSigns.push(cross);
   }
-  return angles;
+
+  // Determine winding convention.
+  // In y-down screen coords: positive signedArea = CW visual (clockwise on screen).
+  // For a CW-wound polygon on screen, at a convex vertex the cross product is negative.
+  // A vertex is reflex when cross product sign is OPPOSITE to what's expected for the winding.
+  const expectNegativeCross = signedArea > 0; // CW visual → expect negative cross at convex vertices
+
+  return unsignedAngles.map((angle, i) => {
+    const cross = crossSigns[i]!;
+    const isReflex = expectNegativeCross ? cross > 0 : cross < 0;
+    return isReflex ? 360 - angle : angle;
+  });
 }
 
 function countEqualPairs(sides: number[]): number {

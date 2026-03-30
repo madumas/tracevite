@@ -9,6 +9,9 @@ interface ContextActionBarProps {
   readonly viewport: ViewportState;
   readonly onDelete: (elementId: string) => void;
   readonly onToggleLock?: (pointId: string) => void;
+  /** When true, auto-trigger micro-confirmation (from keyboard Delete). */
+  readonly triggerConfirm?: boolean;
+  readonly onConfirmHandled?: () => void;
 }
 
 /**
@@ -20,6 +23,8 @@ export function ContextActionBar({
   viewport,
   onDelete,
   onToggleLock,
+  triggerConfirm,
+  onConfirmHandled,
 }: ContextActionBarProps) {
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const confirmTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -30,6 +35,15 @@ export function ContextActionBar({
     setConfirmingDelete(false);
     if (confirmTimerRef.current) clearTimeout(confirmTimerRef.current);
   }, [selectedElementId]);
+
+  // Handle keyboard-triggered micro-confirmation
+  useEffect(() => {
+    if (triggerConfirm && selectedElementId && !confirmingDelete) {
+      setConfirmingDelete(true);
+      confirmTimerRef.current = setTimeout(() => setConfirmingDelete(false), 3000);
+      onConfirmHandled?.();
+    }
+  }, [triggerConfirm, selectedElementId, confirmingDelete, onConfirmHandled]);
 
   // Escape cancels micro-confirmation
   useEffect(() => {

@@ -65,7 +65,9 @@ export function useSegmentTool({
   const handleClick = useCallback(
     (mmPos: { x: number; y: number }) => {
       const excludeIds = firstPoint?.existingId ? [firstPoint.existingId] : [];
-      const snap = findSnap(mmPos, state, DEFAULT_TOLERANCES, excludeIds);
+      // Enable angle snap when a first point is placed
+      const fromPt = firstPoint?.mm ?? undefined;
+      const snap = findSnap(mmPos, state, DEFAULT_TOLERANCES, excludeIds, fromPt);
       const snapped = snap.snappedPosition;
 
       if (phase === 'idle') {
@@ -102,7 +104,8 @@ export function useSegmentTool({
     (mmPos: { x: number; y: number }) => {
       setCursorMm(mmPos);
       const excludeIds = firstPoint?.existingId ? [firstPoint.existingId] : [];
-      const snap = findSnap(mmPos, state, DEFAULT_TOLERANCES, excludeIds);
+      const fromPt = firstPoint?.mm ?? undefined;
+      const snap = findSnap(mmPos, state, DEFAULT_TOLERANCES, excludeIds, fromPt);
       setSnapResult(snap);
 
       if (phase === 'segment_created' && lastMoveMm.current) {

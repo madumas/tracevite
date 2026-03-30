@@ -100,22 +100,40 @@ export const AngleLayer = memo(function AngleLayer({
         }
 
         // Arc for non-right angles
-        let sweep = endAngle - startAngle;
-        if (sweep < 0) sweep += 2 * Math.PI;
-        if (sweep > Math.PI) sweep = 2 * Math.PI - sweep;
+        // Compute the CCW sweep from ray1 to ray2
+        let ccwSweep = endAngle - startAngle;
+        if (ccwSweep < 0) ccwSweep += 2 * Math.PI;
+
+        // We want the smaller angle (≤180°) — determine which direction to sweep
+        const useSmallArc = ccwSweep <= Math.PI;
 
         const r = ARC_RADIUS_PX;
-        const x1 = sx + Math.cos(startAngle) * r;
-        const y1 = sy + Math.sin(startAngle) * r;
-        const x2 = sx + Math.cos(endAngle) * r;
-        const y2 = sy + Math.sin(endAngle) * r;
-        const largeArc = sweep > Math.PI ? 1 : 0;
-        const sweepFlag = sweep >= 0 ? 1 : 0;
+
+        // If using small arc, sweep CCW from start to end (sweepFlag=1)
+        // If using large arc complement, sweep CW from start to end (sweepFlag=0)
+        let arcStart: number, arcEnd: number, sweepFlag: number;
+        if (useSmallArc) {
+          arcStart = startAngle;
+          arcEnd = endAngle;
+          sweepFlag = 1; // CCW in SVG coords
+        } else {
+          arcStart = startAngle;
+          arcEnd = endAngle;
+          sweepFlag = 0; // CW — takes the short way around
+        }
+
+        const x1 = sx + Math.cos(arcStart) * r;
+        const y1 = sy + Math.sin(arcStart) * r;
+        const x2 = sx + Math.cos(arcEnd) * r;
+        const y2 = sy + Math.sin(arcEnd) * r;
+        const largeArc = 0; // Always small arc (we chose the sweep direction)
 
         const arcPath = `M ${x1} ${y1} A ${r} ${r} 0 ${largeArc} ${sweepFlag} ${x2} ${y2}`;
 
-        // Degree label position (midpoint of arc)
-        const midAngle = startAngle + sweep / 2;
+        // Degree label position (midpoint of the displayed arc)
+        const midAngle = useSmallArc
+          ? startAngle + ccwSweep / 2
+          : startAngle - (2 * Math.PI - ccwSweep) / 2;
         const labelR = r + 12;
         const labelX = sx + Math.cos(midAngle) * labelR;
         const labelY = sy + Math.sin(midAngle) * labelR;

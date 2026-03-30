@@ -52,6 +52,8 @@ function AppContent() {
 
   const { saving } = useAutoSave(state, undoManager);
 
+  const [pendingDeleteFromKeyboard, setPendingDeleteFromKeyboard] = useState(false);
+
   // Tool router — returns unified ToolHookResult
   const tool = useActiveTool({ state, dispatch, viewport });
 
@@ -177,7 +179,9 @@ function AppContent() {
       if (e.key === 'Delete' || e.key === 'Backspace') {
         if (state.selectedElementId && !inInput) {
           e.preventDefault();
-          dispatch({ type: 'REMOVE_ELEMENT', elementId: state.selectedElementId });
+          // Trigger micro-confirmation in ContextActionBar instead of direct delete
+          // Set a flag that the ContextActionBar will pick up
+          setPendingDeleteFromKeyboard(true);
         }
       }
     };
@@ -347,6 +351,8 @@ function AppContent() {
               viewport={viewport}
               onDelete={handleContextDelete}
               onToggleLock={handleToggleLock}
+              triggerConfirm={pendingDeleteFromKeyboard}
+              onConfirmHandled={() => setPendingDeleteFromKeyboard(false)}
             />
           )}
 

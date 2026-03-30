@@ -47,10 +47,10 @@ export function useSelection({
 
       const hit = hitTestElement(mmPos, state);
 
-      // In Segment tool idle: clicking a POINT starts a new segment, not selection.
-      // Only segment body clicks count as selection.
-      if (activeTool === 'segment' && hit?.type === 'point') {
-        return false; // Let the segment tool handle it
+      // All construction tools act on point clicks when idle — let the tool handle it.
+      // Selection only intercepts point clicks for tools that never act on points.
+      if (activeTool !== 'measure' && hit?.type === 'point') {
+        return false;
       }
 
       if (hit) {

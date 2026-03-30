@@ -232,33 +232,109 @@ export function movePointWithConstraints(
     (s) => s.fixedLength != null && (s.startPointId === pointId || s.endPointId === pointId),
   );
 
+  // Separate locked constraints (affect moved point) from free constraints (affect other point)
+  const lockedConstraints: Array<{ centerId: string; radius: number }> = [];
+  const freeConstraints: Array<{ segId: string; otherPointId: string; fixedLength: number }> = [];
+
   for (const seg of connectedFixedSegments) {
     const otherPointId = seg.startPointId === pointId ? seg.endPointId : seg.startPointId;
-    const movedPoint = newState.points.find((p) => p.id === pointId);
     const otherPoint = newState.points.find((p) => p.id === otherPointId);
-    if (!movedPoint || !otherPoint || !seg.fixedLength) continue;
+    if (!otherPoint || !seg.fixedLength) continue;
 
     if (otherPoint.locked) {
-      // Constrain the moved point to circle of fixedLength around locked point
-      const dist = distance(movedPoint, otherPoint);
-      if (dist === 0) continue;
-      const ratio = seg.fixedLength / dist;
-      const constrainedX = otherPoint.x + (movedPoint.x - otherPoint.x) * ratio;
-      const constrainedY = otherPoint.y + (movedPoint.y - otherPoint.y) * ratio;
-      newState = updatePointPosition(newState, pointId, constrainedX, constrainedY);
+      lockedConstraints.push({ centerId: otherPointId, radius: seg.fixedLength });
     } else {
-      // Pivot other endpoint to maintain fixedLength along current direction
-      const dist = distance(movedPoint, otherPoint);
-      if (dist === 0) continue;
-      const dx = otherPoint.x - movedPoint.x;
-      const dy = otherPoint.y - movedPoint.y;
-      const newOtherX = movedPoint.x + (dx / dist) * seg.fixedLength;
-      const newOtherY = movedPoint.y + (dy / dist) * seg.fixedLength;
-      newState = updatePointPosition(newState, otherPointId, newOtherX, newOtherY);
+      freeConstraints.push({ segId: seg.id, otherPointId, fixedLength: seg.fixedLength });
     }
   }
 
+  // Resolve locked constraints: constrain moved point
+  if (lockedConstraints.length === 1) {
+    // Single locked constraint: project onto circle
+    const c = lockedConstraints[0]!;
+    const center = newState.points.find((p) => p.id === c.centerId)!;
+    const movedPoint = newState.points.find((p) => p.id === pointId)!;
+    const dist = distance(movedPoint, center);
+    if (dist > 0) {
+      const ratio = c.radius / dist;
+      newState = updatePointPosition(
+        newState,
+        pointId,
+        center.x + (movedPoint.x - center.x) * ratio,
+        center.y + (movedPoint.y - center.y) * ratio,
+      );
+    }
+  } else if (lockedConstraints.length >= 2) {
+    // Multiple locked constraints: find intersection of circles
+    const c1 = lockedConstraints[0]!;
+    const c2 = lockedConstraints[1]!;
+    const center1 = newState.points.find((p) => p.id === c1.centerId)!;
+    const center2 = newState.points.find((p) => p.id === c2.centerId)!;
+    const intersection = circleCircleIntersection(center1, c1.radius, center2, c2.radius);
+
+    if (intersection) {
+      // Pick the intersection point closest to the desired position
+      const movedPoint = newState.points.find((p) => p.id === pointId)!;
+      const d1 = distance(movedPoint, intersection[0]);
+      const d2 = distance(movedPoint, intersection[1]);
+      const best = d1 <= d2 ? intersection[0] : intersection[1];
+      newState = updatePointPosition(newState, pointId, best.x, best.y);
+    } else {
+      // No intersection: project onto the first circle (best effort)
+      const center = newState.points.find((p) => p.id === c1.centerId)!;
+      const movedPoint = newState.points.find((p) => p.id === pointId)!;
+      const dist = distance(movedPoint, center);
+      if (dist > 0) {
+        const ratio = c1.radius / dist;
+        newState = updatePointPosition(
+          newState,
+          pointId,
+          center.x + (movedPoint.x - center.x) * ratio,
+          center.y + (movedPoint.y - center.y) * ratio,
+        );
+      }
+    }
+  }
+
+  // Resolve free constraints: pivot other endpoints
+  for (const fc of freeConstraints) {
+    const movedPoint = newState.points.find((p) => p.id === pointId)!;
+    const otherPoint = newState.points.find((p) => p.id === fc.otherPointId)!;
+    const dist = distance(movedPoint, otherPoint);
+    if (dist === 0) continue;
+    const dx = otherPoint.x - movedPoint.x;
+    const dy = otherPoint.y - movedPoint.y;
+    newState = updatePointPosition(
+      newState,
+      fc.otherPointId,
+      movedPoint.x + (dx / dist) * fc.fixedLength,
+      movedPoint.y + (dy / dist) * fc.fixedLength,
+    );
+  }
+
   return newState;
+}
+
+/** Find intersection points of two circles. Returns null if no intersection. */
+function circleCircleIntersection(
+  c1: { x: number; y: number },
+  r1: number,
+  c2: { x: number; y: number },
+  r2: number,
+): [{ x: number; y: number }, { x: number; y: number }] | null {
+  const d = distance(c1, c2);
+  if (d > r1 + r2 || d < Math.abs(r1 - r2) || d === 0) return null;
+
+  const a = (r1 * r1 - r2 * r2 + d * d) / (2 * d);
+  const h = Math.sqrt(Math.max(0, r1 * r1 - a * a));
+
+  const mx = c1.x + (a * (c2.x - c1.x)) / d;
+  const my = c1.y + (a * (c2.y - c1.y)) / d;
+
+  return [
+    { x: mx + (h * (c2.y - c1.y)) / d, y: my - (h * (c2.x - c1.x)) / d },
+    { x: mx - (h * (c2.y - c1.y)) / d, y: my + (h * (c2.x - c1.x)) / d },
+  ];
 }
 
 /** Fix a segment to an exact length by moving the endpoint. */

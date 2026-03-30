@@ -5,6 +5,7 @@ import {
   SNAP_TOLERANCE_MIDPOINT_MM,
   SNAP_TOLERANCE_GRID_MM,
   SNAP_TOLERANCE_ALIGNMENT_MM,
+  SNAP_TOLERANCE_ANGLE_DEG,
 } from '@/config/accessibility';
 
 /** Snap tolerances in physical mm. */
@@ -29,16 +30,17 @@ export const DEFAULT_TOLERANCES: SnapTolerances = {
  *   1. Existing points (7mm)
  *   2. Segment midpoints (5mm)
  *   3. Grid intersections (5mm)
- *   4. Alignment H/V with existing points (2mm)
- *   5. No snap
- *
- * Angle snap (priority 4 in spec) added separately during segment construction.
+ *   4. Angle snap ±5° (only during segment construction, when fromPoint provided)
+ *   5. Alignment H/V with existing points (2mm)
+ *   6. No snap
  */
 export function findSnap(
   cursor: { readonly x: number; readonly y: number },
   state: ConstructionState,
   tolerances: SnapTolerances = DEFAULT_TOLERANCES,
   excludePointIds: readonly string[] = [],
+  /** If provided, enables angle snap from this anchor point. */
+  fromPoint?: { readonly x: number; readonly y: number },
 ): SnapResult {
   const excludeSet = new Set(excludePointIds);
 
@@ -94,7 +96,31 @@ export function findSnap(
     return { snappedPosition: gridPoint, snapType: 'grid' };
   }
 
-  // Priority 4: Alignment (H/V with existing points)
+  // Priority 4: Angle snap (when constructing from a point)
+  if (fromPoint) {
+    const dx = cursor.x - fromPoint.x;
+    const dy = cursor.y - fromPoint.y;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+    if (dist > 0) {
+      const currentAngle = Math.atan2(dy, dx) * (180 / Math.PI);
+      // Canonical angles: 0, 15, 30, 45, 60, 75, 90, ... 345
+      const step = 15;
+      const nearestCanonical = Math.round(currentAngle / step) * step;
+      const diff = Math.abs(currentAngle - nearestCanonical);
+      if (diff <= SNAP_TOLERANCE_ANGLE_DEG && diff > 0.01) {
+        const radians = (nearestCanonical * Math.PI) / 180;
+        return {
+          snappedPosition: {
+            x: fromPoint.x + Math.cos(radians) * dist,
+            y: fromPoint.y + Math.sin(radians) * dist,
+          },
+          snapType: 'angle',
+        };
+      }
+    }
+  }
+
+  // Priority 5: Alignment (H/V with existing points)
   let alignX: number | null = null;
   let alignY: number | null = null;
   let bestAlignDistX = tolerances.alignmentMm;
