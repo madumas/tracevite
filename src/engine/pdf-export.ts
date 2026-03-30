@@ -42,10 +42,19 @@ export function generatePDF(state: ConstructionState, options: PdfOptions): jsPD
 
   const pointMap = new Map(state.points.map((p) => [p.id, p]));
 
-  // Auto-center construction in printable area (1:1 scale preserved)
+  // Auto-center construction in printable area (1:1 scale preserved).
+  // If figure is larger than the page, align top-left so maximum content is visible.
   const bb = constructionBoundingBox(state);
-  const offsetX = bb ? (pw - bb.width) / 2 - bb.minX : 0;
-  const offsetY = bb ? (ph - bb.height) / 2 - bb.minY : 0;
+  const offsetX = bb
+    ? bb.width <= pw
+      ? (pw - bb.width) / 2 - bb.minX // center horizontally
+      : -bb.minX // align left
+    : 0;
+  const offsetY = bb
+    ? bb.height <= ph
+      ? (ph - bb.height) / 2 - bb.minY // center vertically
+      : -bb.minY // align top
+    : 0;
   const tx = (x: number) => x + offsetX + MARGIN_MM;
   const ty = (y: number) => y + offsetY + MARGIN_MM;
 
