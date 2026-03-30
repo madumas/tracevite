@@ -66,11 +66,13 @@ export function clampZoom(zoom: number): number {
   return Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, zoom));
 }
 
-/** Clamp viewport pan to keep construction bounds visible. */
+/** Clamp viewport pan to keep construction bounds visible.
+ *  Allows negative panning (up to -BOUNDS/2) so reflected figures are reachable. */
 export function clampViewport(viewport: ViewportState): ViewportState {
   const zoom = clampZoom(viewport.zoom);
-  const panX = Math.max(0, Math.min(BOUNDS_WIDTH_MM, viewport.panX));
-  const panY = Math.max(0, Math.min(BOUNDS_HEIGHT_MM, viewport.panY));
+  const margin = BOUNDS_WIDTH_MM / 2;
+  const panX = Math.max(-margin, Math.min(BOUNDS_WIDTH_MM, viewport.panX));
+  const panY = Math.max(-margin, Math.min(BOUNDS_HEIGHT_MM, viewport.panY));
   return { panX, panY, zoom };
 }
 

@@ -24,7 +24,7 @@ const navBtnStyle: React.CSSProperties = {
   fontSize: 18,
   color: '#4A5568',
   opacity: 0.5,
-  zIndex: 10,
+  zIndex: 30,
 };
 
 export const NavigationControls = memo(function NavigationControls({
