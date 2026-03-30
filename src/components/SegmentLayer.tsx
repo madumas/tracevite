@@ -168,7 +168,7 @@ export const SegmentLayer = memo(function SegmentLayer({
             >
               {lengthText}
             </text>
-            {/* Parallel marks: // (two diagonal slashes) colored by pair */}
+            {/* Parallel marks: // (two diagonal slashes) colored by pair, at 1/3 of segment */}
             {parallelSegColor.has(segment.id) && len > 0 && (
               <g>
                 {[-3, 3].map((along) => {
@@ -177,8 +177,11 @@ export const SegmentLayer = memo(function SegmentLayer({
                   // 45° diagonal relative to segment
                   const diagX = (dirX - dirY) * 0.7;
                   const diagY = (dirY + dirX) * 0.7;
-                  const cx = midSx + dirX * along;
-                  const cy = midSy + dirY * along;
+                  // Position at 1/3 of segment (not midpoint, to avoid overlap with congruence marks)
+                  const thirdSx = sx1 + dx * 0.33;
+                  const thirdSy = sy1 + dy * 0.33;
+                  const cx = thirdSx + dirX * along;
+                  const cy = thirdSy + dirY * along;
                   const halfLen = 5;
                   return (
                     <line
