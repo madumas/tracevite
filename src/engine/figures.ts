@@ -153,10 +153,16 @@ export function detectAllFaces(state: ConstructionState): string[][] {
     }
   }
 
-  return faces.filter((_, i) => {
+  // Filter exterior face and degenerate, then deduplicate same-vertex-set faces
+  const seen = new Set<string>();
+  return faces.filter((face, i) => {
     if (i === maxIdx) return false; // exterior face
-    const area = Math.abs(shoelaceArea(faces[i]!, pointMap));
-    return area >= 1; // filter degenerate (< 1mm²)
+    const area = Math.abs(shoelaceArea(face, pointMap));
+    if (area < 1) return false; // degenerate (< 1mm²)
+    const key = [...face].sort().join(',');
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
   });
 }
 
