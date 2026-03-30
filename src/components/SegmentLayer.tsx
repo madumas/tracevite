@@ -36,12 +36,36 @@ export const SegmentLayer = memo(function SegmentLayer({
 
   const pointMap = new Map(points.map((p) => [p.id, p]));
 
-  // Build parallel mark sets: segments that are parallel get double-bar marks
-  const parallelSegIds = new Set<string>();
+  // Build parallel pair colors: each pair of parallel segments gets a distinct color
+  const PARALLEL_COLORS = ['#0B7285', '#C24B22', '#7C3AED', '#2E7D32'];
+  const parallelSegColor = new Map<string, string>();
   if (!hideProperties) {
+    // Group parallel segments into connected pairs
+    const parallelGroups: string[][] = [];
+    const segToParallelGroup = new Map<string, number>();
     for (const prop of properties) {
       if (prop.type === 'parallel') {
-        for (const id of prop.involvedIds) parallelSegIds.add(id);
+        const ids = [...prop.involvedIds];
+        const existingIdx = ids
+          .map((id) => segToParallelGroup.get(id))
+          .find((g) => g !== undefined);
+        if (existingIdx !== undefined) {
+          for (const id of ids) {
+            segToParallelGroup.set(id, existingIdx);
+            if (!parallelGroups[existingIdx]!.includes(id)) parallelGroups[existingIdx]!.push(id);
+          }
+        } else {
+          const idx = parallelGroups.length;
+          parallelGroups.push(ids);
+          for (const id of ids) segToParallelGroup.set(id, idx);
+        }
+      }
+    }
+    // Assign color per group
+    for (let i = 0; i < parallelGroups.length; i++) {
+      const color = PARALLEL_COLORS[i % PARALLEL_COLORS.length]!;
+      for (const id of parallelGroups[i]!) {
+        parallelSegColor.set(id, color);
       }
     }
   }
@@ -144,20 +168,31 @@ export const SegmentLayer = memo(function SegmentLayer({
             >
               {lengthText}
             </text>
-            {/* Parallel marks: double bars (//) perpendicular to segment at midpoint */}
-            {parallelSegIds.has(segment.id) && len > 0 && (
+            {/* Parallel marks: // (two diagonal slashes) colored by pair */}
+            {parallelSegColor.has(segment.id) && len > 0 && (
               <g>
-                {[-3, 3].map((offset) => (
-                  <line
-                    key={offset}
-                    x1={midSx + (offsetX / 14) * 4 + (dx / len) * offset}
-                    y1={midSy + (offsetY / 14) * 4 + (dy / len) * offset}
-                    x2={midSx - (offsetX / 14) * 4 + (dx / len) * offset}
-                    y2={midSy - (offsetY / 14) * 4 + (dy / len) * offset}
-                    stroke={CANVAS_GUIDE}
-                    strokeWidth={1.5}
-                  />
-                ))}
+                {[-3, 3].map((along) => {
+                  const dirX = dx / len;
+                  const dirY = dy / len;
+                  // 45° diagonal relative to segment
+                  const diagX = (dirX - dirY) * 0.7;
+                  const diagY = (dirY + dirX) * 0.7;
+                  const cx = midSx + dirX * along;
+                  const cy = midSy + dirY * along;
+                  const halfLen = 5;
+                  return (
+                    <line
+                      key={along}
+                      x1={cx - diagX * halfLen}
+                      y1={cy - diagY * halfLen}
+                      x2={cx + diagX * halfLen}
+                      y2={cy + diagY * halfLen}
+                      stroke={parallelSegColor.get(segment.id)!}
+                      strokeWidth={2}
+                      strokeLinecap="round"
+                    />
+                  );
+                })}
               </g>
             )}
             {/* Congruence tick marks at midpoint */}
