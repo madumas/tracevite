@@ -44,12 +44,11 @@ export function useMoveTool({ state, dispatch, viewport }: UseMoveToolOptions): 
         setOriginalPosition({ x: point.x, y: point.y });
         setPhase('point_picked');
       } else if (phase === 'point_picked' && pickedPointId) {
-        // Put down the point and select it (shows ContextActionBar for delete/lock)
+        // Put down the point
         const snap = findSnap(mmPos, state, DEFAULT_TOLERANCES, [pickedPointId]);
         const target = snap.snappedPosition;
 
         dispatch({ type: 'MOVE_POINT', pointId: pickedPointId, x: target.x, y: target.y });
-        dispatch({ type: 'SET_SELECTED_ELEMENT', elementId: pickedPointId });
         reset();
       }
     },

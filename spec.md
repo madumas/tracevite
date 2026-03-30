@@ -372,7 +372,7 @@ Conversion affichage :
 **Mode pick-up / put-down (par défaut, adapté TDC) :**
 - Clic sur un point → le point est « ramassé » (visuellement agrandi, couleur d'accentuation, curseur change)
 - Déplacement de la souris (sans bouton enfoncé) → le point suit le curseur
-- Clic pour « déposer » le point à son nouvel emplacement. **Après le dépôt, le point reste sélectionné** (surbrillance + barre d'actions contextuelle visible). Cela permet à l'enfant de supprimer, verrouiller ou inspecter le point sans changer d'outil. Ce comportement résout le fait qu'en mode Déplacer, un clic direct sur un point initie toujours un déplacement — la sélection post-drop est le seul chemin naturel vers les actions contextuelles sur un point depuis le canevas.
+- Clic pour « déposer » le point à son nouvel emplacement. **Le point n'est pas sélectionné après le dépôt** — afficher un bouton Supprimer immédiatement après un geste de placement est dangereux pour un enfant TDC (clic accidentel). Pour supprimer ou verrouiller un point en mode Déplacer, utiliser le **panneau Propriétés** (clic sur « Sommet A » → sélection → barre d'actions contextuelle). Voir §6.9.
 - Escape pour annuler le déplacement et remettre le point à sa position initiale
 
 **Mode drag (alternatif) :** Clic-glissé classique disponible en parallèle.
