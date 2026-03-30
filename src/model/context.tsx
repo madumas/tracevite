@@ -16,6 +16,7 @@ interface ConstructionStateValue {
   readonly state: ConstructionState;
   readonly canUndo: boolean;
   readonly canRedo: boolean;
+  readonly undoManager: UndoManager;
 }
 
 type ConstructionDispatch = (action: ConstructionAction) => void;
@@ -50,6 +51,7 @@ export function ConstructionProvider({ children, initialState }: ProviderProps) 
     state: reducerState.undoManager.current,
     canUndo: canUndo(reducerState.undoManager),
     canRedo: canRedo(reducerState.undoManager),
+    undoManager: reducerState.undoManager,
   };
 
   return (

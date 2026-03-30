@@ -44,12 +44,8 @@ export function screenToMm(
 }
 
 /** Convert a physical mm value to CSS pixels. */
-export function mmToCssPx(mm: number, dpr: number): number {
-  // Standard assumption: 96 CSS px per inch, 25.4 mm per inch
-  const cssPixelsPerMm = 96 / 25.4;
-  return mm * cssPixelsPerMm * (dpr > 0 ? 1 : 1);
-  // Note: we use CSS px (not device px). devicePixelRatio is handled
-  // by the browser's rendering pipeline, not our coordinate math.
+export function mmToCssPx(mm: number): number {
+  return mm * CSS_PX_PER_MM;
 }
 
 /**

@@ -17,6 +17,7 @@ import { useSegmentTool } from '@/hooks/useSegmentTool';
 import { usePointerInteraction } from '@/hooks/usePointerInteraction';
 import { useViewport } from '@/hooks/useViewport';
 import { useBeforeUnload } from '@/hooks/useBeforeUnload';
+import { useAutoSave } from '@/hooks/useAutoSave';
 import { UI_BG, UI_TEXT_PRIMARY, CANVAS_BG, HEADER_HEIGHT } from '@/config/theme';
 import { CSS_PX_PER_MM, BOUNDS_WIDTH_MM, BOUNDS_HEIGHT_MM } from '@/engine/viewport';
 import { GridLayer } from '@/components/GridLayer';
@@ -32,13 +33,14 @@ import {
 import type { ToolType, GridSize, DisplayUnit, SchoolLevel } from '@/model/types';
 
 function AppContent() {
-  const { state, canUndo, canRedo } = useConstructionState();
+  const { state, canUndo, canRedo, undoManager } = useConstructionState();
   const dispatch = useConstructionDispatch();
   const containerRef = useRef<HTMLDivElement>(null);
   const { viewport, zoomIn, zoomOut, panUp, panDown, panLeft, panRight } =
     useViewport(containerRef);
   const [showNewConfirm, setShowNewConfirm] = useState(false);
 
+  const { saving } = useAutoSave(state, undoManager);
   const segmentTool = useSegmentTool({ state, dispatch });
 
   const { handlePointerDown, handlePointerMove, handlePointerUp } = usePointerInteraction({
@@ -104,11 +106,17 @@ function AppContent() {
           segmentTool.handleEscape();
         }
       }
-      if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) {
+      const inInput =
+        e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement;
+      if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey && !inInput) {
         e.preventDefault();
         if (canUndo) dispatch({ type: 'UNDO' });
       }
-      if ((e.ctrlKey || e.metaKey) && (e.key === 'y' || (e.key === 'z' && e.shiftKey))) {
+      if (
+        (e.ctrlKey || e.metaKey) &&
+        (e.key === 'y' || (e.key === 'z' && e.shiftKey)) &&
+        !inInput
+      ) {
         e.preventDefault();
         if (canRedo) dispatch({ type: 'REDO' });
       }
@@ -169,7 +177,7 @@ function AppContent() {
         }}
       >
         <strong style={{ fontSize: 16 }}>TraceVite</strong>
-        <SaveIndicator saving={false} />
+        <SaveIndicator saving={saving} />
         <div style={{ flex: 1 }} />
         <LevelSelector level={state.schoolLevel} onChange={handleLevelChange} />
         <span style={{ fontSize: 11, color: '#9CA3AF' }}>v0.1.0</span>

@@ -30,31 +30,31 @@ export function findSnap(
 ): SnapResult {
   const excludeSet = new Set(excludePointIds);
 
-  // Priority 1: Existing points
-  let bestPointDist = Infinity;
-  let bestPointId: string | undefined;
-  let bestPointPos: { x: number; y: number } | undefined;
-
-  for (const point of state.points) {
-    if (excludeSet.has(point.id)) continue;
-    const dist = distance(cursor, point);
-    if (dist <= tolerances.pointMm && dist < bestPointDist) {
-      bestPointDist = dist;
-      bestPointId = point.id;
-      bestPointPos = { x: point.x, y: point.y };
-    }
-  }
-
-  if (bestPointPos && bestPointId) {
-    return {
-      snappedPosition: bestPointPos,
-      snapType: 'point',
-      snappedToPointId: bestPointId,
-    };
-  }
-
-  // Priority 2: Grid
   if (state.snapEnabled) {
+    // Priority 1: Existing points
+    let bestPointDist = Infinity;
+    let bestPointId: string | undefined;
+    let bestPointPos: { x: number; y: number } | undefined;
+
+    for (const point of state.points) {
+      if (excludeSet.has(point.id)) continue;
+      const dist = distance(cursor, point);
+      if (dist <= tolerances.pointMm && dist < bestPointDist) {
+        bestPointDist = dist;
+        bestPointId = point.id;
+        bestPointPos = { x: point.x, y: point.y };
+      }
+    }
+
+    if (bestPointPos && bestPointId) {
+      return {
+        snappedPosition: bestPointPos,
+        snapType: 'point',
+        snappedToPointId: bestPointId,
+      };
+    }
+
+    // Priority 2: Grid
     const gridPoint = nearestGridPoint(cursor.x, cursor.y, state.gridSizeMm);
     const gridDist = distance(cursor, gridPoint);
     if (gridDist <= tolerances.gridMm) {

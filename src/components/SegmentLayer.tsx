@@ -21,7 +21,7 @@ export const SegmentLayer = memo(function SegmentLayer({
   selectedElementId,
 }: SegmentLayerProps) {
   const pxPerMm = viewport.zoom * CSS_PX_PER_MM;
-  const hitZonePx = SEGMENT_HIT_ZONE_MM * CSS_PX_PER_MM * 2;
+  const hitZonePx = SEGMENT_HIT_ZONE_MM * pxPerMm * 2;
 
   const pointMap = new Map(points.map((p) => [p.id, p]));
 

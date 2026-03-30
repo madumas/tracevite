@@ -139,6 +139,20 @@ export function useSegmentTool({ state, dispatch }: UseSegmentToolOptions) {
     }
   }, [phase, reset]);
 
+  // After segment creation, resolve the chaining anchor point ID.
+  // dispatch is synchronous but state updates on next render — this effect
+  // picks up the newly created endpoint so the next segment reuses it
+  // instead of creating a duplicate point at the same coordinates.
+  useEffect(() => {
+    if (phase === 'segment_created' && firstPoint && !firstPoint.existingId) {
+      const match = state.points.find((p) => p.x === firstPoint.mm.x && p.y === firstPoint.mm.y);
+      if (match) {
+        setFirstPoint({ mm: firstPoint.mm, existingId: match.id });
+        setChainingAnchorId(match.id);
+      }
+    }
+  }, [phase, firstPoint, state.points]);
+
   // Cleanup timer on unmount
   useEffect(() => {
     return () => clearChainTimer();
