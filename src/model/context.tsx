@@ -36,13 +36,17 @@ function constructionReducer(state: ReducerState, action: ConstructionAction): R
 
 interface ProviderProps {
   readonly children: ReactNode;
-  /** Optional initial state for testing. */
   readonly initialState?: ConstructionState;
+  readonly initialUndoManager?: UndoManager;
 }
 
-export function ConstructionProvider({ children, initialState }: ProviderProps) {
+export function ConstructionProvider({
+  children,
+  initialState,
+  initialUndoManager,
+}: ProviderProps) {
   const initial: ReducerState = {
-    undoManager: createUndoManager(initialState ?? createInitialState()),
+    undoManager: initialUndoManager ?? createUndoManager(initialState ?? createInitialState()),
   };
 
   const [reducerState, dispatch] = useReducer(constructionReducer, initial);

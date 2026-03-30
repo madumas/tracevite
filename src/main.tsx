@@ -2,14 +2,17 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { App } from './App';
 import './styles/print.css';
-import { migrateIfNeeded } from '@/model/slot-persistence';
+import { migrateIfNeeded, loadSlotData } from '@/model/slot-persistence';
 import type { SlotRegistry } from '@/model/slots';
+import type { ConstructionState } from '@/model/types';
+import type { UndoManager } from '@/model/undo';
+import { createUndoManager } from '@/model/undo';
+import { createInitialState } from '@/model/state';
 
 // D1: Read URL params SYNCHRONOUSLY before createRoot
 function parseUrlParams(): { consigne: string | null; level: string | null } {
   const params = new URLSearchParams(window.location.search);
   let consigne = params.get('consigne');
-  // Accept ?mode= (new) or ?level= (backward compat)
   const mode = params.get('mode');
   const level = params.get('level');
 
@@ -27,14 +30,33 @@ function parseUrlParams(): { consigne: string | null; level: string | null } {
 
 const urlParams = parseUrlParams();
 
-// D2: Migration gate — must complete before React renders
+// D2: Migration gate + load active slot — must complete before React renders
 async function boot() {
   let registry: SlotRegistry;
   try {
     registry = await migrateIfNeeded();
   } catch {
-    // IndexedDB unavailable — start with empty registry
     registry = { slots: [], activeSlotId: null, nextNumber: 1 };
+  }
+
+  // Load the active slot's saved construction data
+  let initialState: ConstructionState = createInitialState();
+  let initialUndoManager: UndoManager = createUndoManager(initialState);
+
+  if (registry.activeSlotId) {
+    try {
+      const slotData = await loadSlotData(registry.activeSlotId);
+      if (slotData) {
+        initialState = slotData.state;
+        initialUndoManager = {
+          past: slotData.past,
+          current: slotData.state,
+          future: slotData.future,
+        };
+      }
+    } catch {
+      // Corrupted slot data — start fresh
+    }
   }
 
   createRoot(document.getElementById('root')!).render(
@@ -43,6 +65,8 @@ async function boot() {
         initialConsigne={urlParams.consigne}
         initialLevel={urlParams.level}
         initialRegistry={registry}
+        initialState={initialState}
+        initialUndoManager={initialUndoManager}
       />
     </StrictMode>,
   );

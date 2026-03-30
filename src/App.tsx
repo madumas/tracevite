@@ -44,6 +44,8 @@ import {
 } from '@/config/messages';
 import { hitTestElement } from '@/engine/hit-test';
 import { ConsigneBanner } from '@/components/ConsigneBanner';
+import { SlotManager } from '@/components/SlotManager';
+import { useSlotManager } from '@/hooks/useSlotManager';
 import { PrintDialog } from '@/components/PrintDialog';
 import { PrintSvg } from '@/components/PrintSvg';
 import { TutorialOverlay } from '@/components/TutorialOverlay';
@@ -52,10 +54,15 @@ import type { ToolType, GridSize, DisplayUnit, DisplayMode } from '@/model/types
 
 import type { SlotRegistry } from '@/model/slots';
 
+import type { UndoManager } from '@/model/undo';
+import type { ConstructionState } from '@/model/types';
+
 interface AppProps {
   initialConsigne?: string | null;
   initialLevel?: string | null;
   initialRegistry?: SlotRegistry;
+  initialState?: ConstructionState;
+  initialUndoManager?: UndoManager;
 }
 
 function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps) {
@@ -68,8 +75,7 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
   const [consigneDismissed, setConsigneDismissed] = useState(false);
   const initializedRef = useRef(false);
 
-  const activeSlotId = initialRegistry?.activeSlotId ?? null;
-  const { saving } = useAutoSave(state, undoManager, activeSlotId);
+  const [showSlotManager, setShowSlotManager] = useState(false);
 
   const [pendingDeleteFromKeyboard, setPendingDeleteFromKeyboard] = useState(false);
   const [deleteMode, setDeleteMode] = useState(false);
@@ -109,6 +115,20 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
     toolIsIdle: tool.isIdle,
     activeTool: state.activeTool,
   });
+
+  // Slot manager
+  const slotManager = useSlotManager({
+    initialRegistry: initialRegistry ?? { slots: [], activeSlotId: null, nextNumber: 1 },
+    state,
+    undoManager,
+    dispatch,
+    onBeforeSwitch: () => {
+      tool.reset();
+      selection.clearSelection();
+    },
+  });
+
+  const { saving } = useAutoSave(state, undoManager, slotManager.activeSlotId);
 
   // Pointer events — route to delete mode, selection, or tool
   const handleCanvasClick = useCallback(
@@ -338,6 +358,21 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
       >
         <strong style={{ fontSize: 16 }}>TraceVite</strong>
         <SaveIndicator saving={saving} />
+        <button
+          onClick={() => setShowSlotManager(true)}
+          style={{
+            padding: '3px 10px',
+            background: 'transparent',
+            border: `1px solid #D1D8E0`,
+            borderRadius: 4,
+            cursor: 'pointer',
+            fontSize: 12,
+            color: '#4A5568',
+          }}
+          data-testid="slot-manager-btn"
+        >
+          Mes constructions
+        </button>
         {state.consigne && consigneDismissed && (
           <button
             onClick={() => setConsigneDismissed(false)}
@@ -565,7 +600,8 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
         <PrintDialog
           state={state}
           slotName={
-            initialRegistry?.slots.find((s) => s.id === activeSlotId)?.name ?? 'Construction 1'
+            slotManager.registry.slots.find((s) => s.id === slotManager.activeSlotId)?.name ??
+            'Construction 1'
           }
           landscape={printLandscape}
           onLandscapeChange={setPrintLandscape}
@@ -579,13 +615,47 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
 
       {/* Hidden print SVG — visible only in @media print */}
       <PrintSvg state={state} landscape={printLandscape} />
+
+      {/* Slot manager modal */}
+      {showSlotManager && (
+        <SlotManager
+          registry={slotManager.registry}
+          activeSlotId={slotManager.activeSlotId}
+          state={state}
+          onSwitch={(id) => {
+            slotManager.switchSlot(id);
+            setShowSlotManager(false);
+          }}
+          onCreate={(name) => {
+            slotManager.createNewSlot(name);
+            setShowSlotManager(false);
+          }}
+          onDelete={(id) => slotManager.removeSlot(id)}
+          onRename={(id, name) => slotManager.renameCurrentSlot(id, name)}
+          onImport={(importedState, name) => {
+            slotManager.createNewSlot(name);
+            dispatch({
+              type: 'LOAD_CONSTRUCTION',
+              undoManager: { past: [], current: importedState, future: [] },
+            });
+            setShowSlotManager(false);
+          }}
+          onClose={() => setShowSlotManager(false)}
+        />
+      )}
     </div>
   );
 }
 
-export function App({ initialConsigne, initialLevel, initialRegistry }: AppProps) {
+export function App({
+  initialConsigne,
+  initialLevel,
+  initialRegistry,
+  initialState,
+  initialUndoManager,
+}: AppProps) {
   return (
-    <ConstructionProvider>
+    <ConstructionProvider initialState={initialState} initialUndoManager={initialUndoManager}>
       <AppContent
         initialConsigne={initialConsigne}
         initialLevel={initialLevel}
