@@ -58,11 +58,7 @@ interface AppProps {
   initialRegistry?: SlotRegistry;
 }
 
-function AppContent({
-  initialConsigne,
-  initialLevel,
-  initialRegistry: _initialRegistry,
-}: AppProps) {
+function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps) {
   const { state, canUndo, canRedo, undoManager } = useConstructionState();
   const dispatch = useConstructionDispatch();
   const containerRef = useRef<HTMLDivElement>(null);
@@ -72,7 +68,8 @@ function AppContent({
   const [consigneDismissed, setConsigneDismissed] = useState(false);
   const initializedRef = useRef(false);
 
-  const { saving } = useAutoSave(state, undoManager);
+  const activeSlotId = initialRegistry?.activeSlotId ?? null;
+  const { saving } = useAutoSave(state, undoManager, activeSlotId);
 
   const [pendingDeleteFromKeyboard, setPendingDeleteFromKeyboard] = useState(false);
   const [deleteMode, setDeleteMode] = useState(false);
@@ -186,6 +183,7 @@ function AppContent({
   const handleUndo = useCallback(() => dispatch({ type: 'UNDO' }), [dispatch]);
   const handleRedo = useCallback(() => dispatch({ type: 'REDO' }), [dispatch]);
   const [showPrintDialog, setShowPrintDialog] = useState(false);
+  const [printLandscape, setPrintLandscape] = useState(false);
   const handlePrint = useCallback(() => setShowPrintDialog(true), []);
   const handleNewConstruction = useCallback(() => setShowNewConfirm(true), []);
   const handleConfirmNew = useCallback(() => {
@@ -556,7 +554,11 @@ function AppContent({
       {showPrintDialog && (
         <PrintDialog
           state={state}
-          slotName="Construction 1"
+          slotName={
+            initialRegistry?.slots.find((s) => s.id === activeSlotId)?.name ?? 'Construction 1'
+          }
+          landscape={printLandscape}
+          onLandscapeChange={setPrintLandscape}
           onClose={() => setShowPrintDialog(false)}
           onRecenter={() => {
             // TODO: RECENTER_CONSTRUCTION action
@@ -566,7 +568,7 @@ function AppContent({
       )}
 
       {/* Hidden print SVG — visible only in @media print */}
-      <PrintSvg state={state} landscape={false} />
+      <PrintSvg state={state} landscape={printLandscape} />
     </div>
   );
 }

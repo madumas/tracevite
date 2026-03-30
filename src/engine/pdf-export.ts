@@ -154,6 +154,17 @@ export function constructionBoundingBox(state: ConstructionState): {
     if (p.y > maxY) maxY = p.y;
   }
 
+  // Include circles: center ± radius
+  const pointMap = new Map(state.points.map((p) => [p.id, p]));
+  for (const c of state.circles) {
+    const center = pointMap.get(c.centerPointId);
+    if (!center) continue;
+    if (center.x - c.radiusMm < minX) minX = center.x - c.radiusMm;
+    if (center.y - c.radiusMm < minY) minY = center.y - c.radiusMm;
+    if (center.x + c.radiusMm > maxX) maxX = center.x + c.radiusMm;
+    if (center.y + c.radiusMm > maxY) maxY = center.y + c.radiusMm;
+  }
+
   return { minX, minY, maxX, maxY, width: maxX - minX, height: maxY - minY };
 }
 

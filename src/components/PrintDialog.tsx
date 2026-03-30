@@ -15,12 +15,20 @@ import { sanitizeFilename } from '@/model/file-io';
 interface PrintDialogProps {
   readonly state: ConstructionState;
   readonly slotName: string;
+  readonly landscape: boolean;
+  readonly onLandscapeChange: (landscape: boolean) => void;
   readonly onClose: () => void;
   readonly onRecenter: () => void;
 }
 
-export function PrintDialog({ state, slotName, onClose, onRecenter }: PrintDialogProps) {
-  const [landscape, setLandscape] = useState(false);
+export function PrintDialog({
+  state,
+  slotName,
+  landscape,
+  onLandscapeChange,
+  onClose,
+  onRecenter,
+}: PrintDialogProps) {
   const [hideWarning, setHideWarning] = useState(() => {
     try {
       return localStorage.getItem('tracevite_hide_print_warning') === 'true';
@@ -89,7 +97,7 @@ export function PrintDialog({ state, slotName, onClose, onRecenter }: PrintDialo
         {/* Orientation toggle */}
         <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
           <button
-            onClick={() => setLandscape(false)}
+            onClick={() => onLandscapeChange(false)}
             style={{
               flex: 1,
               padding: '8px',
@@ -104,7 +112,7 @@ export function PrintDialog({ state, slotName, onClose, onRecenter }: PrintDialo
             Portrait
           </button>
           <button
-            onClick={() => setLandscape(true)}
+            onClick={() => onLandscapeChange(true)}
             style={{
               flex: 1,
               padding: '8px',

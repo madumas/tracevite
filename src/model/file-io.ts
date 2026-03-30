@@ -33,6 +33,11 @@ export function importFromTracevite(json: string): ConstructionState {
 
   const obj = data as Record<string, unknown>;
 
+  // Reject settings files opened as construction
+  if (obj['type'] === 'tracevite-settings') {
+    throw new ImportError('WRONG_FILE_TYPE');
+  }
+
   // Version check
   if (typeof obj['version'] !== 'number') {
     throw new ImportError('MISSING_VERSION');
