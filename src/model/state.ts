@@ -29,6 +29,7 @@ export function createInitialState(): ConstructionState {
     displayUnit: 'cm',
     selectedElementId: null,
     consigne: null,
+    hideProperties: false,
   };
 }
 
@@ -192,6 +193,71 @@ export function updatePointPosition(
   });
 
   return { ...state, points: newPoints, segments: newSegments };
+}
+
+/** Add a circle with given center and radius. */
+export function addCircle(
+  state: ConstructionState,
+  centerPointId: string,
+  radiusMm: number,
+): { state: ConstructionState; circleId: string } | null {
+  if (radiusMm < MIN_POINT_DISTANCE_MM) return null;
+  if (!state.points.some((p) => p.id === centerPointId)) return null;
+
+  const id = generateId();
+  return {
+    state: { ...state, circles: [...state.circles, { id, centerPointId, radiusMm }] },
+    circleId: id,
+  };
+}
+
+/**
+ * Move a point with constraint resolution (spec §6.7).
+ * - If connected segment has fixedLength: other endpoint pivots to maintain length.
+ * - If other endpoint is locked + fixedLength: constrain moved point to circle.
+ * - Propagation stops after 1 level.
+ */
+export function movePointWithConstraints(
+  state: ConstructionState,
+  pointId: string,
+  x: number,
+  y: number,
+): ConstructionState {
+  // First, move the point
+  let newState = updatePointPosition(state, pointId, x, y);
+
+  // Resolve fixedLength constraints on connected segments (1 level only)
+  const connectedFixedSegments = newState.segments.filter(
+    (s) => s.fixedLength != null && (s.startPointId === pointId || s.endPointId === pointId),
+  );
+
+  for (const seg of connectedFixedSegments) {
+    const otherPointId = seg.startPointId === pointId ? seg.endPointId : seg.startPointId;
+    const movedPoint = newState.points.find((p) => p.id === pointId);
+    const otherPoint = newState.points.find((p) => p.id === otherPointId);
+    if (!movedPoint || !otherPoint || !seg.fixedLength) continue;
+
+    if (otherPoint.locked) {
+      // Constrain the moved point to circle of fixedLength around locked point
+      const dist = distance(movedPoint, otherPoint);
+      if (dist === 0) continue;
+      const ratio = seg.fixedLength / dist;
+      const constrainedX = otherPoint.x + (movedPoint.x - otherPoint.x) * ratio;
+      const constrainedY = otherPoint.y + (movedPoint.y - otherPoint.y) * ratio;
+      newState = updatePointPosition(newState, pointId, constrainedX, constrainedY);
+    } else {
+      // Pivot other endpoint to maintain fixedLength along current direction
+      const dist = distance(movedPoint, otherPoint);
+      if (dist === 0) continue;
+      const dx = otherPoint.x - movedPoint.x;
+      const dy = otherPoint.y - movedPoint.y;
+      const newOtherX = movedPoint.x + (dx / dist) * seg.fixedLength;
+      const newOtherY = movedPoint.y + (dy / dist) * seg.fixedLength;
+      newState = updatePointPosition(newState, otherPointId, newOtherX, newOtherY);
+    }
+  }
+
+  return newState;
 }
 
 /** Fix a segment to an exact length by moving the endpoint. */

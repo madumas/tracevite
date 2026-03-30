@@ -5,8 +5,10 @@ import {
   createSegment,
   removeElement,
   updatePointPosition,
+  movePointWithConstraints,
   fixSegmentLength,
   splitSegmentAtPoint,
+  togglePointLock,
   setGridSize,
   setSchoolLevel,
   setDisplayUnit,
@@ -193,6 +195,60 @@ describe('updatePointPosition', () => {
     state = updatePointPosition(state, p2.pointId, 30, 40);
     expect(state.points.find((p) => p.id === p2.pointId)!.x).toBe(30);
     expect(state.segments[0]!.lengthMm).toBe(50); // 3-4-5 triangle
+  });
+});
+
+describe('movePointWithConstraints', () => {
+  it('moves a free point normally', () => {
+    let state = createInitialState();
+    const p1 = addPoint(state, 0, 0);
+    state = p1.state;
+    const p2 = addPoint(state, 50, 0);
+    state = p2.state;
+    const seg = addSegment(state, p1.pointId, p2.pointId);
+    state = seg!.state;
+
+    state = movePointWithConstraints(state, p2.pointId, 30, 40);
+    const moved = state.points.find((p) => p.id === p2.pointId)!;
+    expect(moved.x).toBe(30);
+    expect(moved.y).toBe(40);
+  });
+
+  it('pivots other endpoint when fixedLength segment', () => {
+    let state = createInitialState();
+    const p1 = addPoint(state, 0, 0);
+    state = p1.state;
+    const p2 = addPoint(state, 50, 0);
+    state = p2.state;
+
+    state = addSegment(state, p1.pointId, p2.pointId)!.state;
+    state = fixSegmentLength(state, state.segments[0]!.id, 50);
+
+    // Move p1 to (0, 50) — p2 should pivot to maintain 50mm
+    state = movePointWithConstraints(state, p1.pointId, 0, 50);
+    const p2After = state.points.find((p) => p.id === p2.pointId)!;
+    const p1After = state.points.find((p) => p.id === p1.pointId)!;
+    const dist = Math.sqrt((p2After.x - p1After.x) ** 2 + (p2After.y - p1After.y) ** 2);
+    expect(dist).toBeCloseTo(50);
+  });
+
+  it('constrains moved point to circle when other endpoint is locked + fixedLength', () => {
+    let state = createInitialState();
+    const p1 = addPoint(state, 0, 0);
+    state = p1.state;
+    const p2 = addPoint(state, 50, 0);
+    state = p2.state;
+
+    state = addSegment(state, p1.pointId, p2.pointId)!.state;
+    state = fixSegmentLength(state, state.segments[0]!.id, 50);
+    state = togglePointLock(state, p2.pointId); // Lock p2
+
+    // Move p1 far away — should be constrained to circle r=50 around p2
+    state = movePointWithConstraints(state, p1.pointId, 200, 200);
+    const p1After = state.points.find((p) => p.id === p1.pointId)!;
+    const p2Pos = state.points.find((p) => p.id === p2.pointId)!;
+    const dist = Math.sqrt((p1After.x - p2Pos.x) ** 2 + (p1After.y - p2Pos.y) ** 2);
+    expect(dist).toBeCloseTo(50);
   });
 });
 

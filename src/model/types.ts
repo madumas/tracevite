@@ -77,6 +77,7 @@ export interface ConstructionState {
   readonly displayUnit: DisplayUnit;
   readonly selectedElementId: string | null;
   readonly consigne: string | null;
+  readonly hideProperties: boolean;
 }
 
 /** Snap result from the snap engine. */

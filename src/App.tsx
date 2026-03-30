@@ -26,10 +26,13 @@ import {
   STATUS_BAR_HEIGHT,
 } from '@/config/theme';
 import { CSS_PX_PER_MM, BOUNDS_WIDTH_MM, BOUNDS_HEIGHT_MM } from '@/engine/viewport';
-import { detectAllAngles, isAngleCluttered } from '@/engine/angles';
+import { isAngleCluttered } from '@/engine/angles';
+import { computeDerived } from '@/engine/derived';
+import { PropertiesPanel } from '@/components/PropertiesPanel';
 import { GridLayer } from '@/components/GridLayer';
 import { SegmentLayer } from '@/components/SegmentLayer';
 import { PointLayer } from '@/components/PointLayer';
+import { CircleLayer } from '@/components/CircleLayer';
 import { NavigationControls } from '@/components/NavigationControls';
 import {
   CONFIRM_NEW_TITLE,
@@ -192,8 +195,13 @@ function AppContent() {
     selection,
   ]);
 
-  // Derived: angles (computed, not stored in state)
-  const angles = useMemo(() => detectAllAngles(state), [state.points, state.segments]);
+  const [panelCollapsed, setPanelCollapsed] = useState(false);
+
+  // Derived: angles, properties, figures (computed, not stored in state)
+  const derived = useMemo(
+    () => computeDerived(state, state.schoolLevel),
+    [state.points, state.segments, state.circles, state.schoolLevel],
+  );
   const cluttered = useMemo(
     () => isAngleCluttered(state, state.schoolLevel),
     [state.segments.length, state.schoolLevel],
@@ -243,6 +251,7 @@ function AppContent() {
         gridSizeMm={state.gridSizeMm}
         displayUnit={state.displayUnit}
         snapEnabled={state.snapEnabled}
+        schoolLevel={state.schoolLevel}
         onToolChange={handleToolChange}
         onGridChange={handleGridChange}
         onUnitChange={handleUnitChange}
@@ -268,78 +277,103 @@ function AppContent() {
         {tool.statusMessage}
       </div>
 
-      {/* Canvas area */}
-      <div
-        ref={containerRef}
-        style={{
-          flex: 1,
-          position: 'relative',
-          overflow: 'auto',
-          background: CANVAS_BG,
-        }}
-        data-testid="canvas-container"
-      >
-        <svg
-          width={svgWidth}
-          height={svgHeight}
-          viewBox={`0 0 ${svgWidth} ${svgHeight}`}
-          role="application"
-          aria-label="Canevas de construction géométrique"
-          style={{ display: 'block', touchAction: 'none' }}
-          onPointerDown={handlePointerDown}
-          onPointerMove={handlePointerMove}
-          onPointerUp={handlePointerUp}
-          data-testid="canvas-svg"
+      {/* Canvas + Panel row */}
+      <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
+        {/* Canvas area */}
+        <div
+          ref={containerRef}
+          style={{
+            flex: 1,
+            position: 'relative',
+            overflow: 'auto',
+            background: CANVAS_BG,
+          }}
+          data-testid="canvas-container"
         >
-          <GridLayer viewport={viewport} gridSizeMm={state.gridSizeMm} />
-          <SegmentLayer
-            segments={state.segments}
-            points={state.points}
-            viewport={viewport}
-            displayUnit={state.displayUnit}
-            selectedElementId={state.selectedElementId}
+          <svg
+            width={svgWidth}
+            height={svgHeight}
+            viewBox={`0 0 ${svgWidth} ${svgHeight}`}
+            role="application"
+            aria-label="Canevas de construction géométrique"
+            style={{ display: 'block', touchAction: 'none' }}
+            onPointerDown={handlePointerDown}
+            onPointerMove={handlePointerMove}
+            onPointerUp={handlePointerUp}
+            data-testid="canvas-svg"
+          >
+            <GridLayer viewport={viewport} gridSizeMm={state.gridSizeMm} />
+            <SegmentLayer
+              segments={state.segments}
+              points={state.points}
+              viewport={viewport}
+              displayUnit={state.displayUnit}
+              selectedElementId={state.selectedElementId}
+            />
+            <CircleLayer
+              circles={state.circles}
+              points={state.points}
+              viewport={viewport}
+              selectedElementId={state.selectedElementId}
+            />
+            <PointLayer
+              points={state.points}
+              viewport={viewport}
+              selectedElementId={state.selectedElementId}
+            />
+
+            {/* Angle arcs and markers */}
+            <AngleLayer
+              angles={derived.angles}
+              points={pointMap}
+              viewport={viewport}
+              schoolLevel={state.schoolLevel}
+              cluttered={cluttered}
+              selectedElementId={state.selectedElementId}
+              hoveredElementId={selection.hoveredElement?.id ?? null}
+            />
+
+            {/* Tool-specific overlays (ghost segment, ghost circle, etc.) */}
+            {tool.overlayElements}
+
+            {/* Snap feedback */}
+            <SnapFeedback snapResult={tool.snapResult} viewport={viewport} />
+          </svg>
+
+          {/* Context action bar (positioned over canvas) */}
+          {state.selectedElementId && (
+            <ContextActionBar
+              state={state}
+              viewport={viewport}
+              onDelete={handleContextDelete}
+              onToggleLock={handleToggleLock}
+            />
+          )}
+
+          <NavigationControls
+            onPanUp={panUp}
+            onPanDown={panDown}
+            onPanLeft={panLeft}
+            onPanRight={panRight}
+            onZoomIn={zoomIn}
+            onZoomOut={zoomOut}
           />
-          <PointLayer
-            points={state.points}
-            viewport={viewport}
-            selectedElementId={state.selectedElementId}
-          />
+        </div>
 
-          {/* Angle arcs and markers */}
-          <AngleLayer
-            angles={angles}
-            points={pointMap}
-            viewport={viewport}
-            schoolLevel={state.schoolLevel}
-            cluttered={cluttered}
-            selectedElementId={state.selectedElementId}
-            hoveredElementId={selection.hoveredElement?.id ?? null}
-          />
-
-          {/* Tool-specific overlays (ghost segment, ghost circle, etc.) */}
-          {tool.overlayElements}
-
-          {/* Snap feedback */}
-          <SnapFeedback snapResult={tool.snapResult} viewport={viewport} />
-        </svg>
-
-        {/* Context action bar (positioned over canvas) */}
-        {state.selectedElementId && (
-          <ContextActionBar
-            state={state}
-            viewport={viewport}
-            onDelete={handleContextDelete}
-            onToggleLock={handleToggleLock}
-          />
-        )}
-
-        <NavigationControls
-          onPanUp={panUp}
-          onPanDown={panDown}
-          onPanLeft={panLeft}
-          onPanRight={panRight}
-          onZoomIn={zoomIn}
-          onZoomOut={zoomOut}
+        {/* Properties Panel */}
+        <PropertiesPanel
+          state={state}
+          angles={derived.angles}
+          properties={derived.properties}
+          figures={derived.figures}
+          schoolLevel={state.schoolLevel}
+          hideProperties={state.hideProperties}
+          onToggleHideProperties={() =>
+            dispatch({ type: 'SET_HIDE_PROPERTIES', hide: !state.hideProperties })
+          }
+          onSelectElement={(id) => dispatch({ type: 'SET_SELECTED_ELEMENT', elementId: id })}
+          collapsed={panelCollapsed}
+          onToggleCollapsed={() => setPanelCollapsed(!panelCollapsed)}
         />
       </div>
 

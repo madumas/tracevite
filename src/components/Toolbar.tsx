@@ -1,5 +1,5 @@
 import { memo } from 'react';
-import type { ToolType, GridSize, DisplayUnit } from '@/model/types';
+import type { ToolType, GridSize, DisplayUnit, SchoolLevel } from '@/model/types';
 import {
   UI_PRIMARY,
   UI_SURFACE,
@@ -13,6 +13,8 @@ import {
   TOOL_SEGMENT,
   TOOL_MOVE,
   TOOL_MEASURE,
+  TOOL_CIRCLE,
+  TOOL_REFLECTION,
   TOOL_SNAP,
   GRID_5MM,
   GRID_1CM,
@@ -24,6 +26,7 @@ interface ToolbarProps {
   readonly gridSizeMm: GridSize;
   readonly displayUnit: DisplayUnit;
   readonly snapEnabled: boolean;
+  readonly schoolLevel: SchoolLevel;
   readonly onToolChange: (tool: ToolType) => void;
   readonly onGridChange: (size: GridSize) => void;
   readonly onUnitChange: (unit: DisplayUnit) => void;
@@ -53,6 +56,7 @@ export const Toolbar = memo(function Toolbar({
   gridSizeMm,
   displayUnit,
   snapEnabled,
+  schoolLevel,
   onToolChange,
   onGridChange,
   onUnitChange,
@@ -89,6 +93,25 @@ export const Toolbar = memo(function Toolbar({
         data-testid="tool-move"
       >
         {TOOL_MOVE}
+      </button>
+      {/* Circle — 3e cycle only */}
+      {schoolLevel === '3e_cycle' && (
+        <button
+          onClick={() => onToolChange('circle')}
+          style={{ ...toolBtnBase, ...(activeTool === 'circle' ? activeStyle : {}) }}
+          aria-pressed={activeTool === 'circle'}
+          data-testid="tool-circle"
+        >
+          {TOOL_CIRCLE}
+        </button>
+      )}
+      <button
+        onClick={() => onToolChange('reflection')}
+        style={{ ...toolBtnBase, ...(activeTool === 'reflection' ? activeStyle : {}) }}
+        aria-pressed={activeTool === 'reflection'}
+        data-testid="tool-reflection"
+      >
+        {TOOL_REFLECTION}
       </button>
       <button
         onClick={() => onToolChange('measure')}

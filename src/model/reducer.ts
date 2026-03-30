@@ -7,6 +7,7 @@ import type { GridSize, SchoolLevel, DisplayUnit, ToolType } from './types';
 import type { UndoManager } from './undo';
 import * as State from './state';
 import * as Undo from './undo';
+import { reflectConstruction } from '@/engine/reflection';
 
 // ── Action types ──────────────────────────────────────────
 
@@ -19,6 +20,15 @@ export type ConstructionAction =
   | { type: 'REMOVE_ELEMENT'; elementId: string }
   | { type: 'UPDATE_POINT_POSITION'; pointId: string; x: number; y: number }
   | { type: 'FIX_SEGMENT_LENGTH'; segmentId: string; lengthMm: number }
+  | { type: 'MOVE_POINT'; pointId: string; x: number; y: number }
+  | { type: 'CREATE_CIRCLE'; centerPointId: string; radiusMm: number }
+  | {
+      type: 'REFLECT_ELEMENTS';
+      pointIds: string[];
+      segmentIds: string[];
+      axisP1: { x: number; y: number };
+      axisP2: { x: number; y: number };
+    }
   | { type: 'SPLIT_SEGMENT'; segmentId: string; x: number; y: number }
   | { type: 'SET_GRID_SIZE'; gridSizeMm: GridSize }
   | { type: 'SET_SCHOOL_LEVEL'; schoolLevel: SchoolLevel }
@@ -27,6 +37,7 @@ export type ConstructionAction =
   | { type: 'SET_SNAP_ENABLED'; snapEnabled: boolean }
   | { type: 'SET_SELECTED_ELEMENT'; elementId: string | null }
   | { type: 'TOGGLE_POINT_LOCK'; pointId: string }
+  | { type: 'SET_HIDE_PROPERTIES'; hide: boolean }
   | { type: 'UNDO' }
   | { type: 'REDO' }
   | { type: 'NEW_CONSTRUCTION' };
@@ -60,9 +71,36 @@ export function reduce(state: ReducerState, action: ConstructionAction): Reducer
       return { undoManager: Undo.pushState(undoManager, newState) };
     }
 
+    case 'MOVE_POINT': {
+      const newState = State.movePointWithConstraints(current, action.pointId, action.x, action.y);
+      return { undoManager: Undo.pushState(undoManager, newState) };
+    }
+
     case 'FIX_SEGMENT_LENGTH': {
       const newState = State.fixSegmentLength(current, action.segmentId, action.lengthMm);
       if (newState === current) return state;
+      return { undoManager: Undo.pushState(undoManager, newState) };
+    }
+
+    case 'CREATE_CIRCLE': {
+      const result = State.addCircle(current, action.centerPointId, action.radiusMm);
+      if (!result) return state;
+      return { undoManager: Undo.pushState(undoManager, result.state) };
+    }
+
+    case 'REFLECT_ELEMENTS': {
+      const { points: newPoints, segments: newSegments } = reflectConstruction(
+        action.pointIds,
+        action.segmentIds,
+        current,
+        action.axisP1,
+        action.axisP2,
+      );
+      const newState: typeof current = {
+        ...current,
+        points: [...current.points, ...newPoints],
+        segments: [...current.segments, ...newSegments],
+      };
       return { undoManager: Undo.pushState(undoManager, newState) };
     }
 
@@ -122,6 +160,11 @@ export function reduce(state: ReducerState, action: ConstructionAction): Reducer
       const newState = State.togglePointLock(current, action.pointId);
       return { undoManager: Undo.pushState(undoManager, newState) };
     }
+
+    case 'SET_HIDE_PROPERTIES':
+      return {
+        undoManager: Undo.updateCurrent(undoManager, { ...current, hideProperties: action.hide }),
+      };
 
     // ── Undo/Redo ─────────────────────────────────────
     case 'UNDO':

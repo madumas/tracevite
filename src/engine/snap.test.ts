@@ -13,6 +13,7 @@ function makeState(points: Array<{ id: string; x: number; y: number }>): Constru
     displayUnit: 'cm',
     selectedElementId: null,
     consigne: null,
+    hideProperties: false,
   };
 }
 
