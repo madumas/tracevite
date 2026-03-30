@@ -6,6 +6,7 @@
 
 import { jsPDF } from 'jspdf';
 import type { ConstructionState } from '@/model/types';
+import { computeDerived } from './derived';
 import { formatLength } from './format';
 import {
   MARGIN_MM,
@@ -103,6 +104,93 @@ export function generatePDF(state: ConstructionState, options: PdfOptions): jsPD
     doc.setTextColor(80);
     const lengthText = formatLength(seg.lengthMm, state.displayUnit);
     doc.text(lengthText, tx(mx) + 2, ty(my) - 2);
+  }
+
+  // ── Conventional marks (parallel bars, congruence ticks) ──
+  if (!state.hideProperties) {
+    const derived = computeDerived(state, state.displayMode);
+    doc.setLineWidth(0.3);
+    doc.setDrawColor(0);
+
+    // Parallel marks: double bars on parallel segments
+    const parallelSegIds = new Set<string>();
+    for (const prop of derived.properties) {
+      if (prop.type === 'parallel') {
+        for (const id of prop.involvedIds) parallelSegIds.add(id);
+      }
+    }
+
+    // Congruence groups
+    const segToTicks = new Map<string, number>();
+    const equalGroups: string[][] = [];
+    for (const prop of derived.properties) {
+      if (prop.type === 'equal_length') equalGroups.push([...prop.involvedIds]);
+    }
+    const segToGroup = new Map<string, number>();
+    for (const group of equalGroups) {
+      const existing = group.map((id) => segToGroup.get(id)).find((g) => g !== undefined);
+      const groupIdx = existing ?? equalGroups.indexOf(group);
+      for (const id of group) segToGroup.set(id, groupIdx);
+    }
+    const groupTicks = new Map<number, number>();
+    let tickCounter = 1;
+    for (const [segId, groupIdx] of segToGroup) {
+      if (!groupTicks.has(groupIdx)) groupTicks.set(groupIdx, tickCounter++);
+      segToTicks.set(segId, groupTicks.get(groupIdx)!);
+    }
+
+    for (const seg of state.segments) {
+      const start = pointMap.get(seg.startPointId);
+      const end = pointMap.get(seg.endPointId);
+      if (!start || !end) continue;
+
+      const dx = end.x - start.x;
+      const dy = end.y - start.y;
+      const len = Math.sqrt(dx * dx + dy * dy);
+      if (len === 0) continue;
+
+      const midX = (start.x + end.x) / 2;
+      const midY = (start.y + end.y) / 2;
+      // Perpendicular direction (unit)
+      const perpX = -dy / len;
+      const perpY = dx / len;
+      // Along direction (unit)
+      const alongX = dx / len;
+      const alongY = dy / len;
+      const markLen = 2; // mm half-length of each tick
+
+      // Parallel marks: 2 bars perpendicular to segment at midpoint
+      if (parallelSegIds.has(seg.id)) {
+        for (const offset of [-1, 1]) {
+          const cx = midX + alongX * offset;
+          const cy = midY + alongY * offset;
+          doc.line(
+            tx(cx - perpX * markLen),
+            ty(cy - perpY * markLen),
+            tx(cx + perpX * markLen),
+            ty(cy + perpY * markLen),
+          );
+        }
+      }
+
+      // Congruence ticks
+      const ticks = segToTicks.get(seg.id);
+      if (ticks) {
+        const spacing = 1.5;
+        const totalW = (ticks - 1) * spacing;
+        for (let i = 0; i < ticks; i++) {
+          const off = -totalW / 2 + i * spacing;
+          const cx = midX + alongX * off;
+          const cy = midY + alongY * off;
+          doc.line(
+            tx(cx - perpX * markLen),
+            ty(cy - perpY * markLen),
+            tx(cx + perpX * markLen),
+            ty(cy + perpY * markLen),
+          );
+        }
+      }
+    }
   }
 
   // ── Circles ───────────────────────────────────────

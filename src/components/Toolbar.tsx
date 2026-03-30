@@ -11,6 +11,7 @@ import {
 import { MIN_BUTTON_SIZE_PX, MIN_BUTTON_GAP_PX } from '@/config/accessibility';
 import {
   TOOL_SEGMENT,
+  TOOL_POINT,
   TOOL_MOVE,
   TOOL_MEASURE,
   TOOL_CIRCLE,
@@ -31,6 +32,7 @@ interface ToolbarProps {
   readonly onGridChange: (size: GridSize) => void;
   readonly onUnitChange: (unit: DisplayUnit) => void;
   readonly onSnapToggle: () => void;
+  readonly pointToolVisible: boolean;
 }
 
 const toolBtnBase: React.CSSProperties = {
@@ -61,6 +63,7 @@ export const Toolbar = memo(function Toolbar({
   onGridChange,
   onUnitChange,
   onSnapToggle,
+  pointToolVisible,
 }: ToolbarProps) {
   const [moreOpen, setMoreOpen] = useState(false);
   const isSimple = displayMode === 'simplifie';
@@ -89,6 +92,17 @@ export const Toolbar = memo(function Toolbar({
       >
         {TOOL_SEGMENT}
       </button>
+      {/* Point — hidden by default, activable via settings (spec §6.2) */}
+      {pointToolVisible && (
+        <button
+          onClick={() => onToolChange('point')}
+          style={{ ...toolBtnBase, ...(activeTool === 'point' ? activeStyle : {}) }}
+          aria-pressed={activeTool === 'point'}
+          data-testid="tool-point"
+        >
+          {TOOL_POINT}
+        </button>
+      )}
       <button
         onClick={() => onToolChange('move')}
         style={{ ...toolBtnBase, ...(activeTool === 'move' ? activeStyle : {}) }}

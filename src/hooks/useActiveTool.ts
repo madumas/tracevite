@@ -17,14 +17,25 @@ interface UseActiveToolOptions {
   state: ConstructionState;
   dispatch: (action: ConstructionAction) => void;
   viewport: ViewportState;
+  shiftConstraintActive?: boolean;
 }
 
 /**
  * Routes to the appropriate tool hook based on state.activeTool.
  * All hooks called unconditionally (Rules of Hooks).
  */
-export function useActiveTool({ state, dispatch, viewport }: UseActiveToolOptions): ToolHookResult {
-  const segmentTool = useSegmentTool({ state, dispatch, viewport });
+export function useActiveTool({
+  state,
+  dispatch,
+  viewport,
+  shiftConstraintActive = false,
+}: UseActiveToolOptions): ToolHookResult {
+  const segmentTool = useSegmentTool({
+    state,
+    dispatch,
+    viewport,
+    shiftConstraintActive,
+  });
   const moveTool = useMoveTool({ state, dispatch, viewport });
   const circleTool = useCircleTool({ state, dispatch, viewport });
   const reflectionTool = useReflectionTool({ state, dispatch, viewport });

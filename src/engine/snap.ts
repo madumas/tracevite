@@ -55,6 +55,8 @@ export function findSnap(
   excludePointIds: readonly string[] = [],
   /** If provided, enables angle snap from this anchor point. */
   fromPoint?: { readonly x: number; readonly y: number },
+  /** When true, forces angle snap to nearest 15° (Shift constraint, spec §14). */
+  strictAngleSnap: boolean = false,
 ): SnapResult {
   const excludeSet = new Set(excludePointIds);
 
@@ -147,7 +149,8 @@ export function findSnap(
 
       // Check parallel/perpendicular to existing segments first (higher semantic value)
       let bestGuideAngle: number | undefined;
-      let bestGuideDiff = SNAP_TOLERANCE_ANGLE_DEG;
+      const angleTolerance = strictAngleSnap ? 180 : SNAP_TOLERANCE_ANGLE_DEG;
+      let bestGuideDiff = angleTolerance;
       let bestGuideType: 'parallel' | 'perpendicular' | undefined;
       let bestGuideSegId: string | undefined;
 
@@ -205,7 +208,7 @@ export function findSnap(
       const step = 15;
       const nearestCanonical = Math.round(currentAngleDeg / step) * step;
       const diff = Math.abs(currentAngleDeg - nearestCanonical);
-      if (diff <= SNAP_TOLERANCE_ANGLE_DEG && diff > 0.01) {
+      if (diff <= angleTolerance && diff > 0.01) {
         const radians = (nearestCanonical * Math.PI) / 180;
         return {
           snappedPosition: {

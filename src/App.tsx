@@ -20,6 +20,7 @@ import { useBeforeUnload } from '@/hooks/useBeforeUnload';
 import { useAutoSave } from '@/hooks/useAutoSave';
 import {
   UI_BG,
+  UI_PRIMARY,
   UI_TEXT_PRIMARY,
   CANVAS_BG,
   HEADER_HEIGHT,
@@ -29,6 +30,12 @@ import { CSS_PX_PER_MM, BOUNDS_WIDTH_MM, BOUNDS_HEIGHT_MM } from '@/engine/viewp
 import { isAngleCluttered } from '@/engine/angles';
 import { computeDerived } from '@/engine/derived';
 import { createSoundEngine } from '@/engine/sound';
+import { ExportReminder } from '@/components/ExportReminder';
+import { UpdatePrompt } from '@/components/UpdatePrompt';
+import { detectLaunchStatus } from '@/model/persistence';
+import { serializeState } from '@/model/serialize';
+import { LengthInput } from '@/components/LengthInput';
+import { SettingsDialog } from '@/components/SettingsDialog';
 import { PropertiesPanel } from '@/components/PropertiesPanel';
 import { GridLayer } from '@/components/GridLayer';
 import { SegmentLayer } from '@/components/SegmentLayer';
@@ -95,6 +102,7 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
   const initializedRef = useRef(false);
 
   const [showSlotManager, setShowSlotManager] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
 
   const [pendingDeleteFromKeyboard, setPendingDeleteFromKeyboard] = useState(false);
   const [deleteMode, setDeleteMode] = useState(false);
@@ -127,6 +135,25 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
 
   const tutorial = useTutorial(state);
 
+  // Deep Freeze detection (spec §17.1)
+  const [deepFreezeDetected, setDeepFreezeDetected] = useState(false);
+  useEffect(() => {
+    detectLaunchStatus().then((status) => {
+      if (status === 'deep_freeze') setDeepFreezeDetected(true);
+    });
+  }, []);
+
+  // PWA update detection
+  const [updateAvailable, setUpdateAvailable] = useState(false);
+  useEffect(() => {
+    // Listen for SW update message from vite-plugin-pwa
+    const handler = (event: MessageEvent) => {
+      if (event.data?.type === 'SW_UPDATE_AVAILABLE') setUpdateAvailable(true);
+    };
+    navigator.serviceWorker?.addEventListener('message', handler);
+    return () => navigator.serviceWorker?.removeEventListener('message', handler);
+  }, []);
+
   // Apply URL params once at mount
   useEffect(() => {
     if (initializedRef.current) return;
@@ -150,7 +177,7 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
   }, [initialConsigne, initialLevel, dispatch]);
 
   // Tool router — returns unified ToolHookResult
-  const tool = useActiveTool({ state, dispatch, viewport });
+  const tool = useActiveTool({ state, dispatch, viewport, shiftConstraintActive });
 
   // Selection system
   const selection = useSelection({
@@ -229,6 +256,7 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
     (t: ToolType) => {
       tool.reset();
       selection.clearSelection();
+      setShiftConstraintActive(false);
       dispatch({ type: 'SET_ACTIVE_TOOL', activeTool: t });
     },
     [dispatch, tool, selection],
@@ -294,6 +322,7 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
           selection.clearSelection();
         } else {
           tool.handleEscape();
+          setShiftConstraintActive(false);
         }
       }
       if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey && !inInput) {
@@ -511,8 +540,89 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
         )}
         <div style={{ flex: 1 }} />
         <ModeSelector mode={state.displayMode} onChange={handleModeChange} />
+        <button
+          onClick={() => setShowSettings(true)}
+          style={{
+            background: 'transparent',
+            border: 'none',
+            cursor: 'pointer',
+            fontSize: 16,
+            padding: '4px 6px',
+          }}
+          aria-label="Paramètres"
+          data-testid="settings-button"
+        >
+          ⚙
+        </button>
         <span style={{ fontSize: 11, color: '#9CA3AF' }}>v0.1.0</span>
       </header>
+
+      {/* Deep Freeze warning (spec §17.1) */}
+      {deepFreezeDetected && (
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 8,
+            padding: '6px 12px',
+            background: '#FEE2E2',
+            borderBottom: '1px solid #FECACA',
+            fontSize: 13,
+            fontFamily: 'system-ui, sans-serif',
+          }}
+          data-testid="deep-freeze-banner"
+        >
+          <span style={{ flex: 1 }}>
+            Tes constructions ont été effacées par l'ordinateur. Si tu as exporté tes fichiers
+            .tracevite, clique « Ouvrir » pour les retrouver.
+          </span>
+          <button
+            onClick={() => {
+              setShowSlotManager(true);
+              setDeepFreezeDetected(false);
+            }}
+            style={{
+              padding: '4px 10px',
+              background: UI_PRIMARY,
+              color: 'white',
+              border: 'none',
+              borderRadius: 4,
+              cursor: 'pointer',
+              fontSize: 12,
+            }}
+          >
+            Ouvrir
+          </button>
+          <button
+            onClick={() => setDeepFreezeDetected(false)}
+            style={{
+              background: 'transparent',
+              border: 'none',
+              cursor: 'pointer',
+              fontSize: 14,
+              color: '#666',
+            }}
+            aria-label="Fermer"
+          >
+            ×
+          </button>
+        </div>
+      )}
+
+      {/* Export reminder (spec §17.1) */}
+      <ExportReminder
+        hasConstructions={hasElements}
+        onExport={() => {
+          const json = serializeState(state);
+          const blob = new Blob([json], { type: 'application/json' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = 'construction.tracevite';
+          a.click();
+          URL.revokeObjectURL(url);
+        }}
+      />
 
       {/* Toolbar */}
       <Toolbar
@@ -525,6 +635,7 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
         onGridChange={handleGridChange}
         onUnitChange={handleUnitChange}
         onSnapToggle={handleSnapToggle}
+        pointToolVisible={state.pointToolVisible}
       />
 
       {/* Status Bar */}
@@ -656,6 +767,29 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
             />
           )}
 
+          {/* Length input for Measure tool (spec §6.8, §9.5) */}
+          {state.activeTool === 'measure' &&
+            state.selectedElementId &&
+            (() => {
+              const seg = state.segments.find((s) => s.id === state.selectedElementId);
+              if (!seg) return null;
+              const sp = state.points.find((p) => p.id === seg.startPointId);
+              const ep = state.points.find((p) => p.id === seg.endPointId);
+              const label = sp && ep ? sp.label + ep.label : '';
+              return (
+                <LengthInput
+                  segmentLabel={label}
+                  currentLengthMm={seg.lengthMm}
+                  displayUnit={state.displayUnit}
+                  onSubmit={(lengthMm) => {
+                    dispatch({ type: 'FIX_SEGMENT_LENGTH', segmentId: seg.id, lengthMm });
+                    dispatch({ type: 'SET_SELECTED_ELEMENT', elementId: null });
+                  }}
+                  onDismiss={() => dispatch({ type: 'SET_SELECTED_ELEMENT', elementId: null })}
+                />
+              );
+            })()}
+
           <NavigationControls
             onPanUp={panUp}
             onPanDown={panDown}
@@ -694,6 +828,17 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
         />
       </div>
 
+      {/* PWA update prompt (spec §4.1.2) */}
+      {updateAvailable && (
+        <UpdatePrompt
+          onUpdate={() => {
+            // Auto-save then reload
+            window.location.reload();
+          }}
+          onDismiss={() => setUpdateAvailable(false)}
+        />
+      )}
+
       {/* Action Bar */}
       <ActionBar
         canUndo={canUndo}
@@ -714,7 +859,10 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
       {showNewConfirm && (
         <ConfirmDialog
           title={CONFIRM_NEW_TITLE}
-          subtitle={CONFIRM_NEW_SUBTITLE('Construction 1')}
+          subtitle={CONFIRM_NEW_SUBTITLE(
+            slotManager.registry.slots.find((s) => s.id === slotManager.activeSlotId)?.name ??
+              'Construction 1',
+          )}
           confirmLabel={CONFIRM_NEW_CONFIRM}
           cancelLabel={CONFIRM_NEW_CANCEL}
           onConfirm={handleConfirmNew}
@@ -791,6 +939,31 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
         >
           {toastText}
         </div>
+      )}
+
+      {/* Settings dialog */}
+      {showSettings && (
+        <SettingsDialog
+          toleranceProfile={state.toleranceProfile}
+          chainTimeoutMs={state.chainTimeoutMs}
+          fontScale={state.fontScale}
+          soundMode={state.soundMode}
+          soundGain={state.soundGain}
+          keyboardShortcutsEnabled={state.keyboardShortcutsEnabled}
+          pointToolVisible={state.pointToolVisible}
+          onToleranceChange={(v) =>
+            dispatch({ type: 'SET_TOLERANCE_PROFILE', toleranceProfile: v })
+          }
+          onChainTimeoutChange={(v) => dispatch({ type: 'SET_CHAIN_TIMEOUT', chainTimeoutMs: v })}
+          onFontScaleChange={(v) => dispatch({ type: 'SET_FONT_SCALE', fontScale: v })}
+          onSoundModeChange={(v) => dispatch({ type: 'SET_SOUND_MODE', soundMode: v })}
+          onSoundGainChange={(v) => dispatch({ type: 'SET_SOUND_GAIN', soundGain: v })}
+          onKeyboardShortcutsChange={(v) =>
+            dispatch({ type: 'SET_KEYBOARD_SHORTCUTS', enabled: v })
+          }
+          onPointToolVisibleChange={(v) => dispatch({ type: 'SET_POINT_TOOL_VISIBLE', visible: v })}
+          onClose={() => setShowSettings(false)}
+        />
       )}
     </div>
   );

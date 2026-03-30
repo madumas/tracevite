@@ -34,6 +34,34 @@ export const SnapFeedback = memo(function SnapFeedback({
     );
   }
 
+  if (snapResult.snapType === 'midpoint') {
+    // Green diamond + "milieu" label (spec §7.1)
+    return (
+      <g>
+        <rect
+          x={sx - 5}
+          y={sy - 5}
+          width={10}
+          height={10}
+          fill={CANVAS_GUIDE}
+          opacity={0.6}
+          transform={`rotate(45 ${sx} ${sy})`}
+          data-testid="snap-midpoint-diamond"
+        />
+        <text
+          x={sx + 10}
+          y={sy - 6}
+          fill={CANVAS_GUIDE}
+          fontSize={11}
+          fontFamily="system-ui, sans-serif"
+          opacity={0.8}
+        >
+          milieu
+        </text>
+      </g>
+    );
+  }
+
   if (snapResult.snapType === 'circumference') {
     // Halo on circle circumference
     return (

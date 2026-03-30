@@ -4,12 +4,13 @@ import type { ConstructionAction } from '@/model/reducer';
 import type { ToolHookResult } from './types';
 import { findSnap, DEFAULT_TOLERANCES, scaleTolerances } from '@/engine/snap';
 import { TOLERANCE_PROFILES } from '@/config/accessibility';
-import { CHAIN_MOVEMENT_THRESHOLD_MM } from '@/config/accessibility';
+import { CHAIN_MOVEMENT_THRESHOLD_MM, MIN_POINT_DISTANCE_MM } from '@/config/accessibility';
 import { distance } from '@/engine/geometry';
 import {
   STATUS_SEGMENT_IDLE,
   STATUS_SEGMENT_FIRST_PLACED,
   STATUS_SEGMENT_CHAINING,
+  HINT_SEGMENT_TOO_SHORT,
 } from '@/config/messages';
 import { GhostSegment } from '@/components/GhostSegment';
 import { ChainingIndicator } from '@/components/ChainingIndicator';
@@ -19,12 +20,14 @@ interface UseSegmentToolOptions {
   state: ConstructionState;
   dispatch: (action: ConstructionAction) => void;
   viewport: ViewportState;
+  shiftConstraintActive?: boolean;
 }
 
 export function useSegmentTool({
   state,
   dispatch,
   viewport,
+  shiftConstraintActive = false,
 }: UseSegmentToolOptions): ToolHookResult {
   const [phase, setPhase] = useState<SegmentToolPhase>('idle');
   const [firstPoint, setFirstPoint] = useState<{
@@ -34,6 +37,8 @@ export function useSegmentTool({
   const [cursorMm, setCursorMm] = useState<{ x: number; y: number } | null>(null);
   const [snapResult, setSnapResult] = useState<SnapResult | null>(null);
   const [chainingAnchorId, setChainingAnchorId] = useState<string | null>(null);
+  const [hintMessage, setHintMessage] = useState<string | null>(null);
+  const hintTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const chainTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastMoveMm = useRef<{ x: number; y: number } | null>(null);
@@ -66,7 +71,9 @@ export function useSegmentTool({
     setChainingAnchorId(null);
     setCursorMm(null);
     setSnapResult(null);
+    setHintMessage(null);
     clearChainTimer();
+    if (hintTimerRef.current) clearTimeout(hintTimerRef.current);
   }, [clearChainTimer]);
 
   const handleClick = useCallback(
@@ -74,7 +81,7 @@ export function useSegmentTool({
       const excludeIds = firstPoint?.existingId ? [firstPoint.existingId] : [];
       // Enable angle snap when a first point is placed
       const fromPt = firstPoint?.mm ?? undefined;
-      const snap = findSnap(mmPos, state, tolerances, excludeIds, fromPt);
+      const snap = findSnap(mmPos, state, tolerances, excludeIds, fromPt, shiftConstraintActive);
       const snapped = snap.snappedPosition;
 
       if (phase === 'idle') {
@@ -83,6 +90,16 @@ export function useSegmentTool({
         clearChainTimer();
       } else if (phase === 'first_point_placed' || phase === 'segment_created') {
         if (!firstPoint) return;
+
+        // Check minimum distance before creating (spec §17)
+        const segDist = distance(firstPoint.mm, snapped);
+        if (segDist < MIN_POINT_DISTANCE_MM) {
+          // Show hint message for 3s
+          setHintMessage(HINT_SEGMENT_TOO_SHORT);
+          if (hintTimerRef.current) clearTimeout(hintTimerRef.current);
+          hintTimerRef.current = setTimeout(() => setHintMessage(null), 3000);
+          return;
+        }
 
         dispatch({
           type: 'CREATE_SEGMENT',
@@ -104,7 +121,16 @@ export function useSegmentTool({
         startChainTimer();
       }
     },
-    [state, phase, firstPoint, dispatch, clearChainTimer, startChainTimer],
+    [
+      state,
+      phase,
+      firstPoint,
+      dispatch,
+      clearChainTimer,
+      startChainTimer,
+      tolerances,
+      shiftConstraintActive,
+    ],
   );
 
   const handleCursorMove = useCallback(
@@ -112,7 +138,7 @@ export function useSegmentTool({
       setCursorMm(mmPos);
       const excludeIds = firstPoint?.existingId ? [firstPoint.existingId] : [];
       const fromPt = firstPoint?.mm ?? undefined;
-      const snap = findSnap(mmPos, state, tolerances, excludeIds, fromPt);
+      const snap = findSnap(mmPos, state, tolerances, excludeIds, fromPt, shiftConstraintActive);
       setSnapResult(snap);
 
       if (phase === 'segment_created' && lastMoveMm.current) {
@@ -123,7 +149,7 @@ export function useSegmentTool({
       }
       lastMoveMm.current = mmPos;
     },
-    [state, phase, firstPoint, startChainTimer],
+    [state, phase, firstPoint, startChainTimer, tolerances, shiftConstraintActive],
   );
 
   const handleEscape = useCallback(() => {
@@ -153,11 +179,12 @@ export function useSegmentTool({
     : '?';
 
   const statusMessage =
-    phase === 'idle'
+    hintMessage ??
+    (phase === 'idle'
       ? STATUS_SEGMENT_IDLE
       : phase === 'first_point_placed'
         ? STATUS_SEGMENT_FIRST_PLACED
-        : STATUS_SEGMENT_CHAINING(chainingLabel);
+        : STATUS_SEGMENT_CHAINING(chainingLabel));
 
   // Overlay elements
   const chainingAnchor = chainingAnchorId

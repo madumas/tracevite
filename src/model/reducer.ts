@@ -17,6 +17,8 @@ import type { UndoManager } from './undo';
 import * as State from './state';
 import * as Undo from './undo';
 import { reflectConstruction } from '@/engine/reflection';
+import { pointOnSegmentProjection } from '@/engine/geometry';
+import { MIN_POINT_DISTANCE_MM } from '@/config/accessibility';
 
 // ── Action types ──────────────────────────────────────────
 
@@ -81,7 +83,29 @@ export function reduce(state: ReducerState, action: ConstructionAction): Reducer
     case 'CREATE_SEGMENT': {
       const result = State.createSegment(current, action.start, action.end);
       if (!result) return state; // silently reject
-      return { undoManager: Undo.pushState(undoManager, result.state) };
+
+      // T-junction auto-split (spec §17): if a new point lands on existing segment body
+      let newState = result.state;
+      const pointMap = new Map(newState.points.map((p) => [p.id, p]));
+      for (const newPtId of [result.startPointId, result.endPointId]) {
+        const pt = pointMap.get(newPtId);
+        if (!pt) continue;
+        for (const seg of newState.segments) {
+          if (seg.id === result.segmentId) continue; // skip the just-created segment
+          if (seg.startPointId === newPtId || seg.endPointId === newPtId) continue; // already endpoint
+          const sp = pointMap.get(seg.startPointId);
+          const ep = pointMap.get(seg.endPointId);
+          if (!sp || !ep) continue;
+          const { distance: dist } = pointOnSegmentProjection(pt, sp, ep);
+          if (dist < MIN_POINT_DISTANCE_MM) {
+            const splitResult = State.splitSegmentAtPoint(newState, seg.id, pt.x, pt.y);
+            if (splitResult) newState = splitResult.state;
+            break; // one split per point max
+          }
+        }
+      }
+
+      return { undoManager: Undo.pushState(undoManager, newState) };
     }
 
     case 'REMOVE_ELEMENT': {
