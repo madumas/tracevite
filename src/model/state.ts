@@ -6,7 +6,7 @@
 import type {
   ConstructionState,
   GridSize,
-  SchoolLevel,
+  DisplayMode,
   DisplayUnit,
   ToolType,
   Point,
@@ -25,7 +25,7 @@ export function createInitialState(): ConstructionState {
     gridSizeMm: 10, // 1cm default
     snapEnabled: true,
     activeTool: 'segment',
-    schoolLevel: '2e_cycle',
+    displayMode: 'simplifie',
     displayUnit: 'cm',
     selectedElementId: null,
     consigne: null,
@@ -407,11 +407,11 @@ export function setGridSize(state: ConstructionState, gridSizeMm: GridSize): Con
   return { ...state, gridSizeMm };
 }
 
-export function setSchoolLevel(
+export function setDisplayMode(
   state: ConstructionState,
-  schoolLevel: SchoolLevel,
+  displayMode: DisplayMode,
 ): ConstructionState {
-  return { ...state, schoolLevel };
+  return { ...state, displayMode };
 }
 
 export function setDisplayUnit(

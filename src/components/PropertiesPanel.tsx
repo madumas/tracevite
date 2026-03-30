@@ -1,11 +1,5 @@
 import { memo } from 'react';
-import type {
-  ConstructionState,
-  AngleInfo,
-  DetectedProperty,
-  SchoolLevel,
-  DisplayUnit,
-} from '@/model/types';
+import type { ConstructionState, AngleInfo, DetectedProperty, DisplayMode } from '@/model/types';
 import type { Figure } from '@/engine/figures';
 import { AccordionSection } from './AccordionSection';
 import {
@@ -23,7 +17,7 @@ interface PropertiesPanelProps {
   readonly angles: readonly AngleInfo[];
   readonly properties: readonly DetectedProperty[];
   readonly figures: readonly Figure[];
-  readonly schoolLevel: SchoolLevel;
+  readonly displayMode: DisplayMode;
   readonly hideProperties: boolean;
   readonly onToggleHideProperties: () => void;
   readonly onSelectElement: (elementId: string) => void;
@@ -37,7 +31,7 @@ export const PropertiesPanel = memo(function PropertiesPanel({
   angles,
   properties,
   figures,
-  schoolLevel,
+  displayMode,
   hideProperties,
   onToggleHideProperties,
   onSelectElement,
@@ -162,7 +156,7 @@ export const PropertiesPanel = memo(function PropertiesPanel({
             >
               <span>∠{vertex.label}</span>
               <span style={{ color: UI_TEXT_SECONDARY, marginLeft: 6 }}>
-                {schoolLevel === '3e_cycle' ? `${Math.round(angle.degrees)}°` : ''}{' '}
+                {displayMode === 'complet' ? `${Math.round(angle.degrees)}°` : ''}{' '}
                 {angle.classification === 'droit'
                   ? '(droit)'
                   : angle.classification === 'aigu'
@@ -170,7 +164,7 @@ export const PropertiesPanel = memo(function PropertiesPanel({
                     : angle.classification === 'obtus'
                       ? '(obtus)'
                       : angle.classification === 'plat'
-                        ? schoolLevel === '2e_cycle'
+                        ? displayMode === 'simplifie'
                           ? '(points alignés)'
                           : '(plat)'
                         : ''}
@@ -232,31 +226,6 @@ export const PropertiesPanel = memo(function PropertiesPanel({
         )}
       </AccordionSection>
 
-      {/* Mesures */}
-      {!hideProperties && figures.length > 0 && (
-        <AccordionSection title="Mesures">
-          {figures.map((fig) => (
-            <div key={fig.id} style={{ padding: '2px 0', color: UI_TEXT_PRIMARY }}>
-              <div style={{ fontWeight: 500 }}>{fig.name}</div>
-              <div style={{ color: UI_TEXT_SECONDARY }}>
-                Périmètre : {formatLength(fig.perimeterMm, state.displayUnit)}
-              </div>
-              {fig.areaMm2 !== null ? (
-                <div style={{ color: UI_TEXT_SECONDARY }}>
-                  Aire : {formatArea(fig.areaMm2, state.displayUnit)}
-                </div>
-              ) : fig.selfIntersecting ? (
-                <div style={{ color: UI_TEXT_SECONDARY, fontStyle: 'italic' }}>
-                  Figure croisée — aire non calculée
-                </div>
-              ) : (
-                <div style={{ color: UI_TEXT_SECONDARY }}>Aire : —</div>
-              )}
-            </div>
-          ))}
-        </AccordionSection>
-      )}
-
       {/* Points / Sommets */}
       <AccordionSection title="Points">
         {state.points.map((point) => {
@@ -278,11 +247,3 @@ export const PropertiesPanel = memo(function PropertiesPanel({
     </div>
   );
 });
-
-function formatArea(areaMm2: number, unit: DisplayUnit): string {
-  if (unit === 'cm') {
-    const cm2 = areaMm2 / 100;
-    return `${cm2.toFixed(1).replace('.', ',')} cm²`;
-  }
-  return `${areaMm2.toFixed(1).replace('.', ',')} mm²`;
-}

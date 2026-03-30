@@ -1,5 +1,5 @@
 import { memo } from 'react';
-import type { AngleInfo, ViewportState, SchoolLevel } from '@/model/types';
+import type { AngleInfo, ViewportState, DisplayMode } from '@/model/types';
 import { CANVAS_ANGLE, CANVAS_GUIDE } from '@/config/theme';
 import { CSS_PX_PER_MM } from '@/engine/viewport';
 import { MIN_CANVAS_FONT_PX, POINT_DISPLAY_RADIUS_MM } from '@/config/accessibility';
@@ -8,7 +8,7 @@ interface AngleLayerProps {
   readonly angles: readonly AngleInfo[];
   readonly points: ReadonlyMap<string, { x: number; y: number }>;
   readonly viewport: ViewportState;
-  readonly schoolLevel: SchoolLevel;
+  readonly displayMode: DisplayMode;
   readonly cluttered: boolean;
   readonly selectedElementId: string | null;
   readonly hoveredElementId: string | null;
@@ -27,7 +27,7 @@ export const AngleLayer = memo(function AngleLayer({
   angles,
   points,
   viewport,
-  schoolLevel,
+  displayMode,
   cluttered,
   selectedElementId,
   hoveredElementId,
@@ -151,7 +151,7 @@ export const AngleLayer = memo(function AngleLayer({
               data-testid={`angle-arc-${index}`}
             />
             {/* 3e cycle: show degrees */}
-            {schoolLevel === '3e_cycle' && (
+            {displayMode === 'complet' && (
               <text
                 x={labelX}
                 y={labelY}

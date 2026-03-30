@@ -127,10 +127,10 @@ describe('detectAllAngles', () => {
 describe('isAngleCluttered', () => {
   it('returns false below threshold', () => {
     const state = createInitialState();
-    expect(isAngleCluttered(state, '2e_cycle')).toBe(false);
+    expect(isAngleCluttered(state, 'simplifie')).toBe(false);
   });
 
-  it('returns true above threshold for 2e cycle (5 segments)', () => {
+  it('returns true above threshold for simplifie mode (5 segments)', () => {
     let state = createInitialState();
     // Create 6 segments (> 5 threshold)
     for (let i = 0; i < 7; i++) {
@@ -141,6 +141,6 @@ describe('isAngleCluttered', () => {
       const seg = addSegment(state, state.points[i]!.id, state.points[i + 1]!.id);
       if (seg) state = seg.state;
     }
-    expect(isAngleCluttered(state, '2e_cycle')).toBe(true);
+    expect(isAngleCluttered(state, 'simplifie')).toBe(true);
   });
 });

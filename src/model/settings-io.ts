@@ -2,13 +2,13 @@
  * .tracevite-config settings profile export/import.
  */
 
-import type { ConstructionState, SchoolLevel, DisplayUnit, GridSize } from './types';
+import type { ConstructionState, DisplayMode, DisplayUnit, GridSize } from './types';
 import type { ToleranceProfile } from '@/config/accessibility';
 
 export interface SettingsProfile {
   readonly type: 'tracevite-settings';
   readonly version: 1;
-  readonly schoolLevel: SchoolLevel;
+  readonly displayMode: DisplayMode;
   readonly displayUnit: DisplayUnit;
   readonly gridSizeMm: GridSize;
   readonly snapEnabled: boolean;
@@ -21,7 +21,7 @@ export function exportSettings(state: ConstructionState): string {
   const profile: SettingsProfile = {
     type: 'tracevite-settings',
     version: 1,
-    schoolLevel: state.schoolLevel,
+    displayMode: state.displayMode,
     displayUnit: state.displayUnit,
     gridSizeMm: state.gridSizeMm,
     snapEnabled: state.snapEnabled,
@@ -35,7 +35,7 @@ export function exportSettings(state: ConstructionState): string {
 type MutableSettings = {
   -readonly [K in keyof Pick<
     ConstructionState,
-    'schoolLevel' | 'displayUnit' | 'gridSizeMm' | 'snapEnabled' | 'hideProperties'
+    'displayMode' | 'displayUnit' | 'gridSizeMm' | 'snapEnabled' | 'hideProperties'
   >]?: ConstructionState[K];
 };
 
@@ -55,8 +55,13 @@ export function importSettings(json: string): MutableSettings {
 
   const result: MutableSettings = {};
 
-  if (obj['schoolLevel'] === '2e_cycle' || obj['schoolLevel'] === '3e_cycle') {
-    result.schoolLevel = obj['schoolLevel'];
+  // Accept new displayMode or legacy schoolLevel
+  if (obj['displayMode'] === 'simplifie' || obj['displayMode'] === 'complet') {
+    result.displayMode = obj['displayMode'];
+  } else if (obj['schoolLevel'] === '3e_cycle') {
+    result.displayMode = 'complet';
+  } else if (obj['schoolLevel'] === '2e_cycle') {
+    result.displayMode = 'simplifie';
   }
   if (obj['displayUnit'] === 'cm' || obj['displayUnit'] === 'mm') {
     result.displayUnit = obj['displayUnit'];

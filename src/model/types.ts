@@ -50,8 +50,8 @@ export interface DetectedProperty {
   readonly label: string; // e.g. "AB // CD", "Carré"
 }
 
-/** School level — adapts displayed information. */
-export type SchoolLevel = '2e_cycle' | '3e_cycle';
+/** Display mode — adapts information density. */
+export type DisplayMode = 'simplifie' | 'complet';
 
 /** Display unit — internal is always mm. */
 export type DisplayUnit = 'cm' | 'mm';
@@ -73,7 +73,7 @@ export interface ConstructionState {
   readonly gridSizeMm: GridSize;
   readonly snapEnabled: boolean;
   readonly activeTool: ToolType;
-  readonly schoolLevel: SchoolLevel;
+  readonly displayMode: DisplayMode;
   readonly displayUnit: DisplayUnit;
   readonly selectedElementId: string | null;
   readonly consigne: string | null;
@@ -95,4 +95,4 @@ export interface ViewportState {
 }
 
 /** Serialized file version for .tracevite files. */
-export const FILE_VERSION = 1;
+export const FILE_VERSION = 2;

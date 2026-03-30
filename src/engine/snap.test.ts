@@ -9,7 +9,7 @@ function makeState(points: Array<{ id: string; x: number; y: number }>): Constru
     gridSizeMm: 10,
     snapEnabled: true,
     activeTool: 'segment',
-    schoolLevel: '2e_cycle',
+    displayMode: 'simplifie',
     displayUnit: 'cm',
     selectedElementId: null,
     consigne: null,

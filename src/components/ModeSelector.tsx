@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import type { SchoolLevel } from '@/model/types';
+import type { DisplayMode } from '@/model/types';
 import {
   UI_SURFACE,
   UI_BORDER,
@@ -9,34 +9,29 @@ import {
 } from '@/config/theme';
 import { MIN_BUTTON_SIZE_PX } from '@/config/accessibility';
 import {
-  LEVEL_2E_LABEL,
-  LEVEL_2E_DETAIL,
-  LEVEL_3E_LABEL,
-  LEVEL_3E_DETAIL,
+  MODE_SIMPLIFIE_LABEL,
+  MODE_SIMPLIFIE_DETAIL,
+  MODE_COMPLET_LABEL,
+  MODE_COMPLET_DETAIL,
 } from '@/config/messages';
 
-interface LevelSelectorProps {
-  readonly level: SchoolLevel;
-  readonly onChange: (level: SchoolLevel) => void;
+interface ModeSelectorProps {
+  readonly mode: DisplayMode;
+  readonly onChange: (mode: DisplayMode) => void;
 }
 
-const LEVELS: Array<{ value: SchoolLevel; label: string; detail: string }> = [
-  { value: '2e_cycle', label: LEVEL_2E_LABEL, detail: LEVEL_2E_DETAIL },
-  { value: '3e_cycle', label: LEVEL_3E_LABEL, detail: LEVEL_3E_DETAIL },
+const MODES: Array<{ value: DisplayMode; label: string; detail: string }> = [
+  { value: 'simplifie', label: MODE_SIMPLIFIE_LABEL, detail: MODE_SIMPLIFIE_DETAIL },
+  { value: 'complet', label: MODE_COMPLET_LABEL, detail: MODE_COMPLET_DETAIL },
 ];
 
-/**
- * Custom dropdown (not native <select>) for school level.
- * Shows two-line options with year and age range for parent comprehension.
- */
-export function LevelSelector({ level, onChange }: LevelSelectorProps) {
+export function ModeSelector({ mode, onChange }: ModeSelectorProps) {
   const [open, setOpen] = useState(false);
   const [focusIndex, setFocusIndex] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const currentLevel = LEVELS.find((l) => l.value === level) ?? LEVELS[0]!;
+  const currentMode = MODES.find((m) => m.value === mode) ?? MODES[0]!;
 
-  // Close on click outside
   useEffect(() => {
     if (!open) return;
     const handler = (e: MouseEvent) => {
@@ -61,7 +56,7 @@ export function LevelSelector({ level, onChange }: LevelSelectorProps) {
       switch (e.key) {
         case 'ArrowDown':
           e.preventDefault();
-          setFocusIndex((i) => Math.min(i + 1, LEVELS.length - 1));
+          setFocusIndex((i) => Math.min(i + 1, MODES.length - 1));
           break;
         case 'ArrowUp':
           e.preventDefault();
@@ -69,7 +64,7 @@ export function LevelSelector({ level, onChange }: LevelSelectorProps) {
           break;
         case 'Enter':
           e.preventDefault();
-          onChange(LEVELS[focusIndex]!.value);
+          onChange(MODES[focusIndex]!.value);
           setOpen(false);
           break;
         case 'Escape':
@@ -100,9 +95,9 @@ export function LevelSelector({ level, onChange }: LevelSelectorProps) {
           color: UI_TEXT_PRIMARY,
           whiteSpace: 'nowrap',
         }}
-        data-testid="level-selector"
+        data-testid="mode-selector"
       >
-        {currentLevel.label} ({currentLevel.detail.split(' ')[0]})
+        {currentMode.label}
       </button>
 
       {open && (
@@ -111,7 +106,7 @@ export function LevelSelector({ level, onChange }: LevelSelectorProps) {
           style={{
             position: 'absolute',
             top: '100%',
-            left: 0,
+            right: 0,
             marginTop: 4,
             background: UI_SURFACE,
             border: `1px solid ${UI_BORDER}`,
@@ -120,15 +115,15 @@ export function LevelSelector({ level, onChange }: LevelSelectorProps) {
             zIndex: 50,
             minWidth: 220,
           }}
-          data-testid="level-dropdown"
+          data-testid="mode-dropdown"
         >
-          {LEVELS.map((l, index) => (
+          {MODES.map((m, index) => (
             <div
-              key={l.value}
+              key={m.value}
               role="option"
-              aria-selected={l.value === level}
+              aria-selected={m.value === mode}
               onClick={() => {
-                onChange(l.value);
+                onChange(m.value);
                 setOpen(false);
               }}
               onMouseEnter={() => setFocusIndex(index)}
@@ -136,12 +131,12 @@ export function LevelSelector({ level, onChange }: LevelSelectorProps) {
                 padding: '8px 12px',
                 cursor: 'pointer',
                 background: index === focusIndex ? '#F0F4F8' : 'transparent',
-                borderLeft: l.value === level ? `3px solid ${UI_PRIMARY}` : '3px solid transparent',
+                borderLeft: m.value === mode ? `3px solid ${UI_PRIMARY}` : '3px solid transparent',
               }}
-              data-testid={`level-option-${l.value}`}
+              data-testid={`mode-option-${m.value}`}
             >
-              <div style={{ fontSize: 14, fontWeight: 600, color: UI_TEXT_PRIMARY }}>{l.label}</div>
-              <div style={{ fontSize: 12, color: UI_TEXT_SECONDARY }}>{l.detail}</div>
+              <div style={{ fontSize: 14, fontWeight: 600, color: UI_TEXT_PRIMARY }}>{m.label}</div>
+              <div style={{ fontSize: 12, color: UI_TEXT_SECONDARY }}>{m.detail}</div>
             </div>
           ))}
         </div>

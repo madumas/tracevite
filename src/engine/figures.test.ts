@@ -4,7 +4,6 @@ import {
   classifyFigures,
   classifyTriangle,
   classifyQuadrilateral,
-  shouldDisplayArea,
 } from './figures';
 import { createInitialState, addPoint, addSegment } from '@/model/state';
 
@@ -101,7 +100,7 @@ describe('classifyFigures', () => {
   it('classifies a square', () => {
     const state = buildSquare();
     const faces = detectAllFaces(state);
-    const figures = classifyFigures(faces, state, '3e_cycle');
+    const figures = classifyFigures(faces, state, 'complet');
     expect(figures.length).toBeGreaterThanOrEqual(1);
     const square = figures.find((f) => f.name.includes('Carré'));
     expect(square).toBeDefined();
@@ -110,7 +109,7 @@ describe('classifyFigures', () => {
   it('classifies a right triangle', () => {
     const state = buildTriangle();
     const faces = detectAllFaces(state);
-    const figures = classifyFigures(faces, state, '2e_cycle');
+    const figures = classifyFigures(faces, state, 'simplifie');
     expect(figures.length).toBeGreaterThanOrEqual(1);
     const triangle = figures.find((f) => f.name.includes('Triangle'));
     expect(triangle).toBeDefined();
@@ -119,27 +118,27 @@ describe('classifyFigures', () => {
 
 describe('classifyTriangle', () => {
   it('equilatéral', () => {
-    expect(classifyTriangle([50, 50, 50], [60, 60, 60], '2e_cycle')).toBe('Triangle équilatéral');
+    expect(classifyTriangle([50, 50, 50], [60, 60, 60], 'simplifie')).toBe('Triangle équilatéral');
   });
 
-  it('rectangle in 2e cycle', () => {
-    expect(classifyTriangle([30, 40, 50], [90, 53.13, 36.87], '2e_cycle')).toBe(
+  it('rectangle in simplifie mode', () => {
+    expect(classifyTriangle([30, 40, 50], [90, 53.13, 36.87], 'simplifie')).toBe(
       'Triangle rectangle',
     );
   });
 
-  it('rectangle isocèle cumulative in 3e cycle', () => {
-    const name = classifyTriangle([50, 50, 70.71], [90, 45, 45], '3e_cycle');
+  it('rectangle isocèle cumulative in complet mode', () => {
+    const name = classifyTriangle([50, 50, 70.71], [90, 45, 45], 'complet');
     expect(name).toContain('rectangle');
     expect(name).toContain('isocèle');
   });
 
-  it('isocèle in 2e cycle', () => {
-    expect(classifyTriangle([50, 50, 30], [70, 70, 40], '2e_cycle')).toBe('Triangle isocèle');
+  it('isocèle in simplifie mode', () => {
+    expect(classifyTriangle([50, 50, 30], [70, 70, 40], 'simplifie')).toBe('Triangle isocèle');
   });
 
-  it('scalène in 2e cycle', () => {
-    expect(classifyTriangle([30, 40, 55], [35, 48, 97], '2e_cycle')).toBe('Triangle scalène');
+  it('scalène in simplifie mode', () => {
+    expect(classifyTriangle([30, 40, 55], [35, 48, 97], 'simplifie')).toBe('Triangle scalène');
   });
 });
 
@@ -152,7 +151,7 @@ describe('classifyQuadrilateral', () => {
   ];
 
   it('carré', () => {
-    expect(classifyQuadrilateral([40, 40, 40, 40], [90, 90, 90, 90], sq, '2e_cycle')).toBe('Carré');
+    expect(classifyQuadrilateral([40, 40, 40, 40], [90, 90, 90, 90], sq)).toBe('Carré');
   });
 
   it('rectangle', () => {
@@ -162,9 +161,7 @@ describe('classifyQuadrilateral', () => {
       { id: '2', x: 60, y: 40, label: 'C', locked: false },
       { id: '3', x: 0, y: 40, label: 'D', locked: false },
     ];
-    expect(classifyQuadrilateral([60, 40, 60, 40], [90, 90, 90, 90], rect, '2e_cycle')).toBe(
-      'Rectangle',
-    );
+    expect(classifyQuadrilateral([60, 40, 60, 40], [90, 90, 90, 90], rect)).toBe('Rectangle');
   });
 
   it('losange', () => {
@@ -175,27 +172,6 @@ describe('classifyQuadrilateral', () => {
       { id: '2', x: 25, y: 86.6, label: 'C', locked: false },
       { id: '3', x: 0, y: 43.3, label: 'D', locked: false },
     ];
-    expect(classifyQuadrilateral([50, 50, 50, 50], [60, 120, 60, 120], rhombus, '2e_cycle')).toBe(
-      'Losange',
-    );
-  });
-});
-
-describe('shouldDisplayArea', () => {
-  it('displays area for rectangle in 2e cycle', () => {
-    expect(shouldDisplayArea('Rectangle', '2e_cycle')).toBe(true);
-  });
-
-  it('does not display area for triangle in 2e cycle', () => {
-    expect(shouldDisplayArea('Triangle rectangle', '2e_cycle')).toBe(false);
-  });
-
-  it('displays area for triangle in 3e cycle', () => {
-    expect(shouldDisplayArea('Triangle rectangle', '3e_cycle')).toBe(true);
-  });
-
-  it('does not display area for losange', () => {
-    expect(shouldDisplayArea('Losange', '2e_cycle')).toBe(false);
-    expect(shouldDisplayArea('Losange', '3e_cycle')).toBe(false);
+    expect(classifyQuadrilateral([50, 50, 50, 50], [60, 120, 60, 120], rhombus)).toBe('Losange');
   });
 });

@@ -9,6 +9,7 @@ import type { ToolHookResult } from './types';
 import { useSegmentTool } from './useSegmentTool';
 import { useMoveTool } from './useMoveTool';
 import { useCircleTool } from './useCircleTool';
+import { useReflectionTool } from './useReflectionTool';
 
 interface UseActiveToolOptions {
   state: ConstructionState;
@@ -24,6 +25,7 @@ export function useActiveTool({ state, dispatch, viewport }: UseActiveToolOption
   const segmentTool = useSegmentTool({ state, dispatch, viewport });
   const moveTool = useMoveTool({ state, dispatch, viewport });
   const circleTool = useCircleTool({ state, dispatch, viewport });
+  const reflectionTool = useReflectionTool({ state, dispatch, viewport });
 
   switch (state.activeTool) {
     case 'segment':
@@ -32,8 +34,10 @@ export function useActiveTool({ state, dispatch, viewport }: UseActiveToolOption
       return moveTool;
     case 'circle':
       return circleTool;
+    case 'reflection':
+      return reflectionTool;
     default:
-      // Placeholder for unimplemented tools (reflection, measure)
+      // Placeholder for unimplemented tools (measure)
       return {
         ...segmentTool,
         handleClick: () => {},

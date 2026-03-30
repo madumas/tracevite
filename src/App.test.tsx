@@ -45,9 +45,9 @@ describe('App', () => {
     expect(screen.getByTestId('save-indicator')).toBeInTheDocument();
   });
 
-  it('renders level selector', () => {
+  it('renders mode selector', () => {
     render(<App />);
-    expect(screen.getByTestId('level-selector')).toBeInTheDocument();
+    expect(screen.getByTestId('mode-selector')).toBeInTheDocument();
   });
 
   it('renders version number', () => {

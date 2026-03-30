@@ -3,7 +3,7 @@
  * Uses planar face traversal (leftmost-turn) to find minimal cycles.
  */
 
-import type { ConstructionState, SchoolLevel, Point } from '@/model/types';
+import type { ConstructionState, DisplayMode, Point } from '@/model/types';
 import { distance } from './geometry';
 
 /** Detected figure (computed, not stored in state). */
@@ -12,8 +12,6 @@ export interface Figure {
   readonly pointIds: readonly string[];
   readonly segmentIds: readonly string[];
   readonly name: string;
-  readonly perimeterMm: number;
-  readonly areaMm2: number | null; // null if self-intersecting or not displayable
   readonly selfIntersecting: boolean;
 }
 
@@ -174,16 +172,14 @@ export function detectAllFaces(state: ConstructionState): string[][] {
 export function classifyFigures(
   faces: string[][],
   state: ConstructionState,
-  schoolLevel: SchoolLevel,
+  displayMode: DisplayMode,
 ): Figure[] {
   const pointMap = new Map(state.points.map((p) => [p.id, p]));
 
   return faces.map((face, idx) => {
     const sides = computeSides(face, pointMap);
     const angles = computeInteriorAngles(face, pointMap);
-    const perimeterMm = sides.reduce((sum, s) => sum + s, 0);
     const selfIntersecting = isSelfIntersecting(face, pointMap);
-    const rawArea = selfIntersecting ? null : Math.abs(shoelaceArea(face, pointMap));
 
     // Find segment IDs for this face
     const segmentIds = findSegmentIds(face, state);
@@ -192,24 +188,19 @@ export function classifyFigures(
     const vertexLabels = face.map((id) => pointMap.get(id)?.label ?? '?').join('');
     let name: string;
     if (face.length === 3) {
-      name = `${classifyTriangle(sides, angles, schoolLevel)} ${vertexLabels}`;
+      name = `${classifyTriangle(sides, angles, displayMode)} ${vertexLabels}`;
     } else if (face.length === 4) {
       const facePoints = face.map((id) => pointMap.get(id)!).filter(Boolean);
-      name = `${classifyQuadrilateral(sides, angles, facePoints, schoolLevel)} ${vertexLabels}`;
+      name = `${classifyQuadrilateral(sides, angles, facePoints)} ${vertexLabels}`;
     } else {
       name = `Polygone ${vertexLabels} à ${face.length} côtés`;
     }
-
-    // Determine if area should be displayed
-    const displayArea = rawArea !== null && shouldDisplayArea(name, schoolLevel);
 
     return {
       id: `figure-${idx}`,
       pointIds: face,
       segmentIds,
       name,
-      perimeterMm,
-      areaMm2: displayArea ? rawArea : null,
       selfIntersecting,
     };
   });
@@ -219,7 +210,7 @@ export function classifyFigures(
 export function classifyTriangle(
   sides: number[],
   angles: number[],
-  schoolLevel: SchoolLevel,
+  displayMode: DisplayMode,
 ): string {
   const sortedSides = [...sides].sort((a, b) => a - b);
   const hasRightAngle = angles.some((a) => a >= 89.5 && a <= 90.5);
@@ -227,7 +218,7 @@ export function classifyTriangle(
   const isEquilateral = equalPairs === 3;
   const isIsosceles = equalPairs >= 1;
 
-  if (schoolLevel === '3e_cycle') {
+  if (displayMode === 'complet') {
     // Cumulative classification
     const parts: string[] = [];
     if (isEquilateral) {
@@ -240,7 +231,7 @@ export function classifyTriangle(
     return `Triangle ${parts.join(' ')}`;
   }
 
-  // 2e cycle: most specific, priority equilatéral > rectangle > isocèle > scalène
+  // Simplifié: most specific, priority equilatéral > rectangle > isocèle > scalène
   if (isEquilateral) return 'Triangle équilatéral';
   if (hasRightAngle) return 'Triangle rectangle';
   if (isIsosceles) return 'Triangle isocèle';
@@ -252,10 +243,9 @@ export function classifyQuadrilateral(
   sides: number[],
   angles: number[],
   facePoints: Point[],
-  _schoolLevel: SchoolLevel,
 ): string {
   const allRightAngles = angles.every((a) => a >= 89.5 && a <= 90.5);
-  const allEqualSides = countEqualPairs(sides) >= 6; // All 6 pairs equal → 4 equal sides
+  const allEqualSides = countEqualPairs(sides) >= 6;
   const parallelPairs = countParallelOppositeSides(facePoints);
 
   if (allRightAngles && allEqualSides) return 'Carré';
@@ -264,21 +254,6 @@ export function classifyQuadrilateral(
   if (parallelPairs >= 2) return 'Parallélogramme';
   if (parallelPairs >= 1) return 'Trapèze';
   return 'Quadrilatère';
-}
-
-/** Check if area should be displayed per cycle curriculum. */
-export function shouldDisplayArea(figureName: string, schoolLevel: SchoolLevel): boolean {
-  const lower = figureName.toLowerCase();
-  // "Rectangle ABCD" the quadrilateral, not "Triangle rectangle ABC"
-  const isRectangleQuad = lower.startsWith('rectangle') || lower.startsWith('carré');
-  const isTriangle = lower.startsWith('triangle');
-  const isParallelogramme = lower.startsWith('parallélogramme');
-
-  if (schoolLevel === '2e_cycle') {
-    return isRectangleQuad;
-  }
-  // 3e cycle: + triangle, parallélogramme
-  return isRectangleQuad || isTriangle || isParallelogramme;
 }
 
 // ── Helpers ──────────────────────────────────────────────

@@ -15,7 +15,7 @@ interface SerializedConstruction {
   settings: {
     gridSizeMm: ConstructionState['gridSizeMm'];
     snapEnabled: ConstructionState['snapEnabled'];
-    schoolLevel: ConstructionState['schoolLevel'];
+    displayMode: ConstructionState['displayMode'];
     displayUnit: ConstructionState['displayUnit'];
     hideProperties: ConstructionState['hideProperties'];
   };
@@ -32,7 +32,7 @@ export function serializeState(state: ConstructionState): string {
     settings: {
       gridSizeMm: state.gridSizeMm,
       snapEnabled: state.snapEnabled,
-      schoolLevel: state.schoolLevel,
+      displayMode: state.displayMode,
       displayUnit: state.displayUnit,
       hideProperties: state.hideProperties,
     },
@@ -88,9 +88,7 @@ export function deserializeState(json: string): ConstructionState {
       : defaults.gridSizeMm,
     snapEnabled:
       typeof settings['snapEnabled'] === 'boolean' ? settings['snapEnabled'] : defaults.snapEnabled,
-    schoolLevel: isValidSchoolLevel(settings['schoolLevel'])
-      ? settings['schoolLevel']
-      : defaults.schoolLevel,
+    displayMode: migrateDisplayMode(settings, obj['version'] as number) ?? defaults.displayMode,
     displayUnit: isValidDisplayUnit(settings['displayUnit'])
       ? settings['displayUnit']
       : defaults.displayUnit,
@@ -106,8 +104,23 @@ function isValidGridSize(v: unknown): v is 5 | 10 | 20 {
   return v === 5 || v === 10 || v === 20;
 }
 
-function isValidSchoolLevel(v: unknown): v is '2e_cycle' | '3e_cycle' {
-  return v === '2e_cycle' || v === '3e_cycle';
+function isValidDisplayMode(v: unknown): v is 'simplifie' | 'complet' {
+  return v === 'simplifie' || v === 'complet';
+}
+
+/** Migrate v1 schoolLevel to v2 displayMode. */
+function migrateDisplayMode(
+  settings: Record<string, unknown>,
+  version: number,
+): 'simplifie' | 'complet' | null {
+  if (version >= 2) {
+    return isValidDisplayMode(settings['displayMode']) ? settings['displayMode'] : null;
+  }
+  // v1: map schoolLevel → displayMode
+  const level = settings['schoolLevel'];
+  if (level === '3e_cycle') return 'complet';
+  if (level === '2e_cycle') return 'simplifie';
+  return null;
 }
 
 function isValidDisplayUnit(v: unknown): v is 'cm' | 'mm' {

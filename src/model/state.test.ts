@@ -10,7 +10,7 @@ import {
   splitSegmentAtPoint,
   togglePointLock,
   setGridSize,
-  setSchoolLevel,
+  setDisplayMode,
   setDisplayUnit,
   setActiveTool,
   setSnapEnabled,
@@ -26,7 +26,7 @@ describe('createInitialState', () => {
     expect(state.gridSizeMm).toBe(10);
     expect(state.snapEnabled).toBe(true);
     expect(state.activeTool).toBe('segment');
-    expect(state.schoolLevel).toBe('2e_cycle');
+    expect(state.displayMode).toBe('simplifie');
     expect(state.displayUnit).toBe('cm');
     expect(state.selectedElementId).toBeNull();
     expect(state.consigne).toBeNull();
@@ -295,8 +295,8 @@ describe('parameter changes (no undo push)', () => {
     expect(setGridSize(createInitialState(), 5).gridSizeMm).toBe(5);
   });
 
-  it('sets school level', () => {
-    expect(setSchoolLevel(createInitialState(), '3e_cycle').schoolLevel).toBe('3e_cycle');
+  it('sets display mode', () => {
+    expect(setDisplayMode(createInitialState(), 'complet').displayMode).toBe('complet');
   });
 
   it('sets display unit', () => {

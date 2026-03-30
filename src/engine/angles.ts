@@ -3,7 +3,7 @@
  * Pure functions — no React, no side effects.
  */
 
-import type { ConstructionState, AngleInfo, AngleClassification, SchoolLevel } from '@/model/types';
+import type { ConstructionState, AngleInfo, AngleClassification, DisplayMode } from '@/model/types';
 
 /**
  * Classify an angle in degrees using spec priority:
@@ -129,7 +129,7 @@ export function isAlignedAngle(angle: AngleInfo): boolean {
  * Determine the angle clutter threshold for the current state.
  * Spec: hide angle labels after 5 segments (2e) / 6 segments (3e).
  */
-export function isAngleCluttered(state: ConstructionState, schoolLevel: SchoolLevel): boolean {
-  const threshold = schoolLevel === '2e_cycle' ? 5 : 6;
+export function isAngleCluttered(state: ConstructionState, displayMode: DisplayMode): boolean {
+  const threshold = displayMode === 'simplifie' ? 5 : 6;
   return state.segments.length > threshold;
 }

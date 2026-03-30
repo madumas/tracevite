@@ -58,12 +58,12 @@ export const TOOL_MOVE = 'Déplacer';
 export const TOOL_MEASURE = 'Mesurer';
 export const TOOL_SNAP = 'Aimant';
 
-// ── Level selector ────────────────────────────────────────
+// ── Mode selector ─────────────────────────────────────────
 
-export const LEVEL_2E_LABEL = '2e cycle';
-export const LEVEL_2E_DETAIL = '3e-4e année (8-10 ans)';
-export const LEVEL_3E_LABEL = '3e cycle';
-export const LEVEL_3E_DETAIL = '5e-6e année (10-12 ans)';
+export const MODE_SIMPLIFIE_LABEL = 'Simplifié';
+export const MODE_SIMPLIFIE_DETAIL = 'Affichage essentiel (correspond au 2e cycle)';
+export const MODE_COMPLET_LABEL = 'Complet';
+export const MODE_COMPLET_DETAIL = 'Toutes les mesures et outils (correspond au 3e cycle)';
 
 // ── Grid sizes ────────────────────────────────────────────
 

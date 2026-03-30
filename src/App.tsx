@@ -6,7 +6,7 @@ import {
 } from '@/model/context';
 import { Toolbar } from '@/components/Toolbar';
 import { ActionBar } from '@/components/ActionBar';
-import { LevelSelector } from '@/components/LevelSelector';
+import { ModeSelector } from '@/components/ModeSelector';
 import { SaveIndicator } from '@/components/SaveIndicator';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { SnapFeedback } from '@/components/SnapFeedback';
@@ -48,7 +48,7 @@ import { PrintDialog } from '@/components/PrintDialog';
 import { PrintSvg } from '@/components/PrintSvg';
 import { TutorialOverlay } from '@/components/TutorialOverlay';
 import { useTutorial } from '@/hooks/useTutorial';
-import type { ToolType, GridSize, DisplayUnit, SchoolLevel } from '@/model/types';
+import type { ToolType, GridSize, DisplayUnit, DisplayMode } from '@/model/types';
 
 import type { SlotRegistry } from '@/model/slots';
 
@@ -84,8 +84,18 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
     if (initialConsigne) {
       dispatch({ type: 'SET_CONSIGNE', consigne: initialConsigne });
     }
-    if (initialLevel === '2e_cycle' || initialLevel === '3e_cycle') {
-      dispatch({ type: 'SET_SCHOOL_LEVEL', schoolLevel: initialLevel });
+    const mode =
+      initialLevel === '2e_cycle'
+        ? 'simplifie'
+        : initialLevel === '3e_cycle'
+          ? 'complet'
+          : initialLevel === 'simplifie'
+            ? 'simplifie'
+            : initialLevel === 'complet'
+              ? 'complet'
+              : null;
+    if (mode) {
+      dispatch({ type: 'SET_DISPLAY_MODE', displayMode: mode });
     }
   }, [initialConsigne, initialLevel, dispatch]);
 
@@ -174,8 +184,8 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
     [dispatch, state.snapEnabled],
   );
 
-  const handleLevelChange = useCallback(
-    (level: SchoolLevel) => dispatch({ type: 'SET_SCHOOL_LEVEL', schoolLevel: level }),
+  const handleModeChange = useCallback(
+    (displayMode: DisplayMode) => dispatch({ type: 'SET_DISPLAY_MODE', displayMode }),
     [dispatch],
   );
 
@@ -272,12 +282,12 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
 
   // Derived: angles, properties, figures (computed, not stored in state)
   const derived = useMemo(
-    () => computeDerived(state, state.schoolLevel),
-    [state.points, state.segments, state.circles, state.schoolLevel],
+    () => computeDerived(state, state.displayMode),
+    [state.points, state.segments, state.circles, state.displayMode],
   );
   const cluttered = useMemo(
-    () => isAngleCluttered(state, state.schoolLevel),
-    [state.segments.length, state.schoolLevel],
+    () => isAngleCluttered(state, state.displayMode),
+    [state.segments.length, state.displayMode],
   );
   const pointMap = useMemo(
     () => new Map(state.points.map((p) => [p.id, { x: p.x, y: p.y }])),
@@ -346,7 +356,7 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
           </button>
         )}
         <div style={{ flex: 1 }} />
-        <LevelSelector level={state.schoolLevel} onChange={handleLevelChange} />
+        <ModeSelector mode={state.displayMode} onChange={handleModeChange} />
         <span style={{ fontSize: 11, color: '#9CA3AF' }}>v0.1.0</span>
       </header>
 
@@ -356,7 +366,7 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
         gridSizeMm={state.gridSizeMm}
         displayUnit={state.displayUnit}
         snapEnabled={state.snapEnabled}
-        schoolLevel={state.schoolLevel}
+        displayMode={state.displayMode}
         onToolChange={handleToolChange}
         onGridChange={handleGridChange}
         onUnitChange={handleUnitChange}
@@ -460,7 +470,7 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
               angles={derived.angles}
               points={pointMap}
               viewport={viewport}
-              schoolLevel={state.schoolLevel}
+              displayMode={state.displayMode}
               cluttered={cluttered}
               selectedElementId={state.selectedElementId}
               hoveredElementId={selection.hoveredElement?.id ?? null}
@@ -511,7 +521,7 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
           angles={derived.angles}
           properties={derived.properties}
           figures={derived.figures}
-          schoolLevel={state.schoolLevel}
+          displayMode={state.displayMode}
           hideProperties={state.hideProperties}
           onToggleHideProperties={() =>
             dispatch({ type: 'SET_HIDE_PROPERTIES', hide: !state.hideProperties })

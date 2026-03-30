@@ -3,7 +3,7 @@
  * Geometric actions push to undo. Parameter changes do not.
  */
 
-import type { GridSize, SchoolLevel, DisplayUnit, ToolType } from './types';
+import type { GridSize, DisplayMode, DisplayUnit, ToolType } from './types';
 import type { UndoManager } from './undo';
 import * as State from './state';
 import * as Undo from './undo';
@@ -32,7 +32,7 @@ export type ConstructionAction =
     }
   | { type: 'SPLIT_SEGMENT'; segmentId: string; x: number; y: number }
   | { type: 'SET_GRID_SIZE'; gridSizeMm: GridSize }
-  | { type: 'SET_SCHOOL_LEVEL'; schoolLevel: SchoolLevel }
+  | { type: 'SET_DISPLAY_MODE'; displayMode: DisplayMode }
   | { type: 'SET_DISPLAY_UNIT'; displayUnit: DisplayUnit }
   | { type: 'SET_ACTIVE_TOOL'; activeTool: ToolType }
   | { type: 'SET_SNAP_ENABLED'; snapEnabled: boolean }
@@ -124,11 +124,11 @@ export function reduce(state: ReducerState, action: ConstructionAction): Reducer
         undoManager: Undo.updateCurrent(undoManager, State.setGridSize(current, action.gridSizeMm)),
       };
 
-    case 'SET_SCHOOL_LEVEL':
+    case 'SET_DISPLAY_MODE':
       return {
         undoManager: Undo.updateCurrent(
           undoManager,
-          State.setSchoolLevel(current, action.schoolLevel),
+          State.setDisplayMode(current, action.displayMode),
         ),
       };
 

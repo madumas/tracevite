@@ -9,6 +9,8 @@ import type { SlotRegistry } from '@/model/slots';
 function parseUrlParams(): { consigne: string | null; level: string | null } {
   const params = new URLSearchParams(window.location.search);
   let consigne = params.get('consigne');
+  // Accept ?mode= (new) or ?level= (backward compat)
+  const mode = params.get('mode');
   const level = params.get('level');
 
   if (consigne) {
@@ -20,7 +22,7 @@ function parseUrlParams(): { consigne: string | null; level: string | null } {
     window.history.replaceState(null, '', window.location.pathname);
   }
 
-  return { consigne: consigne || null, level };
+  return { consigne: consigne || null, level: mode || level };
 }
 
 const urlParams = parseUrlParams();

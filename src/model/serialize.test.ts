@@ -10,7 +10,7 @@ describe('serializeState / deserializeState', () => {
     expect(restored.points).toEqual([]);
     expect(restored.segments).toEqual([]);
     expect(restored.gridSizeMm).toBe(10);
-    expect(restored.schoolLevel).toBe('2e_cycle');
+    expect(restored.displayMode).toBe('simplifie');
   });
 
   it('round-trips state with points and segments', () => {
@@ -33,7 +33,7 @@ describe('serializeState / deserializeState', () => {
   it('includes version field', () => {
     const json = serializeState(createInitialState());
     const parsed = JSON.parse(json);
-    expect(parsed.version).toBe(1);
+    expect(parsed.version).toBe(2);
   });
 
   it('throws on invalid JSON', () => {
@@ -57,7 +57,7 @@ describe('serializeState / deserializeState', () => {
       points: [],
       segments: [],
       circles: [],
-      settings: { gridSizeMm: 10, schoolLevel: '2e_cycle', displayUnit: 'cm', snapEnabled: true },
+      settings: { gridSizeMm: 10, displayMode: 'simplifie', displayUnit: 'cm', snapEnabled: true },
       unknownField: 'should be ignored',
       anotherUnknown: 42,
     });
@@ -69,7 +69,7 @@ describe('serializeState / deserializeState', () => {
     const json = JSON.stringify({ version: 1, points: [], segments: [] });
     const state = deserializeState(json);
     expect(state.gridSizeMm).toBe(10);
-    expect(state.schoolLevel).toBe('2e_cycle');
+    expect(state.displayMode).toBe('simplifie');
     expect(state.displayUnit).toBe('cm');
     expect(state.snapEnabled).toBe(true);
   });
@@ -92,5 +92,17 @@ describe('serializeState / deserializeState', () => {
     const state = deserializeState(json);
     expect(state.activeTool).toBe('segment');
     expect(state.selectedElementId).toBeNull();
+  });
+
+  it('migrates v1 schoolLevel to v2 displayMode', () => {
+    const json = JSON.stringify({
+      version: 1,
+      points: [],
+      segments: [],
+      circles: [],
+      settings: { gridSizeMm: 10, schoolLevel: '3e_cycle', displayUnit: 'cm', snapEnabled: true },
+    });
+    const state = deserializeState(json);
+    expect(state.displayMode).toBe('complet');
   });
 });

@@ -1,5 +1,5 @@
 import { memo } from 'react';
-import type { ToolType, GridSize, DisplayUnit, SchoolLevel } from '@/model/types';
+import type { ToolType, GridSize, DisplayUnit, DisplayMode } from '@/model/types';
 import {
   UI_PRIMARY,
   UI_SURFACE,
@@ -26,7 +26,7 @@ interface ToolbarProps {
   readonly gridSizeMm: GridSize;
   readonly displayUnit: DisplayUnit;
   readonly snapEnabled: boolean;
-  readonly schoolLevel: SchoolLevel;
+  readonly displayMode: DisplayMode;
   readonly onToolChange: (tool: ToolType) => void;
   readonly onGridChange: (size: GridSize) => void;
   readonly onUnitChange: (unit: DisplayUnit) => void;
@@ -56,7 +56,7 @@ export const Toolbar = memo(function Toolbar({
   gridSizeMm,
   displayUnit,
   snapEnabled,
-  schoolLevel,
+  displayMode,
   onToolChange,
   onGridChange,
   onUnitChange,
@@ -95,7 +95,7 @@ export const Toolbar = memo(function Toolbar({
         {TOOL_MOVE}
       </button>
       {/* Circle — 3e cycle only */}
-      {schoolLevel === '3e_cycle' && (
+      {displayMode === 'complet' && (
         <button
           onClick={() => onToolChange('circle')}
           style={{ ...toolBtnBase, ...(activeTool === 'circle' ? activeStyle : {}) }}

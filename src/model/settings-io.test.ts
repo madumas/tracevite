@@ -6,7 +6,7 @@ describe('settings-io', () => {
     const state = createInitialState();
     const json = exportSettings(state);
     const result = importSettings(json);
-    expect(result.schoolLevel).toBe('2e_cycle');
+    expect(result.displayMode).toBe('simplifie');
     expect(result.displayUnit).toBe('cm');
     expect(result.gridSizeMm).toBe(10);
     expect(result.snapEnabled).toBe(true);
@@ -27,9 +27,9 @@ describe('settings-io', () => {
   });
 
   it('imports partial settings gracefully', () => {
-    const json = JSON.stringify({ type: 'tracevite-settings', schoolLevel: '3e_cycle' });
+    const json = JSON.stringify({ type: 'tracevite-settings', displayMode: 'complet' });
     const result = importSettings(json);
-    expect(result.schoolLevel).toBe('3e_cycle');
+    expect(result.displayMode).toBe('complet');
     expect(result.displayUnit).toBeUndefined(); // Not provided
   });
 });
