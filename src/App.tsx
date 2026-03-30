@@ -44,6 +44,7 @@ import {
 } from '@/config/messages';
 import { hitTestElement } from '@/engine/hit-test';
 import { ConsigneBanner } from '@/components/ConsigneBanner';
+import { PrintDialog } from '@/components/PrintDialog';
 import type { ToolType, GridSize, DisplayUnit, SchoolLevel } from '@/model/types';
 
 import type { SlotRegistry } from '@/model/slots';
@@ -179,7 +180,8 @@ function AppContent({
   // Action bar handlers
   const handleUndo = useCallback(() => dispatch({ type: 'UNDO' }), [dispatch]);
   const handleRedo = useCallback(() => dispatch({ type: 'REDO' }), [dispatch]);
-  const handlePrint = useCallback(() => {}, []);
+  const [showPrintDialog, setShowPrintDialog] = useState(false);
+  const handlePrint = useCallback(() => setShowPrintDialog(true), []);
   const handleNewConstruction = useCallback(() => setShowNewConfirm(true), []);
   const handleConfirmNew = useCallback(() => {
     dispatch({ type: 'NEW_CONSTRUCTION' });
@@ -533,6 +535,18 @@ function AppContent({
           cancelLabel={CONFIRM_NEW_CANCEL}
           onConfirm={handleConfirmNew}
           onCancel={() => setShowNewConfirm(false)}
+        />
+      )}
+
+      {showPrintDialog && (
+        <PrintDialog
+          state={state}
+          slotName="Construction 1"
+          onClose={() => setShowPrintDialog(false)}
+          onRecenter={() => {
+            // TODO: RECENTER_CONSTRUCTION action
+            setShowPrintDialog(false);
+          }}
         />
       )}
     </div>
