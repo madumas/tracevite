@@ -1245,6 +1245,20 @@ Le MVP est développé en 3 jalons itératifs :
 - Filtre de lissage du curseur : moyennage mobile sur les 3-5 dernières positions du pointeur, activable dans le profil « Tolérance très large ». Réduit le tremblement involontaire chez les enfants avec une précision motrice très faible. Doit être désactivable car il ajoute une latence perceptible (~30-50ms).
 - Mode « pas à pas » pour la réflexion : animation point par point montrant chaque sommet qui traverse l'axe à distance égale (toggle « Voir les étapes »). Renforce la compréhension de la correspondance point-image dans la réflexion.
 
+### Version 2bis (post-v2, avant v3)
+
+**Dialogue « À propos »** : accessible via le numéro de version dans le footer (clic ou tap). Dialogue modal (même style que PrintDialog — fond semi-transparent, fermeture par × ou Escape). Contenu :
+
+- **Logo** TraceVite (logo.svg) + nom de l'application
+- **Version** : numéro de version (ex : « v1.2.3 »)
+- **Vision** : « TraceVite est un outil de construction géométrique numérique pour les élèves du primaire ayant un Trouble Développemental de la Coordination (TDC). L'enfant fait le raisonnement, l'outil exécute le geste. »
+- **Licence** : « Logiciel libre — licence open source avec attribution » + lien vers le texte complet de la licence dans le dépôt
+- **Code source** : lien vers le dépôt GitHub (icône GitHub + URL)
+- **Contact** : ma@tracevite.ca
+- **Crédits** : « Conçu au Québec pour les enfants TDC et leurs enseignants. »
+
+Le dialogue ne contient aucun lien externe de tracking, aucun analytics, aucun formulaire — cohérent avec le principe « pas de données sortantes ». Les liens (GitHub, licence) sont des `<a>` standards avec `target="_blank" rel="noopener"`.
+
 ### Version 3
 - Développements de solides (3D → patron 2D)
 - Import d'image de fond (scanner un exercice papier et construire par-dessus)
@@ -1396,7 +1410,7 @@ La stratégie recommandée :
 ### 21.7 Versioning et maintenance
 
 - **Numéro de version visible** : affiché discrètement dans le footer (ex : « v1.2.3 »). Quand un enseignant signale un bug, on sait quelle version il utilise.
-- **Licence** : MIT ou Apache 2.0 recommandée pour faciliter l'adoption par d'autres commissions scolaires ou organismes.
+- **Licence** : MIT. Contact : ma@tracevite.ca
 
 ---
 
