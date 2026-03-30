@@ -42,6 +42,13 @@ export function generatePDF(state: ConstructionState, options: PdfOptions): jsPD
 
   const pointMap = new Map(state.points.map((p) => [p.id, p]));
 
+  // Auto-center construction in printable area (1:1 scale preserved)
+  const bb = constructionBoundingBox(state);
+  const offsetX = bb ? (pw - bb.width) / 2 - bb.minX : 0;
+  const offsetY = bb ? (ph - bb.height) / 2 - bb.minY : 0;
+  const tx = (x: number) => x + offsetX + MARGIN_MM;
+  const ty = (y: number) => y + offsetY + MARGIN_MM;
+
   // ── Optional grid (10% gray) ──────────────────────
   if (includeGrid) {
     doc.setDrawColor(230);
@@ -73,20 +80,20 @@ export function generatePDF(state: ConstructionState, options: PdfOptions): jsPD
     const end = pointMap.get(seg.endPointId);
     if (!start || !end) continue;
     if (
-      !isInPrintableArea(start.x, start.y, landscape) &&
-      !isInPrintableArea(end.x, end.y, landscape)
+      !isInPrintableArea(start.x + offsetX, start.y + offsetY, landscape) &&
+      !isInPrintableArea(end.x + offsetX, end.y + offsetY, landscape)
     )
       continue;
 
-    doc.line(start.x + MARGIN_MM, start.y + MARGIN_MM, end.x + MARGIN_MM, end.y + MARGIN_MM);
+    doc.line(tx(start.x), ty(start.y), tx(end.x), ty(end.y));
 
     // Length label at midpoint (8pt dark gray)
-    const mx = (start.x + end.x) / 2 + MARGIN_MM;
-    const my = (start.y + end.y) / 2 + MARGIN_MM;
+    const mx = (start.x + end.x) / 2;
+    const my = (start.y + end.y) / 2;
     doc.setFontSize(8);
     doc.setTextColor(80);
     const lengthText = formatLength(seg.lengthMm, state.displayUnit);
-    doc.text(lengthText, mx + 2, my - 2);
+    doc.text(lengthText, tx(mx) + 2, ty(my) - 2);
   }
 
   // ── Circles ───────────────────────────────────────
@@ -95,19 +102,19 @@ export function generatePDF(state: ConstructionState, options: PdfOptions): jsPD
   for (const circle of state.circles) {
     const center = pointMap.get(circle.centerPointId);
     if (!center) continue;
-    doc.circle(center.x + MARGIN_MM, center.y + MARGIN_MM, circle.radiusMm, 'S');
+    doc.circle(tx(center.x), ty(center.y), circle.radiusMm, 'S');
   }
 
   // ── Points (1mm radius filled) ────────────────────
   doc.setFillColor(0, 0, 0);
   for (const point of state.points) {
-    if (!isInPrintableArea(point.x, point.y, landscape)) continue;
-    doc.circle(point.x + MARGIN_MM, point.y + MARGIN_MM, 1, 'F');
+    if (!isInPrintableArea(point.x + offsetX, point.y + offsetY, landscape)) continue;
+    doc.circle(tx(point.x), ty(point.y), 1, 'F');
 
     // Vertex label (10pt)
     doc.setFontSize(10);
     doc.setTextColor(0);
-    doc.text(point.label, point.x + MARGIN_MM + 3, point.y + MARGIN_MM - 3);
+    doc.text(point.label, tx(point.x) + 3, ty(point.y) - 3);
   }
 
   // ── Witness segment (50mm, bottom-right) ──────────

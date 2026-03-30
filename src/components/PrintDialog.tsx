@@ -49,7 +49,12 @@ export function PrintDialog({
   };
 
   const handleDirectPrint = () => {
+    // Inject dynamic @page with correct orientation
+    const style = document.createElement('style');
+    style.textContent = `@page { size: letter${landscape ? ' landscape' : ''}; margin: 15mm; }`;
+    document.head.appendChild(style);
     window.print();
+    document.head.removeChild(style);
     onClose();
   };
 

@@ -9,9 +9,8 @@
     display: block !important;
   }
 
-  /* Page setup — default portrait, landscape set dynamically via JS */
+  /* Page setup — orientation set dynamically via injected <style> in PrintDialog */
   @page {
-    size: letter;
     margin: 15mm;
   }
 }
