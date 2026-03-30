@@ -29,6 +29,7 @@ interface PropertiesPanelProps {
   readonly onSelectElement: (elementId: string) => void;
   readonly collapsed: boolean;
   readonly onToggleCollapsed: () => void;
+  readonly hasNewProperties?: boolean;
 }
 
 export const PropertiesPanel = memo(function PropertiesPanel({
@@ -42,6 +43,7 @@ export const PropertiesPanel = memo(function PropertiesPanel({
   onSelectElement,
   collapsed,
   onToggleCollapsed,
+  hasNewProperties,
 }: PropertiesPanelProps) {
   if (collapsed) {
     return (
@@ -64,6 +66,20 @@ export const PropertiesPanel = memo(function PropertiesPanel({
         data-testid="panel-toggle"
       >
         ◀
+        {hasNewProperties && (
+          <span
+            style={{
+              position: 'absolute',
+              top: 4,
+              right: 4,
+              width: 8,
+              height: 8,
+              borderRadius: '50%',
+              background: '#185FA5',
+            }}
+            data-testid="panel-badge"
+          />
+        )}
       </button>
     );
   }

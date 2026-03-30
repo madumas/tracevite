@@ -249,7 +249,14 @@ function AppContent({ initialConsigne, initialLevel }: AppProps) {
     deleteMode,
   ]);
 
-  const [panelCollapsed, setPanelCollapsed] = useState(false);
+  const [panelCollapsed, setPanelCollapsed] = useState(() => {
+    // Restore from localStorage, auto-collapse on small screens
+    const saved = localStorage.getItem('tracevite_panel_collapsed');
+    if (saved !== null) return saved === 'true';
+    return typeof window !== 'undefined' && window.innerHeight < 800;
+  });
+  const [hasNewProperties, setHasNewProperties] = useState(false);
+  const prevDerivedCountRef = useRef(0);
 
   // Derived: angles, properties, figures (computed, not stored in state)
   const derived = useMemo(
@@ -264,6 +271,21 @@ function AppContent({ initialConsigne, initialLevel }: AppProps) {
     () => new Map(state.points.map((p) => [p.id, { x: p.x, y: p.y }])),
     [state.points],
   );
+
+  // Persist panel collapsed state
+  useEffect(() => {
+    localStorage.setItem('tracevite_panel_collapsed', String(panelCollapsed));
+    if (!panelCollapsed) setHasNewProperties(false); // Clear badge when panel opens
+  }, [panelCollapsed]);
+
+  // Track new properties for badge notification
+  useEffect(() => {
+    const currentCount = derived.properties.length + derived.figures.length;
+    if (panelCollapsed && currentCount > prevDerivedCountRef.current) {
+      setHasNewProperties(true);
+    }
+    prevDerivedCountRef.current = currentCount;
+  }, [derived.properties.length, derived.figures.length, panelCollapsed]);
 
   const pxPerMm = viewport.zoom * CSS_PX_PER_MM;
   const svgWidth = BOUNDS_WIDTH_MM * pxPerMm;
@@ -475,6 +497,7 @@ function AppContent({ initialConsigne, initialLevel }: AppProps) {
           onSelectElement={(id) => dispatch({ type: 'SET_SELECTED_ELEMENT', elementId: id })}
           collapsed={panelCollapsed}
           onToggleCollapsed={() => setPanelCollapsed(!panelCollapsed)}
+          hasNewProperties={hasNewProperties}
         />
       </div>
 
