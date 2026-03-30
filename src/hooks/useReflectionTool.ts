@@ -13,6 +13,7 @@ import { TOLERANCE_PROFILES } from '@/config/accessibility';
 import { constrainAxisAngle } from '@/engine/reflection';
 import { detectAllFaces, classifyFigures } from '@/engine/figures';
 import { STATUS_REFLECTION_AXIS, STATUS_REFLECTION_SELECT } from '@/config/messages';
+import { CSS_PX_PER_MM } from '@/engine/viewport';
 
 type ReflectionPhase = 'choose_axis' | 'axis_first_point' | 'axis_defined';
 
@@ -211,10 +212,11 @@ export function useReflectionTool({
         const extend = 2000; // mm — extend far enough to cross the canvas
         const ux = dx / len;
         const uy = dy / len;
-        const x1 = (axisP1.x - ux * extend - viewport.panX) * viewport.zoom;
-        const y1 = (axisP1.y - uy * extend - viewport.panY) * viewport.zoom;
-        const x2 = (axisP2.x + ux * extend - viewport.panX) * viewport.zoom;
-        const y2 = (axisP2.y + uy * extend - viewport.panY) * viewport.zoom;
+        const pxPerMm = viewport.zoom * CSS_PX_PER_MM;
+        const x1 = (axisP1.x - ux * extend - viewport.panX) * pxPerMm;
+        const y1 = (axisP1.y - uy * extend - viewport.panY) * pxPerMm;
+        const x2 = (axisP2.x + ux * extend - viewport.panX) * pxPerMm;
+        const y2 = (axisP2.y + uy * extend - viewport.panY) * pxPerMm;
         elements.push(
           createElement('line', {
             key: 'axis',
@@ -237,10 +239,11 @@ export function useReflectionTool({
       if (is2eCycle) {
         previewP2 = constrainAxisAngle(axisP1, previewP2);
       }
-      const x1 = (axisP1.x - viewport.panX) * viewport.zoom;
-      const y1 = (axisP1.y - viewport.panY) * viewport.zoom;
-      const x2 = (previewP2.x - viewport.panX) * viewport.zoom;
-      const y2 = (previewP2.y - viewport.panY) * viewport.zoom;
+      const pxPerMm = viewport.zoom * CSS_PX_PER_MM;
+      const x1 = (axisP1.x - viewport.panX) * pxPerMm;
+      const y1 = (axisP1.y - viewport.panY) * pxPerMm;
+      const x2 = (previewP2.x - viewport.panX) * pxPerMm;
+      const y2 = (previewP2.y - viewport.panY) * pxPerMm;
       elements.push(
         createElement('line', {
           key: 'axis-preview',
