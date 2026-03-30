@@ -77,20 +77,39 @@ export const GhostSegment = memo(function GhostSegment({
             strokeDasharray="4 4"
             opacity={0.5}
           />
-          {/* Guide label bubble */}
-          <text
-            x={(sx1 + sx2) / 2}
-            y={(sy1 + sy2) / 2 - 16}
-            fill={CANVAS_GUIDE}
-            fontSize={12}
-            fontFamily="system-ui, sans-serif"
-            textAnchor="middle"
-            opacity={0.9}
-          >
-            {guideType === 'parallel'
-              ? `parallèle à ${guideSegmentLabel ?? ''}`
-              : `perpendiculaire à ${guideSegmentLabel ?? ''}`}
-          </text>
+          {/* Guide label badge — anchored near start point (stable, no flicker) */}
+          {(() => {
+            const label =
+              guideType === 'parallel'
+                ? `parallèle à ${guideSegmentLabel ?? ''}`
+                : `⊥ à ${guideSegmentLabel ?? ''}`;
+            return (
+              <g>
+                {/* Background pill for readability */}
+                <rect
+                  x={sx1 - 4}
+                  y={sy1 - 32}
+                  width={label.length * 7 + 8}
+                  height={20}
+                  rx={4}
+                  fill="white"
+                  stroke={CANVAS_GUIDE}
+                  strokeWidth={1}
+                  opacity={0.95}
+                />
+                <text
+                  x={sx1}
+                  y={sy1 - 18}
+                  fill={CANVAS_GUIDE}
+                  fontSize={13}
+                  fontWeight={600}
+                  fontFamily="system-ui, sans-serif"
+                >
+                  {label}
+                </text>
+              </g>
+            );
+          })()}
         </>
       )}
     </g>
