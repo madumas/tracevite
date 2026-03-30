@@ -546,11 +546,15 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
         <button
           onClick={() => setShowSettings(true)}
           style={{
+            width: 44,
+            height: 44,
             background: 'transparent',
             border: 'none',
             cursor: 'pointer',
-            fontSize: 16,
-            padding: '4px 6px',
+            fontSize: 22,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
           }}
           aria-label="Paramètres"
           data-testid="settings-button"
@@ -828,6 +832,7 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
           collapsed={panelCollapsed}
           onToggleCollapsed={() => setPanelCollapsed(!panelCollapsed)}
           hasNewProperties={hasNewProperties}
+          fontScale={state.fontScale}
         />
       </div>
 

@@ -83,6 +83,18 @@ export const SettingsDialog = memo(function SettingsDialog({
   onPointToolVisibleChange,
   onClose,
 }: SettingsDialogProps) {
+  // Close on Escape
+  React.useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.stopPropagation();
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handler, true);
+    return () => window.removeEventListener('keydown', handler, true);
+  }, [onClose]);
+
   return (
     <div style={overlayStyle} onClick={onClose} data-testid="settings-dialog">
       <div style={dialogStyle} onClick={(e) => e.stopPropagation()}>

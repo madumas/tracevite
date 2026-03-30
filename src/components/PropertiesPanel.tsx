@@ -24,6 +24,7 @@ interface PropertiesPanelProps {
   readonly collapsed: boolean;
   readonly onToggleCollapsed: () => void;
   readonly hasNewProperties?: boolean;
+  readonly fontScale?: number;
 }
 
 export const PropertiesPanel = memo(function PropertiesPanel({
@@ -38,6 +39,7 @@ export const PropertiesPanel = memo(function PropertiesPanel({
   collapsed,
   onToggleCollapsed,
   hasNewProperties,
+  fontScale = 1,
 }: PropertiesPanelProps) {
   if (collapsed) {
     return (
@@ -89,7 +91,7 @@ export const PropertiesPanel = memo(function PropertiesPanel({
         borderLeft: `1px solid ${UI_BORDER}`,
         overflowY: 'auto',
         flexShrink: 0,
-        fontSize: 12,
+        fontSize: 12 * fontScale,
         position: 'relative',
       }}
       data-testid="properties-panel"
