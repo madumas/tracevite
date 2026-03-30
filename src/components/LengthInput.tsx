@@ -27,11 +27,28 @@ export function LengthInput({
   const [value, setValue] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
 
+  const containerRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     // Focus input after a brief delay (don't steal from canvas immediately)
-    const timer = setTimeout(() => inputRef.current?.focus(), 50);
+    const timer = setTimeout(() => inputRef.current?.focus(), 100);
     return () => clearTimeout(timer);
   }, []);
+
+  // Dismiss on click outside (not onBlur — onBlur fires too aggressively with pointer events)
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        onDismiss();
+      }
+    };
+    // Delay to avoid catching the click that opened us
+    const timer = setTimeout(() => document.addEventListener('mousedown', handler), 200);
+    return () => {
+      clearTimeout(timer);
+      document.removeEventListener('mousedown', handler);
+    };
+  }, [onDismiss]);
 
   const handleSubmit = useCallback(() => {
     const parsed = parseFrenchNumber(value);
@@ -57,6 +74,7 @@ export function LengthInput({
 
   return (
     <div
+      ref={containerRef}
       style={{
         position: 'absolute',
         bottom: 60,
@@ -85,7 +103,6 @@ export function LengthInput({
           value={value}
           onChange={(e) => setValue(e.target.value)}
           onKeyDown={handleKeyDown}
-          onBlur={onDismiss}
           placeholder={LENGTH_PLACEHOLDER}
           style={{
             width: 160,
