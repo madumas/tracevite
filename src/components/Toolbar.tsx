@@ -33,6 +33,7 @@ interface ToolbarProps {
   readonly onUnitChange: (unit: DisplayUnit) => void;
   readonly onSnapToggle: () => void;
   readonly pointToolVisible: boolean;
+  readonly fontScale?: number;
 }
 
 const toolBtnBase: React.CSSProperties = {
@@ -42,10 +43,10 @@ const toolBtnBase: React.CSSProperties = {
   border: '1px solid transparent',
   borderRadius: 6,
   cursor: 'pointer',
-  fontSize: 13,
   fontWeight: 500,
   background: 'transparent',
   color: UI_TEXT_PRIMARY,
+  fontSize: 'inherit',
 };
 
 const activeStyle: React.CSSProperties = {
@@ -64,6 +65,7 @@ export const Toolbar = memo(function Toolbar({
   onUnitChange,
   onSnapToggle,
   pointToolVisible,
+  fontScale = 1,
 }: ToolbarProps) {
   const [moreOpen, setMoreOpen] = useState(false);
   const isSimple = displayMode === 'simplifie';
@@ -78,6 +80,7 @@ export const Toolbar = memo(function Toolbar({
         background: UI_SURFACE,
         borderBottom: `1px solid ${UI_BORDER}`,
         gap: MIN_BUTTON_GAP_PX,
+        fontSize: 13 * fontScale,
       }}
       role="toolbar"
       aria-label="Outils de construction"
@@ -148,7 +151,7 @@ export const Toolbar = memo(function Toolbar({
           onClick={() => setMoreOpen(!moreOpen)}
           style={{
             ...toolBtnBase,
-            fontSize: 12,
+            fontSize: 'inherit',
             color: moreOpen ? UI_PRIMARY : UI_TEXT_PRIMARY,
           }}
           aria-expanded={moreOpen}
@@ -174,7 +177,7 @@ export const Toolbar = memo(function Toolbar({
                 ...toolBtnBase,
                 minWidth: 36,
                 padding: '0 6px',
-                fontSize: 12,
+                fontSize: 'inherit',
                 background: gridSizeMm === size ? '#E8F0FA' : 'transparent',
                 border: gridSizeMm === size ? `1px solid ${UI_PRIMARY}` : `1px solid transparent`,
               }}
@@ -196,7 +199,7 @@ export const Toolbar = memo(function Toolbar({
       {(!isSimple || moreOpen) && (
         <button
           onClick={() => onUnitChange(displayUnit === 'cm' ? 'mm' : 'cm')}
-          style={{ ...toolBtnBase, minWidth: 36, fontSize: 12 }}
+          style={{ ...toolBtnBase, minWidth: 36 }}
           data-testid="unit-toggle"
         >
           {displayUnit}
@@ -208,7 +211,7 @@ export const Toolbar = memo(function Toolbar({
         onClick={onSnapToggle}
         style={{
           ...toolBtnBase,
-          fontSize: 12,
+          fontSize: 'inherit',
           color: snapEnabled ? UI_PRIMARY : UI_DISABLED_TEXT,
           fontWeight: snapEnabled ? 600 : 400,
         }}

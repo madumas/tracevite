@@ -12,6 +12,7 @@ interface ContextActionBarProps {
   /** When true, auto-trigger micro-confirmation (from keyboard Delete). */
   readonly triggerConfirm?: boolean;
   readonly onConfirmHandled?: () => void;
+  readonly fontScale?: number;
 }
 
 /**
@@ -23,6 +24,7 @@ export function ContextActionBar({
   viewport,
   onDelete,
   onToggleLock,
+  fontScale = 1,
   triggerConfirm,
   onConfirmHandled,
 }: ContextActionBarProps) {
@@ -124,6 +126,7 @@ export function ContextActionBar({
         padding: 4,
         boxShadow: '0 2px 8px rgba(0,0,0,0.12)',
         zIndex: 30,
+        fontSize: 12 * fontScale,
         whiteSpace: 'nowrap',
       }}
       data-testid="context-action-bar"
@@ -139,7 +142,7 @@ export function ContextActionBar({
           background: confirmingDelete ? UI_DESTRUCTIVE : 'transparent',
           color: confirmingDelete ? '#FFFFFF' : UI_TEXT_PRIMARY,
           cursor: 'pointer',
-          fontSize: 12,
+          fontSize: 'inherit',
           fontWeight: confirmingDelete ? 600 : 400,
         }}
         data-testid="context-delete"
@@ -159,7 +162,7 @@ export function ContextActionBar({
             background: 'transparent',
             color: UI_TEXT_PRIMARY,
             cursor: 'pointer',
-            fontSize: 12,
+            fontSize: 'inherit',
           }}
           data-testid="context-lock"
         >

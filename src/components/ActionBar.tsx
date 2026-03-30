@@ -29,6 +29,7 @@ interface ActionBarProps {
   readonly onToggleDeleteMode?: () => void;
   readonly onPrint: () => void;
   readonly onNewConstruction: () => void;
+  readonly fontScale?: number;
 }
 
 export const ActionBar = memo(function ActionBar({
@@ -41,6 +42,7 @@ export const ActionBar = memo(function ActionBar({
   onToggleDeleteMode,
   onPrint,
   onNewConstruction,
+  fontScale = 1,
 }: ActionBarProps) {
   return (
     <div
@@ -50,6 +52,7 @@ export const ActionBar = memo(function ActionBar({
         alignItems: 'center',
         padding: '0 8px',
         background: UI_SURFACE,
+        fontSize: 13 * fontScale,
         borderTop: `1px solid ${UI_BORDER}`,
         gap: MIN_BUTTON_GAP_PX,
       }}
@@ -68,7 +71,7 @@ export const ActionBar = memo(function ActionBar({
           background: canUndo ? '#E8F0FA' : UI_DISABLED_BG,
           color: canUndo ? UI_TEXT_PRIMARY : UI_DISABLED_TEXT,
           cursor: canUndo ? 'pointer' : 'default',
-          fontSize: 13,
+          fontSize: 'inherit',
         }}
         aria-label={ACTION_UNDO}
         data-testid="action-undo"
@@ -89,7 +92,7 @@ export const ActionBar = memo(function ActionBar({
           background: canRedo ? UI_SURFACE : UI_DISABLED_BG,
           color: canRedo ? UI_TEXT_PRIMARY : UI_DISABLED_TEXT,
           cursor: canRedo ? 'pointer' : 'default',
-          fontSize: 13,
+          fontSize: 'inherit',
         }}
         aria-label={ACTION_REDO}
         data-testid="action-redo"
@@ -109,7 +112,7 @@ export const ActionBar = memo(function ActionBar({
           background: deleteMode ? UI_DESTRUCTIVE : UI_SURFACE,
           color: deleteMode ? '#FFFFFF' : UI_TEXT_PRIMARY,
           cursor: 'pointer',
-          fontSize: 13,
+          fontSize: 'inherit',
           fontWeight: deleteMode ? 600 : 400,
         }}
         aria-label={ACTION_DELETE}
@@ -137,7 +140,7 @@ export const ActionBar = memo(function ActionBar({
           background: canPrint ? UI_PRIMARY : UI_DISABLED_BG,
           color: canPrint ? '#FFFFFF' : UI_DISABLED_TEXT,
           cursor: canPrint ? 'pointer' : 'default',
-          fontSize: 13,
+          fontSize: 'inherit',
           fontWeight: 500,
         }}
         aria-label={ACTION_PRINT}
@@ -161,7 +164,7 @@ export const ActionBar = memo(function ActionBar({
           background: UI_DESTRUCTIVE,
           color: '#FFFFFF',
           cursor: 'pointer',
-          fontSize: 13,
+          fontSize: 'inherit',
           fontWeight: 500,
           whiteSpace: 'nowrap',
         }}

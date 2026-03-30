@@ -643,6 +643,7 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
         onUnitChange={handleUnitChange}
         onSnapToggle={handleSnapToggle}
         pointToolVisible={state.pointToolVisible}
+        fontScale={state.fontScale}
       />
 
       {/* Status Bar */}
@@ -771,6 +772,7 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
               onToggleLock={handleToggleLock}
               triggerConfirm={pendingDeleteFromKeyboard}
               onConfirmHandled={() => setPendingDeleteFromKeyboard(false)}
+              fontScale={state.fontScale}
             />
           )}
 
@@ -862,6 +864,7 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
         }}
         onPrint={handlePrint}
         onNewConstruction={handleNewConstruction}
+        fontScale={state.fontScale}
       />
 
       {showNewConfirm && (
