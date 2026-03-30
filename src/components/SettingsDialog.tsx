@@ -3,7 +3,7 @@
  * Accessible via ⚙️ button in header.
  */
 
-import { memo } from 'react';
+import { memo, useEffect } from 'react';
 import type { ToleranceProfile, ChainTimeout, FontScale, SoundMode } from '@/model/types';
 import { UI_PRIMARY, UI_SURFACE, UI_BORDER, UI_TEXT_PRIMARY } from '@/config/theme';
 import { MIN_BUTTON_SIZE_PX } from '@/config/accessibility';
@@ -84,7 +84,7 @@ export const SettingsDialog = memo(function SettingsDialog({
   onClose,
 }: SettingsDialogProps) {
   // Close on Escape
-  React.useEffect(() => {
+  useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         e.stopPropagation();
