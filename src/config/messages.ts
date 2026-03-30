@@ -34,6 +34,8 @@ export const ACTION_UNDO = 'Annuler';
 export const ACTION_REDO = 'Rétablir';
 export const ACTION_PRINT = 'Imprimer';
 export const ACTION_NEW = 'Nouvelle construction';
+export const ACTION_DELETE = 'Supprimer';
+export const ACTION_DELETE_CONFIRM = 'Confirmer?';
 export const ACTION_SCALE_NOTE = 'Échelle 1:1 sur papier';
 
 // ── Confirm dialog — new construction ─────────────────────

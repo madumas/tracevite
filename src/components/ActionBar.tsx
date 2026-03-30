@@ -1,4 +1,4 @@
-import { memo } from 'react';
+import { memo, useState, useEffect, useRef, useCallback } from 'react';
 import {
   ACTION_BAR_HEIGHT,
   UI_PRIMARY,
@@ -13,6 +13,8 @@ import { MIN_BUTTON_SIZE_PX, MIN_BUTTON_GAP_PX } from '@/config/accessibility';
 import {
   ACTION_UNDO,
   ACTION_REDO,
+  ACTION_DELETE,
+  ACTION_DELETE_CONFIRM,
   ACTION_PRINT,
   ACTION_NEW,
   ACTION_SCALE_NOTE,
@@ -22,21 +24,55 @@ interface ActionBarProps {
   readonly canUndo: boolean;
   readonly canRedo: boolean;
   readonly canPrint: boolean;
+  readonly selectedElementId: string | null;
   readonly onUndo: () => void;
   readonly onRedo: () => void;
+  readonly onDelete: () => void;
   readonly onPrint: () => void;
   readonly onNewConstruction: () => void;
 }
+
+const CONFIRM_TIMEOUT_MS = 3000;
 
 export const ActionBar = memo(function ActionBar({
   canUndo,
   canRedo,
   canPrint,
+  selectedElementId,
   onUndo,
   onRedo,
+  onDelete,
   onPrint,
   onNewConstruction,
 }: ActionBarProps) {
+  const [confirming, setConfirming] = useState(false);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const clearConfirm = useCallback(() => {
+    setConfirming(false);
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
+  }, []);
+
+  // Reset confirm state when selection changes
+  useEffect(() => {
+    clearConfirm();
+  }, [selectedElementId, clearConfirm]);
+
+  const handleDeleteClick = useCallback(() => {
+    if (!selectedElementId) return;
+    if (!confirming) {
+      setConfirming(true);
+      timerRef.current = setTimeout(() => setConfirming(false), CONFIRM_TIMEOUT_MS);
+    } else {
+      onDelete();
+      clearConfirm();
+    }
+  }, [selectedElementId, confirming, onDelete, clearConfirm]);
+
+  const canDelete = selectedElementId !== null;
   return (
     <div
       style={{
@@ -90,6 +126,28 @@ export const ActionBar = memo(function ActionBar({
         data-testid="action-redo"
       >
         ↪ {ACTION_REDO}
+      </button>
+
+      {/* Delete */}
+      <button
+        onClick={handleDeleteClick}
+        disabled={!canDelete}
+        style={{
+          minWidth: MIN_BUTTON_SIZE_PX,
+          height: MIN_BUTTON_SIZE_PX - 8,
+          padding: '0 10px',
+          border: `1px solid ${confirming ? UI_DESTRUCTIVE : UI_BORDER}`,
+          borderRadius: 4,
+          background: confirming ? UI_DESTRUCTIVE : canDelete ? UI_SURFACE : UI_DISABLED_BG,
+          color: confirming ? '#FFFFFF' : canDelete ? UI_TEXT_PRIMARY : UI_DISABLED_TEXT,
+          cursor: canDelete ? 'pointer' : 'default',
+          fontSize: 13,
+          fontWeight: confirming ? 600 : 400,
+        }}
+        aria-label={ACTION_DELETE}
+        data-testid="action-delete"
+      >
+        🗑 {confirming ? ACTION_DELETE_CONFIRM : ACTION_DELETE}
       </button>
 
       {/* Spacer */}

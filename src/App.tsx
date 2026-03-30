@@ -388,8 +388,14 @@ function AppContent() {
         canUndo={canUndo}
         canRedo={canRedo}
         canPrint={hasElements}
+        selectedElementId={state.selectedElementId}
         onUndo={handleUndo}
         onRedo={handleRedo}
+        onDelete={() => {
+          if (state.selectedElementId) {
+            dispatch({ type: 'REMOVE_ELEMENT', elementId: state.selectedElementId });
+          }
+        }}
         onPrint={handlePrint}
         onNewConstruction={handleNewConstruction}
       />
