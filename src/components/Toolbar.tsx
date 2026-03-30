@@ -1,4 +1,4 @@
-import { memo } from 'react';
+import { memo, useState } from 'react';
 import type { ToolType, GridSize, DisplayUnit, DisplayMode } from '@/model/types';
 import {
   UI_PRIMARY,
@@ -62,6 +62,9 @@ export const Toolbar = memo(function Toolbar({
   onUnitChange,
   onSnapToggle,
 }: ToolbarProps) {
+  const [moreOpen, setMoreOpen] = useState(false);
+  const isSimple = displayMode === 'simplifie';
+
   return (
     <div
       style={{
@@ -113,53 +116,80 @@ export const Toolbar = memo(function Toolbar({
       >
         {TOOL_REFLECTION}
       </button>
-      <button
-        onClick={() => onToolChange('measure')}
-        style={{ ...toolBtnBase, ...(activeTool === 'measure' ? activeStyle : {}) }}
-        aria-pressed={activeTool === 'measure'}
-        data-testid="tool-measure"
-      >
-        {TOOL_MEASURE}
-      </button>
+      {/* Measure — always visible in complet, behind "Plus d'outils" in simplifie */}
+      {(!isSimple || moreOpen) && (
+        <button
+          onClick={() => onToolChange('measure')}
+          style={{ ...toolBtnBase, ...(activeTool === 'measure' ? activeStyle : {}) }}
+          aria-pressed={activeTool === 'measure'}
+          data-testid="tool-measure"
+        >
+          {TOOL_MEASURE}
+        </button>
+      )}
+
+      {/* "Plus d'outils" toggle (2e cycle only, spec §10) */}
+      {isSimple && (
+        <button
+          onClick={() => setMoreOpen(!moreOpen)}
+          style={{
+            ...toolBtnBase,
+            fontSize: 12,
+            color: moreOpen ? UI_PRIMARY : UI_TEXT_PRIMARY,
+          }}
+          aria-expanded={moreOpen}
+          data-testid="more-tools"
+        >
+          ⋯
+        </button>
+      )}
 
       {/* Separator */}
-      <div style={{ width: 1, height: 24, background: UI_BORDER, margin: '0 4px' }} />
+      {(!isSimple || moreOpen) && (
+        <div style={{ width: 1, height: 24, background: UI_BORDER, margin: '0 4px' }} />
+      )}
 
-      {/* Grid selector */}
-      <div style={{ display: 'flex', gap: 2 }}>
-        {([5, 10, 20] as GridSize[]).map((size) => (
-          <button
-            key={size}
-            onClick={() => onGridChange(size)}
-            style={{
-              ...toolBtnBase,
-              minWidth: 36,
-              padding: '0 6px',
-              fontSize: 12,
-              background: gridSizeMm === size ? '#E8F0FA' : 'transparent',
-              border: gridSizeMm === size ? `1px solid ${UI_PRIMARY}` : `1px solid transparent`,
-            }}
-            aria-pressed={gridSizeMm === size}
-            data-testid={`grid-${size}`}
-          >
-            {size === 5 ? GRID_5MM : size === 10 ? GRID_1CM : GRID_2CM}
-          </button>
-        ))}
-      </div>
+      {/* Grid selector — always visible in complet, behind "Plus d'outils" in simplifie */}
+      {(!isSimple || moreOpen) && (
+        <div style={{ display: 'flex', gap: 2 }}>
+          {([5, 10, 20] as GridSize[]).map((size) => (
+            <button
+              key={size}
+              onClick={() => onGridChange(size)}
+              style={{
+                ...toolBtnBase,
+                minWidth: 36,
+                padding: '0 6px',
+                fontSize: 12,
+                background: gridSizeMm === size ? '#E8F0FA' : 'transparent',
+                border: gridSizeMm === size ? `1px solid ${UI_PRIMARY}` : `1px solid transparent`,
+              }}
+              aria-pressed={gridSizeMm === size}
+              data-testid={`grid-${size}`}
+            >
+              {size === 5 ? GRID_5MM : size === 10 ? GRID_1CM : GRID_2CM}
+            </button>
+          ))}
+        </div>
+      )}
 
       {/* Separator */}
-      <div style={{ width: 1, height: 24, background: UI_BORDER, margin: '0 4px' }} />
+      {(!isSimple || moreOpen) && (
+        <div style={{ width: 1, height: 24, background: UI_BORDER, margin: '0 4px' }} />
+      )}
 
       {/* Unit toggle */}
-      <button
-        onClick={() => onUnitChange(displayUnit === 'cm' ? 'mm' : 'cm')}
-        style={{ ...toolBtnBase, minWidth: 36, fontSize: 12 }}
-        data-testid="unit-toggle"
-      >
-        {displayUnit}
-      </button>
+      {(!isSimple || moreOpen) && (
+        <button
+          onClick={() => onUnitChange(displayUnit === 'cm' ? 'mm' : 'cm')}
+          style={{ ...toolBtnBase, minWidth: 36, fontSize: 12 }}
+          data-testid="unit-toggle"
+        >
+          {displayUnit}
+        </button>
+      )}
 
-      {/* Snap toggle */}
+      {/* Snap toggle — always visible */}
       <button
         onClick={onSnapToggle}
         style={{

@@ -1,6 +1,11 @@
 import { memo } from 'react';
 import type { ViewportState, DisplayUnit } from '@/model/types';
-import { CANVAS_GHOST, CANVAS_GHOST_OPACITY, CANVAS_MEASUREMENT } from '@/config/theme';
+import {
+  CANVAS_GHOST,
+  CANVAS_GHOST_OPACITY,
+  CANVAS_MEASUREMENT,
+  CANVAS_GUIDE,
+} from '@/config/theme';
 import { MIN_CANVAS_FONT_PX } from '@/config/accessibility';
 import { CSS_PX_PER_MM } from '@/engine/viewport';
 import { distance } from '@/engine/geometry';
@@ -12,6 +17,8 @@ interface GhostSegmentProps {
   readonly viewport: ViewportState;
   readonly displayUnit: DisplayUnit;
   readonly isChaining: boolean;
+  readonly guideType?: 'parallel' | 'perpendicular';
+  readonly guideSegmentLabel?: string;
 }
 
 export const GhostSegment = memo(function GhostSegment({
@@ -20,6 +27,8 @@ export const GhostSegment = memo(function GhostSegment({
   viewport,
   displayUnit,
   isChaining,
+  guideType,
+  guideSegmentLabel,
 }: GhostSegmentProps) {
   const pxPerMm = viewport.zoom * CSS_PX_PER_MM;
   const sx1 = (startMm.x - viewport.panX) * pxPerMm;
@@ -54,6 +63,36 @@ export const GhostSegment = memo(function GhostSegment({
       >
         {lengthText}
       </text>
+      {/* Guide line + label for parallel/perpendicular snap */}
+      {guideType && (
+        <>
+          {/* Extended guide line through the segment direction */}
+          <line
+            x1={sx1 - (sx2 - sx1) * 2}
+            y1={sy1 - (sy2 - sy1) * 2}
+            x2={sx2 + (sx2 - sx1) * 2}
+            y2={sy2 + (sy2 - sy1) * 2}
+            stroke={CANVAS_GUIDE}
+            strokeWidth={1}
+            strokeDasharray="4 4"
+            opacity={0.5}
+          />
+          {/* Guide label bubble */}
+          <text
+            x={(sx1 + sx2) / 2}
+            y={(sy1 + sy2) / 2 - 16}
+            fill={CANVAS_GUIDE}
+            fontSize={12}
+            fontFamily="system-ui, sans-serif"
+            textAnchor="middle"
+            opacity={0.9}
+          >
+            {guideType === 'parallel'
+              ? `parallèle à ${guideSegmentLabel ?? ''}`
+              : `perpendiculaire à ${guideSegmentLabel ?? ''}`}
+          </text>
+        </>
+      )}
     </g>
   );
 });

@@ -3,7 +3,16 @@
  * Geometric actions push to undo. Parameter changes do not.
  */
 
-import type { GridSize, DisplayMode, DisplayUnit, ToolType } from './types';
+import type {
+  GridSize,
+  DisplayMode,
+  DisplayUnit,
+  ToolType,
+  ToleranceProfile,
+  ChainTimeout,
+  FontScale,
+  SoundMode,
+} from './types';
 import type { UndoManager } from './undo';
 import * as State from './state';
 import * as Undo from './undo';
@@ -40,6 +49,13 @@ export type ConstructionAction =
   | { type: 'TOGGLE_POINT_LOCK'; pointId: string }
   | { type: 'SET_HIDE_PROPERTIES'; hide: boolean }
   | { type: 'SET_CONSIGNE'; consigne: string | null }
+  | { type: 'SET_TOLERANCE_PROFILE'; toleranceProfile: ToleranceProfile }
+  | { type: 'SET_CHAIN_TIMEOUT'; chainTimeoutMs: ChainTimeout }
+  | { type: 'SET_FONT_SCALE'; fontScale: FontScale }
+  | { type: 'SET_KEYBOARD_SHORTCUTS'; enabled: boolean }
+  | { type: 'SET_SOUND_MODE'; soundMode: SoundMode }
+  | { type: 'SET_SOUND_GAIN'; soundGain: number }
+  | { type: 'SET_POINT_TOOL_VISIBLE'; visible: boolean }
   | { type: 'LOAD_CONSTRUCTION'; undoManager: UndoManager }
   | { type: 'UNDO' }
   | { type: 'REDO' }
@@ -177,6 +193,53 @@ export function reduce(state: ReducerState, action: ConstructionAction): Reducer
     case 'SET_CONSIGNE':
       return {
         undoManager: Undo.updateCurrent(undoManager, { ...current, consigne: action.consigne }),
+      };
+
+    case 'SET_TOLERANCE_PROFILE':
+      return {
+        undoManager: Undo.updateCurrent(undoManager, {
+          ...current,
+          toleranceProfile: action.toleranceProfile,
+        }),
+      };
+
+    case 'SET_CHAIN_TIMEOUT':
+      return {
+        undoManager: Undo.updateCurrent(undoManager, {
+          ...current,
+          chainTimeoutMs: action.chainTimeoutMs,
+        }),
+      };
+
+    case 'SET_FONT_SCALE':
+      return {
+        undoManager: Undo.updateCurrent(undoManager, { ...current, fontScale: action.fontScale }),
+      };
+
+    case 'SET_KEYBOARD_SHORTCUTS':
+      return {
+        undoManager: Undo.updateCurrent(undoManager, {
+          ...current,
+          keyboardShortcutsEnabled: action.enabled,
+        }),
+      };
+
+    case 'SET_SOUND_MODE':
+      return {
+        undoManager: Undo.updateCurrent(undoManager, { ...current, soundMode: action.soundMode }),
+      };
+
+    case 'SET_SOUND_GAIN':
+      return {
+        undoManager: Undo.updateCurrent(undoManager, { ...current, soundGain: action.soundGain }),
+      };
+
+    case 'SET_POINT_TOOL_VISIBLE':
+      return {
+        undoManager: Undo.updateCurrent(undoManager, {
+          ...current,
+          pointToolVisible: action.visible,
+        }),
       };
 
     // ── Undo/Redo ─────────────────────────────────────

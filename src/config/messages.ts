@@ -23,6 +23,8 @@ export const STATUS_REFLECTION_SELECT = 'Réflexion — Clique sur une figure po
 
 export const STATUS_MEASURE_IDLE = 'Mesurer — Clique sur un segment pour fixer sa longueur';
 
+export const STATUS_POINT_IDLE = 'Point — Clique pour placer un point';
+
 // ── Length input ───────────────────────────────────────────
 
 export const LENGTH_PLACEHOLDER = 'Tape une longueur ou clique ailleurs';

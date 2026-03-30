@@ -10,6 +10,8 @@ import { useSegmentTool } from './useSegmentTool';
 import { useMoveTool } from './useMoveTool';
 import { useCircleTool } from './useCircleTool';
 import { useReflectionTool } from './useReflectionTool';
+import { useMeasureTool } from './useMeasureTool';
+import { usePointTool } from './usePointTool';
 
 interface UseActiveToolOptions {
   state: ConstructionState;
@@ -26,6 +28,8 @@ export function useActiveTool({ state, dispatch, viewport }: UseActiveToolOption
   const moveTool = useMoveTool({ state, dispatch, viewport });
   const circleTool = useCircleTool({ state, dispatch, viewport });
   const reflectionTool = useReflectionTool({ state, dispatch, viewport });
+  const measureTool = useMeasureTool({ state, dispatch, viewport });
+  const pointTool = usePointTool({ state, dispatch, viewport });
 
   switch (state.activeTool) {
     case 'segment':
@@ -36,16 +40,9 @@ export function useActiveTool({ state, dispatch, viewport }: UseActiveToolOption
       return circleTool;
     case 'reflection':
       return reflectionTool;
-    default:
-      // Placeholder for unimplemented tools (measure)
-      return {
-        ...segmentTool,
-        handleClick: () => {},
-        handleCursorMove: segmentTool.handleCursorMove,
-        handleEscape: () => {},
-        isIdle: true,
-        statusMessage: '',
-        overlayElements: null,
-      };
+    case 'measure':
+      return measureTool;
+    case 'point':
+      return pointTool;
   }
 }

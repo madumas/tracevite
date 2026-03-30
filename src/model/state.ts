@@ -30,6 +30,13 @@ export function createInitialState(): ConstructionState {
     selectedElementId: null,
     consigne: null,
     hideProperties: false,
+    toleranceProfile: 'default',
+    chainTimeoutMs: 8000,
+    fontScale: 1,
+    keyboardShortcutsEnabled: false,
+    soundMode: 'off',
+    soundGain: 0.5,
+    pointToolVisible: false,
   };
 }
 

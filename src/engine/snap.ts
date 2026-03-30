@@ -1,5 +1,5 @@
 import type { ConstructionState, SnapResult } from '@/model/types';
-import { distance, nearestGridPoint, midpoint } from './geometry';
+import { distance, nearestGridPoint, midpoint, segmentAngle } from './geometry';
 import {
   SNAP_TOLERANCE_POINT_MM,
   SNAP_TOLERANCE_MIDPOINT_MM,
@@ -25,6 +25,20 @@ export const DEFAULT_TOLERANCES: SnapTolerances = {
 };
 
 /**
+ * Scale tolerances by a multiplier (tolerance profile).
+ * Angle tolerance and drag threshold are NOT scaled (spec §7.1).
+ */
+export function scaleTolerances(base: SnapTolerances, multiplier: number): SnapTolerances {
+  if (multiplier === 1) return base;
+  return {
+    pointMm: base.pointMm * multiplier,
+    midpointMm: base.midpointMm * multiplier,
+    gridMm: base.gridMm * multiplier,
+    alignmentMm: base.alignmentMm * multiplier,
+  };
+}
+
+/**
  * Find the best snap target for a cursor position.
  * Priority order (spec §7):
  *   1. Existing points (7mm)
@@ -48,6 +62,8 @@ export function findSnap(
     return { snappedPosition: { x: cursor.x, y: cursor.y }, snapType: 'none' };
   }
 
+  const pointMap = new Map(state.points.map((p) => [p.id, p]));
+
   // Priority 1: Existing points
   let bestPointDist = Infinity;
   let bestPointId: string | undefined;
@@ -68,7 +84,6 @@ export function findSnap(
   }
 
   // Priority 2: Segment midpoints
-  const pointMap = new Map(state.points.map((p) => [p.id, p]));
   let bestMidDist = Infinity;
   let bestMidPos: { x: number; y: number } | undefined;
 
@@ -89,6 +104,31 @@ export function findSnap(
     return { snappedPosition: bestMidPos, snapType: 'midpoint' };
   }
 
+  // Priority 2b: Circle circumference (primed over grid, spec §7.1)
+  let bestCircleDist = Infinity;
+  let bestCirclePos: { x: number; y: number } | undefined;
+
+  for (const circle of state.circles) {
+    const center = pointMap.get(circle.centerPointId);
+    if (!center) continue;
+    const distToCenter = distance(cursor, center);
+    if (distToCenter === 0) continue;
+    const distToCircumference = Math.abs(distToCenter - circle.radiusMm);
+    if (distToCircumference <= tolerances.midpointMm && distToCircumference < bestCircleDist) {
+      bestCircleDist = distToCircumference;
+      // Project cursor onto circumference
+      const ratio = circle.radiusMm / distToCenter;
+      bestCirclePos = {
+        x: center.x + (cursor.x - center.x) * ratio,
+        y: center.y + (cursor.y - center.y) * ratio,
+      };
+    }
+  }
+
+  if (bestCirclePos) {
+    return { snappedPosition: bestCirclePos, snapType: 'circumference' };
+  }
+
   // Priority 3: Grid
   const gridPoint = nearestGridPoint(cursor.x, cursor.y, state.gridSizeMm);
   const gridDist = distance(cursor, gridPoint);
@@ -97,16 +137,74 @@ export function findSnap(
   }
 
   // Priority 4: Angle snap (when constructing from a point)
+  // Includes parallel/perpendicular detection to existing segments (spec §7.1, §6.1)
   if (fromPoint) {
     const dx = cursor.x - fromPoint.x;
     const dy = cursor.y - fromPoint.y;
     const dist = Math.sqrt(dx * dx + dy * dy);
     if (dist > 0) {
-      const currentAngle = Math.atan2(dy, dx) * (180 / Math.PI);
-      // Canonical angles: 0, 15, 30, 45, 60, 75, 90, ... 345
+      const currentAngleDeg = Math.atan2(dy, dx) * (180 / Math.PI);
+
+      // Check parallel/perpendicular to existing segments first (higher semantic value)
+      let bestGuideAngle: number | undefined;
+      let bestGuideDiff = SNAP_TOLERANCE_ANGLE_DEG;
+      let bestGuideType: 'parallel' | 'perpendicular' | undefined;
+      let bestGuideSegId: string | undefined;
+
+      for (const seg of state.segments) {
+        const sp = pointMap.get(seg.startPointId);
+        const ep = pointMap.get(seg.endPointId);
+        if (!sp || !ep) continue;
+
+        const segAngle = segmentAngle(sp, ep); // [0, 360)
+
+        // Check parallel (same direction or opposite)
+        for (const offset of [0, 180]) {
+          const targetAngle = segAngle + offset;
+          let diff = currentAngleDeg - targetAngle;
+          // Normalize to [-180, 180]
+          diff = ((diff + 540) % 360) - 180;
+          const absDiff = Math.abs(diff);
+          if (absDiff <= bestGuideDiff && absDiff > 0.01) {
+            bestGuideDiff = absDiff;
+            bestGuideAngle = targetAngle;
+            bestGuideType = 'parallel';
+            bestGuideSegId = seg.id;
+          }
+        }
+
+        // Check perpendicular (±90°)
+        for (const offset of [90, -90, 270]) {
+          const targetAngle = segAngle + offset;
+          let diff = currentAngleDeg - targetAngle;
+          diff = ((diff + 540) % 360) - 180;
+          const absDiff = Math.abs(diff);
+          if (absDiff <= bestGuideDiff && absDiff > 0.01) {
+            bestGuideDiff = absDiff;
+            bestGuideAngle = targetAngle;
+            bestGuideType = 'perpendicular';
+            bestGuideSegId = seg.id;
+          }
+        }
+      }
+
+      if (bestGuideAngle !== undefined && bestGuideType && bestGuideSegId) {
+        const radians = (bestGuideAngle * Math.PI) / 180;
+        return {
+          snappedPosition: {
+            x: fromPoint.x + Math.cos(radians) * dist,
+            y: fromPoint.y + Math.sin(radians) * dist,
+          },
+          snapType: 'angle',
+          guideType: bestGuideType,
+          guideSegmentId: bestGuideSegId,
+        };
+      }
+
+      // Fall back to canonical angle snap (15° increments)
       const step = 15;
-      const nearestCanonical = Math.round(currentAngle / step) * step;
-      const diff = Math.abs(currentAngle - nearestCanonical);
+      const nearestCanonical = Math.round(currentAngleDeg / step) * step;
+      const diff = Math.abs(currentAngleDeg - nearestCanonical);
       if (diff <= SNAP_TOLERANCE_ANGLE_DEG && diff > 0.01) {
         const radians = (nearestCanonical * Math.PI) / 180;
         return {

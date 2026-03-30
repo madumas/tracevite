@@ -8,7 +8,8 @@ import type { ConstructionState, ViewportState, SnapResult } from '@/model/types
 import type { ConstructionAction } from '@/model/reducer';
 import type { ToolHookResult } from './types';
 import { hitTestSegment, hitTestCircle } from '@/engine/hit-test';
-import { findSnap, DEFAULT_TOLERANCES } from '@/engine/snap';
+import { findSnap, DEFAULT_TOLERANCES, scaleTolerances } from '@/engine/snap';
+import { TOLERANCE_PROFILES } from '@/config/accessibility';
 import { constrainAxisAngle } from '@/engine/reflection';
 import { detectAllFaces, classifyFigures } from '@/engine/figures';
 import { STATUS_REFLECTION_AXIS, STATUS_REFLECTION_SELECT } from '@/config/messages';
@@ -35,6 +36,11 @@ export function useReflectionTool({
 
   const is2eCycle = state.displayMode === 'simplifie';
 
+  const tolerances = useMemo(
+    () => scaleTolerances(DEFAULT_TOLERANCES, TOLERANCE_PROFILES[state.toleranceProfile]),
+    [state.toleranceProfile],
+  );
+
   const reset = useCallback(() => {
     setPhase('choose_axis');
     setAxisP1(null);
@@ -60,7 +66,7 @@ export function useReflectionTool({
 
   const handleClick = useCallback(
     (mmPos: { x: number; y: number }) => {
-      const snap = findSnap(mmPos, state, DEFAULT_TOLERANCES);
+      const snap = findSnap(mmPos, state, tolerances);
       const snapped = snap.snappedPosition;
 
       if (phase === 'choose_axis') {
@@ -160,7 +166,7 @@ export function useReflectionTool({
   const handleCursorMove = useCallback(
     (mmPos: { x: number; y: number }) => {
       setCursorMm(mmPos);
-      const snap = findSnap(mmPos, state, DEFAULT_TOLERANCES);
+      const snap = findSnap(mmPos, state, tolerances);
       setSnapResult(snap);
     },
     [state],

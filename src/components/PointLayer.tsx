@@ -8,12 +8,14 @@ interface PointLayerProps {
   readonly points: readonly Point[];
   readonly viewport: ViewportState;
   readonly selectedElementId: string | null;
+  readonly fontScale?: number;
 }
 
 export const PointLayer = memo(function PointLayer({
   points,
   viewport,
   selectedElementId,
+  fontScale = 1,
 }: PointLayerProps) {
   const pxPerMm = viewport.zoom * CSS_PX_PER_MM;
   const radiusPx = POINT_DISPLAY_RADIUS_MM * CSS_PX_PER_MM; // Physical mm to CSS px (independent of zoom for consistent screen size)
@@ -39,7 +41,7 @@ export const PointLayer = memo(function PointLayer({
               x={sx + radiusPx + 4}
               y={sy - radiusPx - 2}
               fill={CANVAS_LABEL}
-              fontSize={Math.max(MIN_CANVAS_FONT_PX, 14)}
+              fontSize={Math.max(MIN_CANVAS_FONT_PX, 14) * fontScale}
               fontFamily="system-ui, sans-serif"
             >
               {point.label}

@@ -34,6 +34,22 @@ export const SnapFeedback = memo(function SnapFeedback({
     );
   }
 
+  if (snapResult.snapType === 'circumference') {
+    // Halo on circle circumference
+    return (
+      <circle
+        cx={sx}
+        cy={sy}
+        r={10}
+        fill="none"
+        stroke={CANVAS_GUIDE}
+        strokeWidth={2}
+        opacity={0.5}
+        data-testid="snap-circumference-halo"
+      />
+    );
+  }
+
   if (snapResult.snapType === 'grid') {
     // Small dot at grid intersection
     return (

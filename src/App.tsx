@@ -28,6 +28,7 @@ import {
 import { CSS_PX_PER_MM, BOUNDS_WIDTH_MM, BOUNDS_HEIGHT_MM } from '@/engine/viewport';
 import { isAngleCluttered } from '@/engine/angles';
 import { computeDerived } from '@/engine/derived';
+import { createSoundEngine } from '@/engine/sound';
 import { PropertiesPanel } from '@/components/PropertiesPanel';
 import { GridLayer } from '@/components/GridLayer';
 import { SegmentLayer } from '@/components/SegmentLayer';
@@ -51,6 +52,24 @@ import { PrintSvg } from '@/components/PrintSvg';
 import { TutorialOverlay } from '@/components/TutorialOverlay';
 import { useTutorial } from '@/hooks/useTutorial';
 import type { ToolType, GridSize, DisplayUnit, DisplayMode } from '@/model/types';
+
+const TOOL_SHORTCUT_MAP: Record<string, ToolType> = {
+  s: 'segment',
+  p: 'point',
+  c: 'circle',
+  v: 'move',
+  m: 'measure',
+  r: 'reflection',
+};
+
+const TOOL_DISPLAY_NAMES: Record<ToolType, string> = {
+  segment: 'Segment',
+  point: 'Point',
+  circle: 'Cercle',
+  move: 'Déplacer',
+  measure: 'Mesurer',
+  reflection: 'Réflexion',
+};
 
 import type { SlotRegistry } from '@/model/slots';
 
@@ -80,6 +99,31 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
   const [pendingDeleteFromKeyboard, setPendingDeleteFromKeyboard] = useState(false);
   const [deleteMode, setDeleteMode] = useState(false);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+
+  // Toast for keyboard tool changes (spec §14)
+  const [toastText, setToastText] = useState<string | null>(null);
+  const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const showToast = useCallback((text: string) => {
+    if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+    setToastText(text);
+    toastTimerRef.current = setTimeout(() => setToastText(null), 5000);
+  }, []);
+  // Clear toast on any canvas click
+  const clearToast = useCallback(() => {
+    if (toastText) {
+      setToastText(null);
+      if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+    }
+  }, [toastText]);
+
+  // Shift angle constraint toggle (spec §14)
+  const [shiftConstraintActive, setShiftConstraintActive] = useState(false);
+  // Reset Shift constraint on window blur (J2 fix)
+  useEffect(() => {
+    const handleBlur = () => setShiftConstraintActive(false);
+    window.addEventListener('blur', handleBlur);
+    return () => window.removeEventListener('blur', handleBlur);
+  }, []);
 
   const tutorial = useTutorial(state);
 
@@ -133,6 +177,7 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
   // Pointer events — route to delete mode, selection, or tool
   const handleCanvasClick = useCallback(
     (mmPos: { x: number; y: number }) => {
+      clearToast();
       if (deleteMode) {
         const hit = hitTestElement(mmPos, state);
         if (hit) {
@@ -159,7 +204,7 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
         tool.handleClick(mmPos);
       }
     },
-    [deleteMode, deleteConfirmId, state, dispatch, selection, tool],
+    [deleteMode, deleteConfirmId, state, dispatch, selection, tool, clearToast],
   );
 
   const handleCursorMove = useCallback(
@@ -270,10 +315,32 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
       if (e.key === 'Delete' || e.key === 'Backspace') {
         if (state.selectedElementId && !inInput) {
           e.preventDefault();
-          // Trigger micro-confirmation in ContextActionBar instead of direct delete
-          // Set a flag that the ContextActionBar will pick up
           setPendingDeleteFromKeyboard(true);
         }
+      }
+
+      // Tool keyboard shortcuts (spec §14) — disabled by default
+      if (state.keyboardShortcutsEnabled && !inInput && !e.ctrlKey && !e.metaKey) {
+        const key = e.key.toLowerCase();
+        const targetTool = TOOL_SHORTCUT_MAP[key];
+        if (targetTool && targetTool !== state.activeTool) {
+          // Guard: don't activate tools hidden in current mode (spec §14)
+          if (targetTool === 'point' && !state.pointToolVisible) return;
+          if (targetTool === 'circle' && state.displayMode === 'simplifie') return;
+          e.preventDefault();
+          dispatch({ type: 'SET_ACTIVE_TOOL', activeTool: targetTool });
+          tool.reset();
+          showToast(`Outil : ${TOOL_DISPLAY_NAMES[targetTool]}`);
+        }
+        if (key === 'g') {
+          e.preventDefault();
+          dispatch({ type: 'SET_SNAP_ENABLED', snapEnabled: !state.snapEnabled });
+        }
+      }
+
+      // Shift angle constraint toggle (spec §14)
+      if (e.key === 'Shift' && !inInput && !e.ctrlKey && !e.metaKey && !e.repeat) {
+        setShiftConstraintActive((prev) => !prev);
       }
     };
     window.addEventListener('keydown', handler);
@@ -287,8 +354,12 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
     hasElements,
     handlePrint,
     state.selectedElementId,
+    state.keyboardShortcutsEnabled,
+    state.activeTool,
+    state.snapEnabled,
     selection,
     deleteMode,
+    showToast,
   ]);
 
   const [panelCollapsed, setPanelCollapsed] = useState(() => {
@@ -313,6 +384,54 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
     () => new Map(state.points.map((p) => [p.id, { x: p.x, y: p.y }])),
     [state.points],
   );
+
+  // ── Sound engine integration (spec §7.2) ────────────────
+  const soundEngineRef = useRef<ReturnType<typeof createSoundEngine> | null>(null);
+
+  // Lazily create sound engine when mode changes from 'off'
+  useEffect(() => {
+    if (state.soundMode !== 'off' && !soundEngineRef.current) {
+      soundEngineRef.current = createSoundEngine();
+    }
+    if (soundEngineRef.current) {
+      soundEngineRef.current.setMode(state.soundMode);
+      soundEngineRef.current.setGain(state.soundGain);
+    }
+  }, [state.soundMode, state.soundGain]);
+
+  // Cleanup AudioContext on unmount
+  useEffect(() => {
+    return () => {
+      soundEngineRef.current?.dispose();
+      soundEngineRef.current = null;
+    };
+  }, []);
+
+  // Play snap sound when snap type changes (entry into snap zone)
+  const prevSnapTypeRef = useRef<string>('none');
+  useEffect(() => {
+    const snapType = tool.snapResult?.snapType ?? 'none';
+    if (snapType !== 'none' && snapType !== prevSnapTypeRef.current) {
+      soundEngineRef.current?.playSnap();
+    }
+    prevSnapTypeRef.current = snapType;
+  }, [tool.snapResult?.snapType]);
+
+  // Play segment created / figure closed
+  const prevSegCountRef = useRef(state.segments.length);
+  const prevFigCountRef = useRef(derived.figures.length);
+  useEffect(() => {
+    if (state.segments.length > prevSegCountRef.current) {
+      soundEngineRef.current?.playSegmentCreated();
+    }
+    prevSegCountRef.current = state.segments.length;
+  }, [state.segments.length]);
+  useEffect(() => {
+    if (derived.figures.length > prevFigCountRef.current) {
+      soundEngineRef.current?.playFigureClosed();
+    }
+    prevFigCountRef.current = derived.figures.length;
+  }, [derived.figures.length]);
 
   // Persist panel collapsed state
   useEffect(() => {
@@ -441,6 +560,7 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
               )
             : STATUS_DELETE_MODE
           : tool.statusMessage}
+        {shiftConstraintActive && ' — Contrainte 15° active'}
       </div>
 
       {/* Canvas + Panel row */}
@@ -487,6 +607,9 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
               viewport={viewport}
               displayUnit={state.displayUnit}
               selectedElementId={state.selectedElementId}
+              properties={derived.properties}
+              hideProperties={state.hideProperties}
+              fontScale={state.fontScale}
             />
             <CircleLayer
               circles={state.circles}
@@ -498,6 +621,7 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
               points={state.points}
               viewport={viewport}
               selectedElementId={state.selectedElementId}
+              fontScale={state.fontScale}
             />
 
             {/* Angle arcs and markers */}
@@ -509,6 +633,8 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
               cluttered={cluttered}
               selectedElementId={state.selectedElementId}
               hoveredElementId={selection.hoveredElement?.id ?? null}
+              hideProperties={state.hideProperties}
+              fontScale={state.fontScale}
             />
 
             {/* Tool-specific overlays (ghost segment, ghost circle, etc.) */}
@@ -642,6 +768,29 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
           }}
           onClose={() => setShowSlotManager(false)}
         />
+      )}
+
+      {/* Keyboard shortcut toast (spec §14) */}
+      {toastText && (
+        <div
+          style={{
+            position: 'fixed',
+            top: '20%',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            background: '#1A2433',
+            color: 'white',
+            padding: '8px 16px',
+            borderRadius: 6,
+            fontSize: 14,
+            fontFamily: 'system-ui, sans-serif',
+            pointerEvents: 'none',
+            zIndex: 9999,
+          }}
+          data-testid="tool-toast"
+        >
+          {toastText}
+        </div>
       )}
     </div>
   );

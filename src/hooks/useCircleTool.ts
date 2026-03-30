@@ -2,7 +2,8 @@ import { useState, useCallback, useMemo, useEffect, createElement } from 'react'
 import type { ConstructionState, ViewportState, SnapResult } from '@/model/types';
 import type { ConstructionAction } from '@/model/reducer';
 import type { ToolHookResult } from './types';
-import { findSnap, DEFAULT_TOLERANCES } from '@/engine/snap';
+import { findSnap, DEFAULT_TOLERANCES, scaleTolerances } from '@/engine/snap';
+import { TOLERANCE_PROFILES } from '@/config/accessibility';
 import { distance } from '@/engine/geometry';
 import { STATUS_CIRCLE_IDLE, STATUS_CIRCLE_CENTER_PLACED } from '@/config/messages';
 import { GhostCircle } from '@/components/GhostCircle';
@@ -23,6 +24,11 @@ export function useCircleTool({ state, dispatch, viewport }: UseCircleToolOption
   const [snapResult, setSnapResult] = useState<SnapResult | null>(null);
   // Track pending center creation (point created, waiting for state update to get ID)
   const [pendingCenterMm, setPendingCenterMm] = useState<{ x: number; y: number } | null>(null);
+
+  const tolerances = useMemo(
+    () => scaleTolerances(DEFAULT_TOLERANCES, TOLERANCE_PROFILES[state.toleranceProfile]),
+    [state.toleranceProfile],
+  );
 
   const reset = useCallback(() => {
     setPhase('idle');
@@ -49,7 +55,7 @@ export function useCircleTool({ state, dispatch, viewport }: UseCircleToolOption
   const handleClick = useCallback(
     (mmPos: { x: number; y: number }) => {
       if (phase === 'idle') {
-        const snap = findSnap(mmPos, state, DEFAULT_TOLERANCES);
+        const snap = findSnap(mmPos, state, tolerances);
         const snapped = snap.snappedPosition;
 
         if (snap.snappedToPointId) {
@@ -65,7 +71,7 @@ export function useCircleTool({ state, dispatch, viewport }: UseCircleToolOption
           setPhase('center_placed');
         }
       } else if (phase === 'center_placed' && centerMm && centerPointId) {
-        const snap = findSnap(mmPos, state, DEFAULT_TOLERANCES, [centerPointId]);
+        const snap = findSnap(mmPos, state, tolerances, [centerPointId]);
         const radiusMm = distance(centerMm, snap.snappedPosition);
 
         if (radiusMm >= 2) {
@@ -82,10 +88,10 @@ export function useCircleTool({ state, dispatch, viewport }: UseCircleToolOption
     (mmPos: { x: number; y: number }) => {
       setCursorMm(mmPos);
       const excludeIds = centerPointId ? [centerPointId] : [];
-      const snap = findSnap(mmPos, state, DEFAULT_TOLERANCES, excludeIds);
+      const snap = findSnap(mmPos, state, tolerances, excludeIds);
       setSnapResult(snap);
     },
-    [state, centerPointId],
+    [state, centerPointId, tolerances],
   );
 
   const handleEscape = useCallback(() => {

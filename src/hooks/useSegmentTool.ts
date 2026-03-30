@@ -2,8 +2,9 @@ import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import type { ConstructionState, SegmentToolPhase, SnapResult, ViewportState } from '@/model/types';
 import type { ConstructionAction } from '@/model/reducer';
 import type { ToolHookResult } from './types';
-import { findSnap, DEFAULT_TOLERANCES } from '@/engine/snap';
-import { CHAIN_TIMEOUT_MS, CHAIN_MOVEMENT_THRESHOLD_MM } from '@/config/accessibility';
+import { findSnap, DEFAULT_TOLERANCES, scaleTolerances } from '@/engine/snap';
+import { TOLERANCE_PROFILES } from '@/config/accessibility';
+import { CHAIN_MOVEMENT_THRESHOLD_MM } from '@/config/accessibility';
 import { distance } from '@/engine/geometry';
 import {
   STATUS_SEGMENT_IDLE,
@@ -37,6 +38,11 @@ export function useSegmentTool({
   const chainTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastMoveMm = useRef<{ x: number; y: number } | null>(null);
 
+  const tolerances = useMemo(
+    () => scaleTolerances(DEFAULT_TOLERANCES, TOLERANCE_PROFILES[state.toleranceProfile]),
+    [state.toleranceProfile],
+  );
+
   const clearChainTimer = useCallback(() => {
     if (chainTimerRef.current) {
       clearTimeout(chainTimerRef.current);
@@ -46,12 +52,13 @@ export function useSegmentTool({
 
   const startChainTimer = useCallback(() => {
     clearChainTimer();
+    if (state.chainTimeoutMs === 0) return; // disabled
     chainTimerRef.current = setTimeout(() => {
       setPhase('idle');
       setFirstPoint(null);
       setChainingAnchorId(null);
-    }, CHAIN_TIMEOUT_MS);
-  }, [clearChainTimer]);
+    }, state.chainTimeoutMs);
+  }, [clearChainTimer, state.chainTimeoutMs]);
 
   const reset = useCallback(() => {
     setPhase('idle');
@@ -67,7 +74,7 @@ export function useSegmentTool({
       const excludeIds = firstPoint?.existingId ? [firstPoint.existingId] : [];
       // Enable angle snap when a first point is placed
       const fromPt = firstPoint?.mm ?? undefined;
-      const snap = findSnap(mmPos, state, DEFAULT_TOLERANCES, excludeIds, fromPt);
+      const snap = findSnap(mmPos, state, tolerances, excludeIds, fromPt);
       const snapped = snap.snappedPosition;
 
       if (phase === 'idle') {
@@ -105,7 +112,7 @@ export function useSegmentTool({
       setCursorMm(mmPos);
       const excludeIds = firstPoint?.existingId ? [firstPoint.existingId] : [];
       const fromPt = firstPoint?.mm ?? undefined;
-      const snap = findSnap(mmPos, state, DEFAULT_TOLERANCES, excludeIds, fromPt);
+      const snap = findSnap(mmPos, state, tolerances, excludeIds, fromPt);
       setSnapResult(snap);
 
       if (phase === 'segment_created' && lastMoveMm.current) {
@@ -162,6 +169,16 @@ export function useSegmentTool({
 
     if (firstPoint?.mm && cursorMm) {
       const endMm = snapResult?.snappedPosition ?? cursorMm;
+      // Derive guide segment label (e.g. "AB") from guideSegmentId
+      let guideSegLabel: string | undefined;
+      if (snapResult?.guideSegmentId) {
+        const guideSeg = state.segments.find((s) => s.id === snapResult.guideSegmentId);
+        if (guideSeg) {
+          const startPt = state.points.find((p) => p.id === guideSeg.startPointId);
+          const endPt = state.points.find((p) => p.id === guideSeg.endPointId);
+          if (startPt && endPt) guideSegLabel = startPt.label + endPt.label;
+        }
+      }
       elements.push(
         createElement(GhostSegment, {
           key: 'ghost',
@@ -170,6 +187,8 @@ export function useSegmentTool({
           viewport,
           displayUnit: state.displayUnit,
           isChaining: phase === 'segment_created',
+          guideType: snapResult?.guideType,
+          guideSegmentLabel: guideSegLabel,
         }),
       );
     }

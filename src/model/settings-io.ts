@@ -2,8 +2,16 @@
  * .tracevite-config settings profile export/import.
  */
 
-import type { ConstructionState, DisplayMode, DisplayUnit, GridSize } from './types';
-import type { ToleranceProfile } from '@/config/accessibility';
+import type {
+  ConstructionState,
+  DisplayMode,
+  DisplayUnit,
+  GridSize,
+  ToleranceProfile,
+  ChainTimeout,
+  FontScale,
+  SoundMode,
+} from './types';
 
 export interface SettingsProfile {
   readonly type: 'tracevite-settings';
@@ -14,6 +22,12 @@ export interface SettingsProfile {
   readonly snapEnabled: boolean;
   readonly toleranceProfile: ToleranceProfile;
   readonly hideProperties: boolean;
+  readonly chainTimeoutMs: ChainTimeout;
+  readonly fontScale: FontScale;
+  readonly keyboardShortcutsEnabled: boolean;
+  readonly soundMode: SoundMode;
+  readonly soundGain: number;
+  readonly pointToolVisible: boolean;
 }
 
 /** Export current settings to JSON string. */
@@ -25,8 +39,14 @@ export function exportSettings(state: ConstructionState): string {
     displayUnit: state.displayUnit,
     gridSizeMm: state.gridSizeMm,
     snapEnabled: state.snapEnabled,
-    toleranceProfile: 'default', // TODO: when tolerance profile is in state
+    toleranceProfile: state.toleranceProfile,
     hideProperties: state.hideProperties,
+    chainTimeoutMs: state.chainTimeoutMs,
+    fontScale: state.fontScale,
+    keyboardShortcutsEnabled: state.keyboardShortcutsEnabled,
+    soundMode: state.soundMode,
+    soundGain: state.soundGain,
+    pointToolVisible: state.pointToolVisible,
   };
   return JSON.stringify(profile, null, 2);
 }
@@ -35,7 +55,18 @@ export function exportSettings(state: ConstructionState): string {
 type MutableSettings = {
   -readonly [K in keyof Pick<
     ConstructionState,
-    'displayMode' | 'displayUnit' | 'gridSizeMm' | 'snapEnabled' | 'hideProperties'
+    | 'displayMode'
+    | 'displayUnit'
+    | 'gridSizeMm'
+    | 'snapEnabled'
+    | 'hideProperties'
+    | 'toleranceProfile'
+    | 'chainTimeoutMs'
+    | 'fontScale'
+    | 'keyboardShortcutsEnabled'
+    | 'soundMode'
+    | 'soundGain'
+    | 'pointToolVisible'
   >]?: ConstructionState[K];
 };
 
@@ -74,6 +105,38 @@ export function importSettings(json: string): MutableSettings {
   }
   if (typeof obj['hideProperties'] === 'boolean') {
     result.hideProperties = obj['hideProperties'];
+  }
+
+  const validTolerances: ToleranceProfile[] = ['default', 'large', 'very_large'];
+  if (validTolerances.includes(obj['toleranceProfile'] as ToleranceProfile)) {
+    result.toleranceProfile = obj['toleranceProfile'] as ToleranceProfile;
+  }
+
+  const validTimeouts: ChainTimeout[] = [0, 5000, 8000, 15000];
+  if (validTimeouts.includes(obj['chainTimeoutMs'] as ChainTimeout)) {
+    result.chainTimeoutMs = obj['chainTimeoutMs'] as ChainTimeout;
+  }
+
+  const validFontScales: FontScale[] = [1, 1.25, 1.5];
+  if (validFontScales.includes(obj['fontScale'] as FontScale)) {
+    result.fontScale = obj['fontScale'] as FontScale;
+  }
+
+  if (typeof obj['keyboardShortcutsEnabled'] === 'boolean') {
+    result.keyboardShortcutsEnabled = obj['keyboardShortcutsEnabled'];
+  }
+
+  const validSoundModes: SoundMode[] = ['off', 'reduced', 'full'];
+  if (validSoundModes.includes(obj['soundMode'] as SoundMode)) {
+    result.soundMode = obj['soundMode'] as SoundMode;
+  }
+
+  if (typeof obj['soundGain'] === 'number' && obj['soundGain'] >= 0 && obj['soundGain'] <= 1) {
+    result.soundGain = obj['soundGain'];
+  }
+
+  if (typeof obj['pointToolVisible'] === 'boolean') {
+    result.pointToolVisible = obj['pointToolVisible'];
   }
 
   return result;

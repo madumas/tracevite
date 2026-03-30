@@ -97,6 +97,13 @@ export function deserializeState(json: string): ConstructionState {
     consigne: typeof obj['consigne'] === 'string' ? obj['consigne'] : null,
     hideProperties:
       typeof settings['hideProperties'] === 'boolean' ? settings['hideProperties'] : false,
+    toleranceProfile: defaults.toleranceProfile,
+    chainTimeoutMs: defaults.chainTimeoutMs,
+    fontScale: defaults.fontScale,
+    keyboardShortcutsEnabled: defaults.keyboardShortcutsEnabled,
+    soundMode: defaults.soundMode,
+    soundGain: defaults.soundGain,
+    pointToolVisible: defaults.pointToolVisible,
   };
 }
 

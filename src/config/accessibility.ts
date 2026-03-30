@@ -4,6 +4,8 @@
  * Multiplied by tolerance profile factor at runtime.
  */
 
+import type { ToleranceProfile } from '@/model/types';
+
 /** Drag threshold: movement < this from pointerdown = click, not drag. */
 export const DRAG_THRESHOLD_MM = 1.5;
 
@@ -67,10 +69,8 @@ export const AUTO_SAVE_DEBOUNCE_MS = 2000;
  * 'large' — younger children (8-9 years)
  * 'very_large' — severe DCD
  */
-export const TOLERANCE_PROFILES = {
+export const TOLERANCE_PROFILES: Record<ToleranceProfile, number> = {
   default: 1.0,
   large: 1.5,
   very_large: 2.0,
-} as const;
-
-export type ToleranceProfile = keyof typeof TOLERANCE_PROFILES;
+};

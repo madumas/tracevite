@@ -3,7 +3,8 @@
  * 3 micro-sounds for sensory feedback (TDC proprioceptive compensation).
  */
 
-export type SoundMode = 'off' | 'reduced' | 'full';
+import type { SoundMode } from '@/model/types';
+export type { SoundMode };
 
 const SNAP_DEBOUNCE_MS = 150;
 

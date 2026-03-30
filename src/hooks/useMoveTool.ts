@@ -3,7 +3,8 @@ import type { ConstructionState, ViewportState, SnapResult } from '@/model/types
 import type { ConstructionAction } from '@/model/reducer';
 import type { ToolHookResult } from './types';
 import { hitTestPoint } from '@/engine/hit-test';
-import { findSnap, DEFAULT_TOLERANCES } from '@/engine/snap';
+import { findSnap, DEFAULT_TOLERANCES, scaleTolerances } from '@/engine/snap';
+import { TOLERANCE_PROFILES } from '@/config/accessibility';
 import { STATUS_MOVE_IDLE, STATUS_MOVE_PICKED } from '@/config/messages';
 import { MovePreview } from '@/components/MovePreview';
 
@@ -21,6 +22,11 @@ export function useMoveTool({ state, dispatch, viewport }: UseMoveToolOptions): 
   const [_originalPosition, setOriginalPosition] = useState<{ x: number; y: number } | null>(null);
   const [cursorMm, setCursorMm] = useState<{ x: number; y: number } | null>(null);
   const [snapResult, setSnapResult] = useState<SnapResult | null>(null);
+
+  const tolerances = useMemo(
+    () => scaleTolerances(DEFAULT_TOLERANCES, TOLERANCE_PROFILES[state.toleranceProfile]),
+    [state.toleranceProfile],
+  );
 
   const reset = useCallback(() => {
     setPhase('idle');
@@ -45,7 +51,7 @@ export function useMoveTool({ state, dispatch, viewport }: UseMoveToolOptions): 
         setPhase('point_picked');
       } else if (phase === 'point_picked' && pickedPointId) {
         // Put down the point
-        const snap = findSnap(mmPos, state, DEFAULT_TOLERANCES, [pickedPointId]);
+        const snap = findSnap(mmPos, state, tolerances, [pickedPointId]);
         const target = snap.snappedPosition;
 
         dispatch({ type: 'MOVE_POINT', pointId: pickedPointId, x: target.x, y: target.y });
@@ -59,11 +65,11 @@ export function useMoveTool({ state, dispatch, viewport }: UseMoveToolOptions): 
     (mmPos: { x: number; y: number }) => {
       setCursorMm(mmPos);
       if (pickedPointId) {
-        const snap = findSnap(mmPos, state, DEFAULT_TOLERANCES, [pickedPointId]);
+        const snap = findSnap(mmPos, state, tolerances, [pickedPointId]);
         setSnapResult(snap);
       }
     },
-    [state, pickedPointId],
+    [state, pickedPointId, tolerances],
   );
 
   const handleEscape = useCallback(() => {

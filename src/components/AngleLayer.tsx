@@ -14,6 +14,9 @@ interface AngleLayerProps {
   readonly hoveredElementId: string | null;
   /** IDs of segments in the selected figure (to show all angles). */
   readonly selectedFigurePointIds?: readonly string[];
+  /** When true, congruence arcs are hidden. */
+  readonly hideProperties?: boolean;
+  readonly fontScale?: number;
 }
 
 const ARC_RADIUS_PX = 22;
@@ -32,8 +35,35 @@ export const AngleLayer = memo(function AngleLayer({
   selectedElementId,
   hoveredElementId,
   selectedFigurePointIds,
+  hideProperties,
+  fontScale = 1,
 }: AngleLayerProps) {
   const pxPerMm = viewport.zoom * CSS_PX_PER_MM;
+
+  // Build congruence groups for angle arcs (±0.5° tolerance, spec §8.3)
+  const congruenceArcCount = new Map<number, number>(); // index → number of arcs
+  if (!hideProperties) {
+    const degreeGroups = new Map<number, number[]>(); // rounded degree → angle indices
+    angles.forEach((angle, idx) => {
+      if (angle.classification === 'droit') return; // right angles use square
+      const rounded = Math.round(angle.degrees * 2) / 2; // 0.5° precision
+      const group = degreeGroups.get(rounded) ?? [];
+      group.push(idx);
+      degreeGroups.set(rounded, group);
+    });
+    let arcCounter = 1;
+    const groupArcMap = new Map<number, number>(); // rounded degree → arc count
+    for (const [deg, indices] of degreeGroups) {
+      if (indices.length >= 2) {
+        if (!groupArcMap.has(deg)) {
+          groupArcMap.set(deg, arcCounter++);
+        }
+        for (const idx of indices) {
+          congruenceArcCount.set(idx, groupArcMap.get(deg)!);
+        }
+      }
+    }
+  }
 
   return (
     <g data-testid="angle-layer">
@@ -150,13 +180,51 @@ export const AngleLayer = memo(function AngleLayer({
               strokeWidth={1.5}
               data-testid={`angle-arc-${index}`}
             />
+            {/* Obtus marker: small bar perpendicular to arc at midpoint (spec §13.4) */}
+            {angle.classification === 'obtus' &&
+              (() => {
+                const barLen = 5;
+                const barMx = sx + Math.cos(midAngle) * r;
+                const barMy = sy + Math.sin(midAngle) * r;
+                const perpX = -Math.sin(midAngle) * barLen;
+                const perpY = Math.cos(midAngle) * barLen;
+                return (
+                  <line
+                    x1={barMx - perpX}
+                    y1={barMy - perpY}
+                    x2={barMx + perpX}
+                    y2={barMy + perpY}
+                    stroke={CANVAS_ANGLE}
+                    strokeWidth={1.5}
+                  />
+                );
+              })()}
+            {/* Congruence arcs: additional concentric arcs for equal angles */}
+            {congruenceArcCount.has(index) &&
+              Array.from({ length: congruenceArcCount.get(index)! - 1 }, (_, i) => {
+                const extraR = r + (i + 1) * 3;
+                const ex1 = sx + Math.cos(arcStart) * extraR;
+                const ey1 = sy + Math.sin(arcStart) * extraR;
+                const ex2 = sx + Math.cos(arcEnd) * extraR;
+                const ey2 = sy + Math.sin(arcEnd) * extraR;
+                return (
+                  <path
+                    key={`congruence-${i}`}
+                    d={`M ${ex1} ${ey1} A ${extraR} ${extraR} 0 ${largeArc} ${sweepFlag} ${ex2} ${ey2}`}
+                    fill="none"
+                    stroke={CANVAS_ANGLE}
+                    strokeWidth={1}
+                    opacity={0.7}
+                  />
+                );
+              })}
             {/* 3e cycle: show degrees */}
             {displayMode === 'complet' && (
               <text
                 x={labelX}
                 y={labelY}
                 fill={CANVAS_ANGLE}
-                fontSize={Math.max(MIN_CANVAS_FONT_PX, 11)}
+                fontSize={Math.max(MIN_CANVAS_FONT_PX, 11) * fontScale}
                 fontFamily="system-ui, sans-serif"
                 textAnchor="middle"
                 dominantBaseline="central"

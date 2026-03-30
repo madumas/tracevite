@@ -1,19 +1,11 @@
 import { findSnap, DEFAULT_TOLERANCES } from './snap';
 import type { ConstructionState } from '@/model/types';
+import { createInitialState } from '@/model/state';
 
 function makeState(points: Array<{ id: string; x: number; y: number }>): ConstructionState {
   return {
+    ...createInitialState(),
     points: points.map((p) => ({ ...p, label: 'A', locked: false })),
-    segments: [],
-    circles: [],
-    gridSizeMm: 10,
-    snapEnabled: true,
-    activeTool: 'segment',
-    displayMode: 'simplifie',
-    displayUnit: 'cm',
-    selectedElementId: null,
-    consigne: null,
-    hideProperties: false,
   };
 }
 
