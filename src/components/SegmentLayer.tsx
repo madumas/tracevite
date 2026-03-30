@@ -198,22 +198,25 @@ export const SegmentLayer = memo(function SegmentLayer({
                 })}
               </g>
             )}
-            {/* Congruence tick marks at midpoint */}
+            {/* Congruence tick marks at 2/3 of segment (avoids overlap with // at 1/3) */}
             {congruenceTickMap.has(segment.id) && len > 0 && (
               <g>
                 {Array.from({ length: congruenceTickMap.get(segment.id)! }, (_, i) => {
                   const tickSpacing = 4;
                   const totalWidth = (congruenceTickMap.get(segment.id)! - 1) * tickSpacing;
                   const centerOffset = -totalWidth / 2 + i * tickSpacing;
-                  const perpX = len > 0 ? (-dy / len) * 5 : 0;
-                  const perpY = len > 0 ? (dx / len) * 5 : -5;
+                  const perpX = len > 0 ? (-dy / len) * 6 : 0;
+                  const perpY = len > 0 ? (dx / len) * 6 : -6;
+                  // Position at 2/3 of segment
+                  const twoThirdSx = sx1 + dx * 0.67;
+                  const twoThirdSy = sy1 + dy * 0.67;
                   return (
                     <line
                       key={i}
-                      x1={midSx + (dx / len) * centerOffset - perpX}
-                      y1={midSy + (dy / len) * centerOffset - perpY}
-                      x2={midSx + (dx / len) * centerOffset + perpX}
-                      y2={midSy + (dy / len) * centerOffset + perpY}
+                      x1={twoThirdSx + (dx / len) * centerOffset - perpX}
+                      y1={twoThirdSy + (dy / len) * centerOffset - perpY}
+                      x2={twoThirdSx + (dx / len) * centerOffset + perpX}
+                      y2={twoThirdSy + (dy / len) * centerOffset + perpY}
                       stroke={CANVAS_GUIDE}
                       strokeWidth={1.5}
                     />
