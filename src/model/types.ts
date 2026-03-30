@@ -29,7 +29,7 @@ export interface Circle {
 }
 
 /** Angle classification per PFEQ vocabulary. */
-export type AngleClassification = 'aigu' | 'droit' | 'obtus' | 'plat';
+export type AngleClassification = 'aigu' | 'droit' | 'obtus' | 'plat' | 'reflex';
 
 /** Detected angle at a vertex (computed, not serialized). */
 export interface AngleInfo {

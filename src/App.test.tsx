@@ -23,9 +23,10 @@ describe('App', () => {
     expect(screen.getByTestId('toolbar')).toBeInTheDocument();
   });
 
-  it('renders status bar', () => {
+  it('renders status bar with segment idle message', () => {
     render(<App />);
     expect(screen.getByTestId('status-bar')).toBeInTheDocument();
+    expect(screen.getByText(/Clique pour placer le premier point/)).toBeInTheDocument();
   });
 
   it('renders action bar with undo/redo disabled initially', () => {

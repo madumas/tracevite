@@ -1,25 +1,32 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ConstructionProvider,
   useConstructionState,
   useConstructionDispatch,
 } from '@/model/context';
-import { StatusBar } from '@/components/StatusBar';
 import { Toolbar } from '@/components/Toolbar';
 import { ActionBar } from '@/components/ActionBar';
 import { LevelSelector } from '@/components/LevelSelector';
 import { SaveIndicator } from '@/components/SaveIndicator';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
-import { GhostSegment } from '@/components/GhostSegment';
 import { SnapFeedback } from '@/components/SnapFeedback';
-import { ChainingIndicator } from '@/components/ChainingIndicator';
-import { useSegmentTool } from '@/hooks/useSegmentTool';
+import { ContextActionBar } from '@/components/ContextActionBar';
+import { AngleLayer } from '@/components/AngleLayer';
+import { useActiveTool } from '@/hooks/useActiveTool';
+import { useSelection } from '@/hooks/useSelection';
 import { usePointerInteraction } from '@/hooks/usePointerInteraction';
 import { useViewport } from '@/hooks/useViewport';
 import { useBeforeUnload } from '@/hooks/useBeforeUnload';
 import { useAutoSave } from '@/hooks/useAutoSave';
-import { UI_BG, UI_TEXT_PRIMARY, CANVAS_BG, HEADER_HEIGHT } from '@/config/theme';
+import {
+  UI_BG,
+  UI_TEXT_PRIMARY,
+  CANVAS_BG,
+  HEADER_HEIGHT,
+  STATUS_BAR_HEIGHT,
+} from '@/config/theme';
 import { CSS_PX_PER_MM, BOUNDS_WIDTH_MM, BOUNDS_HEIGHT_MM } from '@/engine/viewport';
+import { detectAllAngles, isAngleCluttered } from '@/engine/angles';
 import { GridLayer } from '@/components/GridLayer';
 import { SegmentLayer } from '@/components/SegmentLayer';
 import { PointLayer } from '@/components/PointLayer';
@@ -41,26 +48,55 @@ function AppContent() {
   const [showNewConfirm, setShowNewConfirm] = useState(false);
 
   const { saving } = useAutoSave(state, undoManager);
-  const segmentTool = useSegmentTool({ state, dispatch });
+
+  // Tool router — returns unified ToolHookResult
+  const tool = useActiveTool({ state, dispatch, viewport });
+
+  // Selection system
+  const selection = useSelection({
+    state,
+    dispatch,
+    toolIsIdle: tool.isIdle,
+    activeTool: state.activeTool,
+  });
+
+  // Pointer events — route to selection first, then tool
+  const handleCanvasClick = useCallback(
+    (mmPos: { x: number; y: number }) => {
+      // Selection gets first chance (when tool idle)
+      const handled = selection.trySelect(mmPos);
+      if (!handled) {
+        tool.handleClick(mmPos);
+      }
+    },
+    [selection, tool],
+  );
+
+  const handleCursorMove = useCallback(
+    (mmPos: { x: number; y: number }) => {
+      selection.updateHover(mmPos);
+      tool.handleCursorMove(mmPos);
+    },
+    [selection, tool],
+  );
 
   const { handlePointerDown, handlePointerMove, handlePointerUp } = usePointerInteraction({
     viewport,
-    onCanvasClick: segmentTool.handleClick,
-    onCursorMove: segmentTool.handleCursorMove,
+    onCanvasClick: handleCanvasClick,
+    onCursorMove: handleCursorMove,
   });
 
   const hasElements = state.points.length > 0;
-
-  // Prevent accidental tab closure
   useBeforeUnload(hasElements);
 
   // Toolbar handlers
   const handleToolChange = useCallback(
-    (tool: ToolType) => {
-      segmentTool.reset();
-      dispatch({ type: 'SET_ACTIVE_TOOL', activeTool: tool });
+    (t: ToolType) => {
+      tool.reset();
+      selection.clearSelection();
+      dispatch({ type: 'SET_ACTIVE_TOOL', activeTool: t });
     },
-    [dispatch, segmentTool],
+    [dispatch, tool, selection],
   );
 
   const handleGridChange = useCallback(
@@ -86,28 +122,39 @@ function AppContent() {
   // Action bar handlers
   const handleUndo = useCallback(() => dispatch({ type: 'UNDO' }), [dispatch]);
   const handleRedo = useCallback(() => dispatch({ type: 'REDO' }), [dispatch]);
-  const handlePrint = useCallback(() => {
-    // Placeholder — wired in Milestone C
-  }, []);
+  const handlePrint = useCallback(() => {}, []);
   const handleNewConstruction = useCallback(() => setShowNewConfirm(true), []);
   const handleConfirmNew = useCallback(() => {
     dispatch({ type: 'NEW_CONSTRUCTION' });
-    segmentTool.reset();
+    tool.reset();
     setShowNewConfirm(false);
-  }, [dispatch, segmentTool]);
+  }, [dispatch, tool]);
+
+  // Context action bar handlers
+  const handleContextDelete = useCallback(
+    (elementId: string) => dispatch({ type: 'REMOVE_ELEMENT', elementId }),
+    [dispatch],
+  );
+  const handleToggleLock = useCallback(
+    (pointId: string) => dispatch({ type: 'TOGGLE_POINT_LOCK', pointId }),
+    [dispatch],
+  );
 
   // Global keyboard handler
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
+      const inInput =
+        e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement;
+
       if (e.key === 'Escape') {
         if (showNewConfirm) {
           setShowNewConfirm(false);
+        } else if (state.selectedElementId) {
+          selection.clearSelection();
         } else {
-          segmentTool.handleEscape();
+          tool.handleEscape();
         }
       }
-      const inInput =
-        e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement;
       if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey && !inInput) {
         e.preventDefault();
         if (canUndo) dispatch({ type: 'UNDO' });
@@ -125,7 +172,7 @@ function AppContent() {
         if (hasElements) handlePrint();
       }
       if (e.key === 'Delete' || e.key === 'Backspace') {
-        if (state.selectedElementId && !(e.target instanceof HTMLInputElement)) {
+        if (state.selectedElementId && !inInput) {
           e.preventDefault();
           dispatch({ type: 'REMOVE_ELEMENT', elementId: state.selectedElementId });
         }
@@ -134,7 +181,7 @@ function AppContent() {
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
   }, [
-    segmentTool,
+    tool,
     canUndo,
     canRedo,
     dispatch,
@@ -142,12 +189,19 @@ function AppContent() {
     hasElements,
     handlePrint,
     state.selectedElementId,
+    selection,
   ]);
 
-  // Find chaining anchor
-  const chainingAnchor = segmentTool.chainingAnchorId
-    ? state.points.find((p) => p.id === segmentTool.chainingAnchorId)
-    : undefined;
+  // Derived: angles (computed, not stored in state)
+  const angles = useMemo(() => detectAllAngles(state), [state.points, state.segments]);
+  const cluttered = useMemo(
+    () => isAngleCluttered(state, state.schoolLevel),
+    [state.segments.length, state.schoolLevel],
+  );
+  const pointMap = useMemo(
+    () => new Map(state.points.map((p) => [p.id, { x: p.x, y: p.y }])),
+    [state.points],
+  );
 
   const pxPerMm = viewport.zoom * CSS_PX_PER_MM;
   const svgWidth = BOUNDS_WIDTH_MM * pxPerMm;
@@ -196,11 +250,23 @@ function AppContent() {
       />
 
       {/* Status Bar */}
-      <StatusBar
-        activeTool={state.activeTool}
-        segmentPhase={segmentTool.phase}
-        chainingLabel={chainingAnchor?.label}
-      />
+      <div
+        style={{
+          height: STATUS_BAR_HEIGHT,
+          display: 'flex',
+          alignItems: 'center',
+          padding: '0 12px',
+          background: '#EDF1F5',
+          borderBottom: '1px solid #D1D8E0',
+          fontSize: 13,
+          color: '#4A5568',
+        }}
+        role="status"
+        aria-live="polite"
+        data-testid="status-bar"
+      >
+        {tool.statusMessage}
+      </div>
 
       {/* Canvas area */}
       <div
@@ -238,20 +304,34 @@ function AppContent() {
             viewport={viewport}
             selectedElementId={state.selectedElementId}
           />
-          {segmentTool.firstPointMm && segmentTool.cursorMm && (
-            <GhostSegment
-              startMm={segmentTool.firstPointMm}
-              endMm={segmentTool.snapResult?.snappedPosition ?? segmentTool.cursorMm}
-              viewport={viewport}
-              displayUnit={state.displayUnit}
-              isChaining={segmentTool.phase === 'segment_created'}
-            />
-          )}
-          {chainingAnchor && segmentTool.phase === 'segment_created' && (
-            <ChainingIndicator point={chainingAnchor} viewport={viewport} />
-          )}
-          <SnapFeedback snapResult={segmentTool.snapResult} viewport={viewport} />
+
+          {/* Angle arcs and markers */}
+          <AngleLayer
+            angles={angles}
+            points={pointMap}
+            viewport={viewport}
+            schoolLevel={state.schoolLevel}
+            cluttered={cluttered}
+            selectedElementId={state.selectedElementId}
+            hoveredElementId={selection.hoveredElement?.id ?? null}
+          />
+
+          {/* Tool-specific overlays (ghost segment, ghost circle, etc.) */}
+          {tool.overlayElements}
+
+          {/* Snap feedback */}
+          <SnapFeedback snapResult={tool.snapResult} viewport={viewport} />
         </svg>
+
+        {/* Context action bar (positioned over canvas) */}
+        {state.selectedElementId && (
+          <ContextActionBar
+            state={state}
+            viewport={viewport}
+            onDelete={handleContextDelete}
+            onToggleLock={handleToggleLock}
+          />
+        )}
 
         <NavigationControls
           onPanUp={panUp}
@@ -274,7 +354,6 @@ function AppContent() {
         onNewConstruction={handleNewConstruction}
       />
 
-      {/* New construction confirmation dialog */}
       {showNewConfirm && (
         <ConfirmDialog
           title={CONFIRM_NEW_TITLE}

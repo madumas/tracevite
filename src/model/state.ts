@@ -292,3 +292,12 @@ export function setSelectedElement(
 ): ConstructionState {
   return { ...state, selectedElementId };
 }
+
+// ── Geometric toggle (pushed to undo) ─────────────────────
+
+export function togglePointLock(state: ConstructionState, pointId: string): ConstructionState {
+  return {
+    ...state,
+    points: state.points.map((p) => (p.id === pointId ? { ...p, locked: !p.locked } : p)),
+  };
+}

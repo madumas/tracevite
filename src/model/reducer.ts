@@ -26,6 +26,7 @@ export type ConstructionAction =
   | { type: 'SET_ACTIVE_TOOL'; activeTool: ToolType }
   | { type: 'SET_SNAP_ENABLED'; snapEnabled: boolean }
   | { type: 'SET_SELECTED_ELEMENT'; elementId: string | null }
+  | { type: 'TOGGLE_POINT_LOCK'; pointId: string }
   | { type: 'UNDO' }
   | { type: 'REDO' }
   | { type: 'NEW_CONSTRUCTION' };
@@ -116,6 +117,11 @@ export function reduce(state: ReducerState, action: ConstructionAction): Reducer
           State.setSelectedElement(current, action.elementId),
         ),
       };
+
+    case 'TOGGLE_POINT_LOCK': {
+      const newState = State.togglePointLock(current, action.pointId);
+      return { undoManager: Undo.pushState(undoManager, newState) };
+    }
 
     // ── Undo/Redo ─────────────────────────────────────
     case 'UNDO':

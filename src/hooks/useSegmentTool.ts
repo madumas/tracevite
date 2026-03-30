@@ -1,25 +1,30 @@
-import { useState, useCallback, useRef, useEffect } from 'react';
-import type { ConstructionState, SegmentToolPhase, SnapResult } from '@/model/types';
+import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
+import type { ConstructionState, SegmentToolPhase, SnapResult, ViewportState } from '@/model/types';
 import type { ConstructionAction } from '@/model/reducer';
+import type { ToolHookResult } from './types';
 import { findSnap, DEFAULT_TOLERANCES } from '@/engine/snap';
 import { CHAIN_TIMEOUT_MS, CHAIN_MOVEMENT_THRESHOLD_MM } from '@/config/accessibility';
 import { distance } from '@/engine/geometry';
+import {
+  STATUS_SEGMENT_IDLE,
+  STATUS_SEGMENT_FIRST_PLACED,
+  STATUS_SEGMENT_CHAINING,
+} from '@/config/messages';
+import { GhostSegment } from '@/components/GhostSegment';
+import { ChainingIndicator } from '@/components/ChainingIndicator';
+import { createElement } from 'react';
 
 interface UseSegmentToolOptions {
   state: ConstructionState;
   dispatch: (action: ConstructionAction) => void;
+  viewport: ViewportState;
 }
 
-export interface SegmentToolState {
-  phase: SegmentToolPhase;
-  firstPointMm: { x: number; y: number } | null;
-  firstPointId: string | null; // existing point reused
-  cursorMm: { x: number; y: number } | null;
-  snapResult: SnapResult | null;
-  chainingAnchorId: string | null;
-}
-
-export function useSegmentTool({ state, dispatch }: UseSegmentToolOptions) {
+export function useSegmentTool({
+  state,
+  dispatch,
+  viewport,
+}: UseSegmentToolOptions): ToolHookResult {
   const [phase, setPhase] = useState<SegmentToolPhase>('idle');
   const [firstPoint, setFirstPoint] = useState<{
     mm: { x: number; y: number };
@@ -32,7 +37,6 @@ export function useSegmentTool({ state, dispatch }: UseSegmentToolOptions) {
   const chainTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastMoveMm = useRef<{ x: number; y: number } | null>(null);
 
-  // Clear chaining timer
   const clearChainTimer = useCallback(() => {
     if (chainTimerRef.current) {
       clearTimeout(chainTimerRef.current);
@@ -40,7 +44,6 @@ export function useSegmentTool({ state, dispatch }: UseSegmentToolOptions) {
     }
   }, []);
 
-  // Start chaining timer
   const startChainTimer = useCallback(() => {
     clearChainTimer();
     chainTimerRef.current = setTimeout(() => {
@@ -50,34 +53,26 @@ export function useSegmentTool({ state, dispatch }: UseSegmentToolOptions) {
     }, CHAIN_TIMEOUT_MS);
   }, [clearChainTimer]);
 
-  // Reset tool to idle
   const reset = useCallback(() => {
     setPhase('idle');
     setFirstPoint(null);
     setChainingAnchorId(null);
+    setCursorMm(null);
+    setSnapResult(null);
     clearChainTimer();
   }, [clearChainTimer]);
 
-  // Handle click on canvas
   const handleClick = useCallback(
     (mmPos: { x: number; y: number }) => {
-      if (state.activeTool !== 'segment') return;
-
-      // Snap the click position
       const excludeIds = firstPoint?.existingId ? [firstPoint.existingId] : [];
       const snap = findSnap(mmPos, state, DEFAULT_TOLERANCES, excludeIds);
       const snapped = snap.snappedPosition;
 
       if (phase === 'idle') {
-        // Place first point
-        setFirstPoint({
-          mm: snapped,
-          existingId: snap.snappedToPointId,
-        });
+        setFirstPoint({ mm: snapped, existingId: snap.snappedToPointId });
         setPhase('first_point_placed');
         clearChainTimer();
       } else if (phase === 'first_point_placed' || phase === 'segment_created') {
-        // Place second point → create segment
         if (!firstPoint) return;
 
         dispatch({
@@ -94,15 +89,8 @@ export function useSegmentTool({ state, dispatch }: UseSegmentToolOptions) {
           },
         });
 
-        // Enter chaining: the endpoint becomes the new start
-        const newAnchorId = snap.snappedToPointId;
-        // Find the created point (last point in state after dispatch)
-        // We set up chaining from the endpoint
-        setFirstPoint({
-          mm: snapped,
-          existingId: newAnchorId,
-        });
-        setChainingAnchorId(newAnchorId ?? null);
+        setFirstPoint({ mm: snapped, existingId: snap.snappedToPointId });
+        setChainingAnchorId(snap.snappedToPointId ?? null);
         setPhase('segment_created');
         startChainTimer();
       }
@@ -110,17 +98,13 @@ export function useSegmentTool({ state, dispatch }: UseSegmentToolOptions) {
     [state, phase, firstPoint, dispatch, clearChainTimer, startChainTimer],
   );
 
-  // Handle cursor movement
   const handleCursorMove = useCallback(
     (mmPos: { x: number; y: number }) => {
       setCursorMm(mmPos);
-
-      // Snap preview
       const excludeIds = firstPoint?.existingId ? [firstPoint.existingId] : [];
       const snap = findSnap(mmPos, state, DEFAULT_TOLERANCES, excludeIds);
       setSnapResult(snap);
 
-      // Reset chaining timer on significant movement
       if (phase === 'segment_created' && lastMoveMm.current) {
         const moved = distance(lastMoveMm.current, mmPos);
         if (moved > CHAIN_MOVEMENT_THRESHOLD_MM) {
@@ -132,17 +116,13 @@ export function useSegmentTool({ state, dispatch }: UseSegmentToolOptions) {
     [state, phase, firstPoint, startChainTimer],
   );
 
-  // Escape handler
   const handleEscape = useCallback(() => {
     if (phase !== 'idle') {
       reset();
     }
   }, [phase, reset]);
 
-  // After segment creation, resolve the chaining anchor point ID.
-  // dispatch is synchronous but state updates on next render — this effect
-  // picks up the newly created endpoint so the next segment reuses it
-  // instead of creating a duplicate point at the same coordinates.
+  // Resolve chaining anchor after dispatch
   useEffect(() => {
     if (phase === 'segment_created' && firstPoint && !firstPoint.existingId) {
       const match = state.points.find((p) => p.x === firstPoint.mm.x && p.y === firstPoint.mm.y);
@@ -153,21 +133,65 @@ export function useSegmentTool({ state, dispatch }: UseSegmentToolOptions) {
     }
   }, [phase, firstPoint, state.points]);
 
-  // Cleanup timer on unmount
   useEffect(() => {
     return () => clearChainTimer();
   }, [clearChainTimer]);
 
+  // Status message
+  const chainingLabel = chainingAnchorId
+    ? (state.points.find((p) => p.id === chainingAnchorId)?.label ?? '?')
+    : '?';
+
+  const statusMessage =
+    phase === 'idle'
+      ? STATUS_SEGMENT_IDLE
+      : phase === 'first_point_placed'
+        ? STATUS_SEGMENT_FIRST_PLACED
+        : STATUS_SEGMENT_CHAINING(chainingLabel);
+
+  // Overlay elements
+  const chainingAnchor = chainingAnchorId
+    ? state.points.find((p) => p.id === chainingAnchorId)
+    : undefined;
+
+  const overlayElements = useMemo(() => {
+    const elements: React.ReactNode[] = [];
+
+    if (firstPoint?.mm && cursorMm) {
+      const endMm = snapResult?.snappedPosition ?? cursorMm;
+      elements.push(
+        createElement(GhostSegment, {
+          key: 'ghost',
+          startMm: firstPoint.mm,
+          endMm,
+          viewport,
+          displayUnit: state.displayUnit,
+          isChaining: phase === 'segment_created',
+        }),
+      );
+    }
+
+    if (chainingAnchor && phase === 'segment_created') {
+      elements.push(
+        createElement(ChainingIndicator, {
+          key: 'chaining',
+          point: chainingAnchor,
+          viewport,
+        }),
+      );
+    }
+
+    return elements.length > 0 ? elements : null;
+  }, [firstPoint, cursorMm, snapResult, viewport, state.displayUnit, phase, chainingAnchor]);
+
   return {
-    phase,
-    firstPointMm: firstPoint?.mm ?? null,
-    firstPointId: firstPoint?.existingId ?? null,
-    cursorMm,
-    snapResult,
-    chainingAnchorId,
     handleClick,
     handleCursorMove,
     handleEscape,
     reset,
+    isIdle: phase === 'idle',
+    statusMessage,
+    snapResult,
+    overlayElements,
   };
 }
