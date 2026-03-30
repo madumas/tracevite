@@ -95,23 +95,26 @@ describe('detectPerpendicularSegments', () => {
 
 describe('detectEqualLengths', () => {
   it('detects segments with same length', () => {
+    const points = makePoints([0, 0], [50, 0], [100, 0], [150, 0.5]);
     const segments: Segment[] = [
       { id: 's1', startPointId: 'p0', endPointId: 'p1', lengthMm: 50 },
       { id: 's2', startPointId: 'p2', endPointId: 'p3', lengthMm: 50.5 },
     ];
 
-    const result = detectEqualLengths(segments);
+    const result = detectEqualLengths(segments, points);
     expect(result).toHaveLength(1);
     expect(result[0]!.type).toBe('equal_length');
+    expect(result[0]!.label).toBe('AB = CD');
   });
 
   it('rejects segments with different lengths', () => {
+    const points = makePoints([0, 0], [50, 0], [100, 0], [152, 0]);
     const segments: Segment[] = [
       { id: 's1', startPointId: 'p0', endPointId: 'p1', lengthMm: 50 },
       { id: 's2', startPointId: 'p2', endPointId: 'p3', lengthMm: 52 },
     ];
 
-    const result = detectEqualLengths(segments);
+    const result = detectEqualLengths(segments, points);
     expect(result).toHaveLength(0);
   });
 });

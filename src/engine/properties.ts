@@ -112,7 +112,11 @@ export function detectPerpendicularSegments(
 }
 
 /** Detect pairs of segments with equal lengths (±1mm). */
-export function detectEqualLengths(segments: readonly Segment[]): DetectedProperty[] {
+export function detectEqualLengths(
+  segments: readonly Segment[],
+  points: readonly Point[],
+): DetectedProperty[] {
+  const pointMap = new Map(points.map((p) => [p.id, p]));
   const properties: DetectedProperty[] = [];
 
   for (let i = 0; i < segments.length; i++) {
@@ -121,10 +125,16 @@ export function detectEqualLengths(segments: readonly Segment[]): DetectedProper
       const s2 = segments[j]!;
 
       if (Math.abs(s1.lengthMm - s2.lengthMm) <= EQUAL_LENGTH_TOLERANCE_MM) {
+        const s1Start = pointMap.get(s1.startPointId);
+        const s1End = pointMap.get(s1.endPointId);
+        const s2Start = pointMap.get(s2.startPointId);
+        const s2End = pointMap.get(s2.endPointId);
+        if (!s1Start || !s1End || !s2Start || !s2End) continue;
+
         properties.push({
           type: 'equal_length',
           involvedIds: [s1.id, s2.id],
-          label: `${s1.id} = ${s2.id}`,
+          label: `${s1Start.label}${s1End.label} = ${s2Start.label}${s2End.label}`,
         });
       }
     }
@@ -141,6 +151,6 @@ export function detectAllProperties(
   return [
     ...detectParallelSegments(segments, points),
     ...detectPerpendicularSegments(segments, points),
-    ...detectEqualLengths(segments),
+    ...detectEqualLengths(segments, points),
   ];
 }
