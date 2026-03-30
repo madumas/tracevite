@@ -372,7 +372,7 @@ Conversion affichage :
 **Mode pick-up / put-down (par défaut, adapté TDC) :**
 - Clic sur un point → le point est « ramassé » (visuellement agrandi, couleur d'accentuation, curseur change)
 - Déplacement de la souris (sans bouton enfoncé) → le point suit le curseur
-- Clic pour « déposer » le point à son nouvel emplacement
+- Clic pour « déposer » le point à son nouvel emplacement. **Après le dépôt, le point reste sélectionné** (surbrillance + barre d'actions contextuelle visible). Cela permet à l'enfant de supprimer, verrouiller ou inspecter le point sans changer d'outil. Ce comportement résout le fait qu'en mode Déplacer, un clic direct sur un point initie toujours un déplacement — la sélection post-drop est le seul chemin naturel vers les actions contextuelles sur un point depuis le canevas.
 - Escape pour annuler le déplacement et remettre le point à sa position initiale
 
 **Mode drag (alternatif) :** Clic-glissé classique disponible en parallèle.
@@ -585,14 +585,14 @@ L'enseignant peut partager un lien TraceVite avec une consigne pré-remplie et u
 - Format : virgule décimale, unité affichée (ex : "4,5 cm" ou "45 mm")
 
 ### 8.2 Angles
-- **Mode 2e cycle** : seul le carré conventionnel d'angle droit est affiché au sommet. Les angles aigus et obtus sont indiqués par un arc coloré sans valeur numérique. La classification (aigu/droit/obtus) apparaît dans le panneau latéral.
+- **Mode 2e cycle** : seul le carré conventionnel d'angle droit est affiché au sommet (mêmes dimensions qu'en 3e cycle : côté 12px, stroke 2px). Les angles aigus et obtus sont indiqués par un arc coloré sans valeur numérique. La classification (aigu/droit/obtus) apparaît dans le panneau latéral.
 - **Mode 3e cycle** : chaque angle formé par deux segments connectés affiche :
   - Un arc de mesure (petit arc entre les deux segments, rayon ~15px écran)
   - La valeur en degrés (ex : "90°")
   - Le type en couleur :
-    - Angle droit : couleur verte + petit carré conventionnel au sommet
-    - Angle aigu : couleur ambre/orange
-    - Angle obtus : couleur ambre/orange
+    - Angle droit : couleur sarcelle (#0B7285) + **carré conventionnel au sommet, côté 12px écran, stroke 2px**. Le carré doit être clairement visible même sur des constructions denses — l'identification visuelle de l'angle droit est la propriété la plus enseignée au primaire.
+    - Angle aigu : couleur orange brûlé (#C24B22)
+    - Angle obtus : couleur orange brûlé (#C24B22)
 - La classification apparaît aussi dans le panneau latéral
 - **Surcharge visuelle** : quand la construction dépasse un seuil de segments, les mesures d'angle ne s'affichent sur le canevas que pour l'élément sélectionné ou survolé. Seuil par défaut : **5 segments en mode 2e cycle, 6 segments en mode 3e cycle** (~40% des enfants TDC ont des difficultés visuo-spatiales concomitantes — un seuil trop élevé sature ces élèves). Le panneau latéral continue d'afficher tous les angles en tout temps.
   - **Survol d'un sommet** : affiche tous les angles formés à ce sommet.

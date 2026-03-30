@@ -17,7 +17,7 @@ interface AngleLayerProps {
 }
 
 const ARC_RADIUS_PX = 15;
-const SQUARE_SIZE_PX = 8;
+const SQUARE_SIZE_PX = 12;
 
 /**
  * Renders angle arcs and markers on the canvas SVG.
@@ -93,7 +93,7 @@ export const AngleLayer = memo(function AngleLayer({
               d={path}
               fill="none"
               stroke={CANVAS_GUIDE}
-              strokeWidth={1.5}
+              strokeWidth={2}
               data-testid={`angle-right-${index}`}
             />
           );
