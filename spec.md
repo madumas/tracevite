@@ -106,7 +106,7 @@ src/
     ContextActions.tsx         # Barre d'actions contextuelle (apparaît près de l'élément sélectionné)
     StatusBar.tsx              # Barre de statut contextuelle — indicateur de séquençage (outil actif + prochaine action)
     PrintDialog.tsx            # Dialogue d'instructions d'impression + déclenchement export PDF
-    LevelSelector.tsx          # Sélecteur de niveau scolaire (2e cycle / 3e cycle)
+    ModeSelector.tsx           # Sélecteur de mode d'affichage (Simplifié / Complet)
   engine/
     geometry.ts                # Calculs géométriques purs (distances, angles, intersections)
     snap.ts                    # Logique d'accrochage (grille, sommets, parallélisme, perpendicularité)
@@ -163,7 +163,7 @@ interface AngleInfo {
   ray2PointId: string;
   degrees: number;
   classification: 'aigu' | 'droit' | 'obtus' | 'plat';
-  // Note : en mode 2e cycle, l'angle « plat » n'est pas affiché (hors programme)
+  // Note : en mode Simplifié, l'angle « plat » n'est pas affiché (hors programme 2e cycle)
   // « Rentrant » est retiré du MVP — entièrement hors programme au primaire
 }
 
@@ -182,7 +182,7 @@ interface ConstructionState {
   gridSizeMm: number;          // taille d'un carreau en mm (défaut : 10mm = 1cm)
   snapEnabled: boolean;
   activeTool: ToolType;
-  schoolLevel: '2e_cycle' | '3e_cycle';  // adapte l'affichage des mesures et outils disponibles
+  displayMode: 'simplifie' | 'complet';  // adapte l'affichage des mesures et outils disponibles
   displayUnit: 'cm' | 'mm';             // unité d'affichage (défaut : 'cm')
   consigne?: string;                     // instruction d'exercice de l'enseignant (max 1000 car., lecture seule pour l'élève, voir §8.0.1)
   history: HistoryEntry[];      // pour undo/redo
@@ -287,7 +287,7 @@ Conversion affichage :
 
 **Connecter pour fermer une figure :**
 - Si le dernier point d'un segment se connecte au premier point de la chaîne, la figure est fermée
-- Une figure fermée déclenche le calcul automatique du périmètre et de l'aire
+- Une figure fermée déclenche la classification automatique (triangle, carré, etc.)
 
 ### 6.2 Outil Point
 - Clic simple → place un point libre sur le canevas
@@ -365,8 +365,8 @@ Conversion affichage :
 - L'ensemble de l'opération (axe + copie réfléchie) constitue **une seule étape** dans l'historique undo.
 
 **Contraintes d'axe par niveau :**
-- **Mode 2e cycle** : l'axe est contraint aux orientations verticale, horizontale ou diagonale à 45° (la PDA évalue la réflexion avec axe oblique dès la 4e année — ex. : axe de symétrie d'un losange). Si l'axe tracé ne correspond pas à l'une de ces orientations, il est **snappé automatiquement** à l'orientation permise la plus proche.
-- **Mode 3e cycle** : l'axe peut être dans n'importe quelle orientation.
+- **Mode Simplifié** : l'axe est contraint aux orientations verticale, horizontale ou diagonale à 45° (la PDA évalue la réflexion avec axe oblique dès la 4e année — ex. : axe de symétrie d'un losange). Si l'axe tracé ne correspond pas à l'une de ces orientations, il est **snappé automatiquement** à l'orientation permise la plus proche.
+- **Mode Complet** : l'axe peut être dans n'importe quelle orientation.
 
 ### 6.7 Outil Déplacer
 **Mode pick-up / put-down (par défaut, adapté TDC) :**
@@ -493,40 +493,42 @@ Désactivé par défaut, activable via un sélecteur « Sons » dans les paramè
 
 ## 8. Feedback visuel en temps réel
 
-### 8.0 Sélecteur de niveau scolaire
+### 8.0 Sélecteur de mode d'affichage
 
-Un sélecteur dans l'en-tête permet de choisir le niveau : **2e cycle** (3e-4e année) ou **3e cycle** (5e-6e année). Ce choix adapte l'affichage des mesures et les outils disponibles :
+Un sélecteur dans l'en-tête permet de choisir le mode d'affichage : **Simplifié** (par défaut) ou **Complet**. Les libellés sont non-jugementaux — ils décrivent l'interface, pas le niveau de l'enfant. Ce choix adapte l'affichage des mesures et les outils disponibles :
 
-| Aspect | 2e cycle | 3e cycle |
-|--------|----------|----------|
+| Aspect | Simplifié | Complet |
+|--------|-----------|---------|
 | Angles | Classification seulement (aigu/droit/obtus) + carré pour angle droit | Classification + mesure en degrés |
 | Cercle | Non disponible | Disponible |
 | Plan cartésien | Non disponible | Disponible (v2) |
 | Réflexion | Disponible (axe vertical/horizontal/diagonal 45°) | Disponible (axe quelconque) |
+| Classification triangles | Une seule (la plus spécifique) | Cumulative (ex. « rectangle isocèle ») |
+| Seuil surcharge visuelle | 5 segments | 6 segments |
 
-Le niveau par défaut est 2e cycle. L'enseignant ou l'enfant peut changer à tout moment.
+Le mode par défaut est Simplifié. L'enseignant ou l'enfant peut changer à tout moment.
 
 **Aide contextuelle pour les parents (usage à la maison) :** le sélecteur utilise un menu déroulant personnalisé (pas un `<select>` natif) avec deux lignes par option :
 
-- **État fermé (affiché dans le header)** : texte compact avec l'année scolaire entre parenthèses — « 2e cycle (3e-4e année) » ou « 3e cycle (5e-6e année) ». Cela aide le parent qui ne connaît pas la terminologie « cycle » à identifier immédiatement le bon réglage.
+- **État fermé (affiché dans le header)** : texte compact — « Simplifié » ou « Complet ».
 
 - **État ouvert (dropdown déplié)** : chaque option affiche :
-  - Ligne principale (14px, gras) : « 2e cycle » / « 3e cycle »
-  - Ligne secondaire (12px, gris, non gras) : « 3e et 4e année (8-10 ans) » / « 5e et 6e année (10-12 ans) »
+  - Ligne principale (14px, gras) : « Simplifié » / « Complet »
+  - Ligne secondaire (12px, gris, non gras) : « Affichage essentiel (correspond au 2e cycle) » / « Toutes les mesures et outils (correspond au 3e cycle) »
   - Hauteur de chaque option : minimum 44px (cible de clic conforme TDC)
 
 Exemple visuel du dropdown ouvert :
 ```
-┌──────────────────────────────┐
-│  2e cycle               ✓   │
-│  3e et 4e année (8-10 ans)   │
-├──────────────────────────────┤
-│  3e cycle                    │
-│  5e et 6e année (10-12 ans)  │
-└──────────────────────────────┘
+┌────────────────────────────────────────────────────┐
+│  Simplifié                                    ✓   │
+│  Affichage essentiel (correspond au 2e cycle)      │
+├────────────────────────────────────────────────────┤
+│  Complet                                           │
+│  Toutes les mesures et outils (correspond au 3e cycle) │
+└────────────────────────────────────────────────────┘
 ```
 
-**Note de conception :** un menu déroulant personnalisé (plutôt qu'un `<select>` natif) est nécessaire pour afficher les deux lignes par option. Il doit respecter les attributs `role="listbox"` / `role="option"` et `aria-selected` pour l'accessibilité. Le dropdown se ferme au clic en dehors (comportement standard). Le texte secondaire (année et âge) n'ajoute pas de charge cognitive pour l'enfant qui utilise l'outil en classe — il connaît son cycle. L'information est principalement utile au parent à la maison.
+**Note de conception :** un menu déroulant personnalisé (plutôt qu'un `<select>` natif) est nécessaire pour afficher les deux lignes par option. Il doit respecter les attributs `role="listbox"` / `role="option"` et `aria-selected` pour l'accessibilité. Le dropdown se ferme au clic en dehors (comportement standard). Le texte secondaire (référence au cycle) est une information professionnelle pour l'enseignant ou le parent — il fait le lien avec le programme scolaire sans étiqueter l'enfant.
 
 ### 8.0.1 Consigne d'exercice (support devoirs à la maison)
 
@@ -548,7 +550,7 @@ Exemple visuel du dropdown ouvert :
 - Texte : police 14px (taille ajustable via le facteur de police §13.3), noir, préfixé « **Consigne :** » en gras suivi du texte de l'enseignant
 - Exemple : « **Consigne :** Construis un rectangle de 4 cm × 6 cm avec une diagonale. »
 - **Retours à la ligne** (`\n`) préservés dans le texte de la consigne (les enseignants utilisent des étapes numérotées). Encodage URL : `%0A`. Le bandeau affiche le texte sur 1-2 lignes max (text-overflow: ellipsis après 2 lignes). Un clic sur le bandeau ouvre le texte complet dans un popover avec `white-space: pre-line` (retours à la ligne rendus)
-- Bouton de fermeture (×) à droite (44×44px) : masque le bandeau pour la session. Un bouton discret « Voir la consigne » apparaît à côté du sélecteur de niveau dans le header pour la réafficher. La consigne n'est PAS supprimée, seulement masquée
+- Bouton de fermeture (×) à droite (44×44px) : masque le bandeau pour la session. Un bouton discret « Voir la consigne » apparaît à côté du sélecteur de mode dans le header pour la réafficher. La consigne n'est PAS supprimée, seulement masquée
 - Le bandeau se superpose aux premiers ~40px du haut du canevas (position: absolute) — ne réduit pas la zone de canevas utilisable
 
 **Interaction avec la barre de statut :**
@@ -559,19 +561,20 @@ Exemple visuel du dropdown ouvert :
 
 ### 8.0.2 Lien d'exercice par URL
 
-L'enseignant peut partager un lien TraceVite avec une consigne pré-remplie et un niveau scolaire via des paramètres URL. Cela permet le partage via Google Classroom, Microsoft Teams, ou tout autre plateforme sans nécessiter de téléchargement de fichier.
+L'enseignant peut partager un lien TraceVite avec une consigne pré-remplie et un mode d'affichage via des paramètres URL. Cela permet le partage via Google Classroom, Microsoft Teams, ou tout autre plateforme sans nécessiter de téléchargement de fichier.
 
 **Paramètres URL supportés :**
 - `consigne` : texte de la consigne, encodé URL (ex : `?consigne=Construis+un+carr%C3%A9+de+4+cm`). Maximum 1000 caractères après décodage. Au-delà, tronqué silencieusement. **Retours à la ligne** : supportés via `%0A` (encodage URL standard de `\n`) **et** via le caractère `|` (pipe) comme alias. Le pipe est converti en retour à la ligne après décodage URL. Cela permet à l'enseignant de taper facilement des consignes multi-étapes : `?consigne=Étape+1|Étape+2|Étape+3` au lieu de `?consigne=Étape+1%0AÉtape+2%0AÉtape+3`. Le `\n` dans les fichiers `.tracevite` JSON reste le séparateur standard (pas de conversion pipe).
-- `level` : `2e_cycle` ou `3e_cycle`. Si présent, définit le niveau scolaire initial (remplace le niveau par défaut mais ne verrouille pas — l'enfant peut changer).
+- `mode` : `simplifie` ou `complet`. Si présent, définit le mode d'affichage initial (remplace le mode par défaut mais ne verrouille pas — l'enfant peut changer).
+- `level` : `2e_cycle` ou `3e_cycle`. **Rétrocompatibilité** : accepté comme alias — `2e_cycle` est converti en `simplifie`, `3e_cycle` en `complet`. Si `mode` et `level` sont présents, `mode` a priorité.
 
 **Exemple de lien complet :**
-`https://tracevite.ca/?consigne=Construis+un+rectangle+de+4+cm+%C3%97+6+cm&level=2e_cycle`
+`https://tracevite.ca/?consigne=Construis+un+rectangle+de+4+cm+%C3%97+6+cm&mode=simplifie`
 
 **Comportement au chargement :**
 1. L'application détecte les paramètres URL au démarrage
 2. Si `consigne` est présent : la construction courante est auto-sauvegardée dans son créneau existant, puis un **nouveau créneau** est créé avec une construction vide et cette consigne (même comportement que « Nouvelle construction »). L'ancienne construction reste accessible dans « Mes constructions ». **Si les 50 créneaux sont pleins** : message « Tu as 50 constructions sauvegardées. Exporte ou supprime une construction dans "Mes constructions" pour ouvrir cet exercice. » avec bouton direct vers « Mes constructions ». L'enfant peut re-cliquer le lien Classroom après avoir libéré un créneau.
-3. Si `level` est présent et valide : le sélecteur de niveau est positionné sur la valeur indiquée
+3. Si `mode` (ou `level` en rétrocompatibilité) est présent et valide : le sélecteur de mode est positionné sur la valeur indiquée
 4. Les paramètres URL sont **consommés une seule fois** : après le chargement, l'URL est nettoyée via `history.replaceState()` (sans paramètres). Un rechargement de la page restaure la construction depuis IndexedDB (avec sa consigne), pas depuis l'URL
 5. Si `consigne` est présent mais l'URL est rechargée après nettoyage : la consigne est déjà sauvegardée dans le créneau IndexedDB — rien ne se passe
 
@@ -592,8 +595,8 @@ L'enseignant peut partager un lien TraceVite avec une consigne pré-remplie et u
 - Format : virgule décimale, unité affichée (ex : "4,5 cm" ou "45 mm")
 
 ### 8.2 Angles
-- **Mode 2e cycle** : seul le carré conventionnel d'angle droit est affiché au sommet (mêmes dimensions qu'en 3e cycle : côté 12px, stroke 2px). Les angles aigus et obtus sont indiqués par un arc coloré sans valeur numérique. La classification (aigu/droit/obtus) apparaît dans le panneau latéral.
-- **Mode 3e cycle** : chaque angle formé par deux segments connectés affiche :
+- **Mode Simplifié** : seul le carré conventionnel d'angle droit est affiché au sommet (mêmes dimensions qu'en mode Complet : côté 12px, stroke 2px). Les angles aigus et obtus sont indiqués par un arc coloré sans valeur numérique. La classification (aigu/droit/obtus) apparaît dans le panneau latéral.
+- **Mode Complet** : chaque angle formé par deux segments connectés affiche :
   - Un arc de mesure (petit arc entre les deux segments, rayon ~15px écran)
   - La valeur en degrés (ex : "90°")
   - Le type en couleur :
@@ -601,7 +604,7 @@ L'enseignant peut partager un lien TraceVite avec une consigne pré-remplie et u
     - Angle aigu : couleur orange brûlé (#C24B22)
     - Angle obtus : couleur orange brûlé (#C24B22)
 - La classification apparaît aussi dans le panneau latéral
-- **Surcharge visuelle** : quand la construction dépasse un seuil de segments, les mesures d'angle ne s'affichent sur le canevas que pour l'élément sélectionné ou survolé. Seuil par défaut : **5 segments en mode 2e cycle, 6 segments en mode 3e cycle** (~40% des enfants TDC ont des difficultés visuo-spatiales concomitantes — un seuil trop élevé sature ces élèves). Le panneau latéral continue d'afficher tous les angles en tout temps.
+- **Surcharge visuelle** : quand la construction dépasse un seuil de segments, les mesures d'angle ne s'affichent sur le canevas que pour l'élément sélectionné ou survolé. Seuil par défaut : **5 segments en mode Simplifié, 6 segments en mode Complet** (~40% des enfants TDC ont des difficultés visuo-spatiales concomitantes — un seuil trop élevé sature ces élèves). Le panneau latéral continue d'afficher tous les angles en tout temps.
   - **Survol d'un sommet** : affiche tous les angles formés à ce sommet.
   - **Survol d'un segment** : affiche les angles aux deux extrémités du segment.
   - **Figure sélectionnée** : affiche **tous les marqueurs d'angle de la figure simultanément** (ex. les 4 carrés d'angle droit d'un rectangle). C'est pédagogiquement essentiel — voir tous les angles confirme visuellement la classification.
@@ -623,10 +626,10 @@ Affichées dans le panneau latéral droit en temps réel :
 
 **Classification des angles (évaluation par priorité — la première règle qui matche gagne) :**
 1. Droit : [89,5°, 90,5°] (tolérance pour les constructions manuelles — **priorité sur aigu/obtus**)
-2. Plat : [179,5°, 180,5°] — masqué en mode 2e cycle (hors programme). **Quand 3 points sont alignés en mode 2e cycle** : ne pas afficher « angle plat » mais afficher dans le panneau latéral et la barre de statut le message « Points alignés » (information géométrique utile sans introduire un concept hors programme). **Exception** : si les 3 points font partie d'une figure fermée (un point au milieu d'un côté), ne PAS afficher « Points alignés » — l'enfant voit un côté, pas trois points alignés. Le message ne s'affiche que pour des segments libres formant un angle de ~180°.
+2. Plat : [179,5°, 180,5°] — masqué en mode Simplifié (hors programme 2e cycle). **Quand 3 points sont alignés en mode Simplifié** : ne pas afficher « angle plat » mais afficher dans le panneau latéral et la barre de statut le message « Points alignés » (information géométrique utile sans introduire un concept hors programme). **Exception** : si les 3 points font partie d'une figure fermée (un point au milieu d'un côté), ne PAS afficher « Points alignés » — l'enfant voit un côté, pas trois points alignés. Le message ne s'affiche que pour des segments libres formant un angle de ~180°.
 3. Aigu : ]0°, 89,5°[
 4. Obtus : ]90,5°, 179,5°[
-5. **Angle intérieur > 180° (polygone concave)** : pas de classification textuelle (« rentrant » est hors programme primaire). En mode 3e cycle : afficher la valeur numérique (ex. « 270° ») + mention « angle intérieur » dans le panneau. En mode 2e cycle : **pas de texte** (ni « concave » ni « non convexe » — les deux sont hors vocabulaire 2e cycle). Marqueur visuel uniquement sur le canevas : arc dépassant le demi-cercle, visuellement distinct d'un arc obtus.
+5. **Angle intérieur > 180° (polygone concave)** : pas de classification textuelle (« rentrant » est hors programme primaire). En mode Complet : afficher la valeur numérique (ex. « 270° ») + mention « angle intérieur » dans le panneau. En mode Simplifié : **pas de texte** (ni « concave » ni « non convexe » — les deux sont hors vocabulaire 2e cycle). Marqueur visuel uniquement sur le canevas : arc dépassant le demi-cercle, visuellement distinct d'un arc obtus.
 
 Note : les intervalles sont maintenant disjoints. Un angle de 89,7° est classé « droit » (pas « aigu »). Un angle de 90,3° est classé « droit » (pas « obtus »). L'Annexe A donne les définitions mathématiques exactes; les tolérances ci-dessus sont l'implémentation pratique pour compenser l'imprécision du tracé.
 
@@ -637,32 +640,23 @@ Note : les intervalles sont maintenant disjoints. Un angle de 89,7° est classé
 - **Exemple « maison »** (carré + triangle sur le dessus) : quand le dernier segment du triangle est ajouté, le leftmost-turn d'un côté donne le triangle (3 arêtes), l'autre côté donne le pentagone (5 arêtes = face extérieure dans ce contexte). Seul le triangle est enregistré. Le carré a été détecté à l'ajout de son propre dernier segment.
 - **Point ou segment partagé entre figures** : un point appartenant à deux figures fermées apparaît une seule fois dans le panneau, étiqueté « Sommet ». Un segment partagé apparaît une seule fois, étiqueté « Côté ». La section contextuelle (sélection) liste les figures : « Sommet A — Carré ABCD, Triangle ABE ». Un clic sur le nom d'une figure dans la section contextuelle **met cette figure en surbrillance** sur le canevas (contour pointillé bleu sur tous ses côtés) sans changer la sélection du point.
 - Quand un point est déplacé ou un segment supprimé, les figures contenant ce point/segment sont **réévaluées**. Si le cycle est brisé, la figure est retirée, le vocabulaire revient à « Point/Segment » (§9.0). **Re-détection à la suppression** : après suppression d'un segment, re-exécuter la détection de face planaire sur les points qui étaient aux extrémités du segment supprimé. Cela permet de re-détecter des figures qui existaient avant l'ajout du segment supprimé (ex. : supprimer la diagonale d'un carré divisé re-détecte le carré original).
-- **Re-classification en temps réel pendant le déplacement** : quand un point est déplacé, la classification de toutes les figures contenant ce point est recalculée en continu (nom, périmètre, aire). Si le déplacement rend un polygone auto-intersectant, l'aire disparaît immédiatement et « Figure croisée » s'affiche. La détection d'auto-intersection est en temps réel (O(n²) sur < 50 segments est trivial, < 1ms).
+- **Re-classification en temps réel pendant le déplacement** : quand un point est déplacé, la classification de toutes les figures contenant ce point est recalculée en continu. Si le déplacement rend un polygone auto-intersectant, « Figure croisée » s'affiche. La détection d'auto-intersection est en temps réel (O(n²) sur < 50 segments est trivial, < 1ms).
 - **Croisements sans point partagé** : la détection de figures ne considère que les connexions explicites (points partagés). Deux segments qui se croisent visuellement sans partager de point ne forment PAS de figures. La détection automatique d'intersections (création implicite de points aux croisements) est prévue en v2. Conséquence : un X tracé à l'intérieur d'un rectangle ne crée pas 4 triangles — seul le rectangle (4 côtés connectés) est détecté.
-- Les polygones auto-intersectants (cycle de segments dont les côtés se croisent) sont détectés comme figures fermées mais leur aire n'est **pas affichée** (la formule du lacet donne un résultat incorrect). Un message « Figure croisée — aire non calculée » apparaît à la place.
+- Les polygones auto-intersectants (cycle de segments dont les côtés se croisent) sont détectés comme figures fermées mais ne sont pas classifiés. Un message « Figure croisée » apparaît à la place.
 
 **Classification des figures fermées :** Quand une figure est fermée (cycle de segments connectés), tenter d'identifier :
-- 3 côtés : Triangle → la classification est **cumulative au 3e cycle** (pas mutuellement exclusive). Un triangle peut être « rectangle isocèle » ou « rectangle scalène ». Propriétés à tester indépendamment :
+- 3 côtés : Triangle → la classification est **cumulative en mode Complet** (pas mutuellement exclusive). Un triangle peut être « rectangle isocèle » ou « rectangle scalène ». Propriétés à tester indépendamment :
     - Équilatéral : 3 côtés égaux (implique isocèle)
     - Isocèle : au moins 2 côtés égaux
     - Rectangle : 1 angle droit
     - Scalène : aucune paire de côtés égaux
-    - **Mode 3e cycle** : combiner les propriétés applicables (ex : « Triangle rectangle isocèle »)
-    - **Mode 2e cycle** : afficher **une seule classification**, la plus spécifique par priorité : **équilatéral > rectangle > isocèle > scalène**. L'angle droit prime sur l'isocèle car c'est la propriété la plus visuellement saillante (marqueur carré sur le canevas) et la plus enseignée au 2e cycle. Exemple : un triangle rectangle isocèle est affiché « Triangle rectangle » au 2e cycle, « Triangle rectangle isocèle » au 3e cycle.
-- 4 côtés : Quadrilatère → sous-classifier en utilisant le nom **le plus spécifique** applicable : carré (4 côtés égaux + 4 angles droits), rectangle (4 angles droits), losange (4 côtés égaux), parallélogramme (2 paires de côtés parallèles), trapèze (1 paire de côtés parallèles), quadrilatère quelconque. **Hiérarchie inclusive :** un carré est aussi un rectangle, un losange, un parallélogramme et un trapèze. Afficher le nom le plus spécifique par défaut (ex. : « Carré »). Un toggle « Voir la hiérarchie » dans le panneau latéral permet d'afficher la classification complète (ex. : « Carré — aussi : rectangle, losange, parallélogramme »). Ce toggle est **masqué par défaut**, y compris en mode 3e cycle — l'inclusion des quadrilatères est introduite progressivement en 5e année et le toggle peut être prématuré sans accompagnement. L'enseignant peut l'activer dans les paramètres (`.tracevite-config`) quand la notion a été enseignée. En mode 2e cycle, seul le nom le plus spécifique est affiché, sans toggle possible.
+    - **Mode Complet** : combiner les propriétés applicables (ex : « Triangle rectangle isocèle »)
+    - **Mode Simplifié** : afficher **une seule classification**, la plus spécifique par priorité : **équilatéral > rectangle > isocèle > scalène**. L'angle droit prime sur l'isocèle car c'est la propriété la plus visuellement saillante (marqueur carré sur le canevas) et la plus enseignée au 2e cycle. Exemple : un triangle rectangle isocèle est affiché « Triangle rectangle » en mode Simplifié, « Triangle rectangle isocèle » en mode Complet.
+- 4 côtés : Quadrilatère → sous-classifier en utilisant le nom **le plus spécifique** applicable : carré (4 côtés égaux + 4 angles droits), rectangle (4 angles droits), losange (4 côtés égaux), parallélogramme (2 paires de côtés parallèles), trapèze (1 paire de côtés parallèles), quadrilatère quelconque. **Hiérarchie inclusive :** un carré est aussi un rectangle, un losange, un parallélogramme et un trapèze. Afficher le nom le plus spécifique par défaut (ex. : « Carré »). Un toggle « Voir la hiérarchie » dans le panneau latéral permet d'afficher la classification complète (ex. : « Carré — aussi : rectangle, losange, parallélogramme »). Ce toggle est **masqué par défaut**, y compris en mode Complet — l'inclusion des quadrilatères est introduite progressivement en 5e année et le toggle peut être prématuré sans accompagnement. L'enseignant peut l'activer dans les paramètres (`.tracevite-config`) quand la notion a été enseignée. En mode Simplifié, seul le nom le plus spécifique est affiché, sans toggle possible.
 - 5+ côtés : Polygone à N côtés
 - Tolérance pour "égal" entre longueurs : ±1mm. Tolérance pour "angle droit" : ±0,5°.
 
-**Périmètre :** Somme des longueurs de tous les segments formant le contour de la figure fermée.
-
-**Aire :** Calculée internement via la formule du lacet (shoelace formula), mais **affichée uniquement pour les figures dont la formule est au programme du cycle sélectionné** (principe : l'enfant doit pouvoir comprendre et vérifier le résultat) :
-
-| Cycle | Figures dont l'aire est affichée |
-|-------|----------------------------------|
-| 2e cycle | Rectangle, carré (base × hauteur) |
-| 3e cycle | + triangle (b×h÷2), parallélogramme (b×h) |
-
-**Note :** la formule de l'aire du losange (D×d÷2) et celle du trapèze ((B+b)×h÷2) relèvent du **secondaire 1**, pas du 3e cycle du primaire (confirmé via la PDA 2021-2022). Elles ne sont pas affichées dans TraceVite. Pour un losange ou un trapèze, le périmètre est affiché et l'aire affiche « — » (tiret, pas de message explicatif).
+**Périmètre et aire : NON AFFICHÉS.** L'outil compense les gestes moteurs (règle, compas, rapporteur), pas les calculs. L'enfant voit les longueurs de chaque côté et les angles ; il calcule le périmètre et l'aire lui-même. L'interface `Figure` ne contient pas de champs `perimeterMm` ni `areaMm2`. La fonction `shouldDisplayArea` est supprimée. Le calcul interne (formule du lacet) est conservé dans `geometry.ts` pour un usage futur éventuel (v2 : affichage optionnel de la formule d'aire pour renforcer l'apprentissage).
 
 Pour les polygones simples non auto-intersectants, le calcul interne utilise :
 ```
@@ -694,16 +688,15 @@ Liste de tous les segments avec :
 - **Annotation « côtés de l'angle droit »** : quand un triangle rectangle est détecté, les deux côtés adjacents à l'angle droit sont annotés dans le panneau avec la mention « (côté de l'angle droit) » en gris, après la longueur (ex. : « Côté AB — 3 cm (côté de l'angle droit) »). Le troisième côté n'a pas d'annotation (le terme « hypoténuse » est hors vocabulaire primaire). Cette annotation aide l'enfant à faire le lien entre la propriété géométrique et les mesures, conformément au vocabulaire PFEQ qui utilise « côtés de l'angle droit » (jamais « cathètes », terme du secondaire).
 
 ### 9.2 Section "Angles"
-Liste de tous les angles détectés, adaptée au niveau scolaire :
+Liste de tous les angles détectés, adaptée au mode d'affichage :
 - Sommet (ex : "A")
-- **Mode 2e cycle** : classification seulement (aigu/droit/obtus) avec code couleur. Pas de mesure en degrés.
-- **Mode 3e cycle** : classification + mesure en degrés
+- **Mode Simplifié** : classification seulement (aigu/droit/obtus) avec code couleur. Pas de mesure en degrés.
+- **Mode Complet** : classification + mesure en degrés
 
 ### 9.3 Section "Propriétés détectées"
 
 **Toggle « Masquer les propriétés »** en haut de cette section (icône œil). Quand activé, les éléments suivants sont masqués à la fois dans le panneau et sur le canevas :
 - Propriétés détectées (parallélisme, perpendicularité, angles droits, côtés/angles congrus, nom de figure)
-- Mesures de périmètre et d'aire
 - Marques conventionnelles (doubles barres //, hachures de congruence, carré d'angle droit, arcs d'angles congrus)
 
 **Restent visibles même quand le toggle est activé :** les segments, points, cercles, étiquettes de sommets (A, B, C), longueurs de segments et mesures d'angles individuels. L'objectif est que l'enfant voie ce qu'il a tracé et ses dimensions, mais doive identifier lui-même les propriétés géométriques.
