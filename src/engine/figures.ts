@@ -183,7 +183,8 @@ export function classifyFigures(
     if (face.length === 3) {
       name = classifyTriangle(sides, angles, schoolLevel);
     } else if (face.length === 4) {
-      name = classifyQuadrilateral(sides, angles, schoolLevel);
+      const facePoints = face.map((id) => pointMap.get(id)!).filter(Boolean);
+      name = classifyQuadrilateral(sides, angles, facePoints, schoolLevel);
     } else {
       name = `Polygone à ${face.length} côtés`;
     }
@@ -235,22 +236,22 @@ export function classifyTriangle(
   return 'Triangle scalène';
 }
 
-/** Classify a quadrilateral by most specific name. */
+/** Classify a quadrilateral by most specific name. Uses real directions for parallelism. */
 export function classifyQuadrilateral(
   sides: number[],
   angles: number[],
+  facePoints: Point[],
   _schoolLevel: SchoolLevel,
 ): string {
   const allRightAngles = angles.every((a) => a >= 89.5 && a <= 90.5);
   const allEqualSides = countEqualPairs(sides) >= 6; // All 6 pairs equal → 4 equal sides
-  const twoParallelPairs = hasParallelPairs(sides, angles) >= 2;
-  const oneParallelPair = hasParallelPairs(sides, angles) >= 1;
+  const parallelPairs = countParallelOppositeSides(facePoints);
 
   if (allRightAngles && allEqualSides) return 'Carré';
   if (allRightAngles) return 'Rectangle';
-  if (allEqualSides && twoParallelPairs) return 'Losange';
-  if (twoParallelPairs) return 'Parallélogramme';
-  if (oneParallelPair) return 'Trapèze';
+  if (allEqualSides && parallelPairs >= 2) return 'Losange';
+  if (parallelPairs >= 2) return 'Parallélogramme';
+  if (parallelPairs >= 1) return 'Trapèze';
   return 'Quadrilatère';
 }
 
@@ -328,15 +329,36 @@ function countEqualPairs(sides: number[]): number {
   return count;
 }
 
-function hasParallelPairs(sides: number[], _angles: number[]): number {
-  // For quadrilaterals: check if opposite sides are parallel (equal length is a proxy)
-  // More accurate: use direction, but we don't have points here.
-  // Simplified: count pairs of equal opposite sides
-  if (sides.length !== 4) return 0;
+/** Count parallel opposite side pairs using actual directions (not length proxy). */
+function countParallelOppositeSides(facePoints: Point[]): number {
+  if (facePoints.length !== 4) return 0;
+
+  const PARALLEL_TOL = 0.5; // degrees
   let pairs = 0;
-  if (Math.abs(sides[0]! - sides[2]!) <= 1) pairs++;
-  if (Math.abs(sides[1]! - sides[3]!) <= 1) pairs++;
+
+  // Side 0-1 vs side 2-3 (opposite sides in a quadrilateral)
+  const dir01 = normalizedDir(facePoints[0]!, facePoints[1]!);
+  const dir23 = normalizedDir(facePoints[2]!, facePoints[3]!);
+  if (dirDiff(dir01, dir23) < PARALLEL_TOL) pairs++;
+
+  // Side 1-2 vs side 3-0
+  const dir12 = normalizedDir(facePoints[1]!, facePoints[2]!);
+  const dir30 = normalizedDir(facePoints[3]!, facePoints[0]!);
+  if (dirDiff(dir12, dir30) < PARALLEL_TOL) pairs++;
+
   return pairs;
+}
+
+function normalizedDir(p1: Point, p2: Point): number {
+  const angle = Math.atan2(p2.y - p1.y, p2.x - p1.x) * (180 / Math.PI);
+  const norm = ((angle % 360) + 360) % 360;
+  return norm >= 180 ? norm - 180 : norm;
+}
+
+function dirDiff(a: number, b: number): number {
+  let diff = Math.abs(a - b);
+  if (diff > 90) diff = 180 - diff;
+  return diff;
 }
 
 function isSelfIntersecting(face: string[], pointMap: Map<string, Point>): boolean {

@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo, createElement } from 'react';
+import { useState, useCallback, useMemo, useEffect, createElement } from 'react';
 import type { ConstructionState, ViewportState, SnapResult } from '@/model/types';
 import type { ConstructionAction } from '@/model/reducer';
 import type { ToolHookResult } from './types';
@@ -21,6 +21,8 @@ export function useCircleTool({ state, dispatch, viewport }: UseCircleToolOption
   const [centerMm, setCenterMm] = useState<{ x: number; y: number } | null>(null);
   const [cursorMm, setCursorMm] = useState<{ x: number; y: number } | null>(null);
   const [snapResult, setSnapResult] = useState<SnapResult | null>(null);
+  // Track pending center creation (point created, waiting for state update to get ID)
+  const [pendingCenterMm, setPendingCenterMm] = useState<{ x: number; y: number } | null>(null);
 
   const reset = useCallback(() => {
     setPhase('idle');
@@ -28,7 +30,21 @@ export function useCircleTool({ state, dispatch, viewport }: UseCircleToolOption
     setCenterMm(null);
     setCursorMm(null);
     setSnapResult(null);
+    setPendingCenterMm(null);
   }, []);
+
+  // Resolve pending center point ID after dispatch
+  useEffect(() => {
+    if (phase === 'center_placed' && pendingCenterMm && !centerPointId) {
+      const match = state.points.find(
+        (p) => p.x === pendingCenterMm.x && p.y === pendingCenterMm.y,
+      );
+      if (match) {
+        setCenterPointId(match.id);
+        setPendingCenterMm(null);
+      }
+    }
+  }, [phase, pendingCenterMm, centerPointId, state.points]);
 
   const handleClick = useCallback(
     (mmPos: { x: number; y: number }) => {
@@ -36,39 +52,24 @@ export function useCircleTool({ state, dispatch, viewport }: UseCircleToolOption
         const snap = findSnap(mmPos, state, DEFAULT_TOLERANCES);
         const snapped = snap.snappedPosition;
 
-        // Place or reuse center point
-        const cpId = snap.snappedToPointId;
-        if (!cpId) {
-          // Will create point as part of circle creation — for now, store position
-          // We need to create the point first
-          dispatch({
-            type: 'CREATE_SEGMENT',
-            start: { x: snapped.x, y: snapped.y },
-            end: { x: snapped.x, y: snapped.y }, // Will fail (zero-length), so use addPoint
-          });
-          // Actually, we need a CREATE_POINT action. For now, we'll handle this
-          // by creating a segment that starts and ends at the same point... that won't work.
-          // Let's just store the position and create the point when creating the circle.
+        if (snap.snappedToPointId) {
+          // Reuse existing point
+          setCenterPointId(snap.snappedToPointId);
+          setCenterMm(snapped);
+          setPhase('center_placed');
+        } else {
+          // Create a new point for the center
+          dispatch({ type: 'CREATE_POINT', x: snapped.x, y: snapped.y });
+          setCenterMm(snapped);
+          setPendingCenterMm(snapped);
+          setPhase('center_placed');
         }
-
-        setCenterPointId(cpId ?? null);
-        setCenterMm(snapped);
-        setPhase('center_placed');
-      } else if (phase === 'center_placed' && centerMm) {
-        const snap = findSnap(
-          mmPos,
-          state,
-          DEFAULT_TOLERANCES,
-          centerPointId ? [centerPointId] : [],
-        );
+      } else if (phase === 'center_placed' && centerMm && centerPointId) {
+        const snap = findSnap(mmPos, state, DEFAULT_TOLERANCES, [centerPointId]);
         const radiusMm = distance(centerMm, snap.snappedPosition);
 
         if (radiusMm >= 2) {
-          // If center point doesn't exist yet, we need to create it
-          // For now, use existing point or skip
-          if (centerPointId) {
-            dispatch({ type: 'CREATE_CIRCLE', centerPointId, radiusMm });
-          }
+          dispatch({ type: 'CREATE_CIRCLE', centerPointId, radiusMm });
         }
 
         reset();

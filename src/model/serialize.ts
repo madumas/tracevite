@@ -17,6 +17,7 @@ interface SerializedConstruction {
     snapEnabled: ConstructionState['snapEnabled'];
     schoolLevel: ConstructionState['schoolLevel'];
     displayUnit: ConstructionState['displayUnit'];
+    hideProperties: ConstructionState['hideProperties'];
   };
   consigne: string | null;
 }
@@ -33,6 +34,7 @@ export function serializeState(state: ConstructionState): string {
       snapEnabled: state.snapEnabled,
       schoolLevel: state.schoolLevel,
       displayUnit: state.displayUnit,
+      hideProperties: state.hideProperties,
     },
     consigne: state.consigne,
   };

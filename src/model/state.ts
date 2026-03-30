@@ -144,6 +144,7 @@ export function removeElement(state: ConstructionState, elementId: string): Cons
       ...state,
       points: state.points.filter((p) => p.id !== elementId),
       segments: state.segments.filter((s) => !connectedSegmentIds.includes(s.id)),
+      circles: state.circles.filter((c) => c.centerPointId !== elementId),
       selectedElementId: state.selectedElementId === elementId ? null : state.selectedElementId,
     };
   }

@@ -17,6 +17,7 @@ export type ConstructionAction =
       start: { x: number; y: number; existingPointId?: string };
       end: { x: number; y: number; existingPointId?: string };
     }
+  | { type: 'CREATE_POINT'; x: number; y: number }
   | { type: 'REMOVE_ELEMENT'; elementId: string }
   | { type: 'UPDATE_POINT_POSITION'; pointId: string; x: number; y: number }
   | { type: 'FIX_SEGMENT_LENGTH'; segmentId: string; lengthMm: number }
@@ -54,6 +55,11 @@ export function reduce(state: ReducerState, action: ConstructionAction): Reducer
 
   switch (action.type) {
     // ── Geometric actions (push to undo) ──────────────
+    case 'CREATE_POINT': {
+      const result = State.addPoint(current, action.x, action.y);
+      return { undoManager: Undo.pushState(undoManager, result.state) };
+    }
+
     case 'CREATE_SEGMENT': {
       const result = State.createSegment(current, action.start, action.end);
       if (!result) return state; // silently reject

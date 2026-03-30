@@ -144,16 +144,40 @@ describe('classifyTriangle', () => {
 });
 
 describe('classifyQuadrilateral', () => {
+  const sq = [
+    { id: '0', x: 0, y: 0, label: 'A', locked: false },
+    { id: '1', x: 40, y: 0, label: 'B', locked: false },
+    { id: '2', x: 40, y: 40, label: 'C', locked: false },
+    { id: '3', x: 0, y: 40, label: 'D', locked: false },
+  ];
+
   it('carré', () => {
-    expect(classifyQuadrilateral([40, 40, 40, 40], [90, 90, 90, 90], '2e_cycle')).toBe('Carré');
+    expect(classifyQuadrilateral([40, 40, 40, 40], [90, 90, 90, 90], sq, '2e_cycle')).toBe('Carré');
   });
 
   it('rectangle', () => {
-    expect(classifyQuadrilateral([40, 60, 40, 60], [90, 90, 90, 90], '2e_cycle')).toBe('Rectangle');
+    const rect = [
+      { id: '0', x: 0, y: 0, label: 'A', locked: false },
+      { id: '1', x: 60, y: 0, label: 'B', locked: false },
+      { id: '2', x: 60, y: 40, label: 'C', locked: false },
+      { id: '3', x: 0, y: 40, label: 'D', locked: false },
+    ];
+    expect(classifyQuadrilateral([60, 40, 60, 40], [90, 90, 90, 90], rect, '2e_cycle')).toBe(
+      'Rectangle',
+    );
   });
 
   it('losange', () => {
-    expect(classifyQuadrilateral([50, 50, 50, 50], [60, 120, 60, 120], '2e_cycle')).toBe('Losange');
+    // Rhombus: all sides equal, opposite sides parallel, but not right angles
+    const rhombus = [
+      { id: '0', x: 25, y: 0, label: 'A', locked: false },
+      { id: '1', x: 50, y: 43.3, label: 'B', locked: false },
+      { id: '2', x: 25, y: 86.6, label: 'C', locked: false },
+      { id: '3', x: 0, y: 43.3, label: 'D', locked: false },
+    ];
+    expect(classifyQuadrilateral([50, 50, 50, 50], [60, 120, 60, 120], rhombus, '2e_cycle')).toBe(
+      'Losange',
+    );
   });
 });
 
