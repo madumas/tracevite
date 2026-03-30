@@ -1,0 +1,17 @@
+@media print {
+  /* Hide all UI */
+  body > div > div > * {
+    display: none !important;
+  }
+
+  /* Show print SVG */
+  .print-svg {
+    display: block !important;
+  }
+
+  /* Page setup — default portrait, landscape set dynamically via JS */
+  @page {
+    size: letter;
+    margin: 15mm;
+  }
+}

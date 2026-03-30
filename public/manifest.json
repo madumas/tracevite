@@ -1,0 +1,18 @@
+{
+  "name": "TraceVite",
+  "short_name": "TraceVite",
+  "description": "Outil de construction géométrique pour le primaire",
+  "start_url": "/",
+  "display": "standalone",
+  "theme_color": "#185FA5",
+  "background_color": "#F5F7FA",
+  "lang": "fr-CA",
+  "icons": [
+    {
+      "src": "/logo.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

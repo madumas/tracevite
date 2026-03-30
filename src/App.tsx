@@ -45,6 +45,9 @@ import {
 import { hitTestElement } from '@/engine/hit-test';
 import { ConsigneBanner } from '@/components/ConsigneBanner';
 import { PrintDialog } from '@/components/PrintDialog';
+import { PrintSvg } from '@/components/PrintSvg';
+import { TutorialOverlay } from '@/components/TutorialOverlay';
+import { useTutorial } from '@/hooks/useTutorial';
 import type { ToolType, GridSize, DisplayUnit, SchoolLevel } from '@/model/types';
 
 import type { SlotRegistry } from '@/model/slots';
@@ -74,6 +77,8 @@ function AppContent({
   const [pendingDeleteFromKeyboard, setPendingDeleteFromKeyboard] = useState(false);
   const [deleteMode, setDeleteMode] = useState(false);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+
+  const tutorial = useTutorial(state);
 
   // Apply URL params once at mount
   useEffect(() => {
@@ -490,6 +495,16 @@ function AppContent({
             onZoomIn={zoomIn}
             onZoomOut={zoomOut}
           />
+
+          {/* Tutorial overlay */}
+          {tutorial.isActive && (
+            <TutorialOverlay
+              step={tutorial.step}
+              onSkip={tutorial.skip}
+              onFinish={tutorial.finish}
+              onDismissPost={tutorial.dismissPost}
+            />
+          )}
         </div>
 
         {/* Properties Panel */}
@@ -549,6 +564,9 @@ function AppContent({
           }}
         />
       )}
+
+      {/* Hidden print SVG — visible only in @media print */}
+      <PrintSvg state={state} landscape={false} />
     </div>
   );
 }
