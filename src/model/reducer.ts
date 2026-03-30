@@ -40,6 +40,7 @@ export type ConstructionAction =
   | { type: 'TOGGLE_POINT_LOCK'; pointId: string }
   | { type: 'SET_HIDE_PROPERTIES'; hide: boolean }
   | { type: 'SET_CONSIGNE'; consigne: string | null }
+  | { type: 'LOAD_CONSTRUCTION'; undoManager: UndoManager }
   | { type: 'UNDO' }
   | { type: 'REDO' }
   | { type: 'NEW_CONSTRUCTION' };
@@ -185,7 +186,10 @@ export function reduce(state: ReducerState, action: ConstructionAction): Reducer
     case 'REDO':
       return { undoManager: Undo.redo(undoManager) };
 
-    // ── New construction ──────────────────────────────
+    // ── Load / New ─────────────────────────────────────
+    case 'LOAD_CONSTRUCTION':
+      return { undoManager: action.undoManager };
+
     case 'NEW_CONSTRUCTION':
       return { undoManager: Undo.createUndoManager(State.createInitialState()) };
   }

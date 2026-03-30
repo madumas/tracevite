@@ -46,12 +46,19 @@ import { hitTestElement } from '@/engine/hit-test';
 import { ConsigneBanner } from '@/components/ConsigneBanner';
 import type { ToolType, GridSize, DisplayUnit, SchoolLevel } from '@/model/types';
 
+import type { SlotRegistry } from '@/model/slots';
+
 interface AppProps {
   initialConsigne?: string | null;
   initialLevel?: string | null;
+  initialRegistry?: SlotRegistry;
 }
 
-function AppContent({ initialConsigne, initialLevel }: AppProps) {
+function AppContent({
+  initialConsigne,
+  initialLevel,
+  initialRegistry: _initialRegistry,
+}: AppProps) {
   const { state, canUndo, canRedo, undoManager } = useConstructionState();
   const dispatch = useConstructionDispatch();
   const containerRef = useRef<HTMLDivElement>(null);
@@ -532,10 +539,14 @@ function AppContent({ initialConsigne, initialLevel }: AppProps) {
   );
 }
 
-export function App({ initialConsigne, initialLevel }: AppProps) {
+export function App({ initialConsigne, initialLevel, initialRegistry }: AppProps) {
   return (
     <ConstructionProvider>
-      <AppContent initialConsigne={initialConsigne} initialLevel={initialLevel} />
+      <AppContent
+        initialConsigne={initialConsigne}
+        initialLevel={initialLevel}
+        initialRegistry={initialRegistry}
+      />
     </ConstructionProvider>
   );
 }
