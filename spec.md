@@ -418,7 +418,13 @@ Conversion affichage :
 - Les mêmes actions sont aussi disponibles dans le panneau latéral droit (section contextuelle)
 
 **Suppression :**
-- **Bouton 🗑 Supprimer dans la barre d'actions** (en bas, à côté de Annuler/Rétablir). Désactivé quand aucun élément n'est sélectionné. Ce bouton est le chemin principal de suppression — il est toujours visible et accessible quel que soit l'outil actif. Utile en particulier pour supprimer des points en mode Déplacer ou Segment, où un clic sur un point déclenche l'outil plutôt que la sélection. L'enfant sélectionne le point via le panneau Propriétés (clic sur « Sommet A »), puis clique le bouton poubelle.
+- **Bouton 🗑 Supprimer dans la barre d'actions** (en bas, à côté de Annuler/Rétablir). Fonctionne en **mode toggle** :
+  1. Clic sur 🗑 → entre en **mode suppression** (bouton fond rouge, curseur crosshair sur le canvas, barre de statut : « Supprimer — Clique sur un élément pour le supprimer »).
+  2. Clic sur un élément (point, segment, cercle) → l'élément est sélectionné (surbrillance) et la barre de statut affiche « Supprimer le point A? Clique à nouveau pour confirmer. » (micro-confirmation).
+  3. Clic à nouveau sur le même élément → suppression confirmée. Le mode suppression reste actif pour enchaîner les suppressions.
+  4. Clic sur un autre élément → change la cible (retour à l'étape 2).
+  5. Clic sur 🗑 à nouveau ou Escape → quitte le mode suppression.
+  Ce mode est le chemin principal de suppression — il est toujours visible et accessible quel que soit l'outil actif. Essentiel pour supprimer des points en mode Déplacer ou Segment, où un clic sur un point déclenche l'outil plutôt que la sélection.
 - **Micro-confirmation** (même pattern sur le bouton de la barre d'actions et sur celui de la barre contextuelle) : un premier clic change le bouton en état « Confirmer? » (fond rouge, texte blanc) pendant 3 secondes, puis revient à « Supprimer ». Un deuxième clic pendant le délai confirme la suppression. **Escape pendant l'état « Confirmer? »** annule la confirmation (ramène le bouton à « Supprimer ») sans monter dans la hiérarchie Escape — il résout l'état intermédiaire le plus local. Le prochain Escape suit la hiérarchie normale. Cela protège du clic accidentel (fréquent chez les TDC) sans la lourdeur d'un dialogue modal.
 - Touche Delete/Backspace sur un élément sélectionné → suppression directe (pas de micro-confirmation — le geste clavier est plus intentionnel qu'un clic errant). L'undo reste disponible dans tous les cas.
 - Supprimer un point supprime aussi tous les segments connectés à ce point
