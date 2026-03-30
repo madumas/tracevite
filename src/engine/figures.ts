@@ -183,14 +183,15 @@ export function classifyFigures(
     const segmentIds = findSegmentIds(face, state);
 
     // Classify
+    const vertexLabels = face.map((id) => pointMap.get(id)?.label ?? '?').join('');
     let name: string;
     if (face.length === 3) {
-      name = classifyTriangle(sides, angles, schoolLevel);
+      name = `${classifyTriangle(sides, angles, schoolLevel)} ${vertexLabels}`;
     } else if (face.length === 4) {
       const facePoints = face.map((id) => pointMap.get(id)!).filter(Boolean);
-      name = classifyQuadrilateral(sides, angles, facePoints, schoolLevel);
+      name = `${classifyQuadrilateral(sides, angles, facePoints, schoolLevel)} ${vertexLabels}`;
     } else {
-      name = `Polygone à ${face.length} côtés`;
+      name = `Polygone ${vertexLabels} à ${face.length} côtés`;
     }
 
     // Determine if area should be displayed
@@ -262,10 +263,10 @@ export function classifyQuadrilateral(
 /** Check if area should be displayed per cycle curriculum. */
 export function shouldDisplayArea(figureName: string, schoolLevel: SchoolLevel): boolean {
   const lower = figureName.toLowerCase();
-  // "Rectangle" the quadrilateral, not "Triangle rectangle"
-  const isRectangleQuad = lower === 'rectangle' || lower === 'carré';
+  // "Rectangle ABCD" the quadrilateral, not "Triangle rectangle ABC"
+  const isRectangleQuad = lower.startsWith('rectangle') || lower.startsWith('carré');
   const isTriangle = lower.startsWith('triangle');
-  const isParallelogramme = lower === 'parallélogramme';
+  const isParallelogramme = lower.startsWith('parallélogramme');
 
   if (schoolLevel === '2e_cycle') {
     return isRectangleQuad;
