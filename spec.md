@@ -705,7 +705,7 @@ L'enseignant peut l'activer en contexte d'évaluation pour que l'élève identif
 
 **Feedback rassurant :** quand le toggle passe en mode « masqué », la barre de statut affiche pendant 3 secondes : « Mode évaluation — les propriétés sont masquées. Tes segments et mesures sont toujours là. » Évite que l'enfant TDC pense avoir « cassé » quelque chose.
 
-**Note PI :** pour être utilisé lors des évaluations ministérielles (4e et 6e année), TraceVite doit être documenté dans le Plan d'intervention (PI) de l'élève comme mesure d'adaptation. Voir Annexe B pour les instructions destinées à l'enseignant.
+**Note PI :** pour être utilisé lors de l'évaluation ministérielle de mathématiques (6e année), TraceVite doit être documenté dans le Plan d'intervention (PI) de l'élève comme mesure d'adaptation. Voir Annexe B pour les instructions destinées à l'enseignant.
 
 Quand les propriétés sont visibles, la section affiche :
 - Parallélismes (ex : badge vert "AB // CD")
@@ -909,7 +909,7 @@ Utiliser un thème clair par défaut (cohérent avec le milieu scolaire). Princi
 | Accrochage (snap feedback) | Sarcelle (#0B7285) + pulsation | 5,6:1 |
 | Fond du canevas | Blanc légèrement bleuté (#FAFCFF) | — (évoque le papier quadrillé, familier pour l'enfant — transforme l'impression « logiciel » en « cahier numérique ») |
 
-**Note daltonisme :** L'ancien vert (#0F6E56) a été remplacé par sarcelle (#0B7285) pour améliorer la distinction avec l'orange (#C24B22) chez les deutéranopes (~8% des garçons). En simulation deutéranopie : sarcelle → bleu-gris, orange → brun-jaune — nettement distinguables. Les mesures ont été assombries (#4A6FA5 → #3A6291) pour un ratio plus confortable à 13px. Tous les ratios WCAG AA ≥ 4,5:1 sur fond blanc.
+**Note daltonisme :** L'ancien vert (#0F6E56) a été remplacé par sarcelle (#0B7285) pour améliorer la distinction avec l'orange (#C24B22) chez les personnes avec daltonisme rouge-vert (~8% des garçons). En simulation deutéranopie : sarcelle → bleu-gris, orange → brun-jaune — nettement distinguables. Les mesures ont été assombries (#4A6FA5 → #3A6291) pour un ratio plus confortable à 13px. Tous les ratios WCAG AA ≥ 4,5:1 sur fond blanc.
 
 #### Interface (UI)
 
@@ -1449,7 +1449,7 @@ TraceVite peut constituer une **mesure d'adaptation** au sens de la Politique de
 3. **Modalités** : l'élève construit à l'écran et imprime sa figure à l'échelle 1:1. Le toggle « Masquer les propriétés » peut être activé lors des évaluations pour que l'élève identifie lui-même les propriétés géométriques.
 4. **Responsable** : selon les pratiques de l'école.
 
-**Pour les évaluations ministérielles (4e et 6e année)** : l'utilisation de TraceVite comme mesure d'adaptation doit être documentée dans le PI et approuvée par la direction, conformément aux directives du ministère.
+**Pour l'évaluation ministérielle de mathématiques (6e année)** : l'utilisation de TraceVite comme mesure d'adaptation doit être documentée dans le PI et approuvée par la direction, conformément aux directives du ministère.
 
 **Référence** : Loi sur l'instruction publique (LIP), articles 96.14 et 235; Politique de l'adaptation scolaire « Une école adaptée à tous ses élèves ».
 
