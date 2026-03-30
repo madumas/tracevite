@@ -1,0 +1,92 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Format check
+        run: npm run format:check
+
+      - name: Type check
+        run: npm run typecheck
+
+      - name: Tests
+        run: npm run test:ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Report bundle size
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { execSync } = require('child_process');
+            const fs = require('fs');
+            const path = require('path');
+
+            const distDir = 'dist/assets';
+            if (!fs.existsSync(distDir)) return;
+
+            const files = fs.readdirSync(distDir);
+            let totalGzipped = 0;
+            const rows = [];
+
+            for (const file of files) {
+              if (file.endsWith('.js') || file.endsWith('.css')) {
+                const filePath = path.join(distDir, file);
+                const raw = fs.statSync(filePath).size;
+                const gzipped = parseInt(
+                  execSync(`gzip -c ${filePath} | wc -c`).toString().trim()
+                );
+                totalGzipped += gzipped;
+                rows.push(
+                  `| ${file} | ${(raw / 1024).toFixed(1)} KB | ${(gzipped / 1024).toFixed(1)} KB |`
+                );
+              }
+            }
+
+            const target = 300;
+            const totalKB = (totalGzipped / 1024).toFixed(1);
+            const status = totalGzipped / 1024 > target ? '⚠️' : '✅';
+
+            const body = [
+              `## Bundle Size Report ${status}`,
+              '',
+              `**Total gzipped: ${totalKB} KB** (target: ~${target} KB)`,
+              '',
+              '| File | Raw | Gzipped |',
+              '|------|-----|---------|',
+              ...rows,
+            ].join('\n');
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body,
+            });

@@ -8,13 +8,19 @@ TraceVite is a digital geometric construction tool for elementary school childre
 
 The complete specification is in `spec.md`.
 
+## Logo
+
+`logo.svg` — A geometric "T" formed by two perpendicular segments with endpoint dots in primary blue (#185FA5) and a right-angle square marker in teal (#0B7285). Used as favicon, PWA icon (192/512px), and app header. Works in black & white for PDF. The right-angle marker is the signature visual element.
+
 ## Tech Stack
 
 - React 18+ with TypeScript
 - Vite as build tool
-- SVG or Canvas (via Konva.js/React Konva or Fabric.js) for the interactive construction canvas
-- jsPDF + svg2pdf.js for client-side PDF generation
-- No backend — everything is client-side, no accounts, no cloud storage
+- **SVG** for the interactive construction canvas (no Konva.js, no Fabric.js — SVG elements are standard DOM with native events, sufficient for < 100 elements)
+- jsPDF for client-side PDF generation (programmatic drawing, no svg2pdf.js)
+- idb-keyval for IndexedDB persistence
+- vite-plugin-pwa for Service Worker / offline support
+- No backend — everything is client-side, no accounts, no cloud storage, no analytics/tracking
 
 ## Build & Dev Commands
 
@@ -31,36 +37,79 @@ npm run test         # Run tests
 
 ### Core Layers
 
-- **`src/components/`** — React UI: `App.tsx` (layout), `Toolbar.tsx` (tools bar), `Canvas.tsx` (interactive drawing surface), `PropertiesPanel.tsx` (right sidebar with measurements), `PrintButton.tsx` (PDF export)
-- **`src/engine/`** — Pure computation: `geometry.ts` (distances, angles, intersections), `snap.ts` (grid/vertex/angle/alignment snapping), `properties.ts` (auto-detection of parallelism, perpendicularity, figure classification), `pdf-export.ts` (1:1 scale PDF generation)
-- **`src/model/`** — Data model: `types.ts` (Point, Segment, Circle, AngleInfo, DetectedProperty, ConstructionState, ToolType), `state.ts` (global construction state + undo history)
-- **`src/hooks/`** — React hooks: `useConstruction.ts`, `useSnap.ts`, `useUndo.ts`
+- **`src/components/`** — React UI: `App.tsx` (layout), `Toolbar.tsx` (tools bar), `StatusBar.tsx` (sequencing cues), `Canvas.tsx` (interactive drawing surface), `PropertiesPanel.tsx` (right sidebar with measurements), `ContextActions.tsx` (contextual action bar near selected element), `PrintDialog.tsx` (print instructions + PDF export), `LevelSelector.tsx` (school level selector)
+- **`src/engine/`** — Pure computation: `geometry.ts` (distances, angles, intersections), `snap.ts` (grid/vertex/angle/alignment snapping), `properties.ts` (auto-detection of parallelism, perpendicularity, figure classification), `reflection.ts` (reflection across axis), `pdf-export.ts` (1:1 scale PDF generation)
+- **`src/model/`** — Data model: `types.ts` (Point, Segment, Circle, AngleInfo, DetectedProperty, ConstructionState, ToolType), `state.ts` (global construction state + undo history), `persistence.ts` (IndexedDB save/restore via idb-keyval)
+- **`src/hooks/`** — React hooks: `useConstruction.ts`, `useSnap.ts`, `useUndo.ts`, `useAutoSave.ts`
 
 ### Critical Design Decisions
 
-**Internal units are millimeters.** All coordinates and measurements are stored in mm. Display to user is always in cm with 1 decimal and French comma separator (e.g., "4,5 cm"). PDF output maps mm directly to PDF units (1 mm = 2.835 PDF units).
+**Internal units are millimeters.** All coordinates and measurements are stored in mm. Display unit is configurable: cm (default) or mm, with French comma separator (e.g., "4,5 cm"). PDF output maps mm directly to PDF units (1 mm = 2.835 PDF units).
 
 **PDF 1:1 scale is the #1 priority.** A 5 cm segment on screen MUST measure 5 cm on printed paper. PDF must be vectorial (never raster). Page format: US Letter (215.9mm x 279.4mm), 15mm margins. Include a 5 cm witness segment for scale verification.
 
-**Snap system compensates for motor imprecision.** Priority order: existing points (15px tolerance) > grid (8px) > angle snap (±5°) > alignment (5px). Snap is on by default.
+**Snap system compensates for motor imprecision.** Tolerances are in physical mm (not pixels) to work across screen densities. Priority order: existing points (7mm) > segment midpoints (5mm) > grid (5mm) > angle snap (±5°) > alignment (2mm). Snap is on by default. Two tolerance profiles: "large" (×1.5) for younger children (8-9 years), "very large" (×2.0) for severe DCD.
+
+**School level selector (2e cycle / 3e cycle)** adapts displayed information. 2e cycle: angle classification only (aigu/droit/obtus), no degrees, no circle tool. 3e cycle: full degree measurements, circle tool available. The LevelSelector is a custom dropdown (not native `<select>`) to display two-line options with school year and age range for parent comprehension at home. Closed state shows "2e cycle (3e-4e année)".
+
+**No right-click anywhere.** All actions via click-to-select + contextual action bar (44x44px buttons). Designed for children with motor difficulties.
+
+**Auto-save to IndexedDB** (via idb-keyval) after every action (2s debounce) + on `beforeunload`. Multiple save slots ("Mes constructions"). Export/import `.tracevite` JSON files. Construction restored on page reload. Never lose work.
+
+**Consigne is passive display only.** The optional `consigne` field (max 1000 chars) shows the teacher's exercise instruction as a read-only banner below the status bar. Settable via `.tracevite` file or URL query params (`?consigne=&level=`). The tool never validates, corrects, or interacts with the consigne — no exercise engine, no correction, no backend. Sanitized via `textContent` (never `innerHTML`) to prevent XSS from URL params. See spec.md §8.0.1 and §8.0.2.
 
 **Property detection tolerances:**
 - Parallel: angle between directions < 0.5°
 - Perpendicular: angle in [89.5°, 90.5°]
 - Equal lengths: ±1mm
 - Right angle display: ±0.5°
+- Angle classification is evaluated by priority (disjoint intervals): right [89.5°, 90.5°] > flat [179.5°, 180.5°] > acute ]0°, 89.5°[ > obtuse ]90.5°, 179.5°[
 
-**Figure classification** triggers when a closed polygon is detected (cycle of connected segments). Triangles: equilateral/isosceles/right/scalene. Quadrilaterals: square/rectangle/rhombus/parallelogram/trapezoid.
+**Figure classification** triggers when a closed polygon is detected (minimal cycle via BFS when a segment connects to an existing point). Triangle classification is **cumulative in 3e cycle only** (a triangle can be "rectangle isocèle"); in 2e cycle, only the most specific single classification is shown. Quadrilaterals: square/rectangle/rhombus/parallelogram/trapezoid. Self-intersecting polygons are detected but area is not displayed. Area is only displayed for figures whose formula is in the selected cycle's curriculum (2e cycle: rectangle/square only; 3e cycle: + triangle, parallelogram). Losange and trapèze area formulas are secondary 1 — not displayed. Selection is cross-cutting (no dedicated Select tool) — clicking an element while idle in any tool selects it.
 
-## UI & Accessibility Constraints
+**"Hide properties" toggle** in the properties panel. When active, hides detected properties (parallelism, perpendicularity, congruence marks, figure names), perimeter and area — but NOT segment lengths or angle values. Segments, points, circles, labels (A, B, C) and their individual measurements remain visible. For evaluation contexts where the student must identify properties themselves. Toggle state is saved per-construction.
+
+## TDC Interaction Principles (designed for motor accessibility)
+
+These principles are non-negotiable — they determine whether the tool is usable by the target population:
+
+- **Two-click mode is default for all actions.** Click-drag (maintaining pressure during movement) is the hardest gesture for DCD children. Every drag action (circle, move) must have a two-click alternative: click to pick up, move (no button held), click to put down. Drag remains available as alternative.
+- **No timeouts on input fields.** Length input fields stay visible until user dismisses (Enter, click elsewhere, Escape). DCD children need more time to coordinate visual attention, cursor movement, and keyboard input.
+- **Status bar shows sequencing cues.** A contextual bar under the toolbar always shows the active tool and expected next gesture in plain language (e.g., "Segment — Clique pour placer le premier point"). This is a standard OT accommodation for planning/sequencing difficulties.
+- **Keyboard shortcuts disabled by default.** Single-letter shortcuts cause accidental tool switches due to imprecise keystrokes. Toggle in settings for the teacher/OT to enable. Toast notification (5s, or dismiss on next click) on keyboard tool changes only (not toolbar clicks). Toasts replace, don't stack.
+- **Escape = panic button.** Hierarchical: close dialog > cancel action > deselect > return to Segment tool. Predictable, reassuring.
+- **Destructive buttons physically separated.** "New construction" button is red, isolated at far right of action bar, away from Undo/Redo. A 15px misclick must not erase all work.
+- **Visual clutter thresholds.** Angle labels on canvas hidden after 5 segments (2e cycle) / 6 segments (3e cycle). Panel always shows all data.
+- **Chaining is visually explicit.** Pulsing anchor point + more transparent ghost segment + status bar message. Auto-terminates after configurable inactivity timeout (default 8s; options: 5s/8s/15s/off).
+- **No dual gestures (hold + move).** Shift for angle constraint is a toggle (single press), not hold-while-dragging.
+- **Optional sounds.** 50ms sounds for snap, segment creation, figure closure. Off by default. Compensates proprioceptive feedback deficit.
+- **Drag detection threshold: 1.5mm physical** (~8px CSS on Chromebook 135dpi). Movement < 1.5mm from pointerdown is a click, not a drag. DCD children involuntarily move 0.5-1mm during clicks. Converted to CSS px at runtime via devicePixelRatio.
+- **Point display radius: 4mm physical** on screen (~15-18px). PDF uses 1mm radius. Hit detection covered by 7mm snap zone.
+- **Font minimum 13px** on canvas. Adjustable larger via settings (1x / 1.25x / 1.5x).
+- **Progressive disclosure (2e cycle):** Only Segment, Déplacer, and Réflexion visible by default in toolbar. Other tools via "Plus d'outils" button. Reduces choice overload for 8-9 year olds with executive function difficulties.
+- **Angle "rentrant" removed from MVP.** Entirely out of primary curriculum. Only aigu/droit/obtus/plat (plat hidden in 2e cycle).
+- **Service Worker graceful degradation.** If SW installation fails (blocked by school content filters), app works normally in online-only mode. Never block core functionality on SW availability.
+
+## UI Constraints
 
 - **Language:** Interface entirely in French (Quebec). Use PFEQ geometric vocabulary exactly (see spec.md Annexe A)
-- **Decimal format:** French comma, never dot. Unit "cm" everywhere.
-- **Minimum click targets:** 44x44px (motor accessibility)
-- **No double-clicks, no precision gestures** — snap compensates
-- **Color palette:** Segments #185FA5, guides #0F6E56, angle arcs (right: green #0F6E56, acute/obtuse: orange #D85A30), measurements #4A6FA5
-- **PDF is black & white only** (school printers)
+- **Vocabulary is context-sensitive:** "Point" becomes "Sommet" when part of a closed figure. "Segment" becomes "Côté" when part of a closed figure. Never use "cathètes" (secondary school term) — say "côtés de l'angle droit". This is a strong PFEQ requirement.
+- **Decimal format:** French comma, never dot. Unit "cm" by default, "mm" available.
+- **Minimum click targets:** 44x44px with 8px minimum spacing between adjacent buttons (motor accessibility)
+- **Use PointerEvent (not MouseEvent)** for all canvas interactions — enables stylus/touch support from day one
+- **No double-clicks, no right-clicks, no precision gestures** — snap compensates. Canvas click debounce of 150ms prevents accidental double-tap (DCD finger re-bound).
+- **`inputmode="decimal"`** on all numeric input fields (length, radius). Reposition field to top of canvas when virtual keyboard detected (tablet).
+- **Persistent save indicator** in header (checkmark icon, Google Docs pattern) — not a transient 2s flash. DCD children with anxiety need continuous reassurance.
+- **`beforeunload` confirmation dialog** when canvas has elements — prevents accidental tab closure (Ctrl+W instead of Ctrl+Z).
+- **Keyboard navigation in UI** (Tab/Enter) works at MVP via semantic HTML elements. Canvas SVG keyboard nav is v2.
+- **Color palette:** Canvas background #FAFCFF (slight blue tint — "digital graph paper" feel). Canvas: segments/points/labels #185FA5 (blue), guides/right-angle #0B7285 (teal), angle arcs #C24B22 (burnt orange), measurements #3A6291 (dark blue-grey). UI: primary #185FA5, destructive #C82828, bg #F5F7FA, text #1A2433. Full palette in spec.md §13.2. Never rely on color alone — always pair with shape markers.
+- **PDF is black & white only** (school printers). PDF filename: `{slot-name}.pdf` (spaces→dashes).
+- **Bundle size target ~300 Ko gzipped** (design goal, not hard limit — keep an eye on it)
+
+## Git Conventions
+
+Never include "Co-Authored-By" or any Claude/AI attribution in commit messages.
 
 ## MVP Scope (v1)
 
-Grid canvas, Segment tool with snap, Move tool, real-time lengths & angles, parallelism/perpendicularity detection & guides, Measure/Fix tool, properties panel, 1:1 PDF export, undo/redo, closed figure detection. See spec.md section 19 for v2/v3 roadmap.
+Grid canvas (5mm/1cm/2cm), Segment tool with snap + inline length input + explicit chaining, Move tool (pick-up/put-down default), Circle tool (two-click default), Reflection tool, real-time lengths & angles (adapted by school level), parallelism/perpendicularity detection & guides, Measure/Fix tool, selection via click + contextual action bar (with micro-confirmation on delete), status bar with sequencing cues, collapsible accordion properties panel (context-sensitive vocabulary), 1:1 PDF export with print instruction dialog + direct CSS print, undo/redo (100 levels, fully persisted), closed figure detection, IndexedDB auto-save with multiple slots + .tracevite file export/import + .tracevite-config settings profiles, PWA with Service Worker for offline use (with Deep Freeze erasure detection), school level selector (2e/3e cycle, custom dropdown with parent-friendly year/age descriptions), unit toggle (cm/mm), optional snap sound, action-based welcome tutorial, consigne field (optional exercise instruction from teacher, displayed as read-only banner, settable via .tracevite file or URL query params `?consigne=&level=`). See spec.md section 19 for v2/v3 roadmap.

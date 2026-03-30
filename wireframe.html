@@ -1,0 +1,1983 @@
+<!DOCTYPE html>
+<html lang="fr-CA">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TraceVite — Wireframe MVP</title>
+  <!-- NOTE DEV: Les emoji (🖨 📁 📐 🗑 💾 ✏️ 👁 🧲) sont des placeholders wireframe.
+       L'implémentation utilisera des SVG inline pour la cohérence cross-plateforme
+       (ChromeOS, Windows, macOS rendent les emoji différemment).
+       Les viewBox SVG du canevas sont hardcodés ici; en production, calculés dynamiquement
+       selon la taille de la fenêtre. -->
+  <style>
+    /* ═══════════════════════════════════════════
+       WIREFRAME — TraceVite MVP
+       Résolution cible: 1366×768 (Chromebook 11.6")
+       ═══════════════════════════════════════════ */
+
+    :root {
+      /* Palette UI (spec §13.2) */
+      --bg-app: #F5F7FA;
+      --surface: #FFFFFF;
+      --text-primary: #1A2433;
+      --text-secondary: #4A5568;
+      --border: #D1D8E0;
+      --primary: #185FA5;
+      --primary-hover: #134D87;
+      --primary-pale: #E6F0FB;
+      --destructive: #C82828;
+      --destructive-hover: #A02020;
+      --disabled-bg: #E8ECF0;
+      --disabled-text: #9CA3AF;
+      --statusbar-bg: #EDF1F5;
+      --consigne-bg: #E6F1FB;
+
+      /* Palette Canevas */
+      --canvas-segment: #185FA5;
+      --canvas-guide: #0B7285;
+      --canvas-angle: #C24B22;
+      --canvas-measure: #3A6291;
+      --canvas-bg: #FAFCFF; /* blanc-bleuté "papier quadrillé" — §13.2 */
+      --canvas-grid: #E5E5E5;
+      --canvas-selection: #D0E2F5;
+      --canvas-ghost: #85B7EB;
+
+      /* Dimensions */
+      --header-h: 44px;
+      --toolbar-h: 48px;
+      --statusbar-h: 32px;
+      --consigne-h: 40px;
+      --actionbar-h: 44px;
+      --panel-w: 220px;
+      --btn-min: 44px;
+      --btn-gap: 8px;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg-app);
+      color: var(--text-primary);
+      font-size: 13px;
+      overflow: hidden;
+    }
+
+    /* ── Annotations wireframe ── */
+    .annotation {
+      position: absolute;
+      background: #FFF3CD;
+      border: 1px solid #FFCA2C;
+      border-radius: 4px;
+      padding: 4px 8px;
+      font-size: 11px;
+      color: #664D03;
+      z-index: 1000;
+      max-width: 220px;
+      line-height: 1.4;
+      pointer-events: none;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+    }
+    .annotation::before {
+      content: '📌 ';
+    }
+
+    /* ── Layout principal ── */
+    .app {
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      width: 100%;
+      max-width: 1366px;
+      margin: 0 auto;
+      background: var(--surface);
+      border-left: 1px solid var(--border);
+      border-right: 1px solid var(--border);
+    }
+
+    /* ══════════════════════════════════════
+       HEADER
+       ══════════════════════════════════════ */
+    .header {
+      display: flex;
+      align-items: center;
+      height: var(--header-h);
+      padding: 0 12px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      gap: 12px;
+      flex-shrink: 0;
+    }
+
+    .header-logo {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-weight: 700;
+      font-size: 16px;
+      color: var(--primary);
+    }
+    .header-logo svg {
+      width: 28px;
+      height: 28px;
+    }
+
+    .save-indicator {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      color: var(--text-secondary);
+      font-size: 12px;
+    }
+    .save-indicator .check {
+      color: #16A34A;
+      font-size: 14px;
+    }
+
+    .header-spacer { flex: 1; }
+
+    .level-selector {
+      display: flex;
+      align-items: center;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 4px 10px;
+      cursor: pointer;
+      font-size: 13px;
+      gap: 6px;
+      min-height: var(--btn-min);
+      background: var(--surface);
+    }
+    .level-selector:hover { border-color: var(--primary); }
+    .level-selector .level-main { font-weight: 600; }
+    .level-selector .level-sub { color: var(--text-secondary); font-size: 11px; }
+    .level-selector .chevron { color: var(--text-secondary); }
+
+    .btn-header {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 4px 12px;
+      cursor: pointer;
+      font-size: 13px;
+      min-height: var(--btn-min);
+      background: var(--surface);
+      color: var(--text-primary);
+    }
+    .btn-header:hover { border-color: var(--primary); background: var(--primary-pale); }
+
+    .version {
+      font-size: 11px;
+      color: var(--disabled-text);
+    }
+
+    /* ══════════════════════════════════════
+       TOOLBAR
+       ══════════════════════════════════════ */
+    .toolbar {
+      display: flex;
+      align-items: center;
+      height: var(--toolbar-h);
+      padding: 0 8px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      gap: 4px;
+      flex-shrink: 0;
+    }
+
+    .tool-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-width: var(--btn-min);
+      min-height: var(--btn-min);
+      padding: 2px 8px;
+      border: 2px solid transparent;
+      border-radius: 6px;
+      cursor: pointer;
+      background: transparent;
+      color: var(--text-primary);
+      font-size: 11px;
+      gap: 1px;
+      transition: all 0.15s;
+    }
+    .tool-btn:hover { background: #F0F4F8; }
+    .tool-btn.active {
+      background: var(--primary-pale);
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+    .tool-btn .tool-icon {
+      font-size: 18px;
+      line-height: 1;
+    }
+
+    .tool-sep {
+      width: 1px;
+      height: 28px;
+      background: var(--border);
+      margin: 0 4px;
+      flex-shrink: 0;
+    }
+
+    .toolbar-spacer { flex: 1; }
+
+    .tool-toggle {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 10px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 12px;
+      min-height: var(--btn-min);
+      cursor: pointer;
+      background: var(--surface);
+    }
+    .tool-toggle.on {
+      background: var(--primary-pale);
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+    .tool-toggle:hover { border-color: var(--primary); }
+
+    .grid-select {
+      display: flex;
+      align-items: center;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      overflow: hidden;
+      min-height: var(--btn-min);
+    }
+    .grid-option {
+      padding: 4px 8px;
+      font-size: 12px;
+      cursor: pointer;
+      border-right: 1px solid var(--border);
+      background: var(--surface);
+    }
+    .grid-option:last-child { border-right: none; }
+    .grid-option.active {
+      background: var(--primary-pale);
+      color: var(--primary);
+      font-weight: 600;
+    }
+    .grid-option:hover:not(.active) { background: #F0F4F8; }
+
+    /* ══════════════════════════════════════
+       STATUS BAR
+       ══════════════════════════════════════ */
+    .statusbar {
+      display: flex;
+      align-items: center;
+      height: var(--statusbar-h);
+      padding: 0 12px;
+      background: var(--statusbar-bg);
+      border-bottom: 1px solid var(--border);
+      font-size: 13px;
+      flex-shrink: 0;
+    }
+    .statusbar strong { color: var(--primary); }
+
+    /* ══════════════════════════════════════
+       CONSIGNE BANNER
+       ══════════════════════════════════════ */
+    .consigne-banner {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      display: flex;
+      align-items: center;
+      min-height: var(--consigne-h);
+      padding: 6px 12px;
+      background: var(--consigne-bg);
+      border-bottom: 1px solid #C5D9ED;
+      font-size: 14px;
+      gap: 8px;
+      z-index: 8;
+    }
+    .consigne-banner .consigne-text { flex: 1; }
+    .consigne-banner strong { font-weight: 700; }
+    .consigne-close {
+      width: var(--btn-min);
+      height: var(--btn-min);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      font-size: 18px;
+      color: var(--text-secondary);
+      border-radius: 4px;
+      flex-shrink: 0;
+    }
+    .consigne-close:hover { background: rgba(0,0,0,0.06); }
+
+    /* ══════════════════════════════════════
+       MAIN AREA (Canvas + Panel)
+       ══════════════════════════════════════ */
+    .main-area {
+      display: flex;
+      flex: 1;
+      min-height: 0;
+      position: relative;
+    }
+
+    /* ── Canvas ── */
+    .canvas-area {
+      flex: 1;
+      position: relative;
+      background: var(--canvas-bg);
+      overflow: hidden;
+    }
+
+    .canvas-svg {
+      width: 100%;
+      height: 100%;
+    }
+
+    /* Grid pattern */
+    .grid-line { stroke: var(--canvas-grid); stroke-width: 0.5; opacity: 0.5; }
+    .grid-line-major { stroke: var(--canvas-grid); stroke-width: 1; opacity: 0.5; }
+
+    /* Geometric elements on canvas */
+    .geo-segment { stroke: var(--canvas-segment); stroke-width: 2.5; stroke-linecap: round; }
+    .geo-point { fill: var(--canvas-segment); }
+    .geo-label { fill: var(--canvas-segment); font-size: 14px; font-weight: 600; font-family: system-ui, sans-serif; }
+    .geo-measure { fill: var(--canvas-measure); font-size: 13px; font-family: system-ui, sans-serif; }
+    .geo-ghost { stroke: var(--canvas-ghost); stroke-width: 2; stroke-dasharray: 6 4; opacity: 0.3; }
+    .geo-guide { stroke: var(--canvas-guide); stroke-width: 1; stroke-dasharray: 4 4; opacity: 0.7; }
+    .geo-angle-arc { fill: none; stroke: var(--canvas-angle); stroke-width: 1.5; }
+    .geo-right-angle { fill: none; stroke: var(--canvas-guide); stroke-width: 1.5; }
+    .geo-angle-text { fill: var(--canvas-angle); font-size: 12px; font-family: system-ui, sans-serif; }
+    .geo-parallel-marks { stroke: var(--canvas-guide); stroke-width: 1.5; }
+    .geo-congruence { stroke: var(--canvas-segment); stroke-width: 1.5; }
+    .geo-snap-feedback { fill: var(--canvas-guide); opacity: 0.7; }
+
+    /* Contextual action bar */
+    .context-bar {
+      position: absolute;
+      display: flex;
+      gap: var(--btn-gap);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 4px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+      z-index: 10;
+    }
+    .context-btn {
+      min-width: var(--btn-min);
+      min-height: var(--btn-min);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      padding: 4px 10px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 12px;
+      background: var(--surface);
+    }
+    .context-btn:hover { border-color: var(--primary); background: var(--primary-pale); }
+    .context-btn.destructive {
+      color: var(--destructive);
+      border-color: #F5C6C6;
+    }
+    .context-btn.destructive:hover {
+      background: #FEF2F2;
+      border-color: var(--destructive);
+    }
+    .context-btn.confirming {
+      background: var(--destructive);
+      color: white;
+      border-color: var(--destructive);
+    }
+
+    /* Length input field (bottom of canvas) */
+    .length-input-container {
+      position: absolute;
+      bottom: 8px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 6px 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+      z-index: 10;
+      font-size: 13px;
+    }
+    .length-input-container input {
+      width: 70px;
+      padding: 4px 8px;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      font-size: 14px;
+      text-align: right;
+      font-family: system-ui, sans-serif;
+    }
+    .length-input-container input:focus {
+      outline: 2px solid var(--primary);
+      border-color: var(--primary);
+    }
+
+    /* Pan buttons (overlaid on canvas edges) */
+    .pan-btn {
+      position: absolute;
+      width: var(--btn-min);
+      height: var(--btn-min);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px; /* carré arrondi, pas cercle — zone cliquable effective > cercle (ergo) */
+      cursor: pointer;
+      opacity: 0.45; /* 0.4-0.5 minimum pour visibilité TDC visuo-spatial (ergo) */
+      transition: opacity 0.2s;
+      z-index: 5;
+      font-size: 16px;
+      color: var(--text-secondary);
+    }
+    .pan-btn:hover { opacity: 0.8; }
+    .pan-btn.top    { top: 8px; left: 50%; transform: translateX(-50%); }
+    .pan-btn.bottom { bottom: 52px; left: 50%; transform: translateX(-50%); }
+    .pan-btn.left   { left: 8px; top: 50%; transform: translateY(-50%); }
+    .pan-btn.right  { right: 8px; top: 50%; transform: translateY(-50%); }
+
+    /* Zoom buttons */
+    .zoom-controls {
+      position: absolute;
+      bottom: 56px;
+      right: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      z-index: 5;
+    }
+    .zoom-btn {
+      width: var(--btn-min);
+      height: var(--btn-min);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 18px;
+      color: var(--text-secondary);
+      opacity: 0.45;
+      transition: opacity 0.2s;
+    }
+    .zoom-btn:hover { opacity: 0.8; }
+
+    /* Save indicator on canvas (persistent, Google Docs style — per CLAUDE.md) */
+    .save-flash {
+      position: absolute;
+      bottom: 8px;
+      left: 12px;
+      font-size: 11px;
+      color: var(--disabled-text);
+      pointer-events: none;
+    }
+
+    /* ── Properties Panel ── */
+    .panel {
+      width: var(--panel-w);
+      background: var(--surface);
+      border-left: 1px solid var(--border);
+      overflow-y: auto;
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .panel-toggle {
+      position: absolute;
+      right: calc(var(--panel-w) + 4px);
+      top: 4px;
+      width: var(--btn-min);
+      height: var(--btn-min);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+      z-index: 5;
+      color: var(--text-secondary);
+    }
+    .panel-toggle:hover { border-color: var(--primary); }
+
+    .panel-section {
+      border-bottom: 1px solid var(--border);
+    }
+    .panel-section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 12px;
+      cursor: pointer;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-secondary);
+      font-weight: 600;
+      min-height: 36px;
+    }
+    .panel-section-header:hover { background: #F8FAFB; }
+    .panel-section-header .chevron { transition: transform 0.2s; }
+    .panel-section-header.open .chevron { transform: rotate(90deg); }
+
+    .panel-section-body {
+      padding: 4px 12px 10px;
+    }
+    .panel-section-body.collapsed { display: none; }
+
+    .panel-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 4px 0;
+      font-size: 13px;
+      cursor: pointer;
+      border-radius: 4px;
+    }
+    .panel-item:hover { background: #F0F4F8; }
+    .panel-item .label { color: var(--text-primary); }
+    .panel-item .value { color: var(--text-secondary); font-variant-numeric: tabular-nums; }
+
+    .panel-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+    .panel-badge.green { background: #ECFDF5; color: #065F46; }
+    .panel-badge.blue { background: #EFF6FF; color: #1E40AF; }
+
+    .panel-toggle-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 0;
+      font-size: 12px;
+      cursor: pointer;
+      color: var(--text-secondary);
+    }
+    .panel-toggle-row .toggle-icon { font-size: 16px; }
+
+    .panel-figure {
+      padding: 6px 0;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--primary);
+    }
+
+    .panel-context {
+      padding: 8px 12px;
+      background: var(--primary-pale);
+      border-bottom: 1px solid var(--border);
+    }
+    .panel-context-title {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--primary);
+      margin-bottom: 4px;
+    }
+
+    /* ══════════════════════════════════════
+       ACTION BAR (bottom)
+       ══════════════════════════════════════ */
+    .actionbar {
+      display: flex;
+      align-items: center;
+      height: var(--actionbar-h);
+      padding: 0 8px;
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      gap: var(--btn-gap);
+      flex-shrink: 0;
+    }
+
+    .action-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      min-width: var(--btn-min);
+      min-height: var(--btn-min);
+      padding: 4px 12px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 13px;
+      background: var(--surface);
+      color: var(--text-primary);
+    }
+    .action-btn:hover { border-color: var(--primary); background: var(--primary-pale); }
+    .action-btn.primary {
+      background: var(--primary);
+      color: white;
+      border-color: var(--primary);
+    }
+    .action-btn.primary:hover { background: var(--primary-hover); }
+    .action-btn.primary:disabled {
+      background: var(--disabled-bg);
+      color: var(--disabled-text);
+      border-color: var(--disabled-bg);
+      cursor: default;
+    }
+    .action-btn.destructive {
+      background: var(--destructive);
+      color: white;
+      border-color: var(--destructive);
+    }
+    .action-btn.destructive:hover { background: var(--destructive-hover); }
+
+    .actionbar-spacer { flex: 1; }
+    .actionbar-note {
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+
+    /* ══════════════════════════════════════
+       TOAST (keyboard tool change)
+       ══════════════════════════════════════ */
+    .toast {
+      position: absolute;
+      top: 20%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--text-primary);
+      color: white;
+      padding: 8px 20px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      z-index: 100;
+      pointer-events: none;
+      opacity: 0.9;
+    }
+
+    /* ══════════════════════════════════════
+       LEVEL SELECTOR DROPDOWN
+       ══════════════════════════════════════ */
+    .level-dropdown {
+      position: absolute;
+      top: var(--header-h);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+      z-index: 200;
+      overflow: hidden;
+      min-width: 260px;
+    }
+    .level-option {
+      padding: 10px 16px;
+      min-height: var(--btn-min);
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      border-bottom: 1px solid var(--border);
+    }
+    .level-option:last-child { border-bottom: none; }
+    .level-option:hover { background: var(--primary-pale); }
+    .level-option.selected { background: var(--primary-pale); }
+    .level-option .opt-main {
+      font-size: 14px;
+      font-weight: 700;
+      display: flex;
+      justify-content: space-between;
+    }
+    .level-option .opt-sub {
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+
+    /* ══════════════════════════════════════
+       STATE TABS (wireframe navigation)
+       ══════════════════════════════════════ */
+    .wireframe-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: #1A2433;
+      display: flex;
+      justify-content: center;
+      gap: 2px;
+      padding: 4px;
+      z-index: 9999;
+    }
+    .wireframe-tab {
+      padding: 8px 16px;
+      color: #CBD5E1;
+      font-size: 12px;
+      cursor: pointer;
+      border-radius: 4px;
+      border: none;
+      background: transparent;
+      font-family: system-ui, sans-serif;
+    }
+    .wireframe-tab:hover { background: #334155; color: white; }
+    .wireframe-tab.active { background: var(--primary); color: white; }
+
+    .view { display: none; }
+    .view.active { display: flex; flex-direction: column; }
+
+    /* ══════════════════════════════════════
+       DIALOG OVERLAY
+       ══════════════════════════════════════ */
+    .dialog-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(0,0,0,0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 500;
+    }
+    .dialog {
+      background: var(--surface);
+      border-radius: 12px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+      max-width: 500px;
+      width: 90%;
+      padding: 24px;
+    }
+    .dialog h2 {
+      font-size: 18px;
+      margin-bottom: 8px;
+    }
+    .dialog p {
+      font-size: 14px;
+      color: var(--text-secondary);
+      margin-bottom: 20px;
+      line-height: 1.5;
+    }
+    .dialog-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+    }
+    .dialog-btn {
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-size: 14px;
+      cursor: pointer;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      min-height: var(--btn-min);
+    }
+    .dialog-btn.primary {
+      background: var(--primary);
+      color: white;
+      border-color: var(--primary);
+      font-weight: 600;
+      font-size: 15px;
+      padding: 10px 28px;
+    }
+    .dialog-btn.destructive-small {
+      background: var(--surface);
+      color: var(--destructive);
+      border-color: var(--destructive);
+      font-size: 13px;
+      padding: 8px 16px;
+    }
+
+    /* ══════════════════════════════════════
+       PRINT DIALOG
+       ══════════════════════════════════════ */
+    .print-dialog { max-width: 520px; }
+    .print-option {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 0;
+      font-size: 14px;
+    }
+    .print-option label { cursor: pointer; }
+    .print-warning {
+      background: var(--consigne-bg); /* bleu pâle — ton neutre, pas anxiogène (psy) */
+      border: 1px solid #C5D9ED;
+      border-radius: 8px;
+      padding: 12px;
+      margin: 12px 0;
+      font-size: 13px;
+      line-height: 1.5;
+      color: var(--text-primary);
+    }
+    .print-actions {
+      display: flex;
+      gap: 12px;
+      margin-top: 16px;
+    }
+    .print-btn-primary {
+      flex: 1;
+      padding: 12px;
+      background: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      min-height: var(--btn-min);
+    }
+    .print-btn-secondary {
+      padding: 12px 16px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 13px;
+      cursor: pointer;
+      min-height: var(--btn-min);
+    }
+
+    /* ══════════════════════════════════════
+       MES CONSTRUCTIONS
+       ══════════════════════════════════════ */
+    .constructions-dialog { max-width: 600px; }
+    .construction-list {
+      max-height: 350px;
+      overflow-y: auto;
+      margin: 16px 0;
+    }
+    .construction-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 8px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      margin-bottom: 8px;
+      cursor: pointer;
+    }
+    .construction-item:hover { border-color: var(--primary); background: var(--primary-pale); }
+    .construction-item.current { border-color: var(--primary); border-width: 2px; }
+    .construction-thumb {
+      width: 60px;
+      height: 45px;
+      background: #F8FAFB;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      color: var(--disabled-text);
+      flex-shrink: 0;
+    }
+    .construction-info { flex: 1; }
+    .construction-name { font-weight: 600; font-size: 14px; }
+    .construction-date { font-size: 12px; color: var(--text-secondary); }
+    .construction-actions {
+      display: flex;
+      gap: var(--btn-gap); /* 8px min — ergo: 4px = trop risqué (Supprimer à côté d'Exporter) */
+    }
+    .construction-action-btn {
+      width: var(--btn-min);
+      height: var(--btn-min);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+      background: var(--surface);
+    }
+    .construction-action-btn:hover { border-color: var(--primary); }
+
+    /* ══════════════════════════════════════
+       TUTORIAL OVERLAY
+       ══════════════════════════════════════ */
+    .tutorial-overlay {
+      position: absolute;
+      inset: 0;
+      z-index: 800;
+      pointer-events: none;
+    }
+    .tutorial-backdrop {
+      position: absolute;
+      inset: 0;
+      background: rgba(0,0,0,0.15);
+    }
+    .tutorial-message {
+      position: absolute;
+      bottom: 60px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--surface);
+      border-radius: 12px;
+      padding: 16px 24px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.2);
+      text-align: center;
+      font-size: 16px;
+      line-height: 1.5;
+      pointer-events: auto;
+      max-width: 400px;
+    }
+    .tutorial-step {
+      font-size: 11px;
+      color: var(--text-secondary);
+      margin-bottom: 4px;
+    }
+    .tutorial-skip {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      padding: 8px 16px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 13px;
+      pointer-events: auto;
+      min-height: var(--btn-min);
+    }
+    .tutorial-dots {
+      display: flex;
+      justify-content: center;
+      gap: 6px;
+      margin-top: 10px;
+    }
+    .tutorial-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--border);
+    }
+    .tutorial-dot.active { background: var(--primary); }
+
+    /* ══════════════════════════════════════
+       SETTINGS PANEL (simplified)
+       ══════════════════════════════════════ */
+    .settings-section {
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+    .settings-label {
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+    .settings-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 4px 0;
+      font-size: 13px;
+    }
+
+    /* Utilities */
+    .hidden { display: none !important; }
+    .mb-8 { margin-bottom: 8px; }
+  </style>
+</head>
+<body>
+
+<!-- ╔══════════════════════════════════════════════════════════════╗
+     ║  VUE 1 — ÉTAT PRINCIPAL (Segment, construction en cours)   ║
+     ╚══════════════════════════════════════════════════════════════╝ -->
+<div class="app view active" id="view-main">
+
+  <!-- HEADER -->
+  <header class="header">
+    <div class="header-logo">
+      <svg viewBox="0 0 200 200" width="28" height="28">
+        <line x1="35" y1="65" x2="165" y2="65" stroke="#185FA5" stroke-width="10" stroke-linecap="round"/>
+        <line x1="100" y1="65" x2="100" y2="175" stroke="#185FA5" stroke-width="10" stroke-linecap="round"/>
+        <rect x="100" y="65" width="20" height="20" fill="none" stroke="#0B7285" stroke-width="3.5"/>
+        <circle cx="35" cy="65" r="9" fill="#185FA5"/>
+        <circle cx="165" cy="65" r="9" fill="#185FA5"/>
+        <circle cx="100" cy="65" r="9" fill="#185FA5"/>
+        <circle cx="100" cy="175" r="9" fill="#185FA5"/>
+      </svg>
+      TraceVite
+    </div>
+
+    <div class="save-indicator">
+      <span class="check">✓</span> Sauvegardé
+    </div>
+
+    <div class="header-spacer"></div>
+
+    <!-- §8.0.1: bouton « Voir la consigne » visible quand le bandeau est masqué -->
+    <button class="btn-header" aria-label="Voir la consigne" style="font-size: 12px; padding: 4px 8px; border-style: dashed; color: var(--text-secondary);" title="Réafficher la consigne de l'enseignant">
+      Consigne
+    </button>
+
+    <div class="level-selector" role="listbox" aria-label="Niveau scolaire">
+      <span class="level-main">2e cycle</span>
+      <span class="level-sub">(3e-4e année)</span>
+      <span class="chevron">▾</span>
+    </div>
+
+    <button class="btn-header" aria-label="Mes constructions">
+      📁 Mes constructions
+    </button>
+
+    <span class="version">v1.0.0</span>
+  </header>
+
+  <!-- TOOLBAR -->
+  <nav class="toolbar" aria-label="Outils de construction">
+    <button class="tool-btn active" aria-label="Outil Segment" aria-pressed="true">
+      <span class="tool-icon">╲</span>
+      Segment
+    </button>
+    <button class="tool-btn" aria-label="Outil Déplacer">
+      <span class="tool-icon">✥</span>
+      Déplacer
+    </button>
+    <button class="tool-btn" aria-label="Outil Réflexion">
+      <span class="tool-icon">⧎</span>
+      Réflexion
+    </button>
+    <button class="tool-btn" style="border: 1px dashed var(--border); color: var(--text-secondary);" aria-label="Plus d'outils" title="Mesurer, grille, unité">
+      <span class="tool-icon">⋯</span>
+      Plus
+    </button>
+    <!-- §10: En 2e cycle, grille/unité/Mesurer sont derrière « Plus d'outils » -->
+
+    <div class="toolbar-spacer"></div>
+
+    <div class="tool-toggle on" aria-label="Aimant activé" aria-pressed="true">
+      🧲 Aimant
+    </div>
+  </nav>
+
+  <!-- STATUS BAR -->
+  <div class="statusbar" role="status" aria-live="polite">
+    <strong>Segment</strong>&nbsp;— Continue depuis le sommet C. Clique ailleurs ou appuie Échap pour terminer.
+  </div>
+
+  <!-- MAIN AREA -->
+  <div class="main-area">
+
+    <!-- CANVAS -->
+    <div class="canvas-area">
+
+      <!-- CONSIGNE BANNER (position: absolute, overlays top ~40px of canvas — §8.0.1) -->
+      <div class="consigne-banner">
+        <span class="consigne-text"><strong>Consigne :</strong> Construis un rectangle de 4 cm × 6 cm avec une diagonale.</span>
+        <button class="consigne-close" aria-label="Masquer la consigne">×</button>
+      </div>
+      <svg class="canvas-svg" viewBox="0 0 900 500" xmlns="http://www.w3.org/2000/svg" role="application" aria-label="Canevas de construction géométrique">
+
+        <!-- Grid -->
+        <defs>
+          <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+            <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#E5E5E5" stroke-width="0.5" opacity="0.5"/>
+          </pattern>
+        </defs>
+        <rect width="900" height="500" fill="url(#grid)" />
+
+        <!-- Completed segments (rectangle ABCD) -->
+        <!-- AB horizontal -->
+        <line x1="200" y1="150" x2="440" y2="150" class="geo-segment"/>
+        <!-- BC vertical -->
+        <line x1="440" y1="150" x2="440" y2="310" class="geo-segment"/>
+        <!-- CD horizontal -->
+        <line x1="440" y1="310" x2="200" y2="310" class="geo-segment"/>
+        <!-- DA vertical -->
+        <line x1="200" y1="310" x2="200" y2="150" class="geo-segment"/>
+
+        <!-- Ghost segment (chaining from D, cursor near E) -->
+        <line x1="200" y1="310" x2="350" y2="200" class="geo-ghost"/>
+
+        <!-- Guide perpendicularity -->
+        <line x1="180" y1="150" x2="180" y2="330" class="geo-guide"/>
+
+        <!-- Points -->
+        <circle cx="200" cy="150" r="7" class="geo-point"/>
+        <circle cx="440" cy="150" r="7" class="geo-point"/>
+        <circle cx="440" cy="310" r="7" class="geo-point"/>
+        <circle cx="200" cy="310" r="7" class="geo-point" style="fill: var(--primary);">
+          <!-- Pulsing anchor point for chaining -->
+          <animate attributeName="r" values="7;10;7" dur="1.5s" repeatCount="indefinite"/>
+        </circle>
+
+        <!-- Labels -->
+        <text x="190" y="140" class="geo-label">A</text>
+        <text x="448" y="140" class="geo-label">B</text>
+        <text x="448" y="325" class="geo-label">C</text>
+        <text x="185" y="325" class="geo-label">D</text>
+
+        <!-- Length labels -->
+        <text x="300" y="142" class="geo-measure" text-anchor="middle">6,0 cm</text>
+        <text x="456" y="235" class="geo-measure">4,0 cm</text>
+        <text x="300" y="305" class="geo-measure" text-anchor="middle">6,0 cm</text>
+        <text x="184" y="235" class="geo-measure" text-anchor="end">4,0 cm</text>
+
+        <!-- Ghost segment length (near cursor) -->
+        <text x="290" y="245" class="geo-measure" style="opacity:0.6">4,7 cm</text>
+
+        <!-- Right angle markers (teal squares) -->
+        <rect x="200" y="150" width="14" height="14" class="geo-right-angle"/>
+        <rect x="426" y="150" width="14" height="14" class="geo-right-angle"/>
+        <rect x="426" y="296" width="14" height="14" class="geo-right-angle"/>
+        <rect x="200" y="296" width="14" height="14" class="geo-right-angle"/>
+
+        <!-- Parallel marks (// on AB and CD) -->
+        <line x1="316" y1="146" x2="320" y2="154" class="geo-parallel-marks"/>
+        <line x1="323" y1="146" x2="327" y2="154" class="geo-parallel-marks"/>
+        <line x1="316" y1="306" x2="320" y2="314" class="geo-parallel-marks"/>
+        <line x1="323" y1="306" x2="327" y2="314" class="geo-parallel-marks"/>
+
+        <!-- Parallel marks (// on BC and DA) -->
+        <line x1="436" y1="226" x2="444" y2="230" class="geo-parallel-marks"/>
+        <line x1="436" y1="233" x2="444" y2="237" class="geo-parallel-marks"/>
+        <line x1="196" y1="226" x2="204" y2="230" class="geo-parallel-marks"/>
+        <line x1="196" y1="233" x2="204" y2="237" class="geo-parallel-marks"/>
+
+        <!-- Congruence marks (= on AB/CD and BC/DA) -->
+        <line x1="315" y1="147" x2="315" y2="153" class="geo-congruence" stroke-width="1" opacity="0"/>
+        <!-- Using parallel marks as visual cue already -->
+
+        <!-- Snap feedback (green dot at grid intersection near cursor) -->
+        <circle cx="360" cy="200" r="4" class="geo-snap-feedback"/>
+
+      </svg>
+
+      <!-- Contextual action bar (hovering above selected segment AB) -->
+      <div class="context-bar" style="top: 105px; left: 270px;">
+        <button class="context-btn destructive" aria-label="Supprimer le côté AB">🗑 Supprimer le côté AB</button>
+        <button class="context-btn" aria-label="Fixer longueur">📐 Fixer</button>
+      </div>
+
+      <!-- Length input field -->
+      <div class="length-input-container">
+        <label>Longueur du côté CD :</label>
+        <input type="text" inputmode="decimal" value="6,0" placeholder="Tape une longueur ou clique ailleurs" aria-label="Longueur en cm"/>
+        <span>cm</span>
+      </div>
+
+      <!-- Pan buttons -->
+      <button class="pan-btn top" aria-label="Défiler vers le haut">▲</button>
+      <button class="pan-btn bottom" aria-label="Défiler vers le bas">▼</button>
+      <button class="pan-btn left" aria-label="Défiler vers la gauche">◀</button>
+      <button class="pan-btn right" aria-label="Défiler vers la droite">▶</button>
+
+      <!-- Zoom controls -->
+      <div class="zoom-controls">
+        <button class="zoom-btn" aria-label="Zoom avant">+</button>
+        <button class="zoom-btn" aria-label="Zoom arrière">−</button>
+      </div>
+
+      <!-- Panel toggle -->
+      <button class="panel-toggle" aria-label="Masquer le panneau">◀</button>
+    </div>
+
+    <!-- PROPERTIES PANEL -->
+    <aside class="panel" aria-label="Panneau de propriétés">
+
+      <!-- Contextual section (selected element) -->
+      <div class="panel-context">
+        <div class="panel-context-title">Côté AB sélectionné</div>
+        <div class="panel-item">
+          <span class="label">Longueur</span>
+          <span class="value">6,0 cm</span>
+        </div>
+      </div>
+
+      <!-- Segments / Côtés -->
+      <div class="panel-section">
+        <div class="panel-section-header open" aria-expanded="true">
+          Côtés
+          <span class="chevron">▸</span>
+        </div>
+        <div class="panel-section-body">
+          <div class="panel-item" style="background: var(--primary-pale); border-radius: 4px; padding: 4px;">
+            <span class="label" style="font-weight:600;">Côté AB</span>
+            <span class="value">6,0 cm</span>
+          </div>
+          <div class="panel-item">
+            <span class="label">Côté BC</span>
+            <span class="value">4,0 cm</span>
+          </div>
+          <div class="panel-item">
+            <span class="label">Côté CD</span>
+            <span class="value">6,0 cm</span>
+          </div>
+          <div class="panel-item">
+            <span class="label">Côté DA</span>
+            <span class="value">4,0 cm</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Angles -->
+      <div class="panel-section">
+        <div class="panel-section-header" aria-expanded="false">
+          Angles
+          <span class="chevron">▸</span>
+        </div>
+        <div class="panel-section-body collapsed">
+          <!-- collapsed by default -->
+        </div>
+      </div>
+
+      <!-- Propriétés — §9: fermé par défaut (seule section contextuelle ouverte) -->
+      <div class="panel-section">
+        <div class="panel-section-header" aria-expanded="false">
+          Propriétés
+          <span class="chevron">▸</span>
+        </div>
+        <div class="panel-section-body collapsed">
+          <div class="panel-toggle-row">
+            <span class="toggle-icon">👁</span>
+            Masquer les propriétés
+          </div>
+          <div class="panel-figure">Rectangle</div>
+          <div class="mb-8">
+            <span class="panel-badge green">AB // CD</span>
+          </div>
+          <div class="mb-8">
+            <span class="panel-badge green">BC // DA</span>
+          </div>
+          <div class="mb-8">
+            <span class="panel-badge green">AB ⊥ BC</span>
+          </div>
+          <div class="mb-8">
+            <span class="panel-badge blue">AB = CD</span>
+          </div>
+          <div>
+            <span class="panel-badge blue">BC = DA</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Mesures — §9: fermé par défaut -->
+      <div class="panel-section">
+        <div class="panel-section-header" aria-expanded="false">
+          Mesures
+          <span class="chevron">▸</span>
+        </div>
+        <div class="panel-section-body collapsed">
+          <div class="panel-item">
+            <span class="label">Périmètre</span>
+            <span class="value">20,0 cm</span>
+          </div>
+          <div class="panel-item">
+            <span class="label">Aire</span>
+            <span class="value">24,0 cm²</span>
+          </div>
+        </div>
+      </div>
+
+    </aside>
+  </div>
+
+  <!-- ACTION BAR -->
+  <footer class="actionbar">
+    <button class="action-btn" aria-label="Annuler (Ctrl+Z)" style="background: var(--primary-pale); border-color: var(--primary-pale);">↩ Annuler</button>
+    <button class="action-btn" aria-label="Rétablir (Ctrl+Y)">↪ Rétablir</button>
+
+    <div class="actionbar-spacer"></div>
+
+    <span class="actionbar-note">Échelle 1:1 sur papier</span>
+
+    <button class="action-btn primary" aria-label="Imprimer">🖨 Imprimer</button>
+
+    <!-- 15+ px gap before destructive button -->
+    <div style="width: 20px; display: flex; align-items: center; justify-content: center;"><div style="width: 1px; height: 24px; background: var(--border);"></div></div>
+
+    <button class="action-btn destructive" aria-label="Nouvelle construction">Nouvelle construction</button>
+  </footer>
+
+</div>
+
+
+<!-- ╔══════════════════════════════════════════════════════════════╗
+     ║  VUE 2 — DIALOGUE « NOUVELLE CONSTRUCTION »                ║
+     ╚══════════════════════════════════════════════════════════════╝ -->
+<div class="app view" id="view-newdialog" style="height:100vh;">
+  <div class="dialog-overlay">
+    <div class="dialog">
+      <h2>Tu veux commencer une nouvelle figure?</h2>
+      <p>Ta figure « Construction 3 » est sauvegardée. Tu peux la retrouver dans « Mes constructions ».</p>
+      <div class="dialog-actions" style="align-items: center;">
+        <button class="dialog-btn primary" style="font-size: 16px; padding: 12px 32px;">Non, je continue</button>
+        <button class="dialog-btn destructive-small" style="font-size: 12px; padding: 6px 12px;">Oui, nouvelle figure</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ╔══════════════════════════════════════════════════════════════╗
+     ║  VUE 3 — DIALOGUE D'IMPRESSION                            ║
+     ╚══════════════════════════════════════════════════════════════╝ -->
+<div class="app view" id="view-print" style="height:100vh;">
+  <div class="dialog-overlay">
+    <div class="dialog print-dialog">
+      <h2>Imprimer ta figure</h2>
+
+      <div class="print-option">
+        <span style="font-weight:600;">Orientation :</span>
+        <div class="grid-select">
+          <div class="grid-option active">Portrait</div>
+          <div class="grid-option">Paysage</div>
+        </div>
+      </div>
+
+      <div class="print-option">
+        <input type="checkbox" id="print-grid"><label for="print-grid">Inclure la grille</label>
+      </div>
+
+      <div class="print-option">
+        <input type="checkbox" id="print-consigne" checked><label for="print-consigne">Inclure la consigne</label>
+      </div>
+
+      <div class="print-warning">
+        <div style="font-size: 16px; font-weight: 700; margin-bottom: 8px;">IMPRIME À 100% (taille réelle)</div>
+        <!-- Illustration : boîte de dialogue impression avec flèche → "Taille réelle" -->
+        <div style="border: 1px solid var(--border); border-radius: 6px; padding: 10px; background: white; margin-bottom: 8px; font-size: 12px; color: var(--text-secondary);">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span>Mise à l'échelle :</span>
+            <span style="border: 2px solid var(--primary); border-radius: 4px; padding: 2px 8px; font-weight: 600; color: var(--primary);">Taille réelle</span>
+            <span style="opacity: 0.4; text-decoration: line-through;">Ajuster à la page</span>
+            <span style="font-size: 16px;">← choisis ici</span>
+          </div>
+        </div>
+        <label style="font-size: 12px;"><input type="checkbox"> Ne plus afficher ce message</label>
+      </div>
+
+      <div class="print-actions">
+        <button class="print-btn-primary">📥 Télécharger le PDF</button>
+        <button class="print-btn-secondary">🖨 Imprimer directement</button>
+      </div>
+      <div style="text-align: center; margin-top: 12px;">
+        <button style="background: none; border: none; color: var(--text-secondary); cursor: pointer; font-size: 13px;">Annuler</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ╔══════════════════════════════════════════════════════════════╗
+     ║  VUE 4 — MES CONSTRUCTIONS                                ║
+     ╚══════════════════════════════════════════════════════════════╝ -->
+<div class="app view" id="view-constructions" style="height:100vh;">
+  <div class="dialog-overlay">
+    <div class="dialog constructions-dialog">
+      <h2>Mes constructions</h2>
+
+      <div style="display:flex; gap: 8px; margin-bottom: 12px;">
+        <button class="action-btn primary" style="font-size: 13px;">+ Nouvelle construction</button>
+        <button class="action-btn primary" style="font-size: 13px; background: var(--surface); color: var(--primary); border-color: var(--primary);">📂 Ouvrir un fichier</button>
+        <div style="flex:1"></div>
+        <span style="font-size: 12px; color: var(--text-secondary); align-self: center;">3 / 50</span>
+      </div>
+
+      <div class="construction-list">
+        <div class="construction-item current">
+          <div class="construction-thumb">
+            <svg viewBox="0 0 60 45" width="60" height="45">
+              <rect x="10" y="8" width="35" height="25" fill="none" stroke="#185FA5" stroke-width="1.5"/>
+              <circle cx="10" cy="8" r="2" fill="#185FA5"/>
+              <circle cx="45" cy="8" r="2" fill="#185FA5"/>
+              <circle cx="45" cy="33" r="2" fill="#185FA5"/>
+              <circle cx="10" cy="33" r="2" fill="#185FA5"/>
+            </svg>
+          </div>
+          <div class="construction-info">
+            <div class="construction-name">Construction 3</div>
+            <div class="construction-date">Aujourd'hui, 14 h 32 — Rectangle ABCD</div>
+          </div>
+          <div class="construction-actions">
+            <button class="construction-action-btn" aria-label="Exporter" title="Exporter .tracevite">💾</button>
+            <button class="construction-action-btn" aria-label="Renommer" title="Renommer">✏️</button>
+            <button class="construction-action-btn" aria-label="Supprimer" title="Supprimer" style="color: var(--destructive);">🗑</button>
+          </div>
+        </div>
+
+        <div class="construction-item">
+          <div class="construction-thumb">
+            <svg viewBox="0 0 60 45" width="60" height="45">
+              <polygon points="30,5 10,38 50,38" fill="none" stroke="#185FA5" stroke-width="1.5"/>
+              <circle cx="30" cy="5" r="2" fill="#185FA5"/>
+              <circle cx="10" cy="38" r="2" fill="#185FA5"/>
+              <circle cx="50" cy="38" r="2" fill="#185FA5"/>
+            </svg>
+          </div>
+          <div class="construction-info">
+            <div class="construction-name">Triangle exercice 5</div>
+            <div class="construction-date">Hier, 10 h 15 — Triangle isocèle ABC</div>
+          </div>
+          <div class="construction-actions">
+            <button class="construction-action-btn" aria-label="Exporter">💾</button>
+            <button class="construction-action-btn" aria-label="Renommer">✏️</button>
+            <button class="construction-action-btn" aria-label="Supprimer" style="color: var(--destructive);">🗑</button>
+          </div>
+        </div>
+
+        <div class="construction-item">
+          <div class="construction-thumb">
+            <svg viewBox="0 0 60 45" width="60" height="45">
+              <circle cx="30" cy="22" r="16" fill="none" stroke="#185FA5" stroke-width="1.5"/>
+              <circle cx="30" cy="22" r="2" fill="#185FA5"/>
+              <line x1="30" y1="22" x2="46" y2="22" stroke="#185FA5" stroke-width="1"/>
+            </svg>
+          </div>
+          <div class="construction-info">
+            <div class="construction-name">Cercle et rayon</div>
+            <div class="construction-date">27 mars, 9 h 05</div>
+          </div>
+          <div class="construction-actions">
+            <button class="construction-action-btn" aria-label="Exporter">💾</button>
+            <button class="construction-action-btn" aria-label="Renommer">✏️</button>
+            <button class="construction-action-btn" aria-label="Supprimer" style="color: var(--destructive);">🗑</button>
+          </div>
+        </div>
+      </div>
+
+      <div style="text-align: center;">
+        <button style="background: none; border: none; color: var(--text-secondary); cursor: pointer; font-size: 13px;">Fermer</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ╔══════════════════════════════════════════════════════════════╗
+     ║  VUE 5 — TUTORIEL (premier lancement)                     ║
+     ╚══════════════════════════════════════════════════════════════╝ -->
+<div class="app view" id="view-tutorial" style="height:100vh; position: relative;">
+  <!-- Simplified app behind tutorial -->
+  <header class="header">
+    <div class="header-logo">
+      <svg viewBox="0 0 200 200" width="28" height="28">
+        <line x1="35" y1="65" x2="165" y2="65" stroke="#185FA5" stroke-width="10" stroke-linecap="round"/>
+        <line x1="100" y1="65" x2="100" y2="175" stroke="#185FA5" stroke-width="10" stroke-linecap="round"/>
+        <rect x="100" y="65" width="20" height="20" fill="none" stroke="#0B7285" stroke-width="3.5"/>
+        <circle cx="35" cy="65" r="9" fill="#185FA5"/>
+        <circle cx="165" cy="65" r="9" fill="#185FA5"/>
+        <circle cx="100" cy="65" r="9" fill="#185FA5"/>
+        <circle cx="100" cy="175" r="9" fill="#185FA5"/>
+      </svg>
+      TraceVite
+    </div>
+    <div class="header-spacer"></div>
+  </header>
+  <nav class="toolbar">
+    <button class="tool-btn active"><span class="tool-icon">╲</span>Segment</button>
+  </nav>
+  <div class="statusbar"><strong>Segment</strong>&nbsp;— Clique pour placer le premier point</div>
+  <div style="flex:1; position: relative; background: var(--canvas-bg);">
+    <svg width="100%" height="100%" viewBox="0 0 900 400">
+      <defs>
+        <pattern id="grid2" width="40" height="40" patternUnits="userSpaceOnUse">
+          <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#E5E5E5" stroke-width="0.5" opacity="0.5"/>
+        </pattern>
+      </defs>
+      <rect width="900" height="400" fill="url(#grid2)" />
+    </svg>
+    <!-- Tutorial overlay -->
+    <div class="tutorial-overlay">
+      <div class="tutorial-backdrop"></div>
+      <button class="tutorial-skip">Passer ›</button>
+      <div class="tutorial-message">
+        <div class="tutorial-step">Étape 1 de 4</div>
+        <div style="font-size: 18px; font-weight: 600; margin-bottom: 4px;">Clique sur la grille pour placer un point.</div>
+        <div style="font-size: 14px; color: var(--text-secondary);">Clique n'importe où</div>
+        <div class="tutorial-dots">
+          <div class="tutorial-dot active"></div>
+          <div class="tutorial-dot"></div>
+          <div class="tutorial-dot"></div>
+          <div class="tutorial-dot"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <footer class="actionbar">
+    <button class="action-btn" disabled>↩ Annuler</button>
+    <button class="action-btn" disabled>↪ Rétablir</button>
+    <div class="actionbar-spacer"></div>
+    <span class="actionbar-note">Échelle 1:1 sur papier</span>
+    <button class="action-btn primary" disabled>🖨 Imprimer</button>
+  </footer>
+</div>
+
+
+<!-- ╔══════════════════════════════════════════════════════════════╗
+     ║  VUE 5b — POST-TUTORIEL (canevas vide, moment vulnérable) ║
+     ╚══════════════════════════════════════════════════════════════╝ -->
+<div class="app view" id="view-post-tutorial">
+  <header class="header">
+    <div class="header-logo">
+      <svg viewBox="0 0 200 200" width="28" height="28">
+        <line x1="35" y1="65" x2="165" y2="65" stroke="#185FA5" stroke-width="10" stroke-linecap="round"/>
+        <line x1="100" y1="65" x2="100" y2="175" stroke="#185FA5" stroke-width="10" stroke-linecap="round"/>
+        <rect x="100" y="65" width="20" height="20" fill="none" stroke="#0B7285" stroke-width="3.5"/>
+        <circle cx="35" cy="65" r="9" fill="#185FA5"/>
+        <circle cx="165" cy="65" r="9" fill="#185FA5"/>
+        <circle cx="100" cy="65" r="9" fill="#185FA5"/>
+        <circle cx="100" cy="175" r="9" fill="#185FA5"/>
+      </svg>
+      TraceVite
+    </div>
+    <div class="save-indicator"><span class="check">✓</span> Sauvegardé</div>
+    <div class="header-spacer"></div>
+    <div class="level-selector">
+      <span class="level-main">2e cycle</span>
+      <span class="level-sub">(3e-4e année)</span>
+      <span class="chevron">▾</span>
+    </div>
+    <button class="btn-header">📁 Mes constructions</button>
+    <span class="version">v1.0.0</span>
+  </header>
+
+  <nav class="toolbar">
+    <button class="tool-btn active"><span class="tool-icon">╲</span>Segment</button>
+    <button class="tool-btn"><span class="tool-icon">✥</span>Déplacer</button>
+    <button class="tool-btn"><span class="tool-icon">⧎</span>Réflexion</button>
+    <button class="tool-btn" style="border: 1px dashed var(--border); color: var(--text-secondary);"><span class="tool-icon">⋯</span>Plus</button>
+    <div class="toolbar-spacer"></div>
+    <div class="tool-toggle on">🧲 Aimant</div>
+  </nav>
+
+  <div class="statusbar"><strong>Segment</strong>&nbsp;— Clique pour placer le premier point</div>
+
+  <div class="main-area">
+    <div class="canvas-area">
+      <svg class="canvas-svg" viewBox="0 0 900 450" xmlns="http://www.w3.org/2000/svg" role="application" aria-label="Canevas de construction géométrique">
+        <defs>
+          <pattern id="grid-post" width="40" height="40" patternUnits="userSpaceOnUse">
+            <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#E5E5E5" stroke-width="0.5" opacity="0.5"/>
+          </pattern>
+        </defs>
+        <rect width="900" height="450" fill="url(#grid-post)" />
+      </svg>
+
+      <!-- Message d'encouragement post-tutoriel (psy: moment le plus vulnérable) -->
+      <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+                  text-align: center; pointer-events: none; color: var(--text-secondary); opacity: 0.7;">
+        <div style="font-size: 18px;">Clique n'importe où pour commencer!</div>
+      </div>
+
+      <button class="pan-btn top">▲</button>
+      <button class="pan-btn bottom">▼</button>
+      <button class="pan-btn left">◀</button>
+      <button class="pan-btn right">▶</button>
+      <div class="zoom-controls">
+        <button class="zoom-btn">+</button>
+        <button class="zoom-btn">−</button>
+      </div>
+    </div>
+    <!-- Panneau fermé au premier lancement (§19) -->
+  </div>
+
+  <footer class="actionbar">
+    <button class="action-btn" disabled>↩ Annuler</button>
+    <button class="action-btn" disabled>↪ Rétablir</button>
+    <div class="actionbar-spacer"></div>
+    <span class="actionbar-note">Échelle 1:1 sur papier</span>
+    <button class="action-btn primary" disabled>🖨 Imprimer</button>
+    <div style="width: 20px; display: flex; align-items: center; justify-content: center;"><div style="width: 1px; height: 24px; background: var(--border);"></div></div>
+    <button class="action-btn destructive">Nouvelle construction</button>
+  </footer>
+</div>
+
+
+<!-- ╔══════════════════════════════════════════════════════════════╗
+     ║  VUE 6 — 3e CYCLE (tous outils visibles + degrés)         ║
+     ╚══════════════════════════════════════════════════════════════╝ -->
+<div class="app view" id="view-3ecycle">
+
+  <header class="header">
+    <div class="header-logo">
+      <svg viewBox="0 0 200 200" width="28" height="28">
+        <line x1="35" y1="65" x2="165" y2="65" stroke="#185FA5" stroke-width="10" stroke-linecap="round"/>
+        <line x1="100" y1="65" x2="100" y2="175" stroke="#185FA5" stroke-width="10" stroke-linecap="round"/>
+        <rect x="100" y="65" width="20" height="20" fill="none" stroke="#0B7285" stroke-width="3.5"/>
+        <circle cx="35" cy="65" r="9" fill="#185FA5"/>
+        <circle cx="165" cy="65" r="9" fill="#185FA5"/>
+        <circle cx="100" cy="65" r="9" fill="#185FA5"/>
+        <circle cx="100" cy="175" r="9" fill="#185FA5"/>
+      </svg>
+      TraceVite
+    </div>
+    <div class="save-indicator">
+      <span class="check">✓</span> Sauvegardé
+    </div>
+    <div class="header-spacer"></div>
+    <div class="level-selector">
+      <span class="level-main">3e cycle</span>
+      <span class="level-sub">(5e-6e année)</span>
+      <span class="chevron">▾</span>
+    </div>
+    <button class="btn-header">📁 Mes constructions</button>
+    <span class="version">v1.0.0</span>
+  </header>
+
+  <!-- TOOLBAR — 3e cycle: tous outils visibles -->
+  <nav class="toolbar">
+    <button class="tool-btn active">
+      <span class="tool-icon">╲</span>Segment
+    </button>
+    <button class="tool-btn">
+      <span class="tool-icon">◯</span>Cercle
+    </button>
+
+    <div class="tool-sep"></div>
+
+    <button class="tool-btn">
+      <span class="tool-icon">⧎</span>Réflexion
+    </button>
+
+    <div class="tool-sep"></div>
+
+    <button class="tool-btn">
+      <span class="tool-icon">✥</span>Déplacer
+    </button>
+    <button class="tool-btn">
+      <span class="tool-icon">📐</span>Mesurer
+    </button>
+
+    <div class="toolbar-spacer"></div>
+
+    <div class="grid-select">
+      <div class="grid-option">5 mm</div>
+      <div class="grid-option active">1 cm</div>
+      <div class="grid-option">2 cm</div>
+    </div>
+
+    <div class="tool-toggle on">cm / <span style="opacity:0.5">mm</span></div>
+    <div class="tool-toggle on">🧲 Aimant</div>
+  </nav>
+
+  <div class="statusbar">
+    <strong>Segment</strong>&nbsp;— Clique pour placer le premier point
+  </div>
+
+  <div class="main-area">
+    <div class="canvas-area">
+      <svg class="canvas-svg" viewBox="0 0 900 450" xmlns="http://www.w3.org/2000/svg" role="application" aria-label="Canevas de construction géométrique">
+        <defs>
+          <pattern id="grid3" width="40" height="40" patternUnits="userSpaceOnUse">
+            <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#E5E5E5" stroke-width="0.5" opacity="0.5"/>
+          </pattern>
+        </defs>
+        <rect width="900" height="450" fill="url(#grid3)" />
+
+        <!-- Triangle with angle measurements (3e cycle) -->
+        <line x1="150" y1="350" x2="500" y2="350" class="geo-segment"/>
+        <line x1="500" y1="350" x2="350" y2="150" class="geo-segment"/>
+        <line x1="350" y1="150" x2="150" y2="350" class="geo-segment"/>
+
+        <!-- Points -->
+        <circle cx="150" cy="350" r="7" class="geo-point"/>
+        <circle cx="500" cy="350" r="7" class="geo-point"/>
+        <circle cx="350" cy="150" r="7" class="geo-point"/>
+
+        <!-- Labels -->
+        <text x="135" y="368" class="geo-label">A</text>
+        <text x="508" y="368" class="geo-label">B</text>
+        <text x="348" y="140" class="geo-label">C</text>
+
+        <!-- Lengths -->
+        <text x="325" y="370" class="geo-measure" text-anchor="middle">8,8 cm</text>
+        <text x="440" y="245" class="geo-measure">5,3 cm</text>
+        <text x="235" y="245" class="geo-measure">5,3 cm</text>
+
+        <!-- Angle arcs with degree values (3e cycle only) -->
+        <!-- Angle at A -->
+        <path d="M 175 350 A 25 25 0 0 0 165 330" class="geo-angle-arc"/>
+        <text x="180" y="332" class="geo-angle-text">68°</text>
+
+        <!-- Angle at B -->
+        <path d="M 475 350 A 25 25 0 0 1 485 330" class="geo-angle-arc"/>
+        <text x="468" y="332" class="geo-angle-text">68°</text>
+
+        <!-- Angle at C — obtus marker -->
+        <path d="M 365 170 A 25 25 0 0 0 335 170" class="geo-angle-arc"/>
+        <text x="342" y="180" class="geo-angle-text">44°</text>
+
+        <!-- Congruence marks on equal sides (single tick) -->
+        <line x1="425" y1="295" x2="430" y2="300" class="geo-congruence"/>
+        <line x1="255" y1="255" x2="250" y2="250" class="geo-congruence"/>
+
+        <!-- Circle -->
+        <circle cx="680" cy="230" r="80" fill="none" stroke="var(--canvas-segment)" stroke-width="2"/>
+        <circle cx="680" cy="230" r="7" class="geo-point"/>
+        <text x="688" y="225" class="geo-label">D</text>
+        <line x1="680" y1="230" x2="760" y2="230" class="geo-segment" stroke-dasharray="none"/>
+        <text x="715" y="222" class="geo-measure">2,0 cm</text>
+
+      </svg>
+
+      <button class="pan-btn top">▲</button>
+      <button class="pan-btn bottom">▼</button>
+      <button class="pan-btn left">◀</button>
+      <button class="pan-btn right">▶</button>
+      <div class="zoom-controls">
+        <button class="zoom-btn">+</button>
+        <button class="zoom-btn">−</button>
+      </div>
+    </div>
+
+    <aside class="panel">
+      <div class="panel-section">
+        <div class="panel-section-header open">
+          Côtés <span class="chevron">▸</span>
+        </div>
+        <div class="panel-section-body">
+          <div class="panel-item"><span class="label">Côté AB</span><span class="value">8,8 cm</span></div>
+          <div class="panel-item"><span class="label">Côté BC</span><span class="value">5,3 cm</span></div>
+          <div class="panel-item"><span class="label">Côté CA</span><span class="value">5,3 cm</span></div>
+        </div>
+      </div>
+      <div class="panel-section">
+        <div class="panel-section-header open">
+          Angles <span class="chevron">▸</span>
+        </div>
+        <div class="panel-section-body">
+          <div class="panel-item"><span class="label">∠A</span><span class="value" style="color: var(--canvas-angle);">68° aigu</span></div>
+          <div class="panel-item"><span class="label">∠B</span><span class="value" style="color: var(--canvas-angle);">68° aigu</span></div>
+          <div class="panel-item"><span class="label">∠C</span><span class="value" style="color: var(--canvas-angle);">44° aigu</span></div>
+        </div>
+      </div>
+      <div class="panel-section">
+        <div class="panel-section-header open">
+          Propriétés <span class="chevron">▸</span>
+        </div>
+        <div class="panel-section-body">
+          <div class="panel-toggle-row">
+            <span class="toggle-icon">👁</span>
+            Masquer les propriétés
+          </div>
+          <div class="panel-figure">Triangle isocèle</div>
+          <div class="mb-8"><span class="panel-badge blue">BC = CA</span></div>
+          <div><span class="panel-badge blue">∠A = ∠B</span></div>
+        </div>
+      </div>
+      <div class="panel-section">
+        <div class="panel-section-header open">
+          Mesures <span class="chevron">▸</span>
+        </div>
+        <div class="panel-section-body">
+          <div class="panel-item"><span class="label">Périmètre</span><span class="value">19,4 cm</span></div>
+          <div class="panel-item"><span class="label">Aire</span><span class="value">19,8 cm²</span></div>
+        </div>
+      </div>
+    </aside>
+  </div>
+
+  <footer class="actionbar">
+    <button class="action-btn">↩ Annuler</button>
+    <button class="action-btn">↪ Rétablir</button>
+    <div class="actionbar-spacer"></div>
+    <span class="actionbar-note">Échelle 1:1 sur papier</span>
+    <button class="action-btn primary">🖨 Imprimer</button>
+    <div style="width: 20px; display: flex; align-items: center; justify-content: center;"><div style="width: 1px; height: 24px; background: var(--border);"></div></div>
+    <button class="action-btn destructive">Nouvelle construction</button>
+  </footer>
+
+</div>
+
+
+<!-- ╔══════════════════════════════════════════════════════════════╗
+     ║  VUE 7 — LEVEL SELECTOR DROPDOWN                          ║
+     ╚══════════════════════════════════════════════════════════════╝ -->
+<div class="app view" id="view-dropdown" style="height:100vh; position: relative;">
+  <header class="header">
+    <div class="header-logo">
+      <svg viewBox="0 0 200 200" width="28" height="28">
+        <line x1="35" y1="65" x2="165" y2="65" stroke="#185FA5" stroke-width="10" stroke-linecap="round"/>
+        <line x1="100" y1="65" x2="100" y2="175" stroke="#185FA5" stroke-width="10" stroke-linecap="round"/>
+        <rect x="100" y="65" width="20" height="20" fill="none" stroke="#0B7285" stroke-width="3.5"/>
+        <circle cx="35" cy="65" r="9" fill="#185FA5"/>
+        <circle cx="165" cy="65" r="9" fill="#185FA5"/>
+        <circle cx="100" cy="65" r="9" fill="#185FA5"/>
+        <circle cx="100" cy="175" r="9" fill="#185FA5"/>
+      </svg>
+      TraceVite
+    </div>
+    <div class="save-indicator"><span class="check">✓</span> Sauvegardé</div>
+    <div class="header-spacer"></div>
+    <div class="level-selector" style="border-color: var(--primary); box-shadow: 0 0 0 2px var(--primary-pale);">
+      <span class="level-main">2e cycle</span>
+      <span class="level-sub">(3e-4e année)</span>
+      <span class="chevron">▴</span>
+    </div>
+    <button class="btn-header">📁 Mes constructions</button>
+    <span class="version">v1.0.0</span>
+  </header>
+
+  <!-- Dropdown overlay -->
+  <div class="level-dropdown" style="right: 230px;" role="listbox" aria-label="Choisir le niveau scolaire">
+    <div class="level-option selected" role="option" aria-selected="true">
+      <div class="opt-main">2e cycle <span style="color: var(--primary);">✓</span></div>
+      <div class="opt-sub">3e et 4e année (8-10 ans)</div>
+    </div>
+    <div class="level-option" role="option" aria-selected="false">
+      <div class="opt-main">3e cycle</div>
+      <div class="opt-sub">5e et 6e année (10-12 ans)</div>
+    </div>
+  </div>
+
+  <nav class="toolbar">
+    <button class="tool-btn active"><span class="tool-icon">╲</span>Segment</button>
+    <button class="tool-btn"><span class="tool-icon">✥</span>Déplacer</button>
+    <button class="tool-btn"><span class="tool-icon">⧎</span>Réflexion</button>
+    <button class="tool-btn" style="border: 1px dashed var(--border); color: var(--text-secondary);" title="Mesurer, grille, unité"><span class="tool-icon">⋯</span>Plus</button>
+    <!-- §10: En 2e cycle, grille/unité/Mesurer sont derrière « Plus d'outils » -->
+    <div class="toolbar-spacer"></div>
+    <div class="tool-toggle on">🧲 Aimant</div>
+  </nav>
+  <div class="statusbar"><strong>Segment</strong>&nbsp;— Clique pour placer le premier point</div>
+  <div style="flex:1; background: var(--canvas-bg);"></div>
+  <footer class="actionbar">
+    <button class="action-btn">↩ Annuler</button>
+    <button class="action-btn">↪ Rétablir</button>
+    <div class="actionbar-spacer"></div>
+    <span class="actionbar-note">Échelle 1:1 sur papier</span>
+    <button class="action-btn primary" disabled>🖨 Imprimer</button>
+    <div style="width: 20px; display: flex; align-items: center; justify-content: center;"><div style="width: 1px; height: 24px; background: var(--border);"></div></div>
+    <button class="action-btn destructive">Nouvelle construction</button>
+  </footer>
+</div>
+
+
+<!-- ╔══════════════════════════════════════════════════════════════╗
+     ║  VUE 8 — PANNEAU FERMÉ (petit écran / replié)             ║
+     ╚══════════════════════════════════════════════════════════════╝ -->
+<div class="app view" id="view-panel-closed">
+
+  <header class="header">
+    <div class="header-logo">
+      <svg viewBox="0 0 200 200" width="28" height="28">
+        <line x1="35" y1="65" x2="165" y2="65" stroke="#185FA5" stroke-width="10" stroke-linecap="round"/>
+        <line x1="100" y1="65" x2="100" y2="175" stroke="#185FA5" stroke-width="10" stroke-linecap="round"/>
+        <rect x="100" y="65" width="20" height="20" fill="none" stroke="#0B7285" stroke-width="3.5"/>
+        <circle cx="35" cy="65" r="9" fill="#185FA5"/>
+        <circle cx="165" cy="65" r="9" fill="#185FA5"/>
+        <circle cx="100" cy="65" r="9" fill="#185FA5"/>
+        <circle cx="100" cy="175" r="9" fill="#185FA5"/>
+      </svg>
+      TraceVite
+    </div>
+    <div class="save-indicator"><span class="check">✓</span> Sauvegardé</div>
+    <div class="header-spacer"></div>
+    <div class="level-selector">
+      <span class="level-main">2e cycle</span>
+      <span class="level-sub">(3e-4e année)</span>
+      <span class="chevron">▾</span>
+    </div>
+    <button class="btn-header">📁 Mes constructions</button>
+    <span class="version">v1.0.0</span>
+  </header>
+
+  <nav class="toolbar">
+    <button class="tool-btn active"><span class="tool-icon">╲</span>Segment</button>
+    <button class="tool-btn"><span class="tool-icon">✥</span>Déplacer</button>
+    <button class="tool-btn"><span class="tool-icon">⧎</span>Réflexion</button>
+    <button class="tool-btn" style="border: 1px dashed var(--border); color: var(--text-secondary);"><span class="tool-icon">⋯</span>Plus</button>
+    <div class="toolbar-spacer"></div>
+    <div class="tool-toggle on">🧲 Aimant</div>
+  </nav>
+
+  <div class="statusbar"><strong>Segment</strong>&nbsp;— Clique pour placer le deuxième point</div>
+
+  <div class="main-area">
+    <div class="canvas-area">
+      <svg class="canvas-svg" viewBox="0 0 1100 500" xmlns="http://www.w3.org/2000/svg" role="application" aria-label="Canevas de construction géométrique">
+        <defs>
+          <pattern id="grid8" width="40" height="40" patternUnits="userSpaceOnUse">
+            <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#E5E5E5" stroke-width="0.5" opacity="0.5"/>
+          </pattern>
+        </defs>
+        <rect width="1100" height="500" fill="url(#grid8)" />
+
+        <!-- Simple segment being drawn -->
+        <line x1="300" y1="250" x2="650" y2="250" class="geo-segment"/>
+        <circle cx="300" cy="250" r="7" class="geo-point"/>
+        <circle cx="650" cy="250" r="7" class="geo-point"/>
+        <text x="285" y="240" class="geo-label">A</text>
+        <text x="658" y="240" class="geo-label">B</text>
+        <text x="460" y="242" class="geo-measure" text-anchor="middle">8,8 cm</text>
+
+        <!-- Ghost from B -->
+        <line x1="650" y1="250" x2="800" y2="150" class="geo-ghost"/>
+      </svg>
+
+      <!-- §9: Bouton toggle panneau avec badge notification (point bleu) -->
+      <button class="panel-toggle" aria-label="Ouvrir le panneau" style="right: 4px; position: absolute;">
+        ▶
+        <!-- Badge notification: propriété détectée, panneau fermé -->
+        <span style="position: absolute; top: 2px; right: 2px; width: 10px; height: 10px; background: var(--primary); border-radius: 50%; border: 2px solid white;"></span>
+      </button>
+
+      <button class="pan-btn top">▲</button>
+      <button class="pan-btn bottom">▼</button>
+      <button class="pan-btn left">◀</button>
+      <button class="pan-btn right">▶</button>
+      <div class="zoom-controls">
+        <button class="zoom-btn">+</button>
+        <button class="zoom-btn">−</button>
+      </div>
+    </div>
+    <!-- PAS de panneau latéral — replié, le canevas occupe toute la largeur -->
+  </div>
+
+  <footer class="actionbar">
+    <button class="action-btn">↩ Annuler</button>
+    <button class="action-btn">↪ Rétablir</button>
+    <div class="actionbar-spacer"></div>
+    <span class="actionbar-note">Échelle 1:1 sur papier</span>
+    <button class="action-btn primary">🖨 Imprimer</button>
+    <div style="width: 20px; display: flex; align-items: center; justify-content: center;"><div style="width: 1px; height: 24px; background: var(--border);"></div></div>
+    <button class="action-btn destructive">Nouvelle construction</button>
+  </footer>
+
+</div>
+
+
+<!-- ══════════════════════════════════════
+     NAVIGATION TABS (wireframe only)
+     ══════════════════════════════════════ -->
+<nav class="wireframe-nav">
+  <button class="wireframe-tab active" onclick="showView('view-main')">Vue principale (2e cycle)</button>
+  <button class="wireframe-tab" onclick="showView('view-3ecycle')">3e cycle + cercle</button>
+  <button class="wireframe-tab" onclick="showView('view-dropdown')">Sélecteur niveau</button>
+  <button class="wireframe-tab" onclick="showView('view-tutorial')">Tutoriel</button>
+  <button class="wireframe-tab" onclick="showView('view-post-tutorial')">Post-tutoriel</button>
+  <button class="wireframe-tab" onclick="showView('view-constructions')">Mes constructions</button>
+  <button class="wireframe-tab" onclick="showView('view-print')">Impression</button>
+  <button class="wireframe-tab" onclick="showView('view-newdialog')">Nouvelle (dialog)</button>
+  <button class="wireframe-tab" onclick="showView('view-panel-closed')">Panneau fermé</button>
+</nav>
+
+<script>
+function showView(id) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.querySelectorAll('.wireframe-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  event.target.classList.add('active');
+}
+</script>
+
+</body>
+</html>
