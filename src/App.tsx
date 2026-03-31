@@ -339,8 +339,10 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
         return;
       }
       // Normal mode: if tool is mid-action, forward to tool directly.
-      // Otherwise, try selection first, then tool.
-      if (!tool.isIdle) {
+      // Tools that need clicks on elements (measure, reproduce) get priority over selection.
+      const toolNeedsElementClick =
+        state.activeTool === 'measure' || state.activeTool === 'reproduce';
+      if (!tool.isIdle || toolNeedsElementClick) {
         tool.handleClick(mmPos);
       } else {
         const handled = selection.trySelect(mmPos);
