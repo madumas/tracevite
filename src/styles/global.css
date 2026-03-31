@@ -1,0 +1,18 @@
+/* Global styles — iOS/touch fixes */
+
+/* Prevent double-tap zoom on iOS Safari (spec: no double-click anywhere) */
+body {
+  touch-action: manipulation;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+  overscroll-behavior: none;
+}
+
+/* Allow text selection in inputs and the properties panel */
+input,
+textarea,
+[data-testid='properties-panel'] {
+  -webkit-user-select: text;
+  user-select: text;
+}
