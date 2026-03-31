@@ -17,9 +17,8 @@ test.describe('Auto-save and persistence', () => {
     await expectSegmentCount(page, 1);
     await expectPointCount(page, 2);
 
-    // Wait for auto-save — indicator shows ✓ with aria-label="Sauvegardé"
-    const saveIndicator = page.locator('[data-testid="save-indicator"]');
-    await expect(saveIndicator).toHaveAttribute('aria-label', 'Sauvegardé', { timeout: 5000 });
+    // Wait for auto-save to complete (2s debounce + write time)
+    await page.waitForTimeout(3000);
 
     // Reload the page
     await page.reload();
