@@ -54,6 +54,7 @@ export function useReflectionTool({
   >([]);
   const [animIndex, setAnimIndex] = useState(-1);
   const animTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [pendingReflect, setPendingReflect] = useState<ConstructionAction | null>(null);
 
   const is2eCycle = state.displayMode === 'simplifie';
 
@@ -72,6 +73,7 @@ export function useReflectionTool({
     setSymmetryResult(null);
     setAnimSteps([]);
     setAnimIndex(-1);
+    setPendingReflect(null);
     if (animTimerRef.current) clearTimeout(animTimerRef.current);
   }, []);
 
@@ -85,6 +87,16 @@ export function useReflectionTool({
       if (animTimerRef.current) clearTimeout(animTimerRef.current);
     };
   }, [isActive, animIndex, animSteps.length]);
+
+  // Dispatch deferred REFLECT_ELEMENTS once animation finishes
+  useEffect(() => {
+    if (pendingReflect && animSteps.length > 0 && animIndex >= animSteps.length) {
+      dispatch(pendingReflect);
+      setPendingReflect(null);
+      setAnimSteps([]);
+      setAnimIndex(-1);
+    }
+  }, [animIndex, animSteps.length, pendingReflect, dispatch]);
 
   /** Launch step-by-step animation for reflected points. */
   const launchStepAnimation = useCallback(
@@ -194,28 +206,37 @@ export function useReflectionTool({
 
           if (figure) {
             // Reflect the entire figure
-            if (stepByStep) launchStepAnimation([...figure.pointIds], axisP1, axisP2);
-            dispatch({
+            const reflectAction: ConstructionAction = {
               type: 'REFLECT_ELEMENTS',
               pointIds: [...figure.pointIds],
               segmentIds: [...figure.segmentIds],
               axisP1,
               axisP2,
-            });
+            };
+            if (stepByStep) {
+              launchStepAnimation([...figure.pointIds], axisP1, axisP2);
+              setPendingReflect(reflectAction);
+            } else {
+              dispatch(reflectAction);
+            }
             setLastReflectionMsg(`${figure.name} réfléchi.`);
           } else {
             // Reflect the single segment
             const seg = state.segments.find((s) => s.id === segId);
             if (seg) {
-              if (stepByStep)
-                launchStepAnimation([seg.startPointId, seg.endPointId], axisP1, axisP2);
-              dispatch({
+              const reflectAction: ConstructionAction = {
                 type: 'REFLECT_ELEMENTS',
                 pointIds: [seg.startPointId, seg.endPointId],
                 segmentIds: [segId],
                 axisP1,
                 axisP2,
-              });
+              };
+              if (stepByStep) {
+                launchStepAnimation([seg.startPointId, seg.endPointId], axisP1, axisP2);
+                setPendingReflect(reflectAction);
+              } else {
+                dispatch(reflectAction);
+              }
               const pointMap = new Map(state.points.map((p) => [p.id, p]));
               const startLabel = pointMap.get(seg.startPointId)?.label ?? '?';
               const endLabel = pointMap.get(seg.endPointId)?.label ?? '?';
