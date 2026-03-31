@@ -121,28 +121,55 @@ export function reduce(state: ReducerState, action: ConstructionAction): Reducer
 
       // Auto-intersection detection (opt-in, spec §19 v2)
       if (current.autoIntersection) {
+        // Collect all intersection points first, then split in a second pass
+        const pm = new Map(newState.points.map((p) => [p.id, p]));
         const createdSeg = newState.segments.find((s) => s.id === result.segmentId);
         if (createdSeg) {
-          const pm = new Map(newState.points.map((p) => [p.id, p]));
           const cs = pm.get(createdSeg.startPointId);
           const ce = pm.get(createdSeg.endPointId);
           if (cs && ce) {
-            for (const other of [...newState.segments]) {
-              if (other.id === result.segmentId) continue;
-              const os = pm.get(other.startPointId);
-              const oe = pm.get(other.endPointId);
+            const existingSegIds = newState.segments
+              .filter((s) => s.id !== result.segmentId)
+              .map((s) => s.id);
+
+            for (const otherId of existingSegIds) {
+              const other = newState.segments.find((s) => s.id === otherId);
+              if (!other) continue;
+              const opm = new Map(newState.points.map((p) => [p.id, p]));
+              const os = opm.get(other.startPointId);
+              const oe = opm.get(other.endPointId);
               if (!os || !oe) continue;
               const ix = segmentIntersection(cs, ce, os, oe);
-              if (ix) {
-                // Split the existing segment at intersection
-                const splitResult = State.splitSegmentAtPoint(newState, other.id, ix.x, ix.y);
-                if (splitResult) {
-                  newState = splitResult.state;
-                  // Also split the new segment at the same point
-                  const newSeg = newState.segments.find((s) => s.id === result.segmentId);
-                  if (newSeg) {
-                    const split2 = State.splitSegmentAtPoint(newState, newSeg.id, ix.x, ix.y);
+              if (!ix) continue;
+
+              // Split the existing segment — creates the intersection point
+              const splitResult = State.splitSegmentAtPoint(newState, otherId, ix.x, ix.y);
+              if (!splitResult) continue;
+              newState = splitResult.state;
+              const junctionPointId = splitResult.pointId;
+
+              // Find which sub-segment of the new segment contains the junction point
+              // and split it using the SAME point (connect to existing junction)
+              // Find segments from the original creation that span the intersection
+              for (const seg of [...newState.segments]) {
+                if (
+                  seg.startPointId === result.startPointId ||
+                  seg.endPointId === result.startPointId ||
+                  seg.startPointId === result.endPointId ||
+                  seg.endPointId === result.endPointId
+                ) {
+                  // This segment is part of the original new segment (or its splits)
+                  if (seg.startPointId === junctionPointId || seg.endPointId === junctionPointId)
+                    continue;
+                  const sp = newState.points.find((p) => p.id === seg.startPointId);
+                  const ep = newState.points.find((p) => p.id === seg.endPointId);
+                  const jp = newState.points.find((p) => p.id === junctionPointId);
+                  if (!sp || !ep || !jp) continue;
+                  const { distance: dist } = pointOnSegmentProjection(jp, sp, ep);
+                  if (dist < MIN_POINT_DISTANCE_MM) {
+                    const split2 = State.splitSegmentAtPoint(newState, seg.id, jp.x, jp.y);
                     if (split2) newState = split2.state;
+                    break;
                   }
                 }
               }

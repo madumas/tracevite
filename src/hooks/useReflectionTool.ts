@@ -75,16 +75,16 @@ export function useReflectionTool({
     if (animTimerRef.current) clearTimeout(animTimerRef.current);
   }, []);
 
-  // Step-by-step animation timer
+  // Step-by-step animation timer — stops when tool is inactive
   useEffect(() => {
-    if (animIndex < 0 || animIndex >= animSteps.length) return;
+    if (!isActive || animIndex < 0 || animIndex >= animSteps.length) return;
     animTimerRef.current = setTimeout(() => {
       setAnimIndex((i) => i + 1);
     }, 500);
     return () => {
       if (animTimerRef.current) clearTimeout(animTimerRef.current);
     };
-  }, [animIndex, animSteps.length]);
+  }, [isActive, animIndex, animSteps.length]);
 
   /** Launch step-by-step animation for reflected points. */
   const launchStepAnimation = useCallback(

@@ -5,20 +5,23 @@
  */
 
 import { memo } from 'react';
-import type { ViewportState, CartesianMode } from '@/model/types';
+import type { ViewportState, CartesianMode, DisplayUnit } from '@/model/types';
 import { useCanvasColors } from '@/config/theme';
 import { CSS_PX_PER_MM, BOUNDS_WIDTH_MM, BOUNDS_HEIGHT_MM } from '@/engine/viewport';
+import { formatLength } from '@/engine/format';
 
 interface CartesianLayerProps {
   readonly viewport: ViewportState;
   readonly mode: CartesianMode;
   readonly gridSizeMm: number;
+  readonly displayUnit: DisplayUnit;
 }
 
 export const CartesianLayer = memo(function CartesianLayer({
   viewport,
   mode,
   gridSizeMm,
+  displayUnit,
 }: CartesianLayerProps) {
   const colors = useCanvasColors();
 
@@ -74,7 +77,8 @@ export const CartesianLayer = memo(function CartesianLayer({
           fontSize={9}
           textAnchor="middle"
         >
-          {mm}
+          {mm < 0 ? '−' : ''}
+          {formatLength(Math.abs(mm), displayUnit)}
         </text>,
       );
     }
@@ -137,7 +141,8 @@ export const CartesianLayer = memo(function CartesianLayer({
           fontSize={9}
           textAnchor="end"
         >
-          {mm}
+          {mm < 0 ? '−' : ''}
+          {formatLength(Math.abs(mm), displayUnit)}
         </text>,
       );
     }

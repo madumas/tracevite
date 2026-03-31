@@ -212,7 +212,10 @@ export function classifyFigures(
     if (displayMode === 'complet' && !selfIntersecting) {
       if (face.length === 3) {
         height = computeTriangleHeight(face, pointMap);
-      } else if (face.length === 4 && name.startsWith('Parallélogramme')) {
+      } else if (
+        face.length === 4 &&
+        ['Parallélogramme', 'Rectangle', 'Carré', 'Losange'].some((n) => name.startsWith(n))
+      ) {
         height = computeParallelogramHeight(face, pointMap);
       }
     }

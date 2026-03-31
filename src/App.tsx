@@ -773,6 +773,7 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
         onSnapToggle={handleSnapToggle}
         pointToolVisible={state.pointToolVisible}
         fontScale={effectiveFontScale}
+        onTutorialStart={tutorial.start}
       />
 
       {/* Status Bar */}
@@ -893,11 +894,12 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
               data-testid="canvas-svg"
             >
               <GridLayer viewport={viewport} gridSizeMm={state.gridSizeMm} />
-              {state.cartesianMode !== 'off' && (
+              {state.cartesianMode !== 'off' && state.displayMode === 'complet' && (
                 <CartesianLayer
                   viewport={viewport}
                   mode={state.cartesianMode}
                   gridSizeMm={state.gridSizeMm}
+                  displayUnit={state.displayUnit}
                 />
               )}
               <SegmentLayer

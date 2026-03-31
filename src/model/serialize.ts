@@ -19,6 +19,8 @@ interface SerializedConstruction {
     displayUnit: ConstructionState['displayUnit'];
     hideProperties: ConstructionState['hideProperties'];
     estimationMode?: ConstructionState['estimationMode'];
+    cartesianMode?: ConstructionState['cartesianMode'];
+    autoIntersection?: ConstructionState['autoIntersection'];
   };
   consigne: string | null;
 }
@@ -37,6 +39,8 @@ export function serializeState(state: ConstructionState): string {
       displayUnit: state.displayUnit,
       hideProperties: state.hideProperties,
       estimationMode: state.estimationMode || undefined,
+      cartesianMode: state.cartesianMode !== 'off' ? state.cartesianMode : undefined,
+      autoIntersection: state.autoIntersection || undefined,
     },
     consigne: state.consigne,
   };

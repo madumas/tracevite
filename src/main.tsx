@@ -68,22 +68,31 @@ async function boot() {
     setConsumer(cb: (params: LaunchParams) => void): void;
   }
   if ('launchQueue' in window) {
-    (window as unknown as { launchQueue: LaunchQueue }).launchQueue.setConsumer(
-      async (launchParams) => {
-        if (launchParams.files?.length) {
-          try {
-            const fileHandle = launchParams.files[0]!;
-            const file = await fileHandle.getFile();
-            const text = await file.text();
-            const { deserializeState } = await import('@/model/serialize');
-            initialState = deserializeState(text);
-            initialUndoManager = createUndoManager(initialState);
-          } catch {
-            // Invalid file — continue with default state
-          }
-        }
-      },
-    );
+    try {
+      await new Promise<void>((resolve) => {
+        (window as unknown as { launchQueue: LaunchQueue }).launchQueue.setConsumer(
+          async (launchParams) => {
+            if (launchParams.files?.length) {
+              try {
+                const fileHandle = launchParams.files[0]!;
+                const file = await fileHandle.getFile();
+                const text = await file.text();
+                const { deserializeState } = await import('@/model/serialize');
+                initialState = deserializeState(text);
+                initialUndoManager = createUndoManager(initialState);
+              } catch {
+                // Invalid file — continue with default state
+              }
+            }
+            resolve();
+          },
+        );
+        // If consumer is never called (no file), resolve after a short timeout
+        setTimeout(resolve, 100);
+      });
+    } catch {
+      // launchQueue not supported properly
+    }
   }
 
   createRoot(document.getElementById('root')!).render(
