@@ -50,7 +50,7 @@ export function useViewport(containerRef: React.RefObject<HTMLElement | null>) {
       clampViewport({
         panX: v.panX + panDeltaMm.x,
         panY: v.panY + panDeltaMm.y,
-        zoom: clampZoom(v.zoom + deltaZoom),
+        zoom: clampZoom(v.zoom * (1 + deltaZoom)), // multiplicative zoom (I4 fix)
       }),
     );
   }, []);

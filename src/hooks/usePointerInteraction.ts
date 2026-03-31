@@ -180,8 +180,8 @@ export function usePointerInteraction({
         return;
       }
 
-      // During pending touch delay, don't forward cursor move to tool
-      if (gestureMode.current === 'pending_touch') return;
+      // During pending touch delay or pinch, don't forward cursor move to tool (I3 fix)
+      if (gestureMode.current === 'pending_touch' || gestureMode.current === 'pinch') return;
 
       // Normal move: forward to tool
       const mmPos = screenToMmPos(e);
@@ -204,9 +204,9 @@ export function usePointerInteraction({
     (e: React.PointerEvent<SVGSVGElement>) => {
       activePointers.current.delete(e.pointerId);
 
-      // If ending pinch, reset gesture mode
+      // If ending pinch, reset gesture mode when < 2 fingers remain (I1 fix)
       if (gestureMode.current === 'pinch') {
-        if (activePointers.current.size === 0) {
+        if (activePointers.current.size < 2) {
           gestureMode.current = 'idle';
         }
         return;
@@ -240,9 +240,24 @@ export function usePointerInteraction({
     [screenToMmPos, onCanvasClick, clearTouchTimer],
   );
 
+  // pointercancel: iOS fires this instead of pointerup when system gesture takes over (C1 fix)
+  const handlePointerCancel = useCallback(
+    (e: React.PointerEvent<SVGSVGElement>) => {
+      activePointers.current.delete(e.pointerId);
+      if (activePointers.current.size === 0) {
+        gestureMode.current = 'idle';
+        pointerDownPos.current = null;
+        clearTouchTimer();
+        pendingTouchEvent.current = null;
+      }
+    },
+    [clearTouchTimer],
+  );
+
   return {
     handlePointerDown,
     handlePointerMove,
     handlePointerUp,
+    handlePointerCancel,
   };
 }

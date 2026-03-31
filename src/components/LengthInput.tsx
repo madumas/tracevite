@@ -48,18 +48,18 @@ export function LengthInput({
     return () => vv.removeEventListener('resize', onResize);
   }, []);
 
-  // Dismiss on click outside (not onBlur — onBlur fires too aggressively with pointer events)
+  // Dismiss on click/tap outside (pointerdown for touch compatibility, I5 fix)
   useEffect(() => {
-    const handler = (e: MouseEvent) => {
+    const handler = (e: PointerEvent) => {
       if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
         onDismiss();
       }
     };
     // Delay to avoid catching the click that opened us
-    const timer = setTimeout(() => document.addEventListener('mousedown', handler), 200);
+    const timer = setTimeout(() => document.addEventListener('pointerdown', handler), 200);
     return () => {
       clearTimeout(timer);
-      document.removeEventListener('mousedown', handler);
+      document.removeEventListener('pointerdown', handler);
     };
   }, [onDismiss]);
 

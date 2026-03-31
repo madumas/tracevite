@@ -405,6 +405,12 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
     [dispatch],
   );
 
+  const [panelCollapsed, setPanelCollapsed] = useState(() => {
+    const saved = localStorage.getItem('tracevite_panel_collapsed');
+    if (saved !== null) return saved === 'true';
+    return typeof window !== 'undefined' && window.innerHeight < 800;
+  });
+
   // Global keyboard handler
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -529,12 +535,6 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
     selection,
   ]);
 
-  const [panelCollapsed, setPanelCollapsed] = useState(() => {
-    // Restore from localStorage, auto-collapse on small screens
-    const saved = localStorage.getItem('tracevite_panel_collapsed');
-    if (saved !== null) return saved === 'true';
-    return typeof window !== 'undefined' && window.innerHeight < 800;
-  });
   const [hasNewProperties, setHasNewProperties] = useState(false);
   const prevDerivedCountRef = useRef(0);
 
