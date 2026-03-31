@@ -63,6 +63,7 @@ import { PreferencesProvider, usePreferences } from '@/model/preferences';
 import { AboutDialog } from '@/components/AboutDialog';
 import { FatigueReminder } from '@/components/FatigueReminder';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
+import { checkSymmetry } from '@/engine/reflection';
 
 /** Tools where clicking an element is a tool action, not a general selection.
  * Used to (1) forward clicks to the tool and (2) hide ContextActionBar. */
@@ -203,6 +204,11 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
   const [fixingCircleId, setFixingCircleId] = useState<string | null>(null);
   // LengthInput state for segment length fixing (contextual action)
   const [fixingSegmentId, setFixingSegmentId] = useState<string | null>(null);
+  // Symmetry check result overlay
+  const [symmetryResult, setSymmetryResult] = useState<
+    import('@/engine/reflection').SymmetryResult | null
+  >(null);
+  const [symmetryAxisSegId, setSymmetryAxisSegId] = useState<string | null>(null);
 
   // Toast for keyboard tool changes (spec §14)
   const [toastText, setToastText] = useState<string | null>(null);
@@ -293,11 +299,21 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
     }
   }, [fixingCircleId, state.circles]);
 
-  // Close RadiusInput/LengthInput on tool change
+  // Close RadiusInput/LengthInput/symmetry overlay on tool change
   useEffect(() => {
     setFixingCircleId(null);
     setFixingSegmentId(null);
+    setSymmetryResult(null);
+    setSymmetryAxisSegId(null);
   }, [state.activeTool]);
+
+  // Clear symmetry overlay when selection changes
+  useEffect(() => {
+    if (symmetryAxisSegId && state.selectedElementId !== symmetryAxisSegId) {
+      setSymmetryResult(null);
+      setSymmetryAxisSegId(null);
+    }
+  }, [state.selectedElementId, symmetryAxisSegId]);
 
   // Close LengthInput when segment is deleted
   useEffect(() => {
@@ -458,6 +474,24 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
   const handleFixSegmentLength = useCallback(
     (segmentId: string) => setFixingSegmentId(segmentId),
     [],
+  );
+  const handleCheckSymmetry = useCallback(
+    (segmentId: string) => {
+      const seg = state.segments.find((s) => s.id === segmentId);
+      if (!seg) return;
+      const sp = state.points.find((p) => p.id === seg.startPointId);
+      const ep = state.points.find((p) => p.id === seg.endPointId);
+      if (!sp || !ep) return;
+      // Check symmetry of ALL points (except the axis endpoints) about this segment
+      const allPointIds = state.points
+        .filter((p) => p.id !== seg.startPointId && p.id !== seg.endPointId)
+        .map((p) => p.id);
+      if (allPointIds.length === 0) return;
+      const result = checkSymmetry(allPointIds, state, sp, ep);
+      setSymmetryResult(result);
+      setSymmetryAxisSegId(segmentId);
+    },
+    [state],
   );
 
   const [panelCollapsed, setPanelCollapsed] = useState(() => {
@@ -965,6 +999,27 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
               {/* Tool-specific overlays (ghost segment, ghost circle, etc.) */}
               {tool.overlayElements}
 
+              {/* Symmetry check overlay (green/red circles on vertices) */}
+              {symmetryResult &&
+                symmetryResult.correspondences.map((corr) => {
+                  const pt = state.points.find((p) => p.id === corr.originalId);
+                  if (!pt) return null;
+                  const cx = (pt.x - viewport.panX) * viewport.zoom * CSS_PX_PER_MM;
+                  const cy = (pt.y - viewport.panY) * viewport.zoom * CSS_PX_PER_MM;
+                  const isMatch = corr.deviationMm <= 1.0;
+                  return (
+                    <circle
+                      key={`sym-${corr.originalId}`}
+                      cx={cx}
+                      cy={cy}
+                      r={8}
+                      fill={isMatch ? '#22C55E' : '#EF4444'}
+                      opacity={0.4}
+                      pointerEvents="none"
+                    />
+                  );
+                })}
+
               {/* Snap feedback */}
               <SnapFeedback snapResult={tool.snapResult} viewport={viewport} />
             </svg>
@@ -979,6 +1034,7 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
               onToggleLock={handleToggleLock}
               onFixCircleRadius={setFixingCircleId}
               onFixSegmentLength={handleFixSegmentLength}
+              onCheckSymmetry={handleCheckSymmetry}
               fontScale={effectiveFontScale}
             />
           )}

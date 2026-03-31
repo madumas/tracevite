@@ -9,6 +9,7 @@ interface ContextActionBarProps {
   readonly onToggleLock?: (pointId: string) => void;
   readonly onFixCircleRadius?: (circleId: string) => void;
   readonly onFixSegmentLength?: (segmentId: string) => void;
+  readonly onCheckSymmetry?: (segmentId: string) => void;
   readonly fontScale?: number;
 }
 
@@ -22,6 +23,7 @@ export function ContextActionBar({
   onToggleLock,
   onFixCircleRadius,
   onFixSegmentLength,
+  onCheckSymmetry,
   fontScale = 1,
 }: ContextActionBarProps) {
   const { selectedElementId } = state;
@@ -71,7 +73,9 @@ export function ContextActionBar({
 
   // Only show if there are actions to display
   const hasActions =
-    (point && onToggleLock) || (segment && onFixSegmentLength) || (circle && onFixCircleRadius);
+    (point && onToggleLock) ||
+    (segment && (onFixSegmentLength || onCheckSymmetry)) ||
+    (circle && onFixCircleRadius);
   if (!hasActions) return null;
 
   return (
@@ -132,6 +136,27 @@ export function ContextActionBar({
           data-testid="context-fix-length"
         >
           {segment.fixedLength != null ? 'Modifier la longueur' : 'Fixer la longueur'}
+        </button>
+      )}
+
+      {segment && onCheckSymmetry && (
+        <button
+          onClick={() => onCheckSymmetry(segment.id)}
+          style={{
+            minWidth: MIN_BUTTON_SIZE_PX,
+            height: MIN_BUTTON_SIZE_PX,
+            padding: '0 10px',
+            border: `1px solid ${UI_BORDER}`,
+            borderRadius: 4,
+            background: 'transparent',
+            color: UI_TEXT_PRIMARY,
+            cursor: 'pointer',
+            fontSize: 'inherit',
+          }}
+          aria-label={`Vérifier la symétrie par rapport au segment ${getSegmentLabel(segment, state)}`}
+          data-testid="context-check-symmetry"
+        >
+          Vérifier symétrie
         </button>
       )}
 
