@@ -221,7 +221,7 @@ export function useConstrainedLineTool({
     handleCursorMove,
     handleEscape,
     reset,
-    isIdle: phase === 'select_reference',
+    isIdle: false,
     statusMessage,
     snapResult: phase !== 'select_reference' ? snapResult : null,
     overlayElements,
