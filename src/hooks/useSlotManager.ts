@@ -68,7 +68,7 @@ export function useSlotManager({
   );
 
   const createNewSlot = useCallback(
-    async (name?: string) => {
+    async (name?: string, keepCurrentState = false) => {
       if (!canCreateSlot(registry)) return;
 
       // Auto-save current
@@ -80,12 +80,19 @@ export function useSlotManager({
       const result = createSlot(registry, name);
       if (!result) return;
 
-      // Reset to empty construction
-      onBeforeSwitch();
-      dispatch({ type: 'NEW_CONSTRUCTION' });
+      if (!keepCurrentState) {
+        // Reset to empty construction
+        onBeforeSwitch();
+        dispatch({ type: 'NEW_CONSTRUCTION' });
+      }
 
       setRegistry(result.registry);
       await saveRegistry(result.registry);
+
+      // If keeping current state, immediately save it to the new slot
+      if (keepCurrentState) {
+        await saveSlotData(result.slotId, state, undoManager);
+      }
     },
     [registry, activeSlotId, state, undoManager, dispatch, onBeforeSwitch],
   );

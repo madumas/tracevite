@@ -59,6 +59,7 @@ import { PrintSvg } from '@/components/PrintSvg';
 import { TutorialOverlay } from '@/components/TutorialOverlay';
 import { useTutorial } from '@/hooks/useTutorial';
 import type { ToolType, GridSize, DisplayUnit, DisplayMode } from '@/model/types';
+import { PreferencesProvider } from '@/model/preferences.js';
 
 const TOOL_SHORTCUT_MAP: Record<string, ToolType> = {
   s: 'segment',
@@ -198,6 +199,13 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
       selection.clearSelection();
     },
   });
+
+  // Auto-create first slot when user starts drawing (spec §17.1)
+  useEffect(() => {
+    if (!slotManager.activeSlotId && state.points.length > 0) {
+      slotManager.createNewSlot(undefined, true); // keepCurrentState = true
+    }
+  }, [state.points.length, slotManager.activeSlotId, slotManager]);
 
   const { saving } = useAutoSave(state, undoManager, slotManager.activeSlotId);
 
@@ -988,12 +996,14 @@ export function App({
   initialUndoManager,
 }: AppProps) {
   return (
-    <ConstructionProvider initialState={initialState} initialUndoManager={initialUndoManager}>
-      <AppContent
-        initialConsigne={initialConsigne}
-        initialLevel={initialLevel}
-        initialRegistry={initialRegistry}
-      />
-    </ConstructionProvider>
+    <PreferencesProvider>
+      <ConstructionProvider initialState={initialState} initialUndoManager={initialUndoManager}>
+        <AppContent
+          initialConsigne={initialConsigne}
+          initialLevel={initialLevel}
+          initialRegistry={initialRegistry}
+        />
+      </ConstructionProvider>
+    </PreferencesProvider>
   );
 }
