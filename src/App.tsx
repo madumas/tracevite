@@ -227,7 +227,8 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
             setDeleteConfirmId(hit.id);
           }
         } else {
-          // Click empty space → clear pending confirmation
+          // Click empty space → exit delete mode entirely (more intuitive than just clearing)
+          setDeleteMode(false);
           setDeleteConfirmId(null);
           dispatch({ type: 'SET_SELECTED_ELEMENT', elementId: null });
         }
@@ -262,12 +263,23 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
   // Toolbar handlers
   const handleToolChange = useCallback(
     (t: ToolType) => {
+      if (t === state.activeTool && !tool.isIdle) {
+        // Re-click same tool = cancel current action (more intuitive than Escape)
+        tool.reset();
+        selection.clearSelection();
+        return;
+      }
+      // Also exit delete mode when switching tools
+      if (deleteMode) {
+        setDeleteMode(false);
+        setDeleteConfirmId(null);
+      }
       tool.reset();
       selection.clearSelection();
       setShiftConstraintActive(false);
       dispatch({ type: 'SET_ACTIVE_TOOL', activeTool: t });
     },
-    [dispatch, tool, selection],
+    [dispatch, tool, selection, state.activeTool, deleteMode],
   );
 
   const handleGridChange = useCallback(
