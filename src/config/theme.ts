@@ -32,7 +32,7 @@ export const UI_BORDER = '#D1D8E0';
 export const UI_FOCUS = '#185FA5';
 
 // ── Layout dimensions (px) ─────────────────────────────────
-export const TOOLBAR_HEIGHT = 48;
+export const TOOLBAR_HEIGHT = 64;
 export const STATUS_BAR_HEIGHT = 32;
 export const STATUS_BAR_BG = '#E3EBF5';
 export const CONSIGNE_HEIGHT = 40;

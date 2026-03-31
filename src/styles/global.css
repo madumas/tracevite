@@ -25,11 +25,6 @@ textarea,
   user-select: text;
 }
 
-/* ── Complet mode: icon-only (12 tools + labels won't fit) ── */
-[data-toolbar-mode='complet'] .tool-label {
-  display: none;
-}
-
 /* ── Tablet (≤1024px): toolbar scroll + icon-only ───────── */
 @media (max-width: 1024px) {
   [data-testid='toolbar'] {

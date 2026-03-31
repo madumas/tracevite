@@ -42,18 +42,20 @@ interface ToolbarProps {
 
 const toolBtnBase: React.CSSProperties = {
   minWidth: MIN_BUTTON_SIZE_PX,
-  height: MIN_BUTTON_SIZE_PX,
-  padding: '0 10px',
+  height: 56,
+  padding: '4px 8px',
   border: '1px solid transparent',
   borderRadius: 6,
   cursor: 'pointer',
   fontWeight: 500,
   background: 'transparent',
   color: UI_TEXT_PRIMARY,
-  fontSize: 'inherit',
+  fontSize: 11,
   display: 'flex',
+  flexDirection: 'column',
   alignItems: 'center',
-  gap: 4,
+  justifyContent: 'center',
+  gap: 2,
 };
 
 const activeStyle: React.CSSProperties = {
@@ -145,7 +147,7 @@ export const Toolbar = memo(function Toolbar({
         {/* Separator */}
         {!demoMode && (
           <div
-            style={{ width: 1, height: 24, background: UI_BORDER, margin: '0 4px', flexShrink: 0 }}
+            style={{ width: 1, height: 40, background: UI_BORDER, margin: '0 4px', flexShrink: 0 }}
           />
         )}
 
@@ -184,7 +186,7 @@ export const Toolbar = memo(function Toolbar({
 
         {/* ─ sep ─ */}
         <div
-          style={{ width: 1, height: 24, background: UI_BORDER, margin: '0 4px', flexShrink: 0 }}
+          style={{ width: 1, height: 40, background: UI_BORDER, margin: '0 4px', flexShrink: 0 }}
         />
 
         {/* ═══ GROUP: Modifier ═══ */}
@@ -200,7 +202,7 @@ export const Toolbar = memo(function Toolbar({
 
         {/* ─ sep ─ */}
         <div
-          style={{ width: 1, height: 24, background: UI_BORDER, margin: '0 4px', flexShrink: 0 }}
+          style={{ width: 1, height: 40, background: UI_BORDER, margin: '0 4px', flexShrink: 0 }}
         />
 
         {/* ═══ GROUP: Transformer ═══ */}
@@ -277,7 +279,7 @@ export const Toolbar = memo(function Toolbar({
         {/* ─ sep ─ */}
         {(!isSimple || moreOpen) && (
           <div
-            style={{ width: 1, height: 24, background: UI_BORDER, margin: '0 4px', flexShrink: 0 }}
+            style={{ width: 1, height: 40, background: UI_BORDER, margin: '0 4px', flexShrink: 0 }}
           />
         )}
 
