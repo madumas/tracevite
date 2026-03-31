@@ -1,11 +1,6 @@
 import { memo } from 'react';
 import type { Point, Segment, ViewportState, DisplayUnit, DetectedProperty } from '@/model/types';
-import {
-  CANVAS_SEGMENT,
-  CANVAS_MEASUREMENT,
-  CANVAS_SELECTION_BG,
-  CANVAS_GUIDE,
-} from '@/config/theme';
+import { CANVAS_SEGMENT, useCanvasColors } from '@/config/theme';
 import { MIN_CANVAS_FONT_PX, SEGMENT_HIT_ZONE_MM } from '@/config/accessibility';
 import { CSS_PX_PER_MM } from '@/engine/viewport';
 import { formatLength } from '@/engine/format';
@@ -35,6 +30,7 @@ export const SegmentLayer = memo(function SegmentLayer({
   segmentColor = CANVAS_SEGMENT,
   estimationMode = false,
 }: SegmentLayerProps) {
+  const colors = useCanvasColors();
   const pxPerMm = viewport.zoom * CSS_PX_PER_MM;
   const hitZonePx = SEGMENT_HIT_ZONE_MM * pxPerMm * 2;
 
@@ -144,7 +140,7 @@ export const SegmentLayer = memo(function SegmentLayer({
                 y1={sy1}
                 x2={sx2}
                 y2={sy2}
-                stroke={CANVAS_SELECTION_BG}
+                stroke={colors.selectionBg}
                 strokeWidth={6}
                 strokeDasharray="4 2"
               />
@@ -165,7 +161,7 @@ export const SegmentLayer = memo(function SegmentLayer({
               <text
                 x={midSx + offsetX}
                 y={midSy + offsetY}
-                fill={CANVAS_MEASUREMENT}
+                fill={colors.measurement}
                 fontSize={Math.max(MIN_CANVAS_FONT_PX, 13) * fontScale}
                 fontFamily="system-ui, sans-serif"
                 textAnchor="middle"
@@ -223,7 +219,7 @@ export const SegmentLayer = memo(function SegmentLayer({
                       y1={twoThirdSy + (dy / len) * centerOffset - perpY}
                       x2={twoThirdSx + (dx / len) * centerOffset + perpX}
                       y2={twoThirdSy + (dy / len) * centerOffset + perpY}
-                      stroke={CANVAS_GUIDE}
+                      stroke={colors.guide}
                       strokeWidth={1.5}
                     />
                   );

@@ -1,6 +1,6 @@
 import { memo } from 'react';
 import type { SnapResult, ViewportState } from '@/model/types';
-import { CANVAS_POINT, CANVAS_GUIDE } from '@/config/theme';
+import { useCanvasColors } from '@/config/theme';
 import { CSS_PX_PER_MM } from '@/engine/viewport';
 
 interface SnapFeedbackProps {
@@ -12,6 +12,8 @@ export const SnapFeedback = memo(function SnapFeedback({
   snapResult,
   viewport,
 }: SnapFeedbackProps) {
+  const colors = useCanvasColors();
+
   if (!snapResult || snapResult.snapType === 'none') return null;
 
   const pxPerMm = viewport.zoom * CSS_PX_PER_MM;
@@ -26,7 +28,7 @@ export const SnapFeedback = memo(function SnapFeedback({
         cy={sy}
         r={12}
         fill="none"
-        stroke={CANVAS_POINT}
+        stroke={colors.point}
         strokeWidth={2}
         opacity={0.4}
         data-testid="snap-point-halo"
@@ -43,7 +45,7 @@ export const SnapFeedback = memo(function SnapFeedback({
           y={sy - 5}
           width={10}
           height={10}
-          fill={CANVAS_GUIDE}
+          fill={colors.guide}
           opacity={0.6}
           transform={`rotate(45 ${sx} ${sy})`}
           data-testid="snap-midpoint-diamond"
@@ -51,7 +53,7 @@ export const SnapFeedback = memo(function SnapFeedback({
         <text
           x={sx + 10}
           y={sy - 6}
-          fill={CANVAS_GUIDE}
+          fill={colors.guide}
           fontSize={11}
           fontFamily="system-ui, sans-serif"
           opacity={0.8}
@@ -70,7 +72,7 @@ export const SnapFeedback = memo(function SnapFeedback({
         cy={sy}
         r={10}
         fill="none"
-        stroke={CANVAS_GUIDE}
+        stroke={colors.guide}
         strokeWidth={2}
         opacity={0.5}
         data-testid="snap-circumference-halo"
@@ -81,7 +83,7 @@ export const SnapFeedback = memo(function SnapFeedback({
   if (snapResult.snapType === 'grid') {
     // Small dot at grid intersection
     return (
-      <circle cx={sx} cy={sy} r={4} fill={CANVAS_GUIDE} opacity={0.6} data-testid="snap-grid-dot" />
+      <circle cx={sx} cy={sy} r={4} fill={colors.guide} opacity={0.6} data-testid="snap-grid-dot" />
     );
   }
 

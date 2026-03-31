@@ -1,6 +1,6 @@
 import { memo } from 'react';
 import type { Circle, Point, ViewportState } from '@/model/types';
-import { CANVAS_SEGMENT, CANVAS_SELECTION_BG } from '@/config/theme';
+import { useCanvasColors } from '@/config/theme';
 import { CSS_PX_PER_MM } from '@/engine/viewport';
 
 interface CircleLayerProps {
@@ -16,6 +16,7 @@ export const CircleLayer = memo(function CircleLayer({
   viewport,
   selectedElementId,
 }: CircleLayerProps) {
+  const colors = useCanvasColors();
   const pxPerMm = viewport.zoom * CSS_PX_PER_MM;
   const pointMap = new Map(points.map((p) => [p.id, p]));
 
@@ -38,7 +39,7 @@ export const CircleLayer = memo(function CircleLayer({
                 cy={cy}
                 r={r}
                 fill="none"
-                stroke={CANVAS_SELECTION_BG}
+                stroke={colors.selectionBg}
                 strokeWidth={6}
                 strokeDasharray="4 2"
               />
@@ -48,7 +49,7 @@ export const CircleLayer = memo(function CircleLayer({
               cy={cy}
               r={r}
               fill="none"
-              stroke={CANVAS_SEGMENT}
+              stroke={colors.segment}
               strokeWidth={2}
               data-testid={`circle-${circle.id}`}
               data-element-id={circle.id}

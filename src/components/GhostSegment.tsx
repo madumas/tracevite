@@ -1,11 +1,6 @@
 import { memo } from 'react';
 import type { ViewportState, DisplayUnit } from '@/model/types';
-import {
-  CANVAS_GHOST,
-  CANVAS_GHOST_OPACITY,
-  CANVAS_MEASUREMENT,
-  CANVAS_GUIDE,
-} from '@/config/theme';
+import { useCanvasColors } from '@/config/theme';
 import { MIN_CANVAS_FONT_PX } from '@/config/accessibility';
 import { CSS_PX_PER_MM } from '@/engine/viewport';
 import { distance } from '@/engine/geometry';
@@ -30,6 +25,7 @@ export const GhostSegment = memo(function GhostSegment({
   guideType,
   guideSegmentLabel,
 }: GhostSegmentProps) {
+  const colors = useCanvasColors();
   const pxPerMm = viewport.zoom * CSS_PX_PER_MM;
   const sx1 = (startMm.x - viewport.panX) * pxPerMm;
   const sy1 = (startMm.y - viewport.panY) * pxPerMm;
@@ -38,7 +34,7 @@ export const GhostSegment = memo(function GhostSegment({
 
   const lengthMm = distance(startMm, endMm);
   const lengthText = formatLength(lengthMm, displayUnit);
-  const opacity = isChaining ? 0.3 : CANVAS_GHOST_OPACITY;
+  const opacity = isChaining ? 0.3 : colors.ghostOpacity;
 
   return (
     <g data-testid="ghost-segment">
@@ -47,7 +43,7 @@ export const GhostSegment = memo(function GhostSegment({
         y1={sy1}
         x2={sx2}
         y2={sy2}
-        stroke={CANVAS_GHOST}
+        stroke={colors.ghost}
         strokeWidth={2}
         strokeDasharray="6 4"
         opacity={opacity}
@@ -56,7 +52,7 @@ export const GhostSegment = memo(function GhostSegment({
       <text
         x={sx2 + 10}
         y={sy2 - 10}
-        fill={CANVAS_MEASUREMENT}
+        fill={colors.measurement}
         fontSize={Math.max(MIN_CANVAS_FONT_PX, 13)}
         fontFamily="system-ui, sans-serif"
         opacity={0.8}
@@ -72,7 +68,7 @@ export const GhostSegment = memo(function GhostSegment({
             y1={sy1 - (sy2 - sy1) * 2}
             x2={sx2 + (sx2 - sx1) * 2}
             y2={sy2 + (sy2 - sy1) * 2}
-            stroke={CANVAS_GUIDE}
+            stroke={colors.guide}
             strokeWidth={1}
             strokeDasharray="4 4"
             opacity={0.5}
@@ -93,14 +89,14 @@ export const GhostSegment = memo(function GhostSegment({
                   height={20}
                   rx={4}
                   fill="white"
-                  stroke={CANVAS_GUIDE}
+                  stroke={colors.guide}
                   strokeWidth={1}
                   opacity={0.95}
                 />
                 <text
                   x={sx1}
                   y={sy1 - 18}
-                  fill={CANVAS_GUIDE}
+                  fill={colors.guide}
                   fontSize={13}
                   fontWeight={600}
                   fontFamily="system-ui, sans-serif"

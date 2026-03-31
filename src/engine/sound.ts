@@ -41,15 +41,19 @@ export function createSoundEngine(): SoundEngine {
   }
 
   function vibrate(ms: number) {
-    if (mode === 'off') return;
     navigator.vibrate?.(ms);
   }
 
   function playSnap() {
-    if (mode !== 'full') return; // Reduced mode skips snap
+    if (mode === 'off') return;
     const now = Date.now();
     if (now - lastSnapTime < SNAP_DEBOUNCE_MS) return;
     lastSnapTime = now;
+
+    // Haptic feedback in all non-off modes (reduced + full)
+    vibrate(20);
+
+    if (mode !== 'full') return; // Reduced mode skips snap sound
 
     ensureContext();
     if (!ctx || !gainNode) return;
@@ -72,7 +76,6 @@ export function createSoundEngine(): SoundEngine {
     source.connect(filter);
     filter.connect(gainNode);
     source.start();
-    vibrate(20);
   }
 
   function playSegmentCreated() {

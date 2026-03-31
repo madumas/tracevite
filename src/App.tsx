@@ -25,6 +25,7 @@ import {
   HEADER_HEIGHT,
   STATUS_BAR_HEIGHT,
   getCanvasColors,
+  CanvasColorsProvider,
 } from '@/config/theme';
 import { CSS_PX_PER_MM, BOUNDS_WIDTH_MM, BOUNDS_HEIGHT_MM } from '@/engine/viewport';
 import { isAngleCluttered } from '@/engine/angles';
@@ -869,69 +870,71 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
             />
           )}
 
-          <svg
-            width={svgWidth}
-            height={svgHeight}
-            viewBox={`0 0 ${svgWidth} ${svgHeight}`}
-            role="application"
-            aria-label="Canevas de construction géométrique"
-            style={{
-              display: 'block',
-              touchAction: 'none',
-              cursor: deleteMode ? 'crosshair' : undefined,
-            }}
-            onPointerDown={handlePointerDown}
-            onPointerMove={handlePointerMove}
-            onPointerUp={handlePointerUp}
-            data-testid="canvas-svg"
-          >
-            <GridLayer viewport={viewport} gridSizeMm={state.gridSizeMm} />
-            <SegmentLayer
-              segments={state.segments}
-              points={state.points}
-              viewport={viewport}
-              displayUnit={state.displayUnit}
-              selectedElementId={state.selectedElementId}
-              properties={derived.properties}
-              hideProperties={state.hideProperties}
-              fontScale={effectiveFontScale}
-              segmentColor={effectiveSegmentColor}
-              estimationMode={state.estimationMode && !estimationRevealed}
-            />
-            <CircleLayer
-              circles={state.circles}
-              points={state.points}
-              viewport={viewport}
-              selectedElementId={state.selectedElementId}
-            />
-            <PointLayer
-              points={state.points}
-              viewport={viewport}
-              selectedElementId={state.selectedElementId}
-              fontScale={effectiveFontScale}
-              pointColor={effectiveSegmentColor}
-            />
+          <CanvasColorsProvider value={canvasColors}>
+            <svg
+              width={svgWidth}
+              height={svgHeight}
+              viewBox={`0 0 ${svgWidth} ${svgHeight}`}
+              role="application"
+              aria-label="Canevas de construction géométrique"
+              style={{
+                display: 'block',
+                touchAction: 'none',
+                cursor: deleteMode ? 'crosshair' : undefined,
+              }}
+              onPointerDown={handlePointerDown}
+              onPointerMove={handlePointerMove}
+              onPointerUp={handlePointerUp}
+              data-testid="canvas-svg"
+            >
+              <GridLayer viewport={viewport} gridSizeMm={state.gridSizeMm} />
+              <SegmentLayer
+                segments={state.segments}
+                points={state.points}
+                viewport={viewport}
+                displayUnit={state.displayUnit}
+                selectedElementId={state.selectedElementId}
+                properties={derived.properties}
+                hideProperties={state.hideProperties}
+                fontScale={effectiveFontScale}
+                segmentColor={effectiveSegmentColor}
+                estimationMode={state.estimationMode && !estimationRevealed}
+              />
+              <CircleLayer
+                circles={state.circles}
+                points={state.points}
+                viewport={viewport}
+                selectedElementId={state.selectedElementId}
+              />
+              <PointLayer
+                points={state.points}
+                viewport={viewport}
+                selectedElementId={state.selectedElementId}
+                fontScale={effectiveFontScale}
+                pointColor={effectiveSegmentColor}
+              />
 
-            {/* Angle arcs and markers */}
-            <AngleLayer
-              angles={derived.angles}
-              points={pointMap}
-              viewport={viewport}
-              displayMode={state.displayMode}
-              cluttered={cluttered}
-              selectedElementId={state.selectedElementId}
-              hoveredElementId={selection.hoveredElement?.id ?? null}
-              hideProperties={state.hideProperties}
-              fontScale={effectiveFontScale}
-              estimationMode={state.estimationMode && !estimationRevealed}
-            />
+              {/* Angle arcs and markers */}
+              <AngleLayer
+                angles={derived.angles}
+                points={pointMap}
+                viewport={viewport}
+                displayMode={state.displayMode}
+                cluttered={cluttered}
+                selectedElementId={state.selectedElementId}
+                hoveredElementId={selection.hoveredElement?.id ?? null}
+                hideProperties={state.hideProperties}
+                fontScale={effectiveFontScale}
+                estimationMode={state.estimationMode && !estimationRevealed}
+              />
 
-            {/* Tool-specific overlays (ghost segment, ghost circle, etc.) */}
-            {tool.overlayElements}
+              {/* Tool-specific overlays (ghost segment, ghost circle, etc.) */}
+              {tool.overlayElements}
 
-            {/* Snap feedback */}
-            <SnapFeedback snapResult={tool.snapResult} viewport={viewport} />
-          </svg>
+              {/* Snap feedback */}
+              <SnapFeedback snapResult={tool.snapResult} viewport={viewport} />
+            </svg>
+          </CanvasColorsProvider>
 
           {/* Context action bar (positioned over canvas) */}
           {state.selectedElementId && (

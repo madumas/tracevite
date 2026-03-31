@@ -1,6 +1,6 @@
 import { memo } from 'react';
 import type { Point, ViewportState } from '@/model/types';
-import { CANVAS_POINT } from '@/config/theme';
+import { useCanvasColors } from '@/config/theme';
 import { POINT_DISPLAY_RADIUS_MM } from '@/config/accessibility';
 import { CSS_PX_PER_MM } from '@/engine/viewport';
 
@@ -17,6 +17,7 @@ export const ChainingIndicator = memo(function ChainingIndicator({
   point,
   viewport,
 }: ChainingIndicatorProps) {
+  const colors = useCanvasColors();
   const pxPerMm = viewport.zoom * CSS_PX_PER_MM;
   const sx = (point.x - viewport.panX) * pxPerMm;
   const sy = (point.y - viewport.panY) * pxPerMm;
@@ -28,7 +29,7 @@ export const ChainingIndicator = memo(function ChainingIndicator({
       cy={sy}
       r={radiusPx * 1.5}
       fill="none"
-      stroke={CANVAS_POINT}
+      stroke={colors.point}
       strokeWidth={2}
       opacity={0.5}
       data-testid="chaining-indicator"

@@ -1,6 +1,6 @@
 import { memo } from 'react';
 import type { Point, ConstructionState, ViewportState } from '@/model/types';
-import { CANVAS_POINT, CANVAS_GHOST } from '@/config/theme';
+import { useCanvasColors } from '@/config/theme';
 import { POINT_DISPLAY_RADIUS_MM } from '@/config/accessibility';
 import { CSS_PX_PER_MM } from '@/engine/viewport';
 
@@ -20,6 +20,7 @@ export const MovePreview = memo(function MovePreview({
   state,
   viewport,
 }: MovePreviewProps) {
+  const colors = useCanvasColors();
   const pxPerMm = viewport.zoom * CSS_PX_PER_MM;
   const radiusPx = POINT_DISPLAY_RADIUS_MM * CSS_PX_PER_MM * 1.3;
 
@@ -51,7 +52,7 @@ export const MovePreview = memo(function MovePreview({
             y1={sy}
             x2={ox}
             y2={oy}
-            stroke={CANVAS_GHOST}
+            stroke={colors.ghost}
             strokeWidth={2}
             strokeDasharray="6 4"
             opacity={0.5}
@@ -60,7 +61,7 @@ export const MovePreview = memo(function MovePreview({
       })}
 
       {/* Enlarged point at cursor */}
-      <circle cx={sx} cy={sy} r={radiusPx} fill={CANVAS_POINT} opacity={0.7} />
+      <circle cx={sx} cy={sy} r={radiusPx} fill={colors.point} opacity={0.7} />
     </g>
   );
 });

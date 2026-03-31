@@ -59,6 +59,7 @@ const HC_CANVAS_SELECTION_BG = '#E0E0E0';
 export interface CanvasColors {
   readonly bg: string;
   readonly grid: string;
+  readonly gridOpacity: number;
   readonly segment: string;
   readonly point: string;
   readonly label: string;
@@ -66,6 +67,7 @@ export interface CanvasColors {
   readonly angle: string;
   readonly measurement: string;
   readonly ghost: string;
+  readonly ghostOpacity: number;
   readonly selectionBg: string;
   readonly strokeWidth: number; // normal: 2, high contrast: 3
 }
@@ -73,6 +75,7 @@ export interface CanvasColors {
 const NORMAL_COLORS: CanvasColors = {
   bg: CANVAS_BG,
   grid: CANVAS_GRID,
+  gridOpacity: CANVAS_GRID_OPACITY,
   segment: CANVAS_SEGMENT,
   point: CANVAS_POINT,
   label: CANVAS_LABEL,
@@ -80,6 +83,7 @@ const NORMAL_COLORS: CanvasColors = {
   angle: CANVAS_ANGLE,
   measurement: CANVAS_MEASUREMENT,
   ghost: CANVAS_GHOST,
+  ghostOpacity: CANVAS_GHOST_OPACITY,
   selectionBg: CANVAS_SELECTION_BG,
   strokeWidth: 2,
 };
@@ -87,6 +91,7 @@ const NORMAL_COLORS: CanvasColors = {
 const HIGH_CONTRAST_COLORS: CanvasColors = {
   bg: HC_CANVAS_BG,
   grid: HC_CANVAS_GRID,
+  gridOpacity: 0.8,
   segment: HC_CANVAS_SEGMENT,
   point: HC_CANVAS_POINT,
   label: HC_CANVAS_LABEL,
@@ -94,6 +99,7 @@ const HIGH_CONTRAST_COLORS: CanvasColors = {
   angle: HC_CANVAS_ANGLE,
   measurement: HC_CANVAS_MEASUREMENT,
   ghost: HC_CANVAS_GHOST,
+  ghostOpacity: 0.8,
   selectionBg: HC_CANVAS_SELECTION_BG,
   strokeWidth: 3,
 };
@@ -101,4 +107,16 @@ const HIGH_CONTRAST_COLORS: CanvasColors = {
 /** Get canvas color set based on contrast mode. */
 export function getCanvasColors(highContrast: boolean): CanvasColors {
   return highContrast ? HIGH_CONTRAST_COLORS : NORMAL_COLORS;
+}
+
+// ── Canvas colors React context ───────────────────────────
+import { createContext, useContext } from 'react';
+
+const CanvasColorsContext = createContext<CanvasColors>(NORMAL_COLORS);
+
+export const CanvasColorsProvider = CanvasColorsContext.Provider;
+
+/** Access canvas colors from the nearest CanvasColorsProvider. */
+export function useCanvasColors(): CanvasColors {
+  return useContext(CanvasColorsContext);
 }

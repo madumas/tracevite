@@ -1,6 +1,6 @@
 import { memo } from 'react';
 import type { ViewportState, GridSize } from '@/model/types';
-import { CANVAS_GRID, CANVAS_GRID_OPACITY } from '@/config/theme';
+import { useCanvasColors } from '@/config/theme';
 import { BOUNDS_WIDTH_MM, BOUNDS_HEIGHT_MM, CSS_PX_PER_MM } from '@/engine/viewport';
 
 interface GridLayerProps {
@@ -13,6 +13,7 @@ interface GridLayerProps {
  * Adaptive density: skip lines if < 10px apart, add sub-grid if > 60px apart.
  */
 export const GridLayer = memo(function GridLayer({ viewport, gridSizeMm }: GridLayerProps) {
+  const colors = useCanvasColors();
   const pxPerMm = viewport.zoom * CSS_PX_PER_MM;
   const gridPx = gridSizeMm * pxPerMm;
 
@@ -39,9 +40,9 @@ export const GridLayer = memo(function GridLayer({ viewport, gridSizeMm }: GridL
         y1={0}
         x2={sx}
         y2={BOUNDS_HEIGHT_MM * pxPerMm}
-        stroke={CANVAS_GRID}
+        stroke={colors.grid}
         strokeWidth={1}
-        opacity={CANVAS_GRID_OPACITY}
+        opacity={colors.gridOpacity}
       />,
     );
   }
@@ -58,9 +59,9 @@ export const GridLayer = memo(function GridLayer({ viewport, gridSizeMm }: GridL
         y1={sy}
         x2={BOUNDS_WIDTH_MM * pxPerMm}
         y2={sy}
-        stroke={CANVAS_GRID}
+        stroke={colors.grid}
         strokeWidth={1}
-        opacity={CANVAS_GRID_OPACITY}
+        opacity={colors.gridOpacity}
       />,
     );
   }
@@ -79,9 +80,9 @@ export const GridLayer = memo(function GridLayer({ viewport, gridSizeMm }: GridL
           y1={0}
           x2={sx}
           y2={BOUNDS_HEIGHT_MM * pxPerMm}
-          stroke={CANVAS_GRID}
+          stroke={colors.grid}
           strokeWidth={0.5}
-          opacity={CANVAS_GRID_OPACITY * 0.5}
+          opacity={colors.gridOpacity * 0.5}
         />,
       );
     }
@@ -97,9 +98,9 @@ export const GridLayer = memo(function GridLayer({ viewport, gridSizeMm }: GridL
           y1={sy}
           x2={BOUNDS_WIDTH_MM * pxPerMm}
           y2={sy}
-          stroke={CANVAS_GRID}
+          stroke={colors.grid}
           strokeWidth={0.5}
-          opacity={CANVAS_GRID_OPACITY * 0.5}
+          opacity={colors.gridOpacity * 0.5}
         />,
       );
     }

@@ -1,6 +1,6 @@
 import { memo } from 'react';
 import type { AngleInfo, ViewportState, DisplayMode } from '@/model/types';
-import { CANVAS_ANGLE, CANVAS_GUIDE } from '@/config/theme';
+import { useCanvasColors } from '@/config/theme';
 import { CSS_PX_PER_MM } from '@/engine/viewport';
 import { MIN_CANVAS_FONT_PX, POINT_DISPLAY_RADIUS_MM } from '@/config/accessibility';
 
@@ -40,6 +40,7 @@ export const AngleLayer = memo(function AngleLayer({
   fontScale = 1,
   estimationMode = false,
 }: AngleLayerProps) {
+  const colors = useCanvasColors();
   const pxPerMm = viewport.zoom * CSS_PX_PER_MM;
 
   // Build congruence groups for angle arcs (±0.5° tolerance, spec §8.3)
@@ -127,7 +128,7 @@ export const AngleLayer = memo(function AngleLayer({
               key={index}
               d={path}
               fill="none"
-              stroke={CANVAS_GUIDE}
+              stroke={colors.guide}
               strokeWidth={2}
               data-testid={`angle-right-${index}`}
             />
@@ -178,7 +179,7 @@ export const AngleLayer = memo(function AngleLayer({
             <path
               d={arcPath}
               fill="none"
-              stroke={CANVAS_ANGLE}
+              stroke={colors.angle}
               strokeWidth={1.5}
               data-testid={`angle-arc-${index}`}
             />
@@ -196,7 +197,7 @@ export const AngleLayer = memo(function AngleLayer({
                     y1={barMy - perpY}
                     x2={barMx + perpX}
                     y2={barMy + perpY}
-                    stroke={CANVAS_ANGLE}
+                    stroke={colors.angle}
                     strokeWidth={1.5}
                   />
                 );
@@ -214,7 +215,7 @@ export const AngleLayer = memo(function AngleLayer({
                     key={`congruence-${i}`}
                     d={`M ${ex1} ${ey1} A ${extraR} ${extraR} 0 ${largeArc} ${sweepFlag} ${ex2} ${ey2}`}
                     fill="none"
-                    stroke={CANVAS_ANGLE}
+                    stroke={colors.angle}
                     strokeWidth={1}
                     opacity={0.7}
                   />
@@ -225,7 +226,7 @@ export const AngleLayer = memo(function AngleLayer({
               <text
                 x={labelX}
                 y={labelY}
-                fill={CANVAS_ANGLE}
+                fill={colors.angle}
                 fontSize={Math.max(MIN_CANVAS_FONT_PX, 11) * fontScale}
                 fontFamily="system-ui, sans-serif"
                 textAnchor="middle"
