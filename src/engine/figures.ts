@@ -14,6 +14,7 @@ export interface FigureHeight {
   readonly vertexLabel: string;
   readonly footMm: { x: number; y: number };
   readonly vertexMm: { x: number; y: number };
+  readonly isTriangle: boolean;
 }
 
 /** Detected figure (computed, not stored in state). */
@@ -488,6 +489,7 @@ function computeTriangleHeight(
     vertexLabel: vertex.label,
     footMm: foot,
     vertexMm: { x: vertex.x, y: vertex.y },
+    isTriangle: true,
   };
 }
 
@@ -518,6 +520,7 @@ function computeParallelogramHeight(
     vertexLabel: vertex.label,
     footMm: foot,
     vertexMm: { x: vertex.x, y: vertex.y },
+    isTriangle: false,
   };
 }
 
