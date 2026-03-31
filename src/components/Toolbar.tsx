@@ -1,4 +1,4 @@
-import { memo, useState } from 'react';
+import { memo, useState, useEffect, useRef, useCallback } from 'react';
 import type { ToolType, GridSize, DisplayUnit, DisplayMode } from '@/model/types';
 import {
   UI_PRIMARY,
@@ -83,6 +83,22 @@ export const Toolbar = memo(function Toolbar({
   const [moreOpen, setMoreOpen] = useState(false);
   const isSimple = displayMode === 'simplifie';
 
+  // Auto-scroll toolbar to show active tool button on mobile
+  const activeButtonRef = useRef<HTMLButtonElement>(null);
+  useEffect(() => {
+    activeButtonRef.current?.scrollIntoView({
+      inline: 'center',
+      behavior: 'smooth',
+      block: 'nearest',
+    });
+  }, [activeTool]);
+
+  // Helper: ref only for the active tool button
+  const refIfActive = useCallback(
+    (tool: ToolType) => (activeTool === tool ? activeButtonRef : undefined),
+    [activeTool],
+  );
+
   return (
     <div
       style={{
@@ -101,12 +117,13 @@ export const Toolbar = memo(function Toolbar({
     >
       {/* Tool buttons */}
       <button
+        ref={refIfActive('segment')}
         onClick={() => onToolChange('segment')}
         style={{ ...toolBtnBase, ...(activeTool === 'segment' ? activeStyle : {}) }}
         aria-pressed={activeTool === 'segment'}
         data-testid="tool-segment"
       >
-        <SegmentIcon /> {TOOL_SEGMENT}
+        <SegmentIcon /> <span className="tool-label">{TOOL_SEGMENT}</span>
       </button>
       {/* Point — hidden by default, activable via settings (spec §6.2) */}
       {pointToolVisible && (
@@ -116,7 +133,7 @@ export const Toolbar = memo(function Toolbar({
           aria-pressed={activeTool === 'point'}
           data-testid="tool-point"
         >
-          <PointIcon /> {TOOL_POINT}
+          <PointIcon /> <span className="tool-label">{TOOL_POINT}</span>
         </button>
       )}
       <button
@@ -125,7 +142,7 @@ export const Toolbar = memo(function Toolbar({
         aria-pressed={activeTool === 'move'}
         data-testid="tool-move"
       >
-        <MoveIcon /> {TOOL_MOVE}
+        <MoveIcon /> <span className="tool-label">{TOOL_MOVE}</span>
       </button>
       {/* Circle — 3e cycle only */}
       {displayMode === 'complet' && (
@@ -135,7 +152,7 @@ export const Toolbar = memo(function Toolbar({
           aria-pressed={activeTool === 'circle'}
           data-testid="tool-circle"
         >
-          <CircleIcon /> {TOOL_CIRCLE}
+          <CircleIcon /> <span className="tool-label">{TOOL_CIRCLE}</span>
         </button>
       )}
       <button
@@ -144,7 +161,7 @@ export const Toolbar = memo(function Toolbar({
         aria-pressed={activeTool === 'reflection'}
         data-testid="tool-reflection"
       >
-        <ReflectionIcon /> {TOOL_REFLECTION}
+        <ReflectionIcon /> <span className="tool-label">{TOOL_REFLECTION}</span>
       </button>
       {/* Reproduce — behind "Plus d'outils" in simplifie */}
       {(!isSimple || moreOpen) && (
@@ -154,7 +171,7 @@ export const Toolbar = memo(function Toolbar({
           aria-pressed={activeTool === 'reproduce'}
           data-testid="tool-reproduce"
         >
-          Reproduire
+          <span className="tool-label">Reproduire</span>
         </button>
       )}
       {/* Perpendicular — behind "Plus d'outils" in simplifie */}
@@ -165,7 +182,7 @@ export const Toolbar = memo(function Toolbar({
           aria-pressed={activeTool === 'perpendicular'}
           data-testid="tool-perpendicular"
         >
-          Perpendiculaire
+          <span className="tool-label">Perpendiculaire</span>
         </button>
       )}
       {/* Parallel — behind "Plus d'outils" in simplifie */}
@@ -176,7 +193,7 @@ export const Toolbar = memo(function Toolbar({
           aria-pressed={activeTool === 'parallel'}
           data-testid="tool-parallel"
         >
-          Parallèle
+          <span className="tool-label">Parallèle</span>
         </button>
       )}
       {/* Translation — complet only (3e cycle) */}
@@ -187,7 +204,7 @@ export const Toolbar = memo(function Toolbar({
           aria-pressed={activeTool === 'translation'}
           data-testid="tool-translation"
         >
-          Translation
+          <span className="tool-label">Translation</span>
         </button>
       )}
       {/* Measure — always visible in complet, behind "Plus d'outils" in simplifie */}
@@ -198,7 +215,7 @@ export const Toolbar = memo(function Toolbar({
           aria-pressed={activeTool === 'measure'}
           data-testid="tool-measure"
         >
-          <LengthIcon /> {TOOL_MEASURE}
+          <LengthIcon /> <span className="tool-label">{TOOL_MEASURE}</span>
         </button>
       )}
 

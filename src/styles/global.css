@@ -1,4 +1,12 @@
-/* Global styles — iOS/touch fixes */
+/* Global styles — iOS/touch fixes + responsive */
+
+/* Safe area insets for notched devices (iPhone X+) */
+:root {
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+}
 
 /* Prevent double-tap zoom on iOS Safari (spec: no double-click anywhere) */
 body {
@@ -15,4 +23,32 @@ textarea,
 [data-testid='properties-panel'] {
   -webkit-user-select: text;
   user-select: text;
+}
+
+/* ── Tablet (≤1024px): toolbar scroll + icon-only ───────── */
+@media (max-width: 1024px) {
+  [data-testid='toolbar'] {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none; /* Firefox */
+  }
+  [data-testid='toolbar']::-webkit-scrollbar {
+    display: none; /* Chrome/Safari */
+  }
+  .tool-label {
+    display: none;
+  }
+}
+
+/* ── Phone (≤480px): tighter spacing ────────────────────── */
+@media (max-width: 480px) {
+  [data-testid='toolbar'] {
+    padding: 0 4px;
+    gap: 4px;
+  }
+}
+
+/* ── Safe area: action bar padding for iPhone home indicator ── */
+[data-testid='action-bar'] {
+  padding-bottom: var(--safe-bottom);
 }

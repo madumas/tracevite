@@ -58,6 +58,7 @@ import { PrintDialog } from '@/components/PrintDialog';
 import { PrintSvg } from '@/components/PrintSvg';
 import { TutorialOverlay } from '@/components/TutorialOverlay';
 import { useTutorial } from '@/hooks/useTutorial';
+import { useMediaQuery } from '@/hooks/useMediaQuery';
 import type { ToolType, GridSize, DisplayUnit, DisplayMode } from '@/model/types';
 import { PreferencesProvider, usePreferences } from '@/model/preferences';
 import { AboutDialog } from '@/components/AboutDialog';
@@ -106,6 +107,9 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
   const effectiveSegmentColor = preferences.highContrast
     ? canvasColors.segment
     : preferences.segmentColor;
+  // Responsive breakpoints
+  const isNarrow = useMediaQuery('(max-width: 768px)');
+
   const containerRef = useRef<HTMLDivElement>(null);
   const { viewport, zoomIn, zoomOut, panUp, panDown, panLeft, panRight } =
     useViewport(containerRef);
@@ -1012,25 +1016,125 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
           )}
         </div>
 
-        {/* Properties Panel */}
-        <PropertiesPanel
-          state={state}
-          angles={derived.angles}
-          properties={derived.properties}
-          figures={derived.figures}
-          displayMode={state.displayMode}
-          hideProperties={state.hideProperties}
-          onToggleHideProperties={() =>
-            dispatch({ type: 'SET_HIDE_PROPERTIES', hide: !state.hideProperties })
-          }
-          onSelectElement={(id) => dispatch({ type: 'SET_SELECTED_ELEMENT', elementId: id })}
-          collapsed={panelCollapsed}
-          onToggleCollapsed={() => setPanelCollapsed(!panelCollapsed)}
-          hasNewProperties={hasNewProperties}
-          fontScale={effectiveFontScale}
-          estimationActive={state.estimationMode && !estimationRevealed}
-        />
+        {/* Properties Panel — sidebar on desktop, modal overlay on mobile */}
+        {!isNarrow && (
+          <PropertiesPanel
+            state={state}
+            angles={derived.angles}
+            properties={derived.properties}
+            figures={derived.figures}
+            displayMode={state.displayMode}
+            hideProperties={state.hideProperties}
+            onToggleHideProperties={() =>
+              dispatch({ type: 'SET_HIDE_PROPERTIES', hide: !state.hideProperties })
+            }
+            onSelectElement={(id) => dispatch({ type: 'SET_SELECTED_ELEMENT', elementId: id })}
+            collapsed={panelCollapsed}
+            onToggleCollapsed={() => setPanelCollapsed(!panelCollapsed)}
+            hasNewProperties={hasNewProperties}
+            fontScale={effectiveFontScale}
+            estimationActive={state.estimationMode && !estimationRevealed}
+          />
+        )}
+        {isNarrow && (
+          <button
+            onClick={() => setPanelCollapsed(!panelCollapsed)}
+            style={{
+              position: 'absolute',
+              bottom: 52,
+              right: 8,
+              width: 44,
+              height: 44,
+              borderRadius: 22,
+              background: '#FFFFFF',
+              border: '1px solid #D1D8E0',
+              boxShadow: '0 2px 6px rgba(0,0,0,0.15)',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: 18,
+              zIndex: 20,
+            }}
+            aria-label="Propriétés"
+            data-testid="panel-toggle-mobile"
+          >
+            {hasNewProperties ? '📐●' : '📐'}
+          </button>
+        )}
       </div>
+
+      {/* Mobile panel overlay */}
+      {isNarrow && !panelCollapsed && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(0,0,0,0.3)',
+            zIndex: 1000,
+            display: 'flex',
+            flexDirection: 'column',
+          }}
+          onClick={() => setPanelCollapsed(true)}
+        >
+          <div
+            style={{
+              flex: 1,
+              background: '#FFFFFF',
+              marginTop: 60,
+              borderTopLeftRadius: 12,
+              borderTopRightRadius: 12,
+              overflow: 'auto',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                padding: '12px 16px',
+                borderBottom: '1px solid #D1D8E0',
+              }}
+            >
+              <strong>Propriétés</strong>
+              <button
+                onClick={() => setPanelCollapsed(true)}
+                style={{
+                  background: 'transparent',
+                  border: 'none',
+                  fontSize: 18,
+                  cursor: 'pointer',
+                  color: '#666',
+                }}
+                aria-label="Fermer"
+              >
+                ×
+              </button>
+            </div>
+            <PropertiesPanel
+              state={state}
+              angles={derived.angles}
+              properties={derived.properties}
+              figures={derived.figures}
+              displayMode={state.displayMode}
+              hideProperties={state.hideProperties}
+              onToggleHideProperties={() =>
+                dispatch({ type: 'SET_HIDE_PROPERTIES', hide: !state.hideProperties })
+              }
+              onSelectElement={(id) => {
+                dispatch({ type: 'SET_SELECTED_ELEMENT', elementId: id });
+                setPanelCollapsed(true);
+              }}
+              collapsed={false}
+              onToggleCollapsed={() => setPanelCollapsed(true)}
+              hasNewProperties={false}
+              fontScale={effectiveFontScale}
+              estimationActive={state.estimationMode && !estimationRevealed}
+            />
+          </div>
+        </div>
+      )}
 
       {/* PWA update prompt (spec §4.1.2) */}
       {updateAvailable && (

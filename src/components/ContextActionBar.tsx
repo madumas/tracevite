@@ -92,8 +92,17 @@ export function ContextActionBar({
     }
   }
 
-  // Keep in bounds
-  if (posY < 10) posY += 100; // Move below element if too close to top
+  // Keep in bounds (vertical + horizontal clamp)
+  if (posY < 10) posY += 100;
+  // Horizontal: estimate bar width ~200px, clamp so it doesn't overflow edges
+  const estimatedHalfWidth = 100;
+  posX = Math.max(
+    estimatedHalfWidth + 8,
+    Math.min(
+      posX,
+      (typeof window !== 'undefined' ? window.innerWidth : 1200) - estimatedHalfWidth - 8,
+    ),
+  );
 
   const deleteLabel = point
     ? `Supprimer le point ${point.label}`
