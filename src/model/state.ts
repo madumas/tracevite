@@ -39,7 +39,7 @@ export function createInitialState(): ConstructionState {
     pointToolVisible: false,
     estimationMode: false,
     cartesianMode: 'off',
-    autoIntersection: false,
+    autoIntersection: true,
   };
 }
 
