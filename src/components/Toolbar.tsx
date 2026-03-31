@@ -90,7 +90,7 @@ export const Toolbar = memo(function Toolbar({
   // Auto-scroll toolbar to show active tool button on mobile
   const activeButtonRef = useRef<HTMLButtonElement>(null);
   useEffect(() => {
-    activeButtonRef.current?.scrollIntoView({
+    activeButtonRef.current?.scrollIntoView?.({
       inline: 'center',
       behavior: 'smooth',
       block: 'nearest',

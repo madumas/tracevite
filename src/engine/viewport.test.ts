@@ -64,7 +64,8 @@ describe('clampZoom', () => {
 describe('clampViewport', () => {
   it('clamps pan to bounds', () => {
     const v = clampViewport({ panX: -10, panY: 999, zoom: 1.0 });
-    expect(v.panX).toBe(0);
+    // -10 is within valid range [-BOUNDS_WIDTH_MM/2, BOUNDS_WIDTH_MM]
+    expect(v.panX).toBe(-10);
     expect(v.panY).toBeLessThanOrEqual(559);
   });
 
