@@ -1,4 +1,5 @@
 import { memo } from 'react';
+import type { GridSize, DisplayUnit } from '@/model/types';
 import {
   ACTION_BAR_HEIGHT,
   UI_PRIMARY,
@@ -17,7 +18,12 @@ import {
   ACTION_PRINT,
   ACTION_NEW,
   ACTION_SCALE_NOTE,
+  TOOL_SNAP,
+  GRID_5MM,
+  GRID_1CM,
+  GRID_2CM,
 } from '@/config/messages';
+import { SnapIcon } from './ToolIcons';
 
 interface ActionBarProps {
   readonly canUndo: boolean;
@@ -36,6 +42,12 @@ interface ActionBarProps {
   readonly onShowSettings?: () => void;
   readonly onToggleDemoMode?: () => void;
   readonly demoMode?: boolean;
+  readonly snapEnabled: boolean;
+  readonly onSnapToggle: () => void;
+  readonly gridSizeMm: GridSize;
+  readonly onGridChange: (size: GridSize) => void;
+  readonly displayUnit: DisplayUnit;
+  readonly onUnitChange: (unit: DisplayUnit) => void;
 }
 
 export const ActionBar = memo(function ActionBar({
@@ -55,6 +67,12 @@ export const ActionBar = memo(function ActionBar({
   onShowSettings,
   onToggleDemoMode,
   demoMode = false,
+  snapEnabled,
+  onSnapToggle,
+  gridSizeMm,
+  onGridChange,
+  displayUnit,
+  onUnitChange,
 }: ActionBarProps) {
   return (
     <div
@@ -132,6 +150,87 @@ export const ActionBar = memo(function ActionBar({
         data-testid="action-delete"
       >
         🗑 <span className="action-label">{ACTION_DELETE}</span>
+      </button>
+
+      {/* ─ sep ─ */}
+      <div style={{ width: 1, height: 24, background: UI_BORDER, margin: '0 4px' }} />
+
+      {/* Snap toggle */}
+      <button
+        onClick={onSnapToggle}
+        style={{
+          minWidth: MIN_BUTTON_SIZE_PX,
+          height: MIN_BUTTON_SIZE_PX - 8,
+          padding: '0 10px',
+          border: `1px solid ${UI_BORDER}`,
+          borderRadius: 4,
+          background: UI_SURFACE,
+          color: snapEnabled ? UI_PRIMARY : UI_DISABLED_TEXT,
+          cursor: 'pointer',
+          fontSize: 'inherit',
+          fontWeight: snapEnabled ? 600 : 400,
+          display: 'flex',
+          alignItems: 'center',
+          gap: 4,
+        }}
+        aria-pressed={snapEnabled}
+        data-testid="snap-toggle"
+        title={snapEnabled ? 'Aimant activé' : 'Aimant désactivé'}
+      >
+        <SnapIcon /> <span className="action-label">{TOOL_SNAP}</span>
+        <span
+          style={{
+            width: 6,
+            height: 6,
+            borderRadius: '50%',
+            background: snapEnabled ? '#22C55E' : '#D1D8E0',
+            display: 'inline-block',
+          }}
+        />
+      </button>
+
+      {/* Grid selector */}
+      <div style={{ display: 'flex', gap: 2 }}>
+        {([5, 10, 20] as GridSize[]).map((size) => (
+          <button
+            key={size}
+            onClick={() => onGridChange(size)}
+            style={{
+              minWidth: 36,
+              height: MIN_BUTTON_SIZE_PX - 8,
+              padding: '0 6px',
+              border: gridSizeMm === size ? `1px solid ${UI_PRIMARY}` : `1px solid ${UI_BORDER}`,
+              borderRadius: 4,
+              background: gridSizeMm === size ? '#E8F0FA' : UI_SURFACE,
+              color: UI_TEXT_PRIMARY,
+              cursor: 'pointer',
+              fontSize: 'inherit',
+            }}
+            aria-pressed={gridSizeMm === size}
+            data-testid={`grid-${size}`}
+          >
+            {size === 5 ? GRID_5MM : size === 10 ? GRID_1CM : GRID_2CM}
+          </button>
+        ))}
+      </div>
+
+      {/* Unit toggle */}
+      <button
+        onClick={() => onUnitChange(displayUnit === 'cm' ? 'mm' : 'cm')}
+        style={{
+          minWidth: 36,
+          height: MIN_BUTTON_SIZE_PX - 8,
+          padding: '0 6px',
+          border: `1px solid ${UI_BORDER}`,
+          borderRadius: 4,
+          background: UI_SURFACE,
+          color: UI_TEXT_PRIMARY,
+          cursor: 'pointer',
+          fontSize: 'inherit',
+        }}
+        data-testid="unit-toggle"
+      >
+        {displayUnit}
       </button>
 
       {/* Estimation mode: Vérifier button */}

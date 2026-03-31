@@ -738,14 +738,8 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
       {/* Toolbar */}
       <Toolbar
         activeTool={state.activeTool}
-        gridSizeMm={state.gridSizeMm}
-        displayUnit={state.displayUnit}
-        snapEnabled={state.snapEnabled}
         displayMode={state.displayMode}
         onToolChange={handleToolChange}
-        onGridChange={handleGridChange}
-        onUnitChange={handleUnitChange}
-        onSnapToggle={handleSnapToggle}
         pointToolVisible={state.pointToolVisible}
         fontScale={effectiveFontScale}
         onTutorialStart={tutorial.start}
@@ -1244,6 +1238,12 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
           }
         }}
         demoMode={demoMode}
+        snapEnabled={state.snapEnabled}
+        onSnapToggle={handleSnapToggle}
+        gridSizeMm={state.gridSizeMm}
+        onGridChange={handleGridChange}
+        displayUnit={state.displayUnit}
+        onUnitChange={handleUnitChange}
       />
 
       {showNewConfirm && (

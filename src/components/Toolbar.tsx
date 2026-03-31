@@ -1,13 +1,6 @@
 import { memo, useState, useEffect, useRef, useCallback } from 'react';
-import type { ToolType, GridSize, DisplayUnit, DisplayMode } from '@/model/types';
-import {
-  UI_PRIMARY,
-  UI_SURFACE,
-  UI_BORDER,
-  UI_TEXT_PRIMARY,
-  UI_DISABLED_TEXT,
-  TOOLBAR_HEIGHT,
-} from '@/config/theme';
+import type { ToolType, DisplayMode } from '@/model/types';
+import { UI_PRIMARY, UI_SURFACE, UI_BORDER, UI_TEXT_PRIMARY, TOOLBAR_HEIGHT } from '@/config/theme';
 import { MIN_BUTTON_SIZE_PX, MIN_BUTTON_GAP_PX } from '@/config/accessibility';
 import {
   SegmentIcon,
@@ -22,7 +15,6 @@ import {
   CompareIcon,
   FriezeIcon,
   SymmetryIcon,
-  SnapIcon,
 } from './ToolIcons';
 import {
   TOOL_SEGMENT,
@@ -31,24 +23,14 @@ import {
   TOOL_CIRCLE,
   TOOL_REFLECTION,
   TOOL_COMPARE,
-  TOOL_SNAP,
-  GRID_5MM,
-  GRID_1CM,
-  GRID_2CM,
 } from '@/config/messages';
 import { SaveIndicator } from './SaveIndicator';
 import { ModeSelector } from './ModeSelector';
 
 interface ToolbarProps {
   readonly activeTool: ToolType;
-  readonly gridSizeMm: GridSize;
-  readonly displayUnit: DisplayUnit;
-  readonly snapEnabled: boolean;
   readonly displayMode: DisplayMode;
   readonly onToolChange: (tool: ToolType) => void;
-  readonly onGridChange: (size: GridSize) => void;
-  readonly onUnitChange: (unit: DisplayUnit) => void;
-  readonly onSnapToggle: () => void;
   readonly pointToolVisible: boolean;
   readonly fontScale?: number;
   readonly onTutorialStart?: () => void;
@@ -81,14 +63,8 @@ const activeStyle: React.CSSProperties = {
 
 export const Toolbar = memo(function Toolbar({
   activeTool,
-  gridSizeMm,
-  displayUnit,
-  snapEnabled,
   displayMode,
   onToolChange,
-  onGridChange,
-  onUnitChange,
-  onSnapToggle,
   pointToolVisible,
   fontScale = 1,
   onTutorialStart,
@@ -346,73 +322,7 @@ export const Toolbar = memo(function Toolbar({
           </button>
         )}
 
-        {/* ─ sep ─ */}
-        <div
-          style={{ width: 1, height: 24, background: UI_BORDER, margin: '0 4px', flexShrink: 0 }}
-        />
-
-        {/* ═══ GROUP: Affichage ═══ */}
-        {/* Snap toggle — always visible, LED indicator for state */}
-        <button
-          onClick={onSnapToggle}
-          style={{
-            ...toolBtnBase,
-            fontSize: 'inherit',
-            color: snapEnabled ? UI_PRIMARY : UI_DISABLED_TEXT,
-            fontWeight: snapEnabled ? 600 : 400,
-            position: 'relative',
-          }}
-          aria-pressed={snapEnabled}
-          data-testid="snap-toggle"
-          title={snapEnabled ? 'Aimant activé' : 'Aimant désactivé'}
-        >
-          <SnapIcon /> {TOOL_SNAP}
-          <span
-            style={{
-              width: 6,
-              height: 6,
-              borderRadius: '50%',
-              background: snapEnabled ? '#22C55E' : '#D1D8E0',
-              display: 'inline-block',
-              marginLeft: 4,
-            }}
-          />
-        </button>
-
-        {/* Grid selector — always visible in complet, behind "Plus d'outils" in simplifie */}
-        {(!isSimple || moreOpen) && (
-          <div style={{ display: 'flex', gap: 2 }}>
-            {([5, 10, 20] as GridSize[]).map((size) => (
-              <button
-                key={size}
-                onClick={() => onGridChange(size)}
-                style={{
-                  ...toolBtnBase,
-                  minWidth: 36,
-                  padding: '0 6px',
-                  fontSize: 'inherit',
-                  background: gridSizeMm === size ? '#E8F0FA' : 'transparent',
-                  border: gridSizeMm === size ? `1px solid ${UI_PRIMARY}` : `1px solid transparent`,
-                }}
-                aria-pressed={gridSizeMm === size}
-                data-testid={`grid-${size}`}
-              >
-                {size === 5 ? GRID_5MM : size === 10 ? GRID_1CM : GRID_2CM}
-              </button>
-            ))}
-          </div>
-        )}
-
-        {/* Unit toggle */}
-        {(!isSimple || moreOpen) && (
-          <button
-            onClick={() => onUnitChange(displayUnit === 'cm' ? 'mm' : 'cm')}
-            style={{ ...toolBtnBase, minWidth: 36 }}
-            data-testid="unit-toggle"
-          >
-            {displayUnit}
-          </button>
-        )}
+        {/* Snap, grid, unit moved to ActionBar */}
       </div>
       {/* end zone scrollable */}
 
