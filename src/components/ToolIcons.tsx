@@ -344,12 +344,34 @@ export function NewIcon() {
   );
 }
 
-/** Settings: gear with teeth */
+/** Settings: symmetric 6-tooth gear */
 export function SettingsIcon() {
+  // Gear with 6 teeth, centered on (10,10), outer r=9, inner r=6.5, tooth width ±15°
+  const cx = 10,
+    cy = 10,
+    ro = 9,
+    ri = 6.5,
+    teeth = 6,
+    hw = 15; // half-width of tooth in degrees
+  const step = 360 / teeth;
+  const pts: string[] = [];
+  for (let i = 0; i < teeth; i++) {
+    const a = i * step;
+    for (const [deg, r] of [
+      [a - hw, ro],
+      [a + hw, ro],
+      [a + hw, ri],
+      [a + step - hw, ri],
+      [a + step - hw, ro],
+    ] as [number, number][]) {
+      const rad = (deg * Math.PI) / 180;
+      pts.push(`${cx + r * Math.cos(rad)},${cy + r * Math.sin(rad)}`);
+    }
+  }
   return (
     <svg {...SA}>
-      <path
-        d="M9 2h2v1.5a5 5 0 0 1 2.1.9l1.1-1.1 1.4 1.4-1.1 1.1a5 5 0 0 1 .9 2.1H17v2h-1.5a5 5 0 0 1-.9 2.1l1.1 1.1-1.4 1.4-1.1-1.1a5 5 0 0 1-2.1.9V17H9v-1.5a5 5 0 0 1-2.1-.9l-1.1 1.1-1.4-1.4 1.1-1.1A5 5 0 0 1 4.5 11H3V9h1.5a5 5 0 0 1 .9-2.1L4.3 5.7l1.4-1.4 1.1 1.1A5 5 0 0 1 9 4.5V2z"
+      <polygon
+        points={pts.join(' ')}
         stroke={stroke}
         strokeWidth="1.5"
         strokeLinejoin="round"
