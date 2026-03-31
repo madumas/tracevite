@@ -560,6 +560,7 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
           gap: 12,
         }}
       >
+        <img src="/logo.svg" alt="" width={28} height={28} style={{ marginRight: -4 }} />
         <strong style={{ fontSize: 16 }}>TraceVite</strong>
         <SaveIndicator saving={saving} />
         <button

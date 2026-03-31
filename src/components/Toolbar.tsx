@@ -10,6 +10,14 @@ import {
 } from '@/config/theme';
 import { MIN_BUTTON_SIZE_PX, MIN_BUTTON_GAP_PX } from '@/config/accessibility';
 import {
+  SegmentIcon,
+  PointIcon,
+  CircleIcon,
+  MoveIcon,
+  ReflectionIcon,
+  LengthIcon,
+} from './ToolIcons';
+import {
   TOOL_SEGMENT,
   TOOL_POINT,
   TOOL_MOVE,
@@ -47,6 +55,9 @@ const toolBtnBase: React.CSSProperties = {
   background: 'transparent',
   color: UI_TEXT_PRIMARY,
   fontSize: 'inherit',
+  display: 'flex',
+  alignItems: 'center',
+  gap: 4,
 };
 
 const activeStyle: React.CSSProperties = {
@@ -93,7 +104,7 @@ export const Toolbar = memo(function Toolbar({
         aria-pressed={activeTool === 'segment'}
         data-testid="tool-segment"
       >
-        {TOOL_SEGMENT}
+        <SegmentIcon /> {TOOL_SEGMENT}
       </button>
       {/* Point — hidden by default, activable via settings (spec §6.2) */}
       {pointToolVisible && (
@@ -103,7 +114,7 @@ export const Toolbar = memo(function Toolbar({
           aria-pressed={activeTool === 'point'}
           data-testid="tool-point"
         >
-          {TOOL_POINT}
+          <PointIcon /> {TOOL_POINT}
         </button>
       )}
       <button
@@ -112,7 +123,7 @@ export const Toolbar = memo(function Toolbar({
         aria-pressed={activeTool === 'move'}
         data-testid="tool-move"
       >
-        {TOOL_MOVE}
+        <MoveIcon /> {TOOL_MOVE}
       </button>
       {/* Circle — 3e cycle only */}
       {displayMode === 'complet' && (
@@ -122,7 +133,7 @@ export const Toolbar = memo(function Toolbar({
           aria-pressed={activeTool === 'circle'}
           data-testid="tool-circle"
         >
-          {TOOL_CIRCLE}
+          <CircleIcon /> {TOOL_CIRCLE}
         </button>
       )}
       <button
@@ -131,7 +142,7 @@ export const Toolbar = memo(function Toolbar({
         aria-pressed={activeTool === 'reflection'}
         data-testid="tool-reflection"
       >
-        {TOOL_REFLECTION}
+        <ReflectionIcon /> {TOOL_REFLECTION}
       </button>
       {/* Measure — always visible in complet, behind "Plus d'outils" in simplifie */}
       {(!isSimple || moreOpen) && (
@@ -141,7 +152,7 @@ export const Toolbar = memo(function Toolbar({
           aria-pressed={activeTool === 'measure'}
           data-testid="tool-measure"
         >
-          {TOOL_MEASURE}
+          <LengthIcon /> {TOOL_MEASURE}
         </button>
       )}
 
