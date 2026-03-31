@@ -88,7 +88,7 @@ export const ActionBar = memo(function ActionBar({
         aria-label={ACTION_UNDO}
         data-testid="action-undo"
       >
-        ↩ {ACTION_UNDO}
+        ↩ <span className="action-label">{ACTION_UNDO}</span>
       </button>
 
       {/* Redo */}
@@ -109,7 +109,7 @@ export const ActionBar = memo(function ActionBar({
         aria-label={ACTION_REDO}
         data-testid="action-redo"
       >
-        ↪ {ACTION_REDO}
+        ↪ <span className="action-label">{ACTION_REDO}</span>
       </button>
 
       {/* Delete mode toggle */}
@@ -131,7 +131,7 @@ export const ActionBar = memo(function ActionBar({
         aria-pressed={deleteMode}
         data-testid="action-delete"
       >
-        🗑 {ACTION_DELETE}
+        🗑 <span className="action-label">{ACTION_DELETE}</span>
       </button>
 
       {/* Estimation mode: Vérifier button */}
@@ -157,7 +157,9 @@ export const ActionBar = memo(function ActionBar({
 
       {/* Spacer */}
       <div style={{ flex: 1, display: 'flex', justifyContent: 'center' }}>
-        <span style={{ fontSize: 11, color: '#9CA3AF' }}>{ACTION_SCALE_NOTE}</span>
+        <span className="action-label" style={{ fontSize: 11, color: '#9CA3AF' }}>
+          {ACTION_SCALE_NOTE}
+        </span>
       </div>
 
       {/* Mes constructions */}
@@ -252,11 +254,11 @@ export const ActionBar = memo(function ActionBar({
         aria-label={ACTION_PRINT}
         data-testid="action-print"
       >
-        {ACTION_PRINT}
+        🖨 <span className="action-label">{ACTION_PRINT}</span>
       </button>
 
       {/* Separator */}
-      <div style={{ width: 1, height: 24, background: UI_BORDER, margin: '0 8px' }} />
+      <div style={{ width: 1, height: 24, background: UI_BORDER, margin: '0 4px' }} />
 
       {/* New construction — red, far right, isolated */}
       <button
@@ -276,7 +278,7 @@ export const ActionBar = memo(function ActionBar({
         }}
         data-testid="action-new"
       >
-        {ACTION_NEW}
+        ✚ <span className="action-label">{ACTION_NEW}</span>
       </button>
     </div>
   );

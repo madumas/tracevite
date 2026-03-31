@@ -48,6 +48,16 @@ textarea,
   }
 }
 
+/* ── Action bar: icon-only on narrow screens ───────────── */
+@media (max-width: 768px) {
+  .action-label {
+    display: none;
+  }
+  [data-testid='action-bar'] {
+    gap: 4px;
+  }
+}
+
 /* ── Safe area: action bar padding for iPhone home indicator ── */
 [data-testid='action-bar'] {
   padding-bottom: var(--safe-bottom);
