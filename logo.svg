@@ -1,6 +1,6 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="10 40 180 160" width="200" height="200">
-  <!-- Compact icon version: T as geometric construction, no labels -->
-  <!-- viewBox cropped to content bounds for proper vertical centering -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="12 42 176 156" width="200" height="200">
+  <!-- Compact icon version: T as geometric construction -->
+  <!-- viewBox = exact content bounds (circles r18 at extremes) -->
 
   <!-- Horizontal segment -->
   <line x1="30" y1="60" x2="170" y2="60" stroke="#185FA5" stroke-width="12" stroke-linecap="round"/>
