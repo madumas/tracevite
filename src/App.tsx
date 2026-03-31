@@ -391,7 +391,6 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
       onCursorMove: handleCursorMove,
       cursorSmoothing: preferences.cursorSmoothing && state.toleranceProfile === 'very_large',
       onPinchZoom: pinchZoomPan,
-      skipDebounce: deleteConfirmId !== null,
     });
 
   const hasElements = state.points.length > 0;
@@ -976,6 +975,7 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
              where clicking an element is a tool action, not a general selection */}
           {state.selectedElementId &&
             !COMPOUND_TOOLS.includes(state.activeTool) &&
+            !deleteMode &&
             !fixingSegmentId &&
             !fixingCircleId && (
               <ContextActionBar

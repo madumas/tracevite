@@ -227,7 +227,7 @@ describe('self-intersecting detection', () => {
     expect(quad!.selfIntersecting).toBe(false);
   });
 
-  it('bowtie quadrilateral is filtered out by area check', () => {
+  it('bowtie quadrilateral is detected as self-intersecting', () => {
     let state = createInitialState();
     const a = addPoint(state, 0, 0);
     state = a.state;
@@ -244,8 +244,12 @@ describe('self-intersecting detection', () => {
     state = addSegment(state, d.pointId, a.pointId)!.state;
 
     const faces = detectAllFaces(state);
-    // Bowtie has ~0 area → no faces detected
-    expect(faces).toHaveLength(0);
+    // Bowtie has ~0 shoelace area but IS self-intersecting → kept
+    expect(faces.length).toBeGreaterThanOrEqual(1);
+
+    const figures = classifyFigures(faces, state, 'complet');
+    const selfIntersecting = figures.filter((f) => f.selfIntersecting);
+    expect(selfIntersecting.length).toBeGreaterThanOrEqual(1);
   });
 });
 

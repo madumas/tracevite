@@ -163,12 +163,14 @@ export function detectAllFaces(state: ConstructionState): string[][] {
     }
   }
 
-  // Filter exterior face and degenerate, then deduplicate same-vertex-set faces
+  // Filter exterior face and degenerate, then deduplicate same-vertex-set faces.
+  // Self-intersecting faces (e.g. bowties) have near-zero shoelace area due to
+  // winding cancellation — keep them if they have enough edges to be meaningful.
   const seen = new Set<string>();
   return faces.filter((face, i) => {
     if (i === maxIdx) return false; // exterior face
     const area = Math.abs(shoelaceArea(face, pointMap));
-    if (area < 1) return false; // degenerate (< 1mm²)
+    if (area < 1 && !isSelfIntersecting(face, pointMap)) return false; // degenerate (< 1mm²)
     const key = [...face].sort().join(',');
     if (seen.has(key)) return false;
     seen.add(key);
