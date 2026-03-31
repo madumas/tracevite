@@ -1,14 +1,17 @@
+import type React from 'react';
+
 /**
- * SVG icons for toolbar tools — inline, 24×24 rendered (viewBox 20×20), stroke-based.
+ * SVG icons for toolbar tools — inline, 28×28 rendered (viewBox 20×20), stroke-based.
  * Simple geometric shapes recognizable by children.
  */
 
 const S = {
-  width: 24,
-  height: 24,
+  width: 28,
+  height: 28,
   viewBox: '0 0 20 20',
   fill: 'none',
   xmlns: 'http://www.w3.org/2000/svg',
+  style: { flexShrink: 0 } as React.CSSProperties,
 } as const;
 const stroke = 'currentColor';
 
