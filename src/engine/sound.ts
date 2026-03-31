@@ -58,24 +58,23 @@ export function createSoundEngine(): SoundEngine {
     ensureContext();
     if (!ctx || !gainNode) return;
 
-    // White noise through low-pass filter, 50ms
-    const bufferSize = Math.floor(ctx.sampleRate * 0.05);
-    const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
-    const data = buffer.getChannelData(0);
-    for (let i = 0; i < bufferSize; i++) {
-      data[i] = (Math.random() * 2 - 1) * 0.3;
-    }
+    // "Soft drop" — triangle wave 480→320Hz sweep, 35ms
+    // Triangle has softer harmonics than sine; descending pitch
+    // feels like a gentle "plop" (landing/settling). Inaudible to
+    // neighbours at normal volume — low frequency + short + quiet.
+    const osc = ctx.createOscillator();
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(480, ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(320, ctx.currentTime + 0.035);
 
-    const source = ctx.createBufferSource();
-    source.buffer = buffer;
+    const env = ctx.createGain();
+    env.gain.setValueAtTime(0.25, ctx.currentTime);
+    env.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.035);
 
-    const filter = ctx.createBiquadFilter();
-    filter.type = 'lowpass';
-    filter.frequency.value = 2000;
-
-    source.connect(filter);
-    filter.connect(gainNode);
-    source.start();
+    osc.connect(env);
+    env.connect(gainNode);
+    osc.start();
+    osc.stop(ctx.currentTime + 0.04);
   }
 
   function playSegmentCreated() {

@@ -3,7 +3,7 @@ import { createSoundEngine } from './sound';
 // Mock AudioContext for testing (jsdom doesn't have Web Audio)
 const mockOscillator = {
   type: 'sine',
-  frequency: { value: 0 },
+  frequency: { value: 0, setValueAtTime: vi.fn(), exponentialRampToValueAtTime: vi.fn() },
   connect: vi.fn(),
   start: vi.fn(),
   stop: vi.fn(),
