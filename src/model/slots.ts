@@ -36,7 +36,13 @@ export function createSlot(
   if (registry.slots.length >= MAX_SLOTS) return null;
 
   const id = generateId();
-  const slotName = name ?? `Construction ${registry.nextNumber}`;
+  // Auto-name: skip numbers already used by existing slots
+  let num = registry.nextNumber;
+  if (!name) {
+    const existingNames = new Set(registry.slots.map((s) => s.name));
+    while (existingNames.has(`Construction ${num}`)) num++;
+  }
+  const slotName = name ?? `Construction ${num}`;
   const now = Date.now();
   const slot: SlotMetadata = {
     id,
@@ -50,7 +56,7 @@ export function createSlot(
     registry: {
       slots: [...registry.slots, slot],
       activeSlotId: id,
-      nextNumber: name ? registry.nextNumber : registry.nextNumber + 1,
+      nextNumber: name ? registry.nextNumber : num + 1,
     },
     slotId: id,
   };

@@ -51,9 +51,7 @@ export async function saveSlotData(
   ]);
 }
 
-export async function loadSlotData(
-  slotId: string,
-): Promise<{
+export async function loadSlotData(slotId: string): Promise<{
   state: ConstructionState;
   past: ConstructionState[];
   future: ConstructionState[];
@@ -105,7 +103,7 @@ export async function migrateIfNeeded(): Promise<SlotRegistry> {
   if (legacyData) {
     // Migrate: create registry with one slot containing the legacy data
     const registry = createEmptyRegistry();
-    const result = createSlot(registry, 'Construction 1');
+    const result = createSlot(registry); // auto-names to "Construction 1", increments nextNumber
     if (!result) return createEmptyRegistry(); // Should never happen
 
     const { registry: newRegistry, slotId } = result;
