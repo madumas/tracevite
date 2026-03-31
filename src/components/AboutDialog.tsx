@@ -3,7 +3,7 @@
  * Accessible via click on "TraceVite" in header.
  */
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import {
   UI_SURFACE,
   UI_BORDER,
@@ -96,23 +96,7 @@ export function AboutDialog({ onClose }: AboutDialogProps) {
           <a href="mailto:ma@tracevite.ca" style={{ color: UI_PRIMARY }}>
             ma@tracevite.ca
           </a>
-          <button
-            onClick={() => {
-              navigator.clipboard?.writeText('ma@tracevite.ca');
-            }}
-            style={{
-              background: 'transparent',
-              border: 'none',
-              cursor: 'pointer',
-              fontSize: 14,
-              padding: '0 2px',
-              color: UI_TEXT_SECONDARY,
-            }}
-            title="Copier l'adresse"
-            aria-label="Copier l'adresse courriel"
-          >
-            📋
-          </button>
+          <CopyButton />
         </div>
 
         <div style={{ fontSize: 11, color: UI_TEXT_SECONDARY, marginBottom: 16 }}>
@@ -137,6 +121,39 @@ export function AboutDialog({ onClose }: AboutDialogProps) {
         </button>
       </div>
     </div>
+  );
+}
+
+function CopyButton() {
+  const [copied, setCopied] = useState(false);
+  return (
+    <button
+      onClick={async () => {
+        try {
+          await navigator.clipboard?.writeText('ma@tracevite.ca');
+          setCopied(true);
+          setTimeout(() => setCopied(false), 1500);
+        } catch {
+          /* clipboard non disponible — le lien mailto reste accessible */
+        }
+      }}
+      style={{
+        background: 'transparent',
+        border: 'none',
+        cursor: 'pointer',
+        fontSize: 14,
+        minWidth: 44,
+        minHeight: 44,
+        display: 'inline-flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        color: copied ? '#22C55E' : UI_TEXT_SECONDARY,
+      }}
+      title="Copier l'adresse"
+      aria-label="Copier l'adresse courriel"
+    >
+      {copied ? '✓' : '📋'}
+    </button>
   );
 }
 
