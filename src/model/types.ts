@@ -115,6 +115,7 @@ export interface ConstructionState {
   readonly estimationMode: boolean;
   readonly cartesianMode: CartesianMode;
   readonly autoIntersection: boolean;
+  readonly clutterThreshold: number; // hide canvas labels when segment count exceeds this
 }
 
 /** Snap result from the snap engine. */

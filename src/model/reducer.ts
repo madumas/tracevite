@@ -77,6 +77,7 @@ export type ConstructionAction =
   | { type: 'SET_TOLERANCE_PROFILE'; toleranceProfile: ToleranceProfile }
   | { type: 'SET_CHAIN_TIMEOUT'; chainTimeoutMs: ChainTimeout }
   | { type: 'SET_FONT_SCALE'; fontScale: FontScale }
+  | { type: 'SET_CLUTTER_THRESHOLD'; clutterThreshold: number }
   | { type: 'SET_KEYBOARD_SHORTCUTS'; enabled: boolean }
   | { type: 'SET_SOUND_MODE'; soundMode: SoundMode }
   | { type: 'SET_SOUND_GAIN'; soundGain: number }
@@ -397,6 +398,14 @@ export function reduce(state: ReducerState, action: ConstructionAction): Reducer
         undoManager: Undo.updateCurrent(undoManager, { ...current, fontScale: action.fontScale }),
       };
 
+    case 'SET_CLUTTER_THRESHOLD':
+      return {
+        undoManager: Undo.updateCurrent(undoManager, {
+          ...current,
+          clutterThreshold: action.clutterThreshold,
+        }),
+      };
+
     case 'SET_KEYBOARD_SHORTCUTS':
       return {
         undoManager: Undo.updateCurrent(undoManager, {
@@ -476,6 +485,7 @@ export function reduce(state: ReducerState, action: ConstructionAction): Reducer
           pointToolVisible: current.pointToolVisible,
           cartesianMode: current.cartesianMode,
           autoIntersection: current.autoIntersection,
+          clutterThreshold: current.clutterThreshold,
         }),
       };
     }

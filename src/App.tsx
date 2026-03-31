@@ -1417,6 +1417,10 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
           onCartesianModeChange={(v) => dispatch({ type: 'SET_CARTESIAN_MODE', mode: v })}
           autoIntersection={state.autoIntersection}
           onAutoIntersectionChange={(v) => dispatch({ type: 'SET_AUTO_INTERSECTION', enabled: v })}
+          clutterThreshold={state.clutterThreshold}
+          onClutterThresholdChange={(v) =>
+            dispatch({ type: 'SET_CLUTTER_THRESHOLD', clutterThreshold: v })
+          }
           displayMode={state.displayMode}
           onClose={() => setShowSettings(false)}
         />

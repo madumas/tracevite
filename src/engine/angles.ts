@@ -128,9 +128,12 @@ export function isAlignedAngle(angle: AngleInfo): boolean {
 
 /**
  * Determine if canvas labels should be hidden due to visual clutter.
- * Spec: hide after 5 segments (2e cycle) / 6 segments (3e cycle).
+ * Uses user-configured threshold if set (>0), otherwise mode-dependent defaults.
  */
 export function isAngleCluttered(state: ConstructionState, displayMode: DisplayMode): boolean {
-  const threshold = CLUTTER_THRESHOLDS[displayMode === 'simplifie' ? 'simplifie' : 'complet'];
+  const threshold =
+    state.clutterThreshold > 0
+      ? state.clutterThreshold
+      : CLUTTER_THRESHOLDS[displayMode === 'simplifie' ? 'simplifie' : 'complet'];
   return state.segments.length > threshold;
 }

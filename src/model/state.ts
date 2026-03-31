@@ -40,6 +40,7 @@ export function createInitialState(): ConstructionState {
     estimationMode: false,
     cartesianMode: 'off',
     autoIntersection: true,
+    clutterThreshold: 0, // 0 = use default from CLUTTER_THRESHOLDS (mode-dependent)
   };
 }
 

@@ -136,6 +136,10 @@ export function deserializeState(json: string): ConstructionState {
       typeof settings['autoIntersection'] === 'boolean'
         ? settings['autoIntersection']
         : defaults.autoIntersection,
+    clutterThreshold:
+      typeof settings['clutterThreshold'] === 'number'
+        ? settings['clutterThreshold']
+        : defaults.clutterThreshold,
   };
 }
 

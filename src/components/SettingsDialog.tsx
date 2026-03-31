@@ -30,6 +30,8 @@ interface SettingsDialogProps {
   readonly onCartesianModeChange: (v: import('@/model/types').CartesianMode) => void;
   readonly autoIntersection: boolean;
   readonly onAutoIntersectionChange: (v: boolean) => void;
+  readonly clutterThreshold: number;
+  readonly onClutterThresholdChange: (v: number) => void;
   readonly displayMode: import('@/model/types').DisplayMode;
   readonly onClose: () => void;
 }
@@ -95,6 +97,8 @@ export const SettingsDialog = memo(function SettingsDialog({
   onCartesianModeChange,
   autoIntersection,
   onAutoIntersectionChange,
+  clutterThreshold,
+  onClutterThresholdChange,
   displayMode,
   onClose,
 }: SettingsDialogProps) {
@@ -320,6 +324,25 @@ export const SettingsDialog = memo(function SettingsDialog({
             onChange={(e) => onAutoIntersectionChange(e.target.checked)}
             style={{ width: 20, height: 20, cursor: 'pointer' }}
           />
+        </div>
+
+        {/* Clutter threshold */}
+        <div style={rowStyle}>
+          <span>Seuil de surcharge visuelle</span>
+          <select
+            value={clutterThreshold}
+            onChange={(e) => onClutterThresholdChange(Number(e.target.value))}
+            style={{ height: MIN_BUTTON_SIZE_PX - 8, fontSize: 'inherit', cursor: 'pointer' }}
+          >
+            <option value={0}>Auto ({displayMode === 'simplifie' ? 5 : 6})</option>
+            <option value={4}>4 segments</option>
+            <option value={5}>5 segments</option>
+            <option value={6}>6 segments</option>
+            <option value={8}>8 segments</option>
+            <option value={10}>10 segments</option>
+            <option value={15}>15 segments</option>
+            <option value={999}>Toujours afficher</option>
+          </select>
         </div>
 
         {/* High contrast toggle */}
