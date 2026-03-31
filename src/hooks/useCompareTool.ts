@@ -8,8 +8,9 @@ import { useState, useCallback, useMemo, createElement } from 'react';
 import type { ConstructionState, ViewportState, SnapResult } from '@/model/types';
 import type { ConstructionAction } from '@/model/reducer';
 import type { ToolHookResult } from './types';
-import { hitTestSegment } from '@/engine/hit-test';
+import { hitTestSegment, hitTestCircle } from '@/engine/hit-test';
 import { detectAllFaces, classifyFigures, type Figure } from '@/engine/figures';
+import type { Circle } from '@/model/types';
 import { compareFiguresByTranslation, type ComparisonResult } from '@/engine/comparison';
 import { CSS_PX_PER_MM } from '@/engine/viewport';
 import { CANVAS_SELECTION_BG } from '@/config/theme';
@@ -52,20 +53,44 @@ export function useCompareTool({
         return;
       }
 
-      // Hit-test segment
-      const segId = hitTestSegment(mmPos, state.segments, state.points);
-      if (!segId) return;
+      let figure: Figure | undefined;
 
-      // Find closed figure containing this segment
-      const faces = detectAllFaces(state);
-      const figures = classifyFigures(faces, state, state.displayMode);
-      const figure = figures
-        .filter((f) => f.segmentIds.includes(segId))
-        .sort((a, b) => a.pointIds.length - b.pointIds.length)[0];
+      // Hit-test circle first (single center point → guaranteed mismatch vs polygons)
+      const circleId = hitTestCircle(mmPos, state.circles, state.points);
+      if (circleId) {
+        const circle = state.circles.find((c) => c.id === circleId) as Circle;
+        figure = {
+          id: `circle-${circle.id}`,
+          pointIds: [circle.centerPointId],
+          segmentIds: [],
+          name: 'Cercle',
+          selfIntersecting: false,
+        };
+      }
 
       if (!figure) {
-        // Not a closed figure — reject
-        return;
+        // Hit-test segment
+        const segId = hitTestSegment(mmPos, state.segments, state.points);
+        if (!segId) return;
+
+        // Find closed figure containing this segment
+        const faces = detectAllFaces(state);
+        const figures = classifyFigures(faces, state, state.displayMode);
+        figure = figures
+          .filter((f) => f.segmentIds.includes(segId))
+          .sort((a, b) => a.pointIds.length - b.pointIds.length)[0];
+
+        // Standalone segment → pseudo-figure with 2 endpoints
+        if (!figure) {
+          const seg = state.segments.find((s) => s.id === segId)!;
+          figure = {
+            id: `segment-${segId}`,
+            pointIds: [seg.startPointId, seg.endPointId],
+            segmentIds: [segId],
+            name: 'Segment',
+            selfIntersecting: false,
+          };
+        }
       }
 
       if (phase === 'select_first') {
@@ -109,9 +134,9 @@ export function useCompareTool({
   // Status message
   let statusMessage: string;
   if (phase === 'select_first') {
-    statusMessage = 'Comparer — Clique sur le côté d\u2019une figure fermée';
+    statusMessage = 'Comparer — Clique sur une figure, un segment ou un cercle';
   } else if (phase === 'select_second') {
-    statusMessage = 'Comparer — Clique sur le côté de la deuxième figure';
+    statusMessage = 'Comparer — Clique sur la deuxième figure';
   } else if (comparisonResult?.isIsometric) {
     statusMessage = 'Comparer — Les figures sont isométriques!';
   } else {
@@ -124,9 +149,10 @@ export function useCompareTool({
     const pointMap = new Map(state.points.map((p) => [p.id, p]));
     const pxPerMm = viewport.zoom * CSS_PX_PER_MM;
 
-    // Highlight figure A
-    if (figureA) {
-      for (const segId of figureA.segmentIds) {
+    // Helper: highlight a figure (segments + circle arc)
+    const highlightFigure = (fig: Figure, keyPrefix: string, opacity: number) => {
+      // Segment highlights
+      for (const segId of fig.segmentIds) {
         const seg = state.segments.find((s) => s.id === segId);
         if (!seg) continue;
         const start = pointMap.get(seg.startPointId);
@@ -135,7 +161,7 @@ export function useCompareTool({
 
         elements.push(
           createElement('line', {
-            key: `selA-${segId}`,
+            key: `${keyPrefix}-${segId}`,
             x1: (start.x - viewport.panX) * pxPerMm,
             y1: (start.y - viewport.panY) * pxPerMm,
             x2: (end.x - viewport.panX) * pxPerMm,
@@ -143,38 +169,42 @@ export function useCompareTool({
             stroke: CANVAS_SELECTION_BG,
             strokeWidth: 6,
             strokeLinecap: 'round',
-            opacity: 0.7,
+            opacity,
             pointerEvents: 'none',
           }),
         );
       }
-    }
+
+      // Circle highlight
+      if (fig.id.startsWith('circle-')) {
+        const circleId = fig.id.replace('circle-', '');
+        const circle = state.circles.find((c) => c.id === circleId);
+        if (circle) {
+          const center = pointMap.get(circle.centerPointId);
+          if (center) {
+            elements.push(
+              createElement('circle', {
+                key: `${keyPrefix}-circle`,
+                cx: (center.x - viewport.panX) * pxPerMm,
+                cy: (center.y - viewport.panY) * pxPerMm,
+                r: circle.radiusMm * pxPerMm,
+                fill: 'none',
+                stroke: CANVAS_SELECTION_BG,
+                strokeWidth: 6,
+                opacity,
+                pointerEvents: 'none',
+              }),
+            );
+          }
+        }
+      }
+    };
+
+    // Highlight figure A
+    if (figureA) highlightFigure(figureA, 'selA', 0.7);
 
     // Highlight figure B
-    if (figureB) {
-      for (const segId of figureB.segmentIds) {
-        const seg = state.segments.find((s) => s.id === segId);
-        if (!seg) continue;
-        const start = pointMap.get(seg.startPointId);
-        const end = pointMap.get(seg.endPointId);
-        if (!start || !end) continue;
-
-        elements.push(
-          createElement('line', {
-            key: `selB-${segId}`,
-            x1: (start.x - viewport.panX) * pxPerMm,
-            y1: (start.y - viewport.panY) * pxPerMm,
-            x2: (end.x - viewport.panX) * pxPerMm,
-            y2: (end.y - viewport.panY) * pxPerMm,
-            stroke: CANVAS_SELECTION_BG,
-            strokeWidth: 6,
-            strokeLinecap: 'round',
-            opacity: 0.5,
-            pointerEvents: 'none',
-          }),
-        );
-      }
-    }
+    if (figureB) highlightFigure(figureB, 'selB', 0.5);
 
     // Result overlay: ghost of A translated + green/red circles
     if (phase === 'showing_result' && comparisonResult && figureA) {
@@ -203,6 +233,31 @@ export function useCompareTool({
             pointerEvents: 'none',
           }),
         );
+      }
+
+      // Ghost circle translated
+      if (figureA.id.startsWith('circle-')) {
+        const circleId = figureA.id.replace('circle-', '');
+        const circle = state.circles.find((c) => c.id === circleId);
+        if (circle) {
+          const center = pointMap.get(circle.centerPointId);
+          if (center) {
+            elements.push(
+              createElement('circle', {
+                key: 'ghost-circle',
+                cx: (center.x + tv.x - viewport.panX) * pxPerMm,
+                cy: (center.y + tv.y - viewport.panY) * pxPerMm,
+                r: circle.radiusMm * pxPerMm,
+                fill: 'none',
+                stroke: '#85B7EB',
+                strokeWidth: 2,
+                opacity: 0.6,
+                strokeDasharray: '6 3',
+                pointerEvents: 'none',
+              }),
+            );
+          }
+        }
       }
 
       // Green/red circles on B vertices
