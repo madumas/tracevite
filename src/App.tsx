@@ -6,8 +6,6 @@ import {
 } from '@/model/context';
 import { Toolbar } from '@/components/Toolbar';
 import { ActionBar } from '@/components/ActionBar';
-import { ModeSelector } from '@/components/ModeSelector';
-import { SaveIndicator } from '@/components/SaveIndicator';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { SnapFeedback } from '@/components/SnapFeedback';
 import { ContextActionBar } from '@/components/ContextActionBar';
@@ -22,7 +20,6 @@ import {
   UI_BG,
   UI_PRIMARY,
   UI_TEXT_PRIMARY,
-  HEADER_HEIGHT,
   STATUS_BAR_HEIGHT,
   STATUS_BAR_BG,
   getCanvasColors,
@@ -735,6 +732,10 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
         pointToolVisible={state.pointToolVisible}
         fontScale={effectiveFontScale}
         onTutorialStart={tutorial.start}
+        saving={saving}
+        demoMode={demoMode}
+        onShowAbout={() => setShowAbout(true)}
+        onModeChange={handleModeChange}
       />
 
       {/* Status Bar — primary sequencing guide for TDC */}
@@ -795,6 +796,26 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
               );
             })()}
         {shiftConstraintActive && ' — Contrainte 15° active'}
+        {/* "Voir la consigne" — relocated from header (C1 critique) */}
+        {!demoMode && state.consigne && consigneDismissed && (
+          <button
+            onClick={() => setConsigneDismissed(false)}
+            style={{
+              marginLeft: 'auto',
+              padding: '2px 8px',
+              background: '#E6F1FB',
+              border: '1px solid #C5D8EC',
+              borderRadius: 4,
+              cursor: 'pointer',
+              fontSize: 11,
+              color: '#185FA5',
+              whiteSpace: 'nowrap',
+            }}
+            data-testid="consigne-show"
+          >
+            Voir la consigne
+          </button>
+        )}
         {state.activeTool === 'reflection' && tool.onToggleSymmetryCheck && (
           <button
             onClick={tool.onToggleSymmetryCheck}
@@ -1191,6 +1212,22 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
         fontScale={effectiveFontScale}
         estimationMode={state.estimationMode}
         onToggleEstimation={() => setEstimationRevealed((prev) => !prev)}
+        onShowSlotManager={() => setShowSlotManager(true)}
+        onShowSettings={() => setShowSettings(true)}
+        onToggleDemoMode={() => {
+          if (document.fullscreenElement) {
+            document.exitFullscreen();
+            setDemoMode(false);
+          } else {
+            document.documentElement.requestFullscreen?.()?.then(
+              () => setDemoMode(true),
+              () => {
+                /* fullscreen refused */
+              },
+            );
+          }
+        }}
+        demoMode={demoMode}
       />
 
       {showNewConfirm && (

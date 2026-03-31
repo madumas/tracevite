@@ -32,6 +32,10 @@ interface ActionBarProps {
   readonly fontScale?: number;
   readonly estimationMode?: boolean;
   readonly onToggleEstimation?: () => void;
+  readonly onShowSlotManager?: () => void;
+  readonly onShowSettings?: () => void;
+  readonly onToggleDemoMode?: () => void;
+  readonly demoMode?: boolean;
 }
 
 export const ActionBar = memo(function ActionBar({
@@ -47,6 +51,10 @@ export const ActionBar = memo(function ActionBar({
   fontScale = 1,
   estimationMode = false,
   onToggleEstimation,
+  onShowSlotManager,
+  onShowSettings,
+  onToggleDemoMode,
+  demoMode = false,
 }: ActionBarProps) {
   return (
     <div
@@ -151,6 +159,78 @@ export const ActionBar = memo(function ActionBar({
       <div style={{ flex: 1, display: 'flex', justifyContent: 'center' }}>
         <span style={{ fontSize: 11, color: '#9CA3AF' }}>{ACTION_SCALE_NOTE}</span>
       </div>
+
+      {/* Mes constructions */}
+      {!demoMode && onShowSlotManager && (
+        <button
+          onClick={onShowSlotManager}
+          style={{
+            minWidth: MIN_BUTTON_SIZE_PX,
+            height: MIN_BUTTON_SIZE_PX - 8,
+            padding: '0 10px',
+            border: `1px solid ${UI_BORDER}`,
+            borderRadius: 4,
+            background: UI_SURFACE,
+            color: UI_TEXT_PRIMARY,
+            cursor: 'pointer',
+            fontSize: 'inherit',
+          }}
+          aria-label="Mes constructions"
+          data-testid="slot-manager-btn"
+        >
+          <span className="action-label">Mes constructions</span>
+        </button>
+      )}
+
+      {/* Settings */}
+      {!demoMode && onShowSettings && (
+        <button
+          onClick={onShowSettings}
+          style={{
+            minWidth: MIN_BUTTON_SIZE_PX,
+            height: MIN_BUTTON_SIZE_PX - 8,
+            padding: 0,
+            border: 'none',
+            borderRadius: 4,
+            background: 'transparent',
+            color: UI_TEXT_PRIMARY,
+            cursor: 'pointer',
+            fontSize: 18,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+          aria-label="Paramètres"
+          data-testid="settings-button"
+        >
+          ⚙
+        </button>
+      )}
+
+      {/* Fullscreen/Demo */}
+      {onToggleDemoMode && (
+        <button
+          onClick={onToggleDemoMode}
+          style={{
+            minWidth: MIN_BUTTON_SIZE_PX,
+            height: MIN_BUTTON_SIZE_PX - 8,
+            padding: 0,
+            border: 'none',
+            borderRadius: 4,
+            background: demoMode ? UI_PRIMARY : 'transparent',
+            color: demoMode ? '#FFF' : UI_TEXT_PRIMARY,
+            cursor: 'pointer',
+            fontSize: 16,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+          aria-label="Mode démonstration"
+          title="Mode démonstration (plein écran)"
+        >
+          {demoMode ? '✕' : '⛶'}
+        </button>
+      )}
 
       {/* Print */}
       <button

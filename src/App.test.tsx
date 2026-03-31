@@ -5,7 +5,7 @@ import { App } from './App';
 describe('App', () => {
   it('renders without crashing', () => {
     render(<App />);
-    expect(screen.getByText('TraceVite')).toBeInTheDocument();
+    expect(screen.getByTestId('toolbar')).toBeInTheDocument();
   });
 
   it('renders the canvas SVG', () => {
@@ -50,9 +50,9 @@ describe('App', () => {
     expect(screen.getByTestId('mode-selector')).toBeInTheDocument();
   });
 
-  it('renders version number', () => {
+  it('renders settings button in action bar', () => {
     render(<App />);
-    expect(screen.getByText('v0.1.0')).toBeInTheDocument();
+    expect(screen.getByTestId('settings-button')).toBeInTheDocument();
   });
 
   it('shows new construction confirmation dialog on button click', async () => {

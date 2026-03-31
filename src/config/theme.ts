@@ -35,6 +35,7 @@ export const UI_FOCUS = '#185FA5';
 export const HEADER_HEIGHT = 44;
 export const TOOLBAR_HEIGHT = 48;
 export const STATUS_BAR_HEIGHT = 32;
+export const STATUS_BAR_BG = '#E3EBF5';
 export const CONSIGNE_HEIGHT = 40;
 export const ACTION_BAR_HEIGHT = 44;
 export const PANEL_WIDTH = 220;

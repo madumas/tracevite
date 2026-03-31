@@ -3,13 +3,17 @@ import { SAVE_SAVED, SAVE_SAVING } from '@/config/messages';
 
 interface SaveIndicatorProps {
   readonly saving: boolean;
+  readonly compact?: boolean;
 }
 
 /**
  * Persistent save status indicator (Google Docs pattern).
  * Always visible: checkmark when saved, spinner when saving.
  */
-export const SaveIndicator = memo(function SaveIndicator({ saving }: SaveIndicatorProps) {
+export const SaveIndicator = memo(function SaveIndicator({
+  saving,
+  compact = false,
+}: SaveIndicatorProps) {
   return (
     <span
       style={{
@@ -23,7 +27,7 @@ export const SaveIndicator = memo(function SaveIndicator({ saving }: SaveIndicat
       aria-label={saving ? SAVE_SAVING : SAVE_SAVED}
     >
       {saving ? '⟳' : '✓'}
-      <span>{saving ? SAVE_SAVING : SAVE_SAVED}</span>
+      {!compact && <span>{saving ? SAVE_SAVING : SAVE_SAVED}</span>}
     </span>
   );
 });

@@ -4,6 +4,7 @@ import type { Figure } from '@/engine/figures';
 import { AccordionSection } from './AccordionSection';
 import {
   PANEL_WIDTH,
+  UI_BG,
   UI_SURFACE,
   UI_BORDER,
   UI_TEXT_PRIMARY,
@@ -85,12 +86,34 @@ export const PropertiesPanel = memo(function PropertiesPanel({
   const figurePointIds = new Set(figures.flatMap((f) => [...f.pointIds]));
   const figureSegmentIds = new Set(figures.flatMap((f) => [...f.segmentIds]));
 
+  // Build set of segment IDs that are "côtés de l'angle droit" in right triangles (spec §9.1)
+  const rightAngleSideIds = new Set<string>();
+  for (const fig of figures) {
+    if (fig.pointIds.length !== 3 || !fig.name.includes('rectangle')) continue;
+    for (const ptId of fig.pointIds) {
+      const angle = angles.find(
+        (a) =>
+          a.vertexPointId === ptId &&
+          a.classification === 'droit' &&
+          fig.pointIds.includes(a.ray1PointId) &&
+          fig.pointIds.includes(a.ray2PointId),
+      );
+      if (!angle) continue;
+      for (const segId of fig.segmentIds) {
+        const seg = state.segments.find((s) => s.id === segId);
+        if (seg && (seg.startPointId === ptId || seg.endPointId === ptId)) {
+          rightAngleSideIds.add(segId);
+        }
+      }
+    }
+  }
+
   return (
     <div
       style={{
         width: PANEL_WIDTH,
-        background: UI_SURFACE,
-        borderLeft: `1px solid ${UI_BORDER}`,
+        background: UI_BG,
+        borderLeft: `2px solid ${UI_PRIMARY}`,
         overflowY: 'auto',
         flexShrink: 0,
         fontSize: 12 * fontScale,
@@ -117,8 +140,15 @@ export const PropertiesPanel = memo(function PropertiesPanel({
         ▶
       </button>
 
-      {/* Segments / Côtés */}
-      <AccordionSection title="Segments" defaultOpen>
+      {/* Segments / Côtés — titre adapté au contexte (spec §989) */}
+      <AccordionSection
+        title={
+          state.segments.length > 0 && state.segments.every((s) => figureSegmentIds.has(s.id))
+            ? 'Côtés'
+            : 'Segments'
+        }
+        defaultOpen
+      >
         {state.segments.map((seg) => {
           const start = state.points.find((p) => p.id === seg.startPointId);
           const end = state.points.find((p) => p.id === seg.endPointId);
@@ -138,6 +168,11 @@ export const PropertiesPanel = memo(function PropertiesPanel({
               {!estimationActive && (
                 <span style={{ color: UI_TEXT_SECONDARY, marginLeft: 6 }}>
                   {formatLength(seg.lengthMm, state.displayUnit)}
+                </span>
+              )}
+              {rightAngleSideIds.has(seg.id) && (
+                <span style={{ color: UI_TEXT_SECONDARY, marginLeft: 4, fontSize: '0.9em' }}>
+                  (côté de l'angle droit)
                 </span>
               )}
             </div>
@@ -274,8 +309,14 @@ export const PropertiesPanel = memo(function PropertiesPanel({
         </AccordionSection>
       )}
 
-      {/* Points / Sommets */}
-      <AccordionSection title="Points">
+      {/* Points / Sommets — titre adapté au contexte (spec §989) */}
+      <AccordionSection
+        title={
+          state.points.length > 0 && state.points.every((p) => figurePointIds.has(p.id))
+            ? 'Sommets'
+            : 'Points'
+        }
+      >
         {state.points.map((point) => {
           const prefix = figurePointIds.has(point.id) ? 'Sommet' : 'Point';
           return (

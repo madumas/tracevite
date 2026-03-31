@@ -390,7 +390,7 @@ Conversion affichage :
 - **Propagation des contraintes** : la résolution s'arrête après **un seul niveau**. Si l'extrémité déplacée par la résolution d'un `fixedLength` est elle-même liée à un autre segment `fixedLength`, cette deuxième contrainte est **relâchée** (flash orange). Un système de contraintes en chaîne dépasserait le scope d'un outil primaire et serait imprévisible pour l'enfant.
 - Ces mises à jour se font en temps réel pendant le déplacement.
 
-### 6.8 Outil Mesurer / Fixer
+### 6.8 Outil Longueur
 - Clic sur un segment → le champ "longueur" dans le panneau latéral devient éditable
 - L'utilisateur tape une valeur exacte (ex : "5") → le segment s'ajuste automatiquement à cette longueur dans l'unité d'affichage active (cm ou mm)
 - Le point le plus récemment créé (timestamp de création le plus élevé) se déplace pour respecter la longueur fixée, le long de la direction actuelle du segment (l'autre extrémité reste ancrée). Si ce point est verrouillé, c'est l'autre extrémité qui se déplace.
@@ -402,7 +402,7 @@ Conversion affichage :
 - **En mode Segment** : un clic sur un segment (pas un point) le sélectionne si l'outil est à l'état IDLE (pas de premier point posé, pas de chaînage actif). Un clic sur un point en IDLE commence un nouveau segment depuis ce point (§6.1), pas la sélection. **Pendant le chaînage**, aucune sélection n'est possible — tout clic est interprété comme continuation de la chaîne. Les **règles de snap normales** s'appliquent au clic (points existants > milieu de segment > grille > angle > alignement). Il n'y a pas de snap spécial « projection sur segment » — un clic près d'un segment snap au milieu si dans la tolérance 2a, sinon à la grille, sinon à la position du clic. L'enfant qui veut vérifier une mesure pendant le chaînage peut consulter le panneau latéral (toujours visible) sans interrompre le chaînage.
 - **En mode Cercle** : un clic sur un cercle existant le sélectionne si l'outil est à l'état IDLE (pas de centre posé).
 - **En mode Déplacer** : un clic sur un élément (point, segment, cercle) le sélectionne ET initie le déplacement pour les points. Pour sélectionner un segment ou cercle sans action, cliquer dessus.
-- **En mode Mesurer** : un clic sur un segment le sélectionne ET ouvre le champ de longueur.
+- **En mode Longueur** : un clic sur un segment le sélectionne ET ouvre le champ de longueur.
 - **En mode Réflexion** : la sélection est gérée par le workflow de l'outil (§6.6).
 
 **Barre d'actions contextuelle :**
@@ -681,7 +681,7 @@ Aire = 0.5 * |Σ(x_i * y_{i+1} - x_{i+1} * y_i)|
 
 ## 9. Panneau latéral droit (Properties Panel)
 
-Visible par défaut. Largeur fixe de ~200px. **Escamotable** via un bouton toggle (44×44px) pour libérer l'espace canevas sur les écrans 1366×768 — le panneau réduit l'espace canevas effectif à ~1100px de large. **Le panneau démarre fermé sur les écrans de hauteur < 800px** (l'espace canevas minimum acceptable est ~1000×550px). **Badge de notification** : quand le panneau est fermé et qu'une nouvelle propriété est détectée (première figure fermée, premier parallélisme, etc.), un point bleu (8px) apparaît sur le coin supérieur droit du bouton toggle du panneau. Le badge disparaît à l'ouverture du panneau. L'état ouvert/fermé est sauvegardé dans les préférences.
+Visible par défaut. Largeur fixe de ~200px. **Fond distinct** (#F5F7FA au lieu de blanc) et **bordure gauche bleue** (2px UI_PRIMARY) pour se distinguer visuellement du canevas — les enfants TDC avec des difficultés figure/fond pourraient confondre les mesures du panneau avec les labels sur le canevas. **Escamotable** via un bouton toggle (44×44px) pour libérer l'espace canevas sur les écrans 1366×768 — le panneau réduit l'espace canevas effectif à ~1100px de large. **Le panneau démarre fermé sur les écrans de hauteur < 800px** (l'espace canevas minimum acceptable est ~1000×550px). **Badge de notification** : quand le panneau est fermé et qu'une nouvelle propriété est détectée (première figure fermée, premier parallélisme, etc.), un point bleu (8px) apparaît sur le coin supérieur droit du bouton toggle du panneau. Le badge disparaît à l'ouverture du panneau. L'état ouvert/fermé est sauvegardé dans les préférences.
 
 **Sections en accordéon :** chaque section (Segments/Côtés, Angles, Propriétés, Mesures, section contextuelle) est **collapsible** individuellement via un clic sur son en-tête. **État par défaut : seule la section contextuelle (élément sélectionné) est ouverte.** Cela réduit la surcharge d'information pour les enfants avec difficultés visuo-spatiales (~40% des TDC) ou TDAH comorbide (~50% des TDC). L'enfant déplie la section qui l'intéresse. L'état ouvert/fermé des sections est sauvegardé par construction.
 
@@ -741,11 +741,13 @@ Quand les propriétés sont visibles, la section affiche :
 
 ## 10. Barre d'outils supérieure (Toolbar)
 
-Barre horizontale en haut du canevas. Icônes + texte pour chaque outil.
+Barre horizontale en haut du canevas (pas de header séparé — le logo, l'indicateur de sauvegarde et le sélecteur de mode sont intégrés directement dans la toolbar pour maximiser l'espace canevas). Icônes + texte pour chaque outil.
+
+**Structure en deux zones :** La toolbar est divisée en une zone scrollable (logo, sauvegarde, outils, grille, unité, aimant) et une zone fixe droite (sélecteur de mode, bouton aide). Cela empêche le dropdown du sélecteur de mode d'être clippé par le scroll horizontal sur petit écran.
 
 **Indicateur de l'outil actif :** L'outil actif a un encadrement bien contrasté (bordure bleue 2px + fond bleu pâle), pas juste un fond pâle. Le nom de l'outil est aussi affiché dans la barre de statut contextuelle (voir §10.1).
 
-**Révélation progressive (2e cycle) :** En mode 2e cycle, seuls les outils **Segment**, **Déplacer** et **Réflexion** sont visibles par défaut dans la toolbar. Les outils Mesurer et les contrôles avancés (sélecteur de grille, toggle d'unité) sont accessibles via un bouton « Plus d'outils » (icône : trois points ou chevron). Cela réduit la surcharge de choix pour les enfants de 8-9 ans, dont ~50% ont un TDAH comorbide avec difficultés de fonctions exécutives. En mode 3e cycle, tous les outils applicables sont visibles directement. L'enseignant peut forcer l'affichage complet dans les paramètres.
+**Révélation progressive (2e cycle) :** En mode 2e cycle, seuls les outils **Segment**, **Déplacer** et **Réflexion** sont visibles par défaut dans la toolbar. L'outil Longueur et les contrôles avancés (sélecteur de grille, toggle d'unité) sont accessibles via un bouton « Plus d'outils » (icône : trois points ou chevron). Cela réduit la surcharge de choix pour les enfants de 8-9 ans, dont ~50% ont un TDAH comorbide avec difficultés de fonctions exécutives. En mode 3e cycle, tous les outils applicables sont visibles directement. L'enseignant peut forcer l'affichage complet dans les paramètres.
 
 De gauche à droite (tous les outils ont une icône + texte) :
 1. **Segment** (outil par défaut, icône : ligne diagonale avec points aux extrémités)
@@ -757,7 +759,7 @@ De gauche à droite (tous les outils ont une icône + texte) :
 7. **Perpendiculaire** (icône : angle droit avec carré marqueur) — derrière « Plus d'outils » en 2e cycle
 8. **Parallèle** (icône : deux lignes diagonales parallèles) — derrière « Plus d'outils » en 2e cycle
 9. **Translation** (icône : point source → flèche pointillée → point destination) — visible uniquement en mode 3e cycle
-10. **Mesurer** (icône : règle avec graduations) — derrière « Plus d'outils » en 2e cycle
+10. **Longueur** (icône : règle avec graduations) — derrière « Plus d'outils » en 2e cycle
 
 Toutes les icônes sont des SVG 20×20 en stroke, couleur `currentColor` (héritée du bouton). Style uniforme pour la reconnaissance rapide — les enfants TDC balayent visuellement plutôt que lire.
 
@@ -771,7 +773,7 @@ Toutes les icônes sont des SVG 20×20 en stroke, couleur `currentColor` (hérit
 
 | Outil(s) | Curseur | Raison |
 |----------|---------|--------|
-| Segment, Point, Cercle, Réflexion, Perpendiculaire, Parallèle, Translation, Mesurer, Reproduire | `crosshair` | Construction / placement de points |
+| Segment, Point, Cercle, Réflexion, Perpendiculaire, Parallèle, Translation, Longueur, Reproduire | `crosshair` | Construction / placement de points |
 | Déplacer (idle) | `grab` | Invite à « ramasser » un point |
 | Déplacer (point ramassé) | `grabbing` | Point en cours de déplacement |
 | Tout outil idle + survol d'un élément | `pointer` | Signale la sélection possible (cross-cutting) |
@@ -781,7 +783,7 @@ Priorité : mode suppression > survol élément (idle) > outil actif.
 
 ### 10.1 Barre de statut contextuelle (indicateur de séquençage)
 
-Barre fine immédiatement sous la toolbar, fond gris très pâle, texte 13px. Affiche en langage naturel l'outil actif et le prochain geste attendu. Exemples :
+Barre fine immédiatement sous la toolbar, fond bleu pâle distinct (#E3EBF5), accent bleu 3px à gauche, texte 13px. Le nom de l'outil est affiché dans un **badge/pill bleu** (fond UI_PRIMARY, texte blanc, border-radius 4px) suivi de l'instruction en texte normal. Cette séparation visuelle aide les enfants TDC avec des difficultés de séquençage à identifier rapidement l'outil actif et l'action attendue sans regarder la toolbar. Quand une consigne est définie et que la bannière est fermée, un bouton « Voir la consigne » apparaît dans la barre de statut. Exemples :
 
 | Contexte | Message affiché |
 |----------|----------------|
@@ -794,7 +796,7 @@ Barre fine immédiatement sous la toolbar, fond gris très pâle, texte 13px. Af
 | Outil Déplacer, point ramassé | « **Déplacer** — Clique pour déposer le point. Clique ailleurs ou appuie Échap pour annuler. » |
 | Outil Réflexion, aucun axe | « **Réflexion** — Clique deux points pour tracer l'axe de symétrie » |
 | Outil Réflexion, axe tracé | « **Réflexion** — Clique sur une figure pour la refléter » |
-| Outil Mesurer | « **Mesurer** — Clique sur un segment pour fixer sa longueur » |
+| Outil Longueur | « **Longueur** — Clique sur un segment pour régler sa longueur » |
 
 **Note de conception :** Cet indicateur de séquençage est un accommodement courant pour les difficultés de planification motrice associées au TDC (réf. : littérature sur les aides procédurales externes). Il soutient la mémoire de travail et la planification motrice sans gêner l'enfant avancé.
 
@@ -1005,7 +1007,7 @@ Quand les raccourcis à lettre unique sont activés :
 | P | Outil Point | Non (lettre) |
 | C | Outil Cercle | Non (lettre) |
 | V | Outil Déplacer | Non (lettre) |
-| M | Outil Mesurer | Non (lettre) |
+| M | Outil Longueur | Non (lettre) |
 | R | Outil Réflexion | Non (lettre) |
 | G | Toggle accrochage grille | Non (lettre) |
 | Escape | Annuler action / désélectionner / revenir à l'outil Segment / fermer tout dialogue | **Oui** |
@@ -1217,7 +1219,7 @@ Le MVP est développé en 3 jalons itératifs :
 8. Sélecteur de niveau scolaire (2e cycle / 3e cycle) pour adapter l'affichage
 9. Détection de parallélisme et perpendicularité (affichage dans le panneau)
 10. Snap de parallélisme et perpendicularité (guides visuels pendant la construction)
-11. Outil Mesurer/Fixer (fixer une longueur exacte) + saisie rapide après création de segment
+11. Outil Longueur (fixer une longueur exacte) + saisie rapide après création de segment
 12. Panneau latéral avec segments, angles, propriétés
 13. Sélection par clic simple + barre d'actions contextuelle (pas de clic droit)
 14. Export PDF à l'échelle 1:1 avec dialogue d'instructions d'impression
@@ -1329,7 +1331,7 @@ Le canevas doit fonctionner indépendamment de la résolution de l'écran. Les c
 **Pan (défilement)** : Si la construction dépasse la zone visible, plusieurs méthodes de pan sont disponibles, en cohérence avec le principe « pas de geste dual (maintien + mouvement) » :
 1. **Boutons fléchés** (méthode par défaut, adaptée TDC) : 4 boutons fléchés (44×44px) **superposés** aux bords du canevas (haut, bas, gauche, droite) qui défilent le canevas par incréments d'un carreau dans les coordonnées internes (mm). Appui maintenu = défilement continu. Les boutons ne réduisent pas la zone de dessin. **Opacité adaptative** : **50% au repos** (test utilisateur : 20-30% est quasi-invisible pour les TDC, surtout les 8-9 ans), 80% au survol du bouton. Les boutons **capturent toujours les clics** dans tous les outils (la navigation prime sur la construction au bord du canevas). Pour placer un point sous un bouton, l'enfant panne d'abord pour éloigner la zone de travail du bord.
 2. **Barres de défilement** : barres de défilement standard du navigateur, toujours visibles quand le contenu dépasse la zone visible.
-3. **Clic-glissé sur le fond vide** (alternatif) : disponible uniquement en mode **Déplacer** (quand aucun point n'est sous le curseur) et **Mesurer** (quand aucun segment n'est sous le curseur). **Non disponible en mode Segment/Point/Cercle** car clic-sur-fond = création de géométrie dans ces outils.
+3. **Clic-glissé sur le fond vide** (alternatif) : disponible uniquement en mode **Déplacer** (quand aucun point n'est sous le curseur) et **Longueur** (quand aucun segment n'est sous le curseur). **Non disponible en mode Segment/Point/Cercle** car clic-sur-fond = création de géométrie dans ces outils.
 4. **Clic-molette drag** (middle-click) : disponible dans tous les outils comme raccourci power-user. Le bouton molette n'est pas utilisé par les enfants TDC mais peut l'être par l'enseignant ou l'accompagnateur.
 5. **Shift+molette** : défilement horizontal (complément du défilement vertical par molette seule).
 6. ~~Maintien barre d'espace + glissé~~ — **retiré** : c'est un geste dual (hold + move), en contradiction avec les principes TDC.
@@ -1541,7 +1543,7 @@ Les questions suivantes ont été posées, débattues et tranchées définitivem
 ### Interactions — règles de désambiguïsation
 - **Drag > 1,5mm = déplacement** dans tous les outils, y compris pendant le chaînage (chaînage suspendu, reprend au relâchement).
 - **Clic < 1,5mm = action contextuelle** de l'outil actif (nouveau segment, continuation chaîne, etc.).
-- **Pan par clic-glissé** : uniquement en mode Déplacer/Mesurer (fond vide). Pas en Segment/Point/Cercle.
+- **Pan par clic-glissé** : uniquement en mode Déplacer/Longueur (fond vide). Pas en Segment/Point/Cercle.
 - **Boutons de pan** : capturent toujours les clics, dans tous les outils. L'enfant panne d'abord.
 - **Barre contextuelle** : centrée au-dessus du milieu du segment/point. Plus large que le segment = normal. Fallback en-dessous si hors canevas.
 
