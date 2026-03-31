@@ -141,6 +141,38 @@ export function TranslationIcon() {
   );
 }
 
+/** Frieze: three small shapes in a row with an arrow */
+export function FriezeIcon() {
+  return (
+    <svg {...S}>
+      <polygon points="2,16 6,8 10,16" stroke={stroke} strokeWidth="1.5" fill="none" />
+      <polygon
+        points="8,16 12,8 16,16"
+        stroke={stroke}
+        strokeWidth="1.5"
+        fill="none"
+        opacity="0.6"
+      />
+      <polygon
+        points="14,16 18,8 22,16"
+        stroke={stroke}
+        strokeWidth="1.5"
+        fill="none"
+        opacity="0.3"
+      />
+      <line x1="2" y1="4" x2="17" y2="4" stroke={stroke} strokeWidth="1" strokeDasharray="2 1" />
+      <path
+        d="M15 2l2 2-2 2"
+        stroke={stroke}
+        strokeWidth="1"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        fill="none"
+      />
+    </svg>
+  );
+}
+
 /** Compare: two overlapping squares suggesting superposition */
 export function CompareIcon() {
   return (

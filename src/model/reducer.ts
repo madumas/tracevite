@@ -18,7 +18,7 @@ import * as State from './state';
 import * as Undo from './undo';
 import { reflectConstruction } from '@/engine/reflection';
 import { generateId } from './id';
-import { reproduceElements } from '@/engine/reproduce';
+import { reproduceElements, reproduceFrieze } from '@/engine/reproduce';
 import { pointOnSegmentProjection, segmentIntersection } from '@/engine/geometry';
 import { MIN_POINT_DISTANCE_MM } from '@/config/accessibility';
 
@@ -54,6 +54,16 @@ export type ConstructionAction =
       circleIds: readonly string[];
       offsetX: number;
       offsetY: number;
+    }
+  | {
+      type: 'REPRODUCE_FRIEZE';
+      pointIds: readonly string[];
+      segmentIds: readonly string[];
+      circleIds: readonly string[];
+      vector1: { dx: number; dy: number };
+      count1: number;
+      vector2?: { dx: number; dy: number };
+      count2?: number;
     }
   | { type: 'SET_GRID_SIZE'; gridSizeMm: GridSize }
   | { type: 'SET_DISPLAY_MODE'; displayMode: DisplayMode }
@@ -256,6 +266,27 @@ export function reduce(state: ReducerState, action: ConstructionAction): Reducer
         points: [...current.points, ...newPoints],
         segments: [...current.segments, ...newSegments],
         circles: [...current.circles, ...newCircles],
+      };
+      return { undoManager: Undo.pushState(undoManager, newState) };
+    }
+
+    case 'REPRODUCE_FRIEZE': {
+      const result = reproduceFrieze(
+        action.pointIds,
+        action.segmentIds,
+        action.circleIds,
+        current,
+        action.vector1,
+        action.count1,
+        action.vector2,
+        action.count2,
+      );
+      if (result.points.length === 0) return state;
+      const newState: typeof current = {
+        ...current,
+        points: [...current.points, ...result.points],
+        segments: [...current.segments, ...result.segments],
+        circles: [...current.circles, ...result.circles],
       };
       return { undoManager: Undo.pushState(undoManager, newState) };
     }

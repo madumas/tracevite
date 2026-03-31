@@ -20,6 +20,7 @@ import {
   ParallelIcon,
   TranslationIcon,
   CompareIcon,
+  FriezeIcon,
   SnapIcon,
 } from './ToolIcons';
 import {
@@ -224,6 +225,17 @@ export const Toolbar = memo(function Toolbar({
             data-testid="tool-reproduce"
           >
             <ReproduceIcon /> <span className="tool-label">Reproduire</span>
+          </button>
+        )}
+        {/* Frieze — behind "Plus d'outils" in simplifie */}
+        {(!isSimple || moreOpen) && (
+          <button
+            onClick={() => onToolChange('frieze')}
+            style={{ ...toolBtnBase, ...(activeTool === 'frieze' ? activeStyle : {}) }}
+            aria-pressed={activeTool === 'frieze'}
+            data-testid="tool-frieze"
+          >
+            <FriezeIcon /> <span className="tool-label">Frise</span>
           </button>
         )}
         {/* Compare — behind "Plus d'outils" in simplifie */}

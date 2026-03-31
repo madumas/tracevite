@@ -22,6 +22,8 @@ export interface ToolHookResult {
   snapResult: SnapResult | null;
   /** SVG overlay elements to render in the canvas (ghost segment, circle, etc.). */
   overlayElements: ReactNode;
+  /** Optional floating HTML panel rendered over the canvas (e.g. frieze count stepper). */
+  toolPanel?: ReactNode;
   /** True when active motor gesture in progress (drawing, moving). */
   isActiveGesture?: boolean;
   /** During move: ID of the point being moved. */

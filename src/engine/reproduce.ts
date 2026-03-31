@@ -63,9 +63,10 @@ export function reproduceElements(
   state: ConstructionState,
   offsetX: number,
   offsetY: number,
+  extraLabels: readonly string[] = [],
 ): ReproduceResult {
   const pointMap = new Map(state.points.map((p) => [p.id, p]));
-  const existingLabels = state.points.map((p) => p.label);
+  const existingLabels = [...state.points.map((p) => p.label), ...extraLabels];
 
   // Map old point ID → new point
   const newPointMap = new Map<string, Point>();
@@ -127,4 +128,54 @@ export function reproduceElements(
     segments: newSegments,
     circles: newCircles,
   };
+}
+
+/**
+ * Produce a frieze (1D) or tiling (2D) by repeating a figure along one or two vectors.
+ * Returns all copies accumulated. Each copy uses offsets from the original positions.
+ * Labels are accumulated across iterations to avoid collisions.
+ */
+export function reproduceFrieze(
+  pointIds: readonly string[],
+  segmentIds: readonly string[],
+  circleIds: readonly string[],
+  state: ConstructionState,
+  vector1: { dx: number; dy: number },
+  count1: number,
+  vector2?: { dx: number; dy: number },
+  count2?: number,
+): ReproduceResult {
+  const allPoints: Point[] = [];
+  const allSegments: Segment[] = [];
+  const allCircles: Circle[] = [];
+  const accumulatedLabels: string[] = [];
+
+  const rows = count2 != null && vector2 ? count2 : 1;
+
+  for (let j = 0; j < rows; j++) {
+    for (let i = 0; i < count1; i++) {
+      // Skip (0,0) — that's the original figure
+      if (i === 0 && j === 0) continue;
+
+      const ox = i * vector1.dx + (vector2 ? j * vector2.dx : 0);
+      const oy = i * vector1.dy + (vector2 ? j * vector2.dy : 0);
+
+      const result = reproduceElements(
+        pointIds,
+        segmentIds,
+        circleIds,
+        state,
+        ox,
+        oy,
+        accumulatedLabels,
+      );
+
+      allPoints.push(...result.points);
+      allSegments.push(...result.segments);
+      allCircles.push(...result.circles);
+      accumulatedLabels.push(...result.points.map((p) => p.label));
+    }
+  }
+
+  return { points: allPoints, segments: allSegments, circles: allCircles };
 }

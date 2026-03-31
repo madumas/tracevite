@@ -73,6 +73,7 @@ const COMPOUND_TOOLS: readonly ToolType[] = [
   'translation',
   'reflection',
   'compare',
+  'frieze',
 ];
 
 const TOOL_SHORTCUT_MAP: Record<string, ToolType> = {
@@ -94,6 +95,7 @@ const TOOL_DISPLAY_NAMES: Record<ToolType, string> = {
   parallel: 'Parallèle',
   translation: 'Translation',
   compare: 'Comparer',
+  frieze: 'Frise',
 };
 
 import type { SlotRegistry } from '@/model/slots';
@@ -134,6 +136,7 @@ function getCanvasCursor(
     case 'translation':
     case 'reproduce':
     case 'compare':
+    case 'frieze':
       return 'crosshair';
     case 'move':
       return isActiveGesture ? 'grabbing' : 'grab';
@@ -978,6 +981,21 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
               onFixSegmentLength={handleFixSegmentLength}
               fontScale={effectiveFontScale}
             />
+          )}
+
+          {/* Tool-specific floating panel (e.g. frieze count stepper) */}
+          {tool.toolPanel && (
+            <div
+              style={{
+                position: 'absolute',
+                bottom: STATUS_BAR_HEIGHT + 12,
+                left: '50%',
+                transform: 'translateX(-50%)',
+                zIndex: 25,
+              }}
+            >
+              {tool.toolPanel}
+            </div>
           )}
 
           {/* Length input for segment fixing (contextual action, spec §6.8, §9.5) */}

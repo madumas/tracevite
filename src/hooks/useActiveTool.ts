@@ -15,6 +15,7 @@ import { useReproduceTool } from './useReproduceTool';
 import { useConstrainedLineTool } from './useConstrainedLineTool';
 import { useTranslationTool } from './useTranslationTool';
 import { useCompareTool } from './useCompareTool';
+import { useFriezeTool } from './useFriezeTool';
 
 interface UseActiveToolOptions {
   state: ConstructionState;
@@ -82,6 +83,12 @@ export function useActiveTool({
     viewport,
     isActive: active === 'compare',
   });
+  const friezeTool = useFriezeTool({
+    state,
+    dispatch,
+    viewport,
+    isActive: active === 'frieze',
+  });
 
   switch (state.activeTool) {
     case 'segment':
@@ -104,5 +111,7 @@ export function useActiveTool({
       return translationTool;
     case 'compare':
       return compareTool;
+    case 'frieze':
+      return friezeTool;
   }
 }
