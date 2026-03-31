@@ -101,6 +101,7 @@ export function reflectConstruction(
 ): {
   points: Point[];
   segments: Array<{ id: string; startPointId: string; endPointId: string; lengthMm: number }>;
+  pointIdMap: Map<string, string>;
 } {
   const existingLabels = state.points.map((p) => p.label);
   const pointMap = new Map(state.points.map((p) => [p.id, p]));
@@ -151,9 +152,16 @@ export function reflectConstruction(
     });
   }
 
+  // Build old ID → new ID mapping for caller use (e.g. circle reflection)
+  const pointIdMap = new Map<string, string>();
+  for (const [oldId, newPoint] of reflectedPointMap) {
+    pointIdMap.set(oldId, newPoint.id);
+  }
+
   return {
     points: Array.from(reflectedPointMap.values()),
     segments: newSegments,
+    pointIdMap,
   };
 }
 

@@ -39,6 +39,7 @@ import { LengthInput } from '@/components/LengthInput';
 import { SettingsDialog } from '@/components/SettingsDialog';
 import { PropertiesPanel } from '@/components/PropertiesPanel';
 import { GridLayer } from '@/components/GridLayer';
+import { CartesianLayer } from '@/components/CartesianLayer';
 import { SegmentLayer } from '@/components/SegmentLayer';
 import { PointLayer } from '@/components/PointLayer';
 import { CircleLayer } from '@/components/CircleLayer';
@@ -840,6 +841,24 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
             {tool.symmetryCheckMode ? '✓ Vérifier la symétrie' : 'Vérifier la symétrie'}
           </button>
         )}
+        {state.activeTool === 'reflection' && tool.onToggleStepByStep && (
+          <button
+            onClick={tool.onToggleStepByStep}
+            style={{
+              marginLeft: 4,
+              padding: '2px 10px',
+              background: tool.stepByStep ? '#185FA5' : 'transparent',
+              color: tool.stepByStep ? '#FFF' : '#4A5568',
+              border: '1px solid #D1D8E0',
+              borderRadius: 4,
+              cursor: 'pointer',
+              fontSize: 12,
+              fontWeight: 500,
+            }}
+          >
+            {tool.stepByStep ? '✓ Voir les étapes' : 'Voir les étapes'}
+          </button>
+        )}
       </div>
 
       {/* Canvas + Panel row */}
@@ -888,6 +907,13 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
               data-testid="canvas-svg"
             >
               <GridLayer viewport={viewport} gridSizeMm={state.gridSizeMm} />
+              {state.cartesianMode !== 'off' && (
+                <CartesianLayer
+                  viewport={viewport}
+                  mode={state.cartesianMode}
+                  gridSizeMm={state.gridSizeMm}
+                />
+              )}
               <SegmentLayer
                 segments={state.segments}
                 points={state.points}
@@ -1154,6 +1180,11 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
             dispatch({ type: 'SET_ESTIMATION_MODE', enabled: v });
             setEstimationRevealed(false);
           }}
+          cartesianMode={state.cartesianMode}
+          onCartesianModeChange={(v) => dispatch({ type: 'SET_CARTESIAN_MODE', mode: v })}
+          autoIntersection={state.autoIntersection}
+          onAutoIntersectionChange={(v) => dispatch({ type: 'SET_AUTO_INTERSECTION', enabled: v })}
+          displayMode={state.displayMode}
           onClose={() => setShowSettings(false)}
         />
       )}

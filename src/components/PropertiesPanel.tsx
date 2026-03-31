@@ -223,8 +223,15 @@ export const PropertiesPanel = memo(function PropertiesPanel({
               </div>
             ))}
             {figures.map((fig) => (
-              <div key={fig.id} style={{ padding: '2px 0', color: UI_PRIMARY, fontWeight: 600 }}>
-                {fig.name}
+              <div key={fig.id} style={{ padding: '2px 0' }}>
+                <div style={{ color: UI_PRIMARY, fontWeight: 600 }}>{fig.name}</div>
+                {fig.height && !estimationActive && (
+                  <div style={{ color: UI_TEXT_SECONDARY, fontSize: 11, marginTop: 2 }}>
+                    Aire = base × hauteur ={' '}
+                    {formatLength(fig.height.baseLengthMm, state.displayUnit)} ×{' '}
+                    {formatLength(fig.height.heightMm, state.displayUnit)}
+                  </div>
+                )}
               </div>
             ))}
             {properties.length === 0 && figures.length === 0 && (

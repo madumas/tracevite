@@ -38,6 +38,8 @@ export function createInitialState(): ConstructionState {
     soundGain: 0.5,
     pointToolVisible: false,
     estimationMode: false,
+    cartesianMode: 'off',
+    autoIntersection: false,
   };
 }
 

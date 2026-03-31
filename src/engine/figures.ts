@@ -6,6 +6,16 @@
 import type { ConstructionState, DisplayMode, Point } from '@/model/types';
 import { distance } from './geometry';
 
+/** Height data for triangle/parallelogram (complet mode). */
+export interface FigureHeight {
+  readonly baseLengthMm: number;
+  readonly heightMm: number;
+  readonly baseLabel: string;
+  readonly vertexLabel: string;
+  readonly footMm: { x: number; y: number };
+  readonly vertexMm: { x: number; y: number };
+}
+
 /** Detected figure (computed, not stored in state). */
 export interface Figure {
   readonly id: string;
@@ -13,6 +23,7 @@ export interface Figure {
   readonly segmentIds: readonly string[];
   readonly name: string;
   readonly selfIntersecting: boolean;
+  readonly height?: FigureHeight;
 }
 
 // ── Adjacency graph ──────────────────────────────────────
@@ -196,12 +207,23 @@ export function classifyFigures(
       name = `Polygone ${vertexLabels} à ${face.length} côtés`;
     }
 
+    // Compute height for triangles and parallelograms (complet mode only)
+    let height: FigureHeight | undefined;
+    if (displayMode === 'complet' && !selfIntersecting) {
+      if (face.length === 3) {
+        height = computeTriangleHeight(face, pointMap);
+      } else if (face.length === 4 && name.startsWith('Parallélogramme')) {
+        height = computeParallelogramHeight(face, pointMap);
+      }
+    }
+
     return {
       id: `figure-${idx}`,
       pointIds: face,
       segmentIds,
       name,
       selfIntersecting,
+      height,
     };
   });
 }
@@ -426,4 +448,82 @@ function findSegmentIds(face: string[], state: ConstructionState): string[] {
     if (seg) ids.push(seg.id);
   }
   return ids;
+}
+
+/**
+ * Compute the height of a triangle from the longest base.
+ * Projects the opposite vertex onto the base line.
+ */
+function computeTriangleHeight(
+  face: string[],
+  pointMap: Map<string, Point>,
+): FigureHeight | undefined {
+  if (face.length !== 3) return undefined;
+  const pts = face.map((id) => pointMap.get(id)).filter(Boolean) as Point[];
+  if (pts.length !== 3) return undefined;
+
+  // Find the longest side as base
+  const sides = [
+    { base: [0, 1] as const, vertex: 2, len: distance(pts[0]!, pts[1]!) },
+    { base: [1, 2] as const, vertex: 0, len: distance(pts[1]!, pts[2]!) },
+    { base: [2, 0] as const, vertex: 1, len: distance(pts[2]!, pts[0]!) },
+  ];
+  sides.sort((a, b) => b.len - a.len);
+  const best = sides[0]!;
+
+  const baseP1 = pts[best.base[0]]!;
+  const baseP2 = pts[best.base[1]]!;
+  const vertex = pts[best.vertex]!;
+
+  const foot = projectPointOnLine(vertex, baseP1, baseP2);
+  const heightMm = distance(vertex, foot);
+
+  return {
+    baseLengthMm: best.len,
+    heightMm,
+    baseLabel: `${baseP1.label}${baseP2.label}`,
+    vertexLabel: vertex.label,
+    footMm: foot,
+    vertexMm: { x: vertex.x, y: vertex.y },
+  };
+}
+
+/**
+ * Compute the height of a parallelogram from the longest base.
+ */
+function computeParallelogramHeight(
+  face: string[],
+  pointMap: Map<string, Point>,
+): FigureHeight | undefined {
+  if (face.length !== 4) return undefined;
+  const pts = face.map((id) => pointMap.get(id)).filter(Boolean) as Point[];
+  if (pts.length !== 4) return undefined;
+
+  // Use side 0-1 as base, vertex 3 as opposite
+  const baseP1 = pts[0]!;
+  const baseP2 = pts[1]!;
+  const vertex = pts[3]!; // Opposite vertex in a parallelogram
+
+  const baseLengthMm = distance(baseP1, baseP2);
+  const foot = projectPointOnLine(vertex, baseP1, baseP2);
+  const heightMm = distance(vertex, foot);
+
+  return {
+    baseLengthMm,
+    heightMm,
+    baseLabel: `${baseP1.label}${baseP2.label}`,
+    vertexLabel: vertex.label,
+    footMm: foot,
+    vertexMm: { x: vertex.x, y: vertex.y },
+  };
+}
+
+/** Project a point onto the infinite line through p1 and p2. */
+function projectPointOnLine(point: Point, p1: Point, p2: Point): { x: number; y: number } {
+  const dx = p2.x - p1.x;
+  const dy = p2.y - p1.y;
+  const lenSq = dx * dx + dy * dy;
+  if (lenSq === 0) return { x: p1.x, y: p1.y };
+  const t = ((point.x - p1.x) * dx + (point.y - p1.y) * dy) / lenSq;
+  return { x: p1.x + t * dx, y: p1.y + t * dy };
 }

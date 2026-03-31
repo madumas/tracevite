@@ -60,6 +60,32 @@ async function boot() {
     }
   }
 
+  // Handle file_handlers: open .tracevite files via PWA launchQueue
+  interface LaunchParams {
+    files?: Array<{ getFile(): Promise<File> }>;
+  }
+  interface LaunchQueue {
+    setConsumer(cb: (params: LaunchParams) => void): void;
+  }
+  if ('launchQueue' in window) {
+    (window as unknown as { launchQueue: LaunchQueue }).launchQueue.setConsumer(
+      async (launchParams) => {
+        if (launchParams.files?.length) {
+          try {
+            const fileHandle = launchParams.files[0]!;
+            const file = await fileHandle.getFile();
+            const text = await file.text();
+            const { deserializeState } = await import('@/model/serialize');
+            initialState = deserializeState(text);
+            initialUndoManager = createUndoManager(initialState);
+          } catch {
+            // Invalid file — continue with default state
+          }
+        }
+      },
+    );
+  }
+
   createRoot(document.getElementById('root')!).render(
     <StrictMode>
       <App

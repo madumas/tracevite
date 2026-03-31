@@ -110,6 +110,14 @@ export function deserializeState(json: string): ConstructionState {
       typeof settings['estimationMode'] === 'boolean'
         ? settings['estimationMode']
         : defaults.estimationMode,
+    cartesianMode:
+      settings['cartesianMode'] === '1quadrant' || settings['cartesianMode'] === '4quadrants'
+        ? settings['cartesianMode']
+        : defaults.cartesianMode,
+    autoIntersection:
+      typeof settings['autoIntersection'] === 'boolean'
+        ? settings['autoIntersection']
+        : defaults.autoIntersection,
   };
 }
 

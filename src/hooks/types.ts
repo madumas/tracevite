@@ -26,4 +26,8 @@ export interface ToolHookResult {
   symmetryCheckMode?: boolean;
   /** Reflection tool: toggle symmetry check mode (v2). */
   onToggleSymmetryCheck?: () => void;
+  /** Reflection tool: step-by-step animation toggle (v2). */
+  stepByStep?: boolean;
+  /** Reflection tool: toggle step-by-step mode (v2). */
+  onToggleStepByStep?: () => void;
 }

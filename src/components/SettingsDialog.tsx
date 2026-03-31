@@ -26,6 +26,11 @@ interface SettingsDialogProps {
   readonly onPointToolVisibleChange: (v: boolean) => void;
   readonly estimationMode: boolean;
   readonly onEstimationModeChange: (v: boolean) => void;
+  readonly cartesianMode: import('@/model/types').CartesianMode;
+  readonly onCartesianModeChange: (v: import('@/model/types').CartesianMode) => void;
+  readonly autoIntersection: boolean;
+  readonly onAutoIntersectionChange: (v: boolean) => void;
+  readonly displayMode: import('@/model/types').DisplayMode;
   readonly onClose: () => void;
 }
 
@@ -86,6 +91,11 @@ export const SettingsDialog = memo(function SettingsDialog({
   onPointToolVisibleChange,
   estimationMode,
   onEstimationModeChange,
+  cartesianMode,
+  onCartesianModeChange,
+  autoIntersection,
+  onAutoIntersectionChange,
+  displayMode,
   onClose,
 }: SettingsDialogProps) {
   const prefs = usePreferences();
@@ -279,6 +289,35 @@ export const SettingsDialog = memo(function SettingsDialog({
             type="checkbox"
             checked={estimationMode}
             onChange={(e) => onEstimationModeChange(e.target.checked)}
+            style={{ width: 20, height: 20, cursor: 'pointer' }}
+          />
+        </div>
+
+        {/* Cartesian mode — complet only */}
+        {displayMode === 'complet' && (
+          <div style={rowStyle}>
+            <span>Plan cartésien</span>
+            <select
+              value={cartesianMode}
+              onChange={(e) =>
+                onCartesianModeChange(e.target.value as import('@/model/types').CartesianMode)
+              }
+              style={selectStyle}
+            >
+              <option value="off">Désactivé</option>
+              <option value="1quadrant">1er quadrant</option>
+              <option value="4quadrants">4 quadrants</option>
+            </select>
+          </div>
+        )}
+
+        {/* Auto-intersection toggle */}
+        <div style={rowStyle}>
+          <span>Intersections automatiques</span>
+          <input
+            type="checkbox"
+            checked={autoIntersection}
+            onChange={(e) => onAutoIntersectionChange(e.target.checked)}
             style={{ width: 20, height: 20, cursor: 'pointer' }}
           />
         </div>

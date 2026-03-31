@@ -84,6 +84,9 @@ export type ChainTimeout = 0 | 5000 | 8000 | 15000;
 /** Tolerance profile for snap distances. */
 export type ToleranceProfile = 'default' | 'large' | 'very_large';
 
+/** Cartesian plane mode. */
+export type CartesianMode = 'off' | '1quadrant' | '4quadrants';
+
 /** Segment tool state machine phases. */
 export type SegmentToolPhase = 'idle' | 'first_point_placed' | 'segment_created';
 
@@ -108,6 +111,8 @@ export interface ConstructionState {
   readonly soundGain: number; // 0–1, default 0.5
   readonly pointToolVisible: boolean;
   readonly estimationMode: boolean;
+  readonly cartesianMode: CartesianMode;
+  readonly autoIntersection: boolean;
 }
 
 /** Snap result from the snap engine. */

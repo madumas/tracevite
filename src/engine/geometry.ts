@@ -119,6 +119,47 @@ export function segmentAngle(
 }
 
 /**
+ * Compute intersection point of two line segments.
+ * Returns null if segments don't intersect or share an endpoint.
+ */
+export function segmentIntersection(
+  p1: { readonly x: number; readonly y: number },
+  p2: { readonly x: number; readonly y: number },
+  p3: { readonly x: number; readonly y: number },
+  p4: { readonly x: number; readonly y: number },
+  minDistFromEndpoint: number = 2,
+): { x: number; y: number } | null {
+  const dx1 = p2.x - p1.x;
+  const dy1 = p2.y - p1.y;
+  const dx2 = p4.x - p3.x;
+  const dy2 = p4.y - p3.y;
+
+  const denom = dx1 * dy2 - dy1 * dx2;
+  if (Math.abs(denom) < 1e-10) return null; // Parallel or collinear
+
+  const t = ((p3.x - p1.x) * dy2 - (p3.y - p1.y) * dx2) / denom;
+  const u = ((p3.x - p1.x) * dy1 - (p3.y - p1.y) * dx1) / denom;
+
+  // Must be strictly interior (not at endpoints)
+  if (t <= 0 || t >= 1 || u <= 0 || u >= 1) return null;
+
+  const ix = p1.x + t * dx1;
+  const iy = p1.y + t * dy1;
+
+  // Skip if too close to any endpoint
+  if (
+    distance({ x: ix, y: iy }, p1) < minDistFromEndpoint ||
+    distance({ x: ix, y: iy }, p2) < minDistFromEndpoint ||
+    distance({ x: ix, y: iy }, p3) < minDistFromEndpoint ||
+    distance({ x: ix, y: iy }, p4) < minDistFromEndpoint
+  ) {
+    return null;
+  }
+
+  return { x: ix, y: iy };
+}
+
+/**
  * Compute a perpendicular line through a given point, relative to a reference segment direction.
  * Returns the direction unit vector (rotated 90°) from the reference segment.
  */

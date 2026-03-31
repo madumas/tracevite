@@ -19,7 +19,7 @@ import * as Undo from './undo';
 import { reflectConstruction } from '@/engine/reflection';
 import { generateId } from './id';
 import { reproduceElements } from '@/engine/reproduce';
-import { pointOnSegmentProjection } from '@/engine/geometry';
+import { pointOnSegmentProjection, segmentIntersection } from '@/engine/geometry';
 import { MIN_POINT_DISTANCE_MM } from '@/config/accessibility';
 
 // ── Action types ──────────────────────────────────────────
@@ -70,6 +70,8 @@ export type ConstructionAction =
   | { type: 'SET_SOUND_GAIN'; soundGain: number }
   | { type: 'SET_POINT_TOOL_VISIBLE'; visible: boolean }
   | { type: 'SET_ESTIMATION_MODE'; enabled: boolean }
+  | { type: 'SET_CARTESIAN_MODE'; mode: import('./types').CartesianMode }
+  | { type: 'SET_AUTO_INTERSECTION'; enabled: boolean }
   | { type: 'LOAD_CONSTRUCTION'; undoManager: UndoManager }
   | { type: 'UNDO' }
   | { type: 'REDO' }
@@ -117,6 +119,38 @@ export function reduce(state: ReducerState, action: ConstructionAction): Reducer
         }
       }
 
+      // Auto-intersection detection (opt-in, spec §19 v2)
+      if (current.autoIntersection) {
+        const createdSeg = newState.segments.find((s) => s.id === result.segmentId);
+        if (createdSeg) {
+          const pm = new Map(newState.points.map((p) => [p.id, p]));
+          const cs = pm.get(createdSeg.startPointId);
+          const ce = pm.get(createdSeg.endPointId);
+          if (cs && ce) {
+            for (const other of [...newState.segments]) {
+              if (other.id === result.segmentId) continue;
+              const os = pm.get(other.startPointId);
+              const oe = pm.get(other.endPointId);
+              if (!os || !oe) continue;
+              const ix = segmentIntersection(cs, ce, os, oe);
+              if (ix) {
+                // Split the existing segment at intersection
+                const splitResult = State.splitSegmentAtPoint(newState, other.id, ix.x, ix.y);
+                if (splitResult) {
+                  newState = splitResult.state;
+                  // Also split the new segment at the same point
+                  const newSeg = newState.segments.find((s) => s.id === result.segmentId);
+                  if (newSeg) {
+                    const split2 = State.splitSegmentAtPoint(newState, newSeg.id, ix.x, ix.y);
+                    if (split2) newState = split2.state;
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+
       return { undoManager: Undo.pushState(undoManager, newState) };
     }
 
@@ -149,7 +183,11 @@ export function reduce(state: ReducerState, action: ConstructionAction): Reducer
     }
 
     case 'REFLECT_ELEMENTS': {
-      const { points: newPoints, segments: newSegments } = reflectConstruction(
+      const {
+        points: newPoints,
+        segments: newSegments,
+        pointIdMap,
+      } = reflectConstruction(
         action.pointIds,
         action.segmentIds,
         current,
@@ -157,20 +195,12 @@ export function reduce(state: ReducerState, action: ConstructionAction): Reducer
         action.axisP2,
       );
 
-      // Build mapping from original point ID → reflected point ID
-      const reflectedPointMap = new Map<string, string>();
-      for (let i = 0; i < action.pointIds.length; i++) {
-        if (i < newPoints.length) {
-          reflectedPointMap.set(action.pointIds[i]!, newPoints[i]!.id);
-        }
-      }
-
       // Reflect circles: create new circle with reflected center and same radius
       const newCircles = (action.circleIds ?? [])
         .map((cid) => {
           const original = current.circles.find((c) => c.id === cid);
           if (!original) return null;
-          const newCenterId = reflectedPointMap.get(original.centerPointId);
+          const newCenterId = pointIdMap.get(original.centerPointId);
           if (!newCenterId) return null;
           return {
             id: generateId(),
@@ -326,6 +356,22 @@ export function reduce(state: ReducerState, action: ConstructionAction): Reducer
         undoManager: Undo.updateCurrent(undoManager, {
           ...current,
           estimationMode: action.enabled,
+        }),
+      };
+
+    case 'SET_CARTESIAN_MODE':
+      return {
+        undoManager: Undo.updateCurrent(undoManager, {
+          ...current,
+          cartesianMode: action.mode,
+        }),
+      };
+
+    case 'SET_AUTO_INTERSECTION':
+      return {
+        undoManager: Undo.updateCurrent(undoManager, {
+          ...current,
+          autoIntersection: action.enabled,
         }),
       };
 
