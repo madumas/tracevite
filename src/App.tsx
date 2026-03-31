@@ -339,10 +339,15 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
         }
         return;
       }
-      // Normal mode: selection first, then tool
-      const handled = selection.trySelect(mmPos);
-      if (!handled) {
+      // Normal mode: if tool is mid-action, forward to tool directly.
+      // Otherwise, try selection first, then tool.
+      if (!tool.isIdle) {
         tool.handleClick(mmPos);
+      } else {
+        const handled = selection.trySelect(mmPos);
+        if (!handled) {
+          tool.handleClick(mmPos);
+        }
       }
     },
     [deleteMode, deleteConfirmId, state, dispatch, selection, tool, clearToast],
