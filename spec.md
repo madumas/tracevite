@@ -747,22 +747,37 @@ Barre horizontale en haut du canevas. Icônes + texte pour chaque outil.
 
 **Révélation progressive (2e cycle) :** En mode 2e cycle, seuls les outils **Segment**, **Déplacer** et **Réflexion** sont visibles par défaut dans la toolbar. Les outils Mesurer et les contrôles avancés (sélecteur de grille, toggle d'unité) sont accessibles via un bouton « Plus d'outils » (icône : trois points ou chevron). Cela réduit la surcharge de choix pour les enfants de 8-9 ans, dont ~50% ont un TDAH comorbide avec difficultés de fonctions exécutives. En mode 3e cycle, tous les outils applicables sont visibles directement. L'enseignant peut forcer l'affichage complet dans les paramètres.
 
-De gauche à droite :
-1. **Segment** (outil par défaut, icône : ligne diagonale)
-2. **Point** (icône : point/cercle plein) — masqué par défaut, activable dans les paramètres
-3. **Cercle** (icône : cercle vide) — visible uniquement en mode 3e cycle
-4. Séparateur vertical
-5. **Réflexion** (icône : miroir/axe de symétrie) — MVP
-6. **Perpendiculaire** (icône : angle droit) — v2
-7. **Parallèle** (icône : deux lignes horizontales) — v2
-8. Séparateur vertical
-9. **Déplacer** (icône : flèche de déplacement)
-10. **Mesurer** (icône : règle diagonale) — en mode 2e cycle : accessible via « Plus d'outils »
+De gauche à droite (tous les outils ont une icône + texte) :
+1. **Segment** (outil par défaut, icône : ligne diagonale avec points aux extrémités)
+2. **Point** (icône : cercle plein) — masqué par défaut, activable dans les paramètres
+3. **Déplacer** (icône : flèche de déplacement quatre directions)
+4. **Cercle** (icône : cercle vide avec point central) — visible uniquement en mode 3e cycle
+5. **Réflexion** (icône : axe vertical pointillé + points symétriques)
+6. **Reproduire** (icône : deux segments décalés, le second à 50% d'opacité) — derrière « Plus d'outils » en 2e cycle
+7. **Perpendiculaire** (icône : angle droit avec carré marqueur) — derrière « Plus d'outils » en 2e cycle
+8. **Parallèle** (icône : deux lignes diagonales parallèles) — derrière « Plus d'outils » en 2e cycle
+9. **Translation** (icône : point source → flèche pointillée → point destination) — visible uniquement en mode 3e cycle
+10. **Mesurer** (icône : règle avec graduations) — derrière « Plus d'outils » en 2e cycle
+
+Toutes les icônes sont des SVG 20×20 en stroke, couleur `currentColor` (héritée du bouton). Style uniforme pour la reconnaissance rapide — les enfants TDC balayent visuellement plutôt que lire.
 
 À droite de la barre :
 - Toggle « 🧲 Aimant » (on/off). **Ne pas utiliser le mot « Accrochage »** dans l'interface — terme abstrait pour les 8-9 ans. Le terme technique « snap » reste dans le code et la spec; l'interface dit « Aimant ».
 - Sélecteur de grille (5 mm / 1 cm / 2 cm)
 - Toggle d'unité (cm / mm)
+- Bouton **?** (aide / tutoriel) — à l'extrême droite, lance le tutoriel interactif à la demande
+
+**Curseurs contextuels du canevas :** Le curseur CSS change selon l'outil actif pour fournir un feedback permanent au point de focus visuel (accommodation TDC — réduit les allers-retours toolbar↔canevas).
+
+| Outil(s) | Curseur | Raison |
+|----------|---------|--------|
+| Segment, Point, Cercle, Réflexion, Perpendiculaire, Parallèle, Translation, Mesurer, Reproduire | `crosshair` | Construction / placement de points |
+| Déplacer (idle) | `grab` | Invite à « ramasser » un point |
+| Déplacer (point ramassé) | `grabbing` | Point en cours de déplacement |
+| Tout outil idle + survol d'un élément | `pointer` | Signale la sélection possible (cross-cutting) |
+| Mode suppression | `crosshair` | Override — cible de suppression |
+
+Priorité : mode suppression > survol élément (idle) > outil actif.
 
 ### 10.1 Barre de statut contextuelle (indicateur de séquençage)
 

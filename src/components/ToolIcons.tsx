@@ -90,3 +90,66 @@ export function LengthIcon() {
     </svg>
   );
 }
+
+/** Reproduce: two offset segments (copy metaphor) */
+export function ReproduceIcon() {
+  return (
+    <svg {...S}>
+      <line x1="3" y1="14" x2="11" y2="6" stroke={stroke} strokeWidth="2" strokeLinecap="round" />
+      <circle cx="3" cy="14" r="1.5" fill={stroke} />
+      <circle cx="11" cy="6" r="1.5" fill={stroke} />
+      <line
+        x1="9"
+        y1="16"
+        x2="17"
+        y2="8"
+        stroke={stroke}
+        strokeWidth="2"
+        strokeLinecap="round"
+        opacity="0.5"
+      />
+      <circle cx="9" cy="16" r="1.5" fill={stroke} opacity="0.5" />
+      <circle cx="17" cy="8" r="1.5" fill={stroke} opacity="0.5" />
+    </svg>
+  );
+}
+
+/** Perpendicular: two lines at 90° with right-angle square marker */
+export function PerpendicularIcon() {
+  return (
+    <svg {...S}>
+      <line x1="4" y1="16" x2="4" y2="3" stroke={stroke} strokeWidth="2" strokeLinecap="round" />
+      <line x1="4" y1="16" x2="17" y2="16" stroke={stroke} strokeWidth="2" strokeLinecap="round" />
+      <rect x="4" y="12" width="4" height="4" stroke={stroke} strokeWidth="1" fill="none" />
+    </svg>
+  );
+}
+
+/** Parallel: two parallel diagonal lines */
+export function ParallelIcon() {
+  return (
+    <svg {...S}>
+      <line x1="3" y1="15" x2="13" y2="5" stroke={stroke} strokeWidth="2" strokeLinecap="round" />
+      <line x1="7" y1="17" x2="17" y2="7" stroke={stroke} strokeWidth="2" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+/** Translation: source dot → dashed arrow → destination dot */
+export function TranslationIcon() {
+  return (
+    <svg {...S}>
+      <circle cx="4" cy="14" r="2" fill={stroke} />
+      <circle cx="16" cy="6" r="2" fill={stroke} opacity="0.5" />
+      <line x1="4" y1="14" x2="16" y2="6" stroke={stroke} strokeWidth="1.5" strokeDasharray="2 2" />
+      <path
+        d="M13 4l3 2-3 2"
+        stroke={stroke}
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        fill="none"
+      />
+    </svg>
+  );
+}

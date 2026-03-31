@@ -16,6 +16,10 @@ import {
   MoveIcon,
   ReflectionIcon,
   LengthIcon,
+  ReproduceIcon,
+  PerpendicularIcon,
+  ParallelIcon,
+  TranslationIcon,
 } from './ToolIcons';
 import {
   TOOL_SEGMENT,
@@ -171,7 +175,7 @@ export const Toolbar = memo(function Toolbar({
           aria-pressed={activeTool === 'reproduce'}
           data-testid="tool-reproduce"
         >
-          <span className="tool-label">Reproduire</span>
+          <ReproduceIcon /> <span className="tool-label">Reproduire</span>
         </button>
       )}
       {/* Perpendicular — behind "Plus d'outils" in simplifie */}
@@ -182,7 +186,7 @@ export const Toolbar = memo(function Toolbar({
           aria-pressed={activeTool === 'perpendicular'}
           data-testid="tool-perpendicular"
         >
-          <span className="tool-label">Perpendiculaire</span>
+          <PerpendicularIcon /> <span className="tool-label">Perpendiculaire</span>
         </button>
       )}
       {/* Parallel — behind "Plus d'outils" in simplifie */}
@@ -193,7 +197,7 @@ export const Toolbar = memo(function Toolbar({
           aria-pressed={activeTool === 'parallel'}
           data-testid="tool-parallel"
         >
-          <span className="tool-label">Parallèle</span>
+          <ParallelIcon /> <span className="tool-label">Parallèle</span>
         </button>
       )}
       {/* Translation — complet only (3e cycle) */}
@@ -204,7 +208,7 @@ export const Toolbar = memo(function Toolbar({
           aria-pressed={activeTool === 'translation'}
           data-testid="tool-translation"
         >
-          <span className="tool-label">Translation</span>
+          <TranslationIcon /> <span className="tool-label">Translation</span>
         </button>
       )}
       {/* Measure — always visible in complet, behind "Plus d'outils" in simplifie */}

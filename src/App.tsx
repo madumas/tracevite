@@ -99,6 +99,32 @@ interface AppProps {
   initialUndoManager?: UndoManager;
 }
 
+/** Canvas cursor based on active tool + interaction state (TDC affordance). */
+function getCanvasCursor(
+  activeTool: ToolType,
+  deleteMode: boolean,
+  isActiveGesture: boolean | undefined,
+  isIdle: boolean,
+  isHoveringElement: boolean,
+): string {
+  if (deleteMode) return 'crosshair';
+  if (isIdle && isHoveringElement) return 'pointer';
+  switch (activeTool) {
+    case 'segment':
+    case 'point':
+    case 'circle':
+    case 'perpendicular':
+    case 'parallel':
+    case 'reflection':
+    case 'translation':
+    case 'measure':
+    case 'reproduce':
+      return 'crosshair';
+    case 'move':
+      return isActiveGesture ? 'grabbing' : 'grab';
+  }
+}
+
 function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps) {
   const { state, canUndo, canRedo, undoManager } = useConstructionState();
   const dispatch = useConstructionDispatch();
@@ -301,13 +327,14 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
     [selection, tool],
   );
 
-  const { handlePointerDown, handlePointerMove, handlePointerUp } = usePointerInteraction({
-    viewport,
-    onCanvasClick: handleCanvasClick,
-    onCursorMove: handleCursorMove,
-    cursorSmoothing: preferences.cursorSmoothing && state.toleranceProfile === 'very_large',
-    onPinchZoom: pinchZoomPan,
-  });
+  const { handlePointerDown, handlePointerMove, handlePointerUp, handlePointerCancel } =
+    usePointerInteraction({
+      viewport,
+      onCanvasClick: handleCanvasClick,
+      onCursorMove: handleCursorMove,
+      cursorSmoothing: preferences.cursorSmoothing && state.toleranceProfile === 'very_large',
+      onPinchZoom: pinchZoomPan,
+    });
 
   const hasElements = state.points.length > 0;
   useBeforeUnload(hasElements);
@@ -385,7 +412,10 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
         e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement;
 
       if (e.key === 'Escape') {
-        if (showNewConfirm) {
+        // Mobile panel overlay has highest priority (z-index 1000)
+        if (isNarrow && !panelCollapsed) {
+          setPanelCollapsed(true);
+        } else if (showNewConfirm) {
           setShowNewConfirm(false);
         } else if (deleteMode) {
           setDeleteMode(false);
@@ -462,6 +492,8 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
     selection,
     deleteMode,
     showToast,
+    isNarrow,
+    panelCollapsed,
   ]);
 
   // Right-click = cancel (same hierarchy as Escape, spec-compatible "physical Escape")
@@ -891,11 +923,18 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
               style={{
                 display: 'block',
                 touchAction: 'none',
-                cursor: deleteMode ? 'crosshair' : undefined,
+                cursor: getCanvasCursor(
+                  state.activeTool,
+                  deleteMode,
+                  tool.isActiveGesture,
+                  tool.isIdle,
+                  !!selection.hoveredElement,
+                ),
               }}
               onPointerDown={handlePointerDown}
               onPointerMove={handlePointerMove}
               onPointerUp={handlePointerUp}
+              onPointerCancel={handlePointerCancel}
               data-testid="canvas-svg"
             >
               <GridLayer viewport={viewport} gridSizeMm={state.gridSizeMm} />
