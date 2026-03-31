@@ -28,6 +28,11 @@ export async function expectUndoEnabled(page: Page, enabled: boolean): Promise<v
   }
 }
 
+export async function expectCircleCount(page: Page, count: number): Promise<void> {
+  const circles = page.locator('[data-testid="circle-layer"] [data-testid^="circle-"]');
+  await expect(circles).toHaveCount(count, { timeout: 3000 });
+}
+
 export async function expectRedoEnabled(page: Page, enabled: boolean): Promise<void> {
   const btn = page.locator('[data-testid="action-redo"]');
   if (enabled) {
