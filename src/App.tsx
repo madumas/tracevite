@@ -111,7 +111,7 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
   const isNarrow = useMediaQuery('(max-width: 768px)');
 
   const containerRef = useRef<HTMLDivElement>(null);
-  const { viewport, zoomIn, zoomOut, panUp, panDown, panLeft, panRight } =
+  const { viewport, zoomIn, zoomOut, panUp, panDown, panLeft, panRight, pinchZoomPan } =
     useViewport(containerRef);
   const [showNewConfirm, setShowNewConfirm] = useState(false);
   const [consigneDismissed, setConsigneDismissed] = useState(false);
@@ -306,6 +306,7 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
     onCanvasClick: handleCanvasClick,
     onCursorMove: handleCursorMove,
     cursorSmoothing: preferences.cursorSmoothing && state.toleranceProfile === 'very_large',
+    onPinchZoom: pinchZoomPan,
   });
 
   const hasElements = state.points.length > 0;
@@ -1003,6 +1004,7 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
             onPanRight={panRight}
             onZoomIn={zoomIn}
             onZoomOut={zoomOut}
+            hidePanButtons={isNarrow}
           />
 
           {/* Tutorial overlay */}

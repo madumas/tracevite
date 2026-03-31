@@ -8,6 +8,8 @@ interface NavigationControlsProps {
   readonly onPanRight: () => void;
   readonly onZoomIn: () => void;
   readonly onZoomOut: () => void;
+  /** When true, hide pan arrows (pinch-to-zoom replaces them on touch). */
+  readonly hidePanButtons?: boolean;
 }
 
 const navBtnStyle: React.CSSProperties = {
@@ -34,42 +36,47 @@ export const NavigationControls = memo(function NavigationControls({
   onPanRight,
   onZoomIn,
   onZoomOut,
+  hidePanButtons = false,
 }: NavigationControlsProps) {
   return (
     <>
-      {/* Pan buttons */}
-      <button
-        onClick={onPanUp}
-        style={{ ...navBtnStyle, top: 8, left: '50%', transform: 'translateX(-50%)' }}
-        aria-label="Déplacer vers le haut"
-        data-testid="pan-up"
-      >
-        ▲
-      </button>
-      <button
-        onClick={onPanDown}
-        style={{ ...navBtnStyle, bottom: 8, left: '50%', transform: 'translateX(-50%)' }}
-        aria-label="Déplacer vers le bas"
-        data-testid="pan-down"
-      >
-        ▼
-      </button>
-      <button
-        onClick={onPanLeft}
-        style={{ ...navBtnStyle, left: 8, top: '50%', transform: 'translateY(-50%)' }}
-        aria-label="Déplacer vers la gauche"
-        data-testid="pan-left"
-      >
-        ◀
-      </button>
-      <button
-        onClick={onPanRight}
-        style={{ ...navBtnStyle, right: 8, top: '50%', transform: 'translateY(-50%)' }}
-        aria-label="Déplacer vers la droite"
-        data-testid="pan-right"
-      >
-        ▶
-      </button>
+      {/* Pan buttons — hidden on mobile (two-finger pan replaces them) */}
+      {!hidePanButtons && (
+        <>
+          <button
+            onClick={onPanUp}
+            style={{ ...navBtnStyle, top: 8, left: '50%', transform: 'translateX(-50%)' }}
+            aria-label="Déplacer vers le haut"
+            data-testid="pan-up"
+          >
+            ▲
+          </button>
+          <button
+            onClick={onPanDown}
+            style={{ ...navBtnStyle, bottom: 8, left: '50%', transform: 'translateX(-50%)' }}
+            aria-label="Déplacer vers le bas"
+            data-testid="pan-down"
+          >
+            ▼
+          </button>
+          <button
+            onClick={onPanLeft}
+            style={{ ...navBtnStyle, left: 8, top: '50%', transform: 'translateY(-50%)' }}
+            aria-label="Déplacer vers la gauche"
+            data-testid="pan-left"
+          >
+            ◀
+          </button>
+          <button
+            onClick={onPanRight}
+            style={{ ...navBtnStyle, right: 8, top: '50%', transform: 'translateY(-50%)' }}
+            aria-label="Déplacer vers la droite"
+            data-testid="pan-right"
+          >
+            ▶
+          </button>
+        </>
+      )}
 
       {/* Zoom buttons */}
       <div

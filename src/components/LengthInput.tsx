@@ -28,11 +28,24 @@ export function LengthInput({
   const inputRef = useRef<HTMLInputElement>(null);
 
   const containerRef = useRef<HTMLDivElement>(null);
+  const [keyboardVisible, setKeyboardVisible] = useState(false);
 
   useEffect(() => {
     // Focus input after a brief delay (don't steal from canvas immediately)
     const timer = setTimeout(() => inputRef.current?.focus(), 100);
     return () => clearTimeout(timer);
+  }, []);
+
+  // Detect virtual keyboard via visualViewport (spec §6.1)
+  useEffect(() => {
+    const vv = window.visualViewport;
+    if (!vv) return;
+    const onResize = () => {
+      const ratio = vv.height / window.innerHeight;
+      setKeyboardVisible(ratio < 0.7);
+    };
+    vv.addEventListener('resize', onResize);
+    return () => vv.removeEventListener('resize', onResize);
   }, []);
 
   // Dismiss on click outside (not onBlur — onBlur fires too aggressively with pointer events)
@@ -77,7 +90,7 @@ export function LengthInput({
       ref={containerRef}
       style={{
         position: 'absolute',
-        bottom: 60,
+        ...(keyboardVisible ? { top: 80 } : { bottom: 60 }),
         left: '50%',
         transform: 'translateX(-50%)',
         background: UI_SURFACE,

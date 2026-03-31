@@ -44,6 +44,17 @@ export function useViewport(containerRef: React.RefObject<HTMLElement | null>) {
     setViewport((v) => clampViewport({ ...v, panX: v.panX + PAN_STEP_MM }));
   }, []);
 
+  // Pinch-to-zoom + two-finger pan (touch gestures)
+  const pinchZoomPan = useCallback((deltaZoom: number, panDeltaMm: { x: number; y: number }) => {
+    setViewport((v) =>
+      clampViewport({
+        panX: v.panX + panDeltaMm.x,
+        panY: v.panY + panDeltaMm.y,
+        zoom: clampZoom(v.zoom + deltaZoom),
+      }),
+    );
+  }, []);
+
   // Wheel zoom (without Ctrl — Ctrl+wheel = browser zoom per spec §21.1)
   const handleWheel = useCallback((e: WheelEvent) => {
     if (e.ctrlKey || e.metaKey) return; // Let browser handle
@@ -76,5 +87,6 @@ export function useViewport(containerRef: React.RefObject<HTMLElement | null>) {
     panDown,
     panLeft,
     panRight,
+    pinchZoomPan,
   };
 }
