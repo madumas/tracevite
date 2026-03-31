@@ -20,6 +20,7 @@ import {
   PerpendicularIcon,
   ParallelIcon,
   TranslationIcon,
+  SnapIcon,
 } from './ToolIcons';
 import {
   TOOL_SEGMENT,
@@ -284,7 +285,7 @@ export const Toolbar = memo(function Toolbar({
         </button>
       )}
 
-      {/* Snap toggle — always visible */}
+      {/* Snap toggle — always visible, LED indicator for state */}
       <button
         onClick={onSnapToggle}
         style={{
@@ -292,11 +293,23 @@ export const Toolbar = memo(function Toolbar({
           fontSize: 'inherit',
           color: snapEnabled ? UI_PRIMARY : UI_DISABLED_TEXT,
           fontWeight: snapEnabled ? 600 : 400,
+          position: 'relative',
         }}
         aria-pressed={snapEnabled}
         data-testid="snap-toggle"
+        title={snapEnabled ? 'Aimant activé' : 'Aimant désactivé'}
       >
-        {TOOL_SNAP}
+        <SnapIcon /> {TOOL_SNAP}
+        <span
+          style={{
+            width: 6,
+            height: 6,
+            borderRadius: '50%',
+            background: snapEnabled ? '#22C55E' : '#D1D8E0',
+            display: 'inline-block',
+            marginLeft: 4,
+          }}
+        />
       </button>
 
       {/* Spacer to push help button to far right */}

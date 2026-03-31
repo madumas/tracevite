@@ -153,3 +153,20 @@ export function TranslationIcon() {
     </svg>
   );
 }
+
+/** Magnet: U-shape for snap toggle */
+export function SnapIcon() {
+  return (
+    <svg {...S}>
+      <path
+        d="M5 4v8a5 5 0 0 0 10 0V4"
+        stroke={stroke}
+        strokeWidth="2"
+        strokeLinecap="round"
+        fill="none"
+      />
+      <line x1="5" y1="4" x2="5" y2="2" stroke={stroke} strokeWidth="3" strokeLinecap="round" />
+      <line x1="15" y1="4" x2="15" y2="2" stroke={stroke} strokeWidth="3" strokeLinecap="round" />
+    </svg>
+  );
+}
