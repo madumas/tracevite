@@ -57,7 +57,7 @@ export function useMeasureTool({
       handleCursorMove,
       handleEscape,
       reset,
-      isIdle: true,
+      isIdle: false, // Measure tool captures all clicks (no cross-cutting selection)
       statusMessage: STATUS_MEASURE_IDLE,
       snapResult,
       overlayElements: null,

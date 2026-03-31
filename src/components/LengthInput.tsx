@@ -11,6 +11,8 @@ interface LengthInputProps {
   readonly displayUnit: DisplayUnit;
   readonly onSubmit: (lengthMm: number) => void;
   readonly onDismiss: () => void;
+  /** Position near segment midpoint (CSS px relative to canvas container). */
+  readonly positionPx?: { x: number; y: number };
 }
 
 /**
@@ -24,6 +26,7 @@ export function LengthInput({
   displayUnit,
   onSubmit,
   onDismiss,
+  positionPx,
 }: LengthInputProps) {
   const [value, setValue] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
@@ -91,9 +94,14 @@ export function LengthInput({
       ref={containerRef}
       style={{
         position: 'absolute',
-        ...(keyboardVisible ? { top: 80 } : { bottom: 60 }),
-        left: '50%',
-        transform: 'translateX(-50%)',
+        ...(keyboardVisible
+          ? { top: 80, left: '50%', transform: 'translateX(-50%)' }
+          : positionPx
+            ? {
+                top: Math.max(10, positionPx.y - 60),
+                left: Math.max(10, Math.min(positionPx.x - 100, window.innerWidth - 220)),
+              }
+            : { bottom: 60, left: '50%', transform: 'translateX(-50%)' }),
         background: UI_SURFACE,
         border: `1px solid ${UI_BORDER}`,
         borderRadius: 8,

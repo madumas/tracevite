@@ -1034,9 +1034,14 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
           {/* Context action bar — hidden during compound tool workflows (reproduce, perpendicular, etc.)
              where clicking an element is a tool action, not a general selection */}
           {state.selectedElementId &&
-            !['reproduce', 'perpendicular', 'parallel', 'translation', 'reflection'].includes(
-              state.activeTool,
-            ) && (
+            ![
+              'reproduce',
+              'perpendicular',
+              'parallel',
+              'translation',
+              'reflection',
+              'measure',
+            ].includes(state.activeTool) && (
               <ContextActionBar
                 state={state}
                 viewport={viewport}
@@ -1058,11 +1063,20 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
               const sp = state.points.find((p) => p.id === seg.startPointId);
               const ep = state.points.find((p) => p.id === seg.endPointId);
               const label = sp && ep ? sp.label + ep.label : '';
+              const pxPerMm = viewport.zoom * CSS_PX_PER_MM;
+              const midPx =
+                sp && ep
+                  ? {
+                      x: ((sp.x + ep.x) / 2 - viewport.panX) * pxPerMm,
+                      y: ((sp.y + ep.y) / 2 - viewport.panY) * pxPerMm,
+                    }
+                  : undefined;
               return (
                 <LengthInput
                   segmentLabel={label}
                   currentLengthMm={seg.lengthMm}
                   displayUnit={state.displayUnit}
+                  positionPx={midPx}
                   onSubmit={(lengthMm) => {
                     dispatch({ type: 'FIX_SEGMENT_LENGTH', segmentId: seg.id, lengthMm });
                     dispatch({ type: 'SET_SELECTED_ELEMENT', elementId: null });
