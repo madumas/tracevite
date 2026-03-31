@@ -11,6 +11,7 @@ import type {
   ChainTimeout,
   FontScale,
   SoundMode,
+  CartesianMode,
 } from './types';
 
 export interface SettingsProfile {
@@ -28,6 +29,9 @@ export interface SettingsProfile {
   readonly soundMode: SoundMode;
   readonly soundGain: number;
   readonly pointToolVisible: boolean;
+  readonly estimationMode?: boolean;
+  readonly cartesianMode?: CartesianMode;
+  readonly autoIntersection?: boolean;
 }
 
 /** Export current settings to JSON string. */
@@ -47,6 +51,9 @@ export function exportSettings(state: ConstructionState): string {
     soundMode: state.soundMode,
     soundGain: state.soundGain,
     pointToolVisible: state.pointToolVisible,
+    estimationMode: state.estimationMode || undefined,
+    cartesianMode: state.cartesianMode !== 'off' ? state.cartesianMode : undefined,
+    autoIntersection: state.autoIntersection || undefined,
   };
   return JSON.stringify(profile, null, 2);
 }
@@ -67,6 +74,9 @@ type MutableSettings = {
     | 'soundMode'
     | 'soundGain'
     | 'pointToolVisible'
+    | 'estimationMode'
+    | 'cartesianMode'
+    | 'autoIntersection'
   >]?: ConstructionState[K];
 };
 
@@ -137,6 +147,19 @@ export function importSettings(json: string): MutableSettings {
 
   if (typeof obj['pointToolVisible'] === 'boolean') {
     result.pointToolVisible = obj['pointToolVisible'];
+  }
+
+  if (typeof obj['estimationMode'] === 'boolean') {
+    result.estimationMode = obj['estimationMode'];
+  }
+
+  const validCartesian: CartesianMode[] = ['off', '1quadrant', '4quadrants'];
+  if (validCartesian.includes(obj['cartesianMode'] as CartesianMode)) {
+    result.cartesianMode = obj['cartesianMode'] as CartesianMode;
+  }
+
+  if (typeof obj['autoIntersection'] === 'boolean') {
+    result.autoIntersection = obj['autoIntersection'];
   }
 
   return result;

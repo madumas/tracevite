@@ -18,6 +18,13 @@ interface SerializedConstruction {
     displayMode: ConstructionState['displayMode'];
     displayUnit: ConstructionState['displayUnit'];
     hideProperties: ConstructionState['hideProperties'];
+    toleranceProfile?: ConstructionState['toleranceProfile'];
+    chainTimeoutMs?: ConstructionState['chainTimeoutMs'];
+    fontScale?: ConstructionState['fontScale'];
+    keyboardShortcutsEnabled?: ConstructionState['keyboardShortcutsEnabled'];
+    soundMode?: ConstructionState['soundMode'];
+    soundGain?: ConstructionState['soundGain'];
+    pointToolVisible?: ConstructionState['pointToolVisible'];
     estimationMode?: ConstructionState['estimationMode'];
     cartesianMode?: ConstructionState['cartesianMode'];
     autoIntersection?: ConstructionState['autoIntersection'];
@@ -38,6 +45,13 @@ export function serializeState(state: ConstructionState): string {
       displayMode: state.displayMode,
       displayUnit: state.displayUnit,
       hideProperties: state.hideProperties,
+      toleranceProfile: state.toleranceProfile !== 'default' ? state.toleranceProfile : undefined,
+      chainTimeoutMs: state.chainTimeoutMs !== 8000 ? state.chainTimeoutMs : undefined,
+      fontScale: state.fontScale !== 1 ? state.fontScale : undefined,
+      keyboardShortcutsEnabled: state.keyboardShortcutsEnabled || undefined,
+      soundMode: state.soundMode !== 'off' ? state.soundMode : undefined,
+      soundGain: state.soundGain !== 0.5 ? state.soundGain : undefined,
+      pointToolVisible: state.pointToolVisible || undefined,
       estimationMode: state.estimationMode || undefined,
       cartesianMode: state.cartesianMode !== 'off' ? state.cartesianMode : undefined,
       autoIntersection: state.autoIntersection || undefined,
