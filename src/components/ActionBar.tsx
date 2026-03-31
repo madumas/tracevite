@@ -266,8 +266,25 @@ export const ActionBar = memo(function ActionBar({
       )}
 
       {/* Spacer */}
-      <div style={{ flex: 1, display: 'flex', justifyContent: 'center' }}>
-        <span className="action-label" style={{ fontSize: 11, color: '#9CA3AF' }}>
+      <div
+        style={{
+          flex: 1,
+          display: 'flex',
+          justifyContent: 'center',
+          overflow: 'hidden',
+          minWidth: 0,
+        }}
+      >
+        <span
+          className="action-label"
+          style={{
+            fontSize: 11,
+            color: '#9CA3AF',
+            whiteSpace: 'nowrap',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+          }}
+        >
           {ACTION_SCALE_NOTE}
         </span>
       </div>
