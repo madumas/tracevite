@@ -24,6 +24,7 @@ import {
   UI_TEXT_PRIMARY,
   HEADER_HEIGHT,
   STATUS_BAR_HEIGHT,
+  STATUS_BAR_BG,
   getCanvasColors,
   CanvasColorsProvider,
 } from '@/config/theme';
@@ -64,6 +65,7 @@ import type { ToolType, GridSize, DisplayUnit, DisplayMode } from '@/model/types
 import { PreferencesProvider, usePreferences } from '@/model/preferences';
 import { AboutDialog } from '@/components/AboutDialog';
 import { FatigueReminder } from '@/components/FatigueReminder';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 
 const TOOL_SHORTCUT_MAP: Record<string, ToolType> = {
   s: 'segment',
@@ -79,7 +81,7 @@ const TOOL_DISPLAY_NAMES: Record<ToolType, string> = {
   point: 'Point',
   circle: 'Cercle',
   move: 'Déplacer',
-  measure: 'Mesurer',
+  measure: 'Longueur',
   reflection: 'Réflexion',
   reproduce: 'Reproduire',
   perpendicular: 'Perpendiculaire',
@@ -667,118 +669,6 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
         fontFamily: 'system-ui, sans-serif',
       }}
     >
-      {/* Header */}
-      <header
-        style={{
-          height: HEADER_HEIGHT,
-          display: 'flex',
-          alignItems: 'center',
-          padding: '0 12px',
-          background: '#FFFFFF',
-          borderBottom: '1px solid #D1D8E0',
-          gap: 12,
-        }}
-      >
-        <img src="/logo.svg" alt="" width={28} height={28} style={{ marginRight: -4 }} />
-        <strong
-          style={{ fontSize: 16, cursor: 'pointer' }}
-          onClick={() => setShowAbout(true)}
-          title="À propos de TraceVite"
-        >
-          TraceVite
-        </strong>
-        {!demoMode && <SaveIndicator saving={saving} />}
-        {!demoMode && (
-          <button
-            onClick={() => setShowSlotManager(true)}
-            style={{
-              padding: '3px 10px',
-              background: 'transparent',
-              border: `1px solid #D1D8E0`,
-              borderRadius: 4,
-              cursor: 'pointer',
-              fontSize: 12,
-              color: '#4A5568',
-            }}
-            data-testid="slot-manager-btn"
-          >
-            Mes constructions
-          </button>
-        )}
-        {!demoMode && state.consigne && consigneDismissed && (
-          <button
-            onClick={() => setConsigneDismissed(false)}
-            style={{
-              padding: '2px 8px',
-              background: '#E6F1FB',
-              border: '1px solid #C5D8EC',
-              borderRadius: 4,
-              cursor: 'pointer',
-              fontSize: 11,
-              color: '#185FA5',
-            }}
-            data-testid="consigne-show"
-          >
-            Voir la consigne
-          </button>
-        )}
-        <div style={{ flex: 1 }} />
-        {!demoMode && <ModeSelector mode={state.displayMode} onChange={handleModeChange} />}
-        <button
-          onClick={() => {
-            if (document.fullscreenElement) {
-              document.exitFullscreen();
-              setDemoMode(false);
-            } else {
-              document.documentElement.requestFullscreen?.()?.then(
-                () => setDemoMode(true),
-                () => {
-                  /* fullscreen refused — stay in normal mode */
-                },
-              );
-            }
-          }}
-          style={{
-            width: 44,
-            height: 44,
-            background: demoMode ? '#185FA5' : 'transparent',
-            color: demoMode ? '#FFF' : '#4A5568',
-            border: 'none',
-            cursor: 'pointer',
-            fontSize: 18,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            borderRadius: 4,
-          }}
-          aria-label="Mode démonstration"
-          title="Mode démonstration (plein écran)"
-        >
-          {demoMode ? '✕' : '⛶'}
-        </button>
-        {!demoMode && (
-          <button
-            onClick={() => setShowSettings(true)}
-            style={{
-              width: 44,
-              height: 44,
-              background: 'transparent',
-              border: 'none',
-              cursor: 'pointer',
-              fontSize: 22,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-            aria-label="Paramètres"
-            data-testid="settings-button"
-          >
-            ⚙
-          </button>
-        )}
-        {!demoMode && <span style={{ fontSize: 11, color: '#9CA3AF' }}>v0.1.0</span>}
-      </header>
-
       {/* Deep Freeze warning (spec §17.1) */}
       {deepFreezeDetected && (
         <div
@@ -847,15 +737,16 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
         onTutorialStart={tutorial.start}
       />
 
-      {/* Status Bar */}
+      {/* Status Bar — primary sequencing guide for TDC */}
       <div
         style={{
           height: STATUS_BAR_HEIGHT,
           display: 'flex',
           alignItems: 'center',
           padding: '0 12px',
-          background: '#EDF1F5',
+          background: STATUS_BAR_BG,
           borderBottom: '1px solid #D1D8E0',
+          borderLeft: `3px solid ${UI_PRIMARY}`,
           fontSize: 13 * effectiveFontScale,
           color: '#4A5568',
         }}
@@ -879,7 +770,30 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
                 })(),
               )
             : STATUS_DELETE_MODE
-          : tool.statusMessage}
+          : (() => {
+              const parts = tool.statusMessage.split(' — ');
+              const toolName = parts[0];
+              const instruction = parts.length > 1 ? parts.slice(1).join(' — ') : '';
+              return (
+                <>
+                  <span
+                    style={{
+                      background: UI_PRIMARY,
+                      color: '#FFF',
+                      padding: '1px 8px',
+                      borderRadius: 4,
+                      fontSize: 12 * effectiveFontScale,
+                      fontWeight: 600,
+                      marginRight: 6,
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    {toolName}
+                  </span>
+                  {instruction}
+                </>
+              );
+            })()}
         {shiftConstraintActive && ' — Contrainte 15° active'}
         {state.activeTool === 'reflection' && tool.onToggleSymmetryCheck && (
           <button
@@ -1192,7 +1106,7 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
           <div
             style={{
               flex: 1,
-              background: '#FFFFFF',
+              background: UI_BG,
               marginTop: 60,
               borderTopLeftRadius: 12,
               borderTopRightRadius: 12,
@@ -1416,14 +1330,16 @@ export function App({
   initialUndoManager,
 }: AppProps) {
   return (
-    <PreferencesProvider>
-      <ConstructionProvider initialState={initialState} initialUndoManager={initialUndoManager}>
-        <AppContent
-          initialConsigne={initialConsigne}
-          initialLevel={initialLevel}
-          initialRegistry={initialRegistry}
-        />
-      </ConstructionProvider>
-    </PreferencesProvider>
+    <ErrorBoundary>
+      <PreferencesProvider>
+        <ConstructionProvider initialState={initialState} initialUndoManager={initialUndoManager}>
+          <AppContent
+            initialConsigne={initialConsigne}
+            initialLevel={initialLevel}
+            initialRegistry={initialRegistry}
+          />
+        </ConstructionProvider>
+      </PreferencesProvider>
+    </ErrorBoundary>
   );
 }
