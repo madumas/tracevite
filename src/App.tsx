@@ -967,18 +967,22 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
             </svg>
           </CanvasColorsProvider>
 
-          {/* Context action bar (positioned over canvas) */}
-          {state.selectedElementId && (
-            <ContextActionBar
-              state={state}
-              viewport={viewport}
-              onDelete={handleContextDelete}
-              onToggleLock={handleToggleLock}
-              triggerConfirm={pendingDeleteFromKeyboard}
-              onConfirmHandled={() => setPendingDeleteFromKeyboard(false)}
-              fontScale={effectiveFontScale}
-            />
-          )}
+          {/* Context action bar — hidden during compound tool workflows (reproduce, perpendicular, etc.)
+             where clicking an element is a tool action, not a general selection */}
+          {state.selectedElementId &&
+            !['reproduce', 'perpendicular', 'parallel', 'translation', 'reflection'].includes(
+              state.activeTool,
+            ) && (
+              <ContextActionBar
+                state={state}
+                viewport={viewport}
+                onDelete={handleContextDelete}
+                onToggleLock={handleToggleLock}
+                triggerConfirm={pendingDeleteFromKeyboard}
+                onConfirmHandled={() => setPendingDeleteFromKeyboard(false)}
+                fontScale={effectiveFontScale}
+              />
+            )}
 
           {/* Length input for Measure tool (spec §6.8, §9.5) */}
           {state.activeTool === 'measure' &&
