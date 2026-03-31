@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { UI_SURFACE, UI_BORDER, UI_TEXT_PRIMARY } from '@/config/theme';
+import { UI_SURFACE, UI_BORDER, UI_TEXT_PRIMARY, UI_PRIMARY } from '@/config/theme';
 import { MIN_BUTTON_SIZE_PX } from '@/config/accessibility';
 import { LENGTH_PLACEHOLDER } from '@/config/messages';
 import { parseFrenchNumber } from '@/engine/format';
@@ -190,6 +190,24 @@ export function LengthInput({
           )}
         </div>
         <span style={{ fontSize: 13, color: UI_TEXT_PRIMARY }}>{displayUnit}</span>
+        <button
+          onClick={handleSubmit}
+          style={{
+            minWidth: MIN_BUTTON_SIZE_PX - 8,
+            height: MIN_BUTTON_SIZE_PX - 8,
+            padding: '0 10px',
+            border: 'none',
+            borderRadius: 4,
+            background: UI_PRIMARY,
+            color: '#FFFFFF',
+            cursor: 'pointer',
+            fontSize: 13,
+            fontWeight: 600,
+          }}
+          data-testid="length-submit"
+        >
+          OK
+        </button>
       </div>
     </div>
   );

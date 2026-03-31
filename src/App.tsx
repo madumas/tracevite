@@ -1078,6 +1078,7 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
                   onSubmit={(lengthMm) => {
                     dispatch({ type: 'FIX_SEGMENT_LENGTH', segmentId: seg.id, lengthMm });
                     setFixingSegmentId(null);
+                    selection.clearSelection();
                   }}
                   onClear={() => {
                     dispatch({ type: 'UNFIX_SEGMENT_LENGTH', segmentId: seg.id });
