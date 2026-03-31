@@ -141,6 +141,27 @@ export function TranslationIcon() {
   );
 }
 
+/** Symmetry: vertical dashed axis with mirrored dots */
+export function SymmetryIcon() {
+  return (
+    <svg {...S}>
+      <line
+        x1="10"
+        y1="2"
+        x2="10"
+        y2="18"
+        stroke={stroke}
+        strokeWidth="1.5"
+        strokeDasharray="3 2"
+      />
+      <circle cx="5" cy="7" r="2" fill={stroke} />
+      <circle cx="15" cy="7" r="2" fill={stroke} opacity="0.5" />
+      <circle cx="6" cy="14" r="2" fill={stroke} />
+      <circle cx="14" cy="14" r="2" fill={stroke} opacity="0.5" />
+    </svg>
+  );
+}
+
 /** Frieze: three small shapes in a row with an arrow */
 export function FriezeIcon() {
   return (

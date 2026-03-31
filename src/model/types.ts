@@ -68,7 +68,8 @@ export type ToolType =
   | 'parallel'
   | 'translation'
   | 'compare'
-  | 'frieze';
+  | 'frieze'
+  | 'symmetry';
 
 /** Selectable grid sizes in mm. */
 export type GridSize = 5 | 10 | 20;

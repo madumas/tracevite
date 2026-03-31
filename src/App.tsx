@@ -63,7 +63,6 @@ import { PreferencesProvider, usePreferences } from '@/model/preferences';
 import { AboutDialog } from '@/components/AboutDialog';
 import { FatigueReminder } from '@/components/FatigueReminder';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
-import { checkSymmetry } from '@/engine/reflection';
 
 /** Tools where clicking an element is a tool action, not a general selection.
  * Used to (1) forward clicks to the tool and (2) hide ContextActionBar. */
@@ -75,6 +74,7 @@ const COMPOUND_TOOLS: readonly ToolType[] = [
   'reflection',
   'compare',
   'frieze',
+  'symmetry',
 ];
 
 const TOOL_SHORTCUT_MAP: Record<string, ToolType> = {
@@ -97,6 +97,7 @@ const TOOL_DISPLAY_NAMES: Record<ToolType, string> = {
   translation: 'Translation',
   compare: 'Comparer',
   frieze: 'Frise',
+  symmetry: 'Symétrie',
 };
 
 import type { SlotRegistry } from '@/model/slots';
@@ -138,6 +139,7 @@ function getCanvasCursor(
     case 'reproduce':
     case 'compare':
     case 'frieze':
+    case 'symmetry':
       return 'crosshair';
     case 'move':
       return isActiveGesture ? 'grabbing' : 'grab';
@@ -204,12 +206,6 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
   const [fixingCircleId, setFixingCircleId] = useState<string | null>(null);
   // LengthInput state for segment length fixing (contextual action)
   const [fixingSegmentId, setFixingSegmentId] = useState<string | null>(null);
-  // Symmetry check result overlay
-  const [symmetryResult, setSymmetryResult] = useState<
-    import('@/engine/reflection').SymmetryResult | null
-  >(null);
-  const [symmetryAxisSegId, setSymmetryAxisSegId] = useState<string | null>(null);
-
   // Toast for keyboard tool changes (spec §14)
   const [toastText, setToastText] = useState<string | null>(null);
   const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -299,21 +295,11 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
     }
   }, [fixingCircleId, state.circles]);
 
-  // Close RadiusInput/LengthInput/symmetry overlay on tool change
+  // Close RadiusInput/LengthInput on tool change
   useEffect(() => {
     setFixingCircleId(null);
     setFixingSegmentId(null);
-    setSymmetryResult(null);
-    setSymmetryAxisSegId(null);
   }, [state.activeTool]);
-
-  // Clear symmetry overlay when selection changes
-  useEffect(() => {
-    if (symmetryAxisSegId && state.selectedElementId !== symmetryAxisSegId) {
-      setSymmetryResult(null);
-      setSymmetryAxisSegId(null);
-    }
-  }, [state.selectedElementId, symmetryAxisSegId]);
 
   // Close LengthInput when segment is deleted
   useEffect(() => {
@@ -405,6 +391,7 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
       onCursorMove: handleCursorMove,
       cursorSmoothing: preferences.cursorSmoothing && state.toleranceProfile === 'very_large',
       onPinchZoom: pinchZoomPan,
+      skipDebounce: deleteConfirmId !== null,
     });
 
   const hasElements = state.points.length > 0;
@@ -475,25 +462,6 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
     (segmentId: string) => setFixingSegmentId(segmentId),
     [],
   );
-  const handleCheckSymmetry = useCallback(
-    (segmentId: string) => {
-      const seg = state.segments.find((s) => s.id === segmentId);
-      if (!seg) return;
-      const sp = state.points.find((p) => p.id === seg.startPointId);
-      const ep = state.points.find((p) => p.id === seg.endPointId);
-      if (!sp || !ep) return;
-      // Check symmetry of ALL points (except the axis endpoints) about this segment
-      const allPointIds = state.points
-        .filter((p) => p.id !== seg.startPointId && p.id !== seg.endPointId)
-        .map((p) => p.id);
-      if (allPointIds.length === 0) return;
-      const result = checkSymmetry(allPointIds, state, sp, ep);
-      setSymmetryResult(result);
-      setSymmetryAxisSegId(segmentId);
-    },
-    [state],
-  );
-
   const [panelCollapsed, setPanelCollapsed] = useState(() => {
     const saved = localStorage.getItem('tracevite_panel_collapsed');
     if (saved !== null) return saved === 'true';
@@ -821,36 +789,32 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
                 })(),
               )
             : STATUS_DELETE_MODE
-          : symmetryResult
-            ? symmetryResult.isSymmetric
-              ? 'Symétrie — La figure est symétrique par rapport à cet axe!'
-              : 'Symétrie — La figure n\u2019est pas symétrique par rapport à cet axe. Clique ailleurs pour fermer.'
-            : (() => {
-                const raw = tool.statusMessage;
-                const dashIdx = raw.indexOf(' — ');
-                if (dashIdx < 0) return raw; // hint messages without separator
-                const toolName = raw.slice(0, dashIdx);
-                const instruction = raw.slice(dashIdx + 3);
-                return (
-                  <>
-                    <span
-                      style={{
-                        background: UI_PRIMARY,
-                        color: '#FFF',
-                        padding: '1px 8px',
-                        borderRadius: 4,
-                        fontSize: 12 * effectiveFontScale,
-                        fontWeight: 600,
-                        marginRight: 6,
-                        whiteSpace: 'nowrap',
-                      }}
-                    >
-                      {toolName}
-                    </span>
-                    {instruction}
-                  </>
-                );
-              })()}
+          : (() => {
+              const raw = tool.statusMessage;
+              const dashIdx = raw.indexOf(' — ');
+              if (dashIdx < 0) return raw; // hint messages without separator
+              const toolName = raw.slice(0, dashIdx);
+              const instruction = raw.slice(dashIdx + 3);
+              return (
+                <>
+                  <span
+                    style={{
+                      background: UI_PRIMARY,
+                      color: '#FFF',
+                      padding: '1px 8px',
+                      borderRadius: 4,
+                      fontSize: 12 * effectiveFontScale,
+                      fontWeight: 600,
+                      marginRight: 6,
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    {toolName}
+                  </span>
+                  {instruction}
+                </>
+              );
+            })()}
         {shiftConstraintActive && ' — Contrainte 15° active'}
         {/* Right-side buttons grouped in a single flex container to avoid double marginLeft:auto */}
         {((!demoMode && state.consigne && consigneDismissed) ||
@@ -1003,27 +967,6 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
               {/* Tool-specific overlays (ghost segment, ghost circle, etc.) */}
               {tool.overlayElements}
 
-              {/* Symmetry check overlay (green/red circles on vertices) */}
-              {symmetryResult &&
-                symmetryResult.correspondences.map((corr) => {
-                  const pt = state.points.find((p) => p.id === corr.originalId);
-                  if (!pt) return null;
-                  const cx = (pt.x - viewport.panX) * viewport.zoom * CSS_PX_PER_MM;
-                  const cy = (pt.y - viewport.panY) * viewport.zoom * CSS_PX_PER_MM;
-                  const isMatch = corr.deviationMm <= 1.0;
-                  return (
-                    <circle
-                      key={`sym-${corr.originalId}`}
-                      cx={cx}
-                      cy={cy}
-                      r={8}
-                      fill={isMatch ? '#22C55E' : '#EF4444'}
-                      opacity={0.4}
-                      pointerEvents="none"
-                    />
-                  );
-                })}
-
               {/* Snap feedback */}
               <SnapFeedback snapResult={tool.snapResult} viewport={viewport} />
             </svg>
@@ -1041,7 +984,6 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
                 onToggleLock={handleToggleLock}
                 onFixCircleRadius={setFixingCircleId}
                 onFixSegmentLength={handleFixSegmentLength}
-                onCheckSymmetry={handleCheckSymmetry}
                 fontScale={effectiveFontScale}
               />
             )}

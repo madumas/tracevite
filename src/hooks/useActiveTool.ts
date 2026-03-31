@@ -16,6 +16,7 @@ import { useConstrainedLineTool } from './useConstrainedLineTool';
 import { useTranslationTool } from './useTranslationTool';
 import { useCompareTool } from './useCompareTool';
 import { useFriezeTool } from './useFriezeTool';
+import { useSymmetryTool } from './useSymmetryTool';
 
 interface UseActiveToolOptions {
   state: ConstructionState;
@@ -89,6 +90,12 @@ export function useActiveTool({
     viewport,
     isActive: active === 'frieze',
   });
+  const symmetryTool = useSymmetryTool({
+    state,
+    dispatch,
+    viewport,
+    isActive: active === 'symmetry',
+  });
 
   switch (state.activeTool) {
     case 'segment':
@@ -113,5 +120,7 @@ export function useActiveTool({
       return compareTool;
     case 'frieze':
       return friezeTool;
+    case 'symmetry':
+      return symmetryTool;
   }
 }

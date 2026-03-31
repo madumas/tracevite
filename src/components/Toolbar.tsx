@@ -21,6 +21,7 @@ import {
   TranslationIcon,
   CompareIcon,
   FriezeIcon,
+  SymmetryIcon,
   SnapIcon,
 } from './ToolIcons';
 import {
@@ -247,6 +248,17 @@ export const Toolbar = memo(function Toolbar({
             data-testid="tool-compare"
           >
             <CompareIcon /> <span className="tool-label">{TOOL_COMPARE}</span>
+          </button>
+        )}
+        {/* Symmetry — behind "Plus d'outils" in simplifie */}
+        {(!isSimple || moreOpen) && (
+          <button
+            onClick={() => onToolChange('symmetry')}
+            style={{ ...toolBtnBase, ...(activeTool === 'symmetry' ? activeStyle : {}) }}
+            aria-pressed={activeTool === 'symmetry'}
+            data-testid="tool-symmetry"
+          >
+            <SymmetryIcon /> <span className="tool-label">Symétrie</span>
           </button>
         )}
         {/* Perpendicular — behind "Plus d'outils" in simplifie */}
