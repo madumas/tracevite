@@ -1,66 +1,30 @@
-import { useState, useEffect, useRef } from 'react';
 import type { ConstructionState, ViewportState, Segment } from '@/model/types';
-import { UI_SURFACE, UI_BORDER, UI_DESTRUCTIVE, UI_TEXT_PRIMARY } from '@/config/theme';
+import { UI_SURFACE, UI_BORDER, UI_TEXT_PRIMARY } from '@/config/theme';
 import { MIN_BUTTON_SIZE_PX, MIN_BUTTON_GAP_PX } from '@/config/accessibility';
 import { CSS_PX_PER_MM } from '@/engine/viewport';
 
 interface ContextActionBarProps {
   readonly state: ConstructionState;
   readonly viewport: ViewportState;
-  readonly onDelete: (elementId: string) => void;
   readonly onToggleLock?: (pointId: string) => void;
   readonly onFixCircleRadius?: (circleId: string) => void;
-  /** When true, auto-trigger micro-confirmation (from keyboard Delete). */
-  readonly triggerConfirm?: boolean;
-  readonly onConfirmHandled?: () => void;
+  readonly onFixSegmentLength?: (segmentId: string) => void;
   readonly fontScale?: number;
 }
 
 /**
  * Contextual action bar positioned near the selected element.
- * 44×44px buttons with micro-confirmation on delete.
+ * 44×44px buttons. Delete is only available via delete mode (trash tool).
  */
 export function ContextActionBar({
   state,
   viewport,
-  onDelete,
   onToggleLock,
   onFixCircleRadius,
+  onFixSegmentLength,
   fontScale = 1,
-  triggerConfirm,
-  onConfirmHandled,
 }: ContextActionBarProps) {
-  const [confirmingDelete, setConfirmingDelete] = useState(false);
-  const confirmTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { selectedElementId } = state;
-
-  // Reset confirmation when selection changes
-  useEffect(() => {
-    setConfirmingDelete(false);
-    if (confirmTimerRef.current) clearTimeout(confirmTimerRef.current);
-  }, [selectedElementId]);
-
-  // Handle keyboard-triggered micro-confirmation
-  useEffect(() => {
-    if (triggerConfirm && selectedElementId && !confirmingDelete) {
-      setConfirmingDelete(true);
-      confirmTimerRef.current = setTimeout(() => setConfirmingDelete(false), 3000);
-      onConfirmHandled?.();
-    }
-  }, [triggerConfirm, selectedElementId, confirmingDelete, onConfirmHandled]);
-
-  // Escape cancels micro-confirmation
-  useEffect(() => {
-    if (!confirmingDelete) return;
-    const handler = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        e.stopPropagation();
-        setConfirmingDelete(false);
-      }
-    };
-    window.addEventListener('keydown', handler, true);
-    return () => window.removeEventListener('keydown', handler, true);
-  }, [confirmingDelete]);
 
   if (!selectedElementId) return null;
 
@@ -96,7 +60,6 @@ export function ContextActionBar({
 
   // Keep in bounds (vertical + horizontal clamp)
   if (posY < 10) posY += 100;
-  // Horizontal: estimate bar width ~200px, clamp so it doesn't overflow edges
   const estimatedHalfWidth = 100;
   posX = Math.max(
     estimatedHalfWidth + 8,
@@ -106,21 +69,10 @@ export function ContextActionBar({
     ),
   );
 
-  const deleteLabel = point
-    ? `Supprimer le point ${point.label}`
-    : segment
-      ? `Supprimer le segment ${getSegmentLabel(segment, state)}`
-      : 'Supprimer le cercle';
-
-  const handleDeleteClick = () => {
-    if (confirmingDelete) {
-      onDelete(selectedElementId);
-      setConfirmingDelete(false);
-    } else {
-      setConfirmingDelete(true);
-      confirmTimerRef.current = setTimeout(() => setConfirmingDelete(false), 3000);
-    }
-  };
+  // Only show if there are actions to display
+  const hasActions =
+    (point && onToggleLock) || (segment && onFixSegmentLength) || (circle && onFixCircleRadius);
+  if (!hasActions) return null;
 
   return (
     <div
@@ -142,25 +94,6 @@ export function ContextActionBar({
       }}
       data-testid="context-action-bar"
     >
-      <button
-        onClick={handleDeleteClick}
-        style={{
-          minWidth: MIN_BUTTON_SIZE_PX,
-          height: MIN_BUTTON_SIZE_PX,
-          padding: '0 10px',
-          border: 'none',
-          borderRadius: 4,
-          background: confirmingDelete ? UI_DESTRUCTIVE : 'transparent',
-          color: confirmingDelete ? '#FFFFFF' : UI_TEXT_PRIMARY,
-          cursor: 'pointer',
-          fontSize: 'inherit',
-          fontWeight: confirmingDelete ? 600 : 400,
-        }}
-        data-testid="context-delete"
-      >
-        {confirmingDelete ? 'Confirmer?' : deleteLabel}
-      </button>
-
       {point && onToggleLock && (
         <button
           onClick={() => onToggleLock(point.id)}
@@ -178,6 +111,27 @@ export function ContextActionBar({
           data-testid="context-lock"
         >
           {point.locked ? 'Déverrouiller' : 'Verrouiller'}
+        </button>
+      )}
+
+      {segment && onFixSegmentLength && (
+        <button
+          onClick={() => onFixSegmentLength(segment.id)}
+          style={{
+            minWidth: MIN_BUTTON_SIZE_PX,
+            height: MIN_BUTTON_SIZE_PX,
+            padding: '0 10px',
+            border: `1px solid ${UI_BORDER}`,
+            borderRadius: 4,
+            background: 'transparent',
+            color: UI_TEXT_PRIMARY,
+            cursor: 'pointer',
+            fontSize: 'inherit',
+          }}
+          aria-label={`Fixer la longueur du segment ${getSegmentLabel(segment, state)}`}
+          data-testid="context-fix-length"
+        >
+          {segment.fixedLength != null ? 'Modifier la longueur' : 'Fixer la longueur'}
         </button>
       )}
 

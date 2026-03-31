@@ -69,7 +69,6 @@ const TOOL_SHORTCUT_MAP: Record<string, ToolType> = {
   p: 'point',
   c: 'circle',
   v: 'move',
-  m: 'measure',
   r: 'reflection',
 };
 
@@ -78,7 +77,6 @@ const TOOL_DISPLAY_NAMES: Record<ToolType, string> = {
   point: 'Point',
   circle: 'Cercle',
   move: 'Déplacer',
-  measure: 'Longueur',
   reflection: 'Réflexion',
   reproduce: 'Reproduire',
   perpendicular: 'Perpendiculaire',
@@ -122,7 +120,6 @@ function getCanvasCursor(
     case 'parallel':
     case 'reflection':
     case 'translation':
-    case 'measure':
     case 'reproduce':
       return 'crosshair';
     case 'move':
@@ -183,12 +180,13 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
     };
   }, [preferences.fatigueReminderMinutes, showFatigueReminder]);
 
-  const [pendingDeleteFromKeyboard, setPendingDeleteFromKeyboard] = useState(false);
   const [deleteMode, setDeleteMode] = useState(false);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
 
   // RadiusInput state for circle radius/diameter fixing (spec §6.3)
   const [fixingCircleId, setFixingCircleId] = useState<string | null>(null);
+  // LengthInput state for segment length fixing (contextual action)
+  const [fixingSegmentId, setFixingSegmentId] = useState<string | null>(null);
 
   // Toast for keyboard tool changes (spec §14)
   const [toastText, setToastText] = useState<string | null>(null);
@@ -279,17 +277,24 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
     }
   }, [fixingCircleId, state.circles]);
 
-  // Close RadiusInput on tool change
+  // Close RadiusInput/LengthInput on tool change
   useEffect(() => {
     setFixingCircleId(null);
+    setFixingSegmentId(null);
   }, [state.activeTool]);
+
+  // Close LengthInput when segment is deleted
+  useEffect(() => {
+    if (fixingSegmentId && !state.segments.some((s) => s.id === fixingSegmentId)) {
+      setFixingSegmentId(null);
+    }
+  }, [fixingSegmentId, state.segments]);
 
   // Selection system
   const selection = useSelection({
     state,
     dispatch,
     toolIsIdle: tool.isIdle,
-    activeTool: state.activeTool,
   });
 
   // Slot manager
@@ -339,9 +344,8 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
         return;
       }
       // Normal mode: if tool is mid-action, forward to tool directly.
-      // Tools that need clicks on elements (measure, reproduce) get priority over selection.
-      const toolNeedsElementClick =
-        state.activeTool === 'measure' || state.activeTool === 'reproduce';
+      // Tools that need clicks on elements (reproduce) get priority over selection.
+      const toolNeedsElementClick = state.activeTool === 'reproduce';
       if (!tool.isIdle || toolNeedsElementClick) {
         tool.handleClick(mmPos);
       } else {
@@ -431,13 +435,13 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
   }, [dispatch, tool]);
 
   // Context action bar handlers
-  const handleContextDelete = useCallback(
-    (elementId: string) => dispatch({ type: 'REMOVE_ELEMENT', elementId }),
-    [dispatch],
-  );
   const handleToggleLock = useCallback(
     (pointId: string) => dispatch({ type: 'TOGGLE_POINT_LOCK', pointId }),
     [dispatch],
+  );
+  const handleFixSegmentLength = useCallback(
+    (segmentId: string) => setFixingSegmentId(segmentId),
+    [],
   );
 
   const [panelCollapsed, setPanelCollapsed] = useState(() => {
@@ -484,12 +488,6 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
       if ((e.ctrlKey || e.metaKey) && e.key === 'p') {
         e.preventDefault();
         if (hasElements) handlePrint();
-      }
-      if (e.key === 'Delete' || e.key === 'Backspace') {
-        if (state.selectedElementId && !inInput) {
-          e.preventDefault();
-          setPendingDeleteFromKeyboard(true);
-        }
       }
 
       // Tool keyboard shortcuts (spec §14) — disabled by default
@@ -802,7 +800,7 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
         {shiftConstraintActive && ' — Contrainte 15° active'}
         {/* Right-side buttons grouped in a single flex container to avoid double marginLeft:auto */}
         {((!demoMode && state.consigne && consigneDismissed) ||
-          (state.activeTool === 'reflection' && tool.onToggleSymmetryCheck)) && (
+          (state.activeTool === 'reflection' && tool.onToggleStepByStep)) && (
           <div style={{ marginLeft: 'auto', display: 'flex', gap: 4, alignItems: 'center' }}>
             {!demoMode && state.consigne && consigneDismissed && (
               <button
@@ -820,23 +818,6 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
                 data-testid="consigne-show"
               >
                 Voir la consigne
-              </button>
-            )}
-            {state.activeTool === 'reflection' && tool.onToggleSymmetryCheck && (
-              <button
-                onClick={tool.onToggleSymmetryCheck}
-                style={{
-                  padding: '2px 10px',
-                  background: tool.symmetryCheckMode ? '#185FA5' : 'transparent',
-                  color: tool.symmetryCheckMode ? '#FFF' : '#4A5568',
-                  border: '1px solid #D1D8E0',
-                  borderRadius: 4,
-                  cursor: 'pointer',
-                  fontSize: 12,
-                  fontWeight: 500,
-                }}
-              >
-                {tool.symmetryCheckMode ? '✓ Vérifier la symétrie' : 'Vérifier la symétrie'}
               </button>
             )}
             {state.activeTool === 'reflection' && tool.onToggleStepByStep && (
@@ -976,31 +957,23 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
           {/* Context action bar — hidden during compound tool workflows (reproduce, perpendicular, etc.)
              where clicking an element is a tool action, not a general selection */}
           {state.selectedElementId &&
-            ![
-              'reproduce',
-              'perpendicular',
-              'parallel',
-              'translation',
-              'reflection',
-              'measure',
-            ].includes(state.activeTool) && (
+            !['reproduce', 'perpendicular', 'parallel', 'translation', 'reflection'].includes(
+              state.activeTool,
+            ) && (
               <ContextActionBar
                 state={state}
                 viewport={viewport}
-                onDelete={handleContextDelete}
                 onToggleLock={handleToggleLock}
                 onFixCircleRadius={setFixingCircleId}
-                triggerConfirm={pendingDeleteFromKeyboard}
-                onConfirmHandled={() => setPendingDeleteFromKeyboard(false)}
+                onFixSegmentLength={handleFixSegmentLength}
                 fontScale={effectiveFontScale}
               />
             )}
 
-          {/* Length input for Measure tool (spec §6.8, §9.5) */}
-          {state.activeTool === 'measure' &&
-            state.selectedElementId &&
+          {/* Length input for segment fixing (contextual action, spec §6.8, §9.5) */}
+          {fixingSegmentId &&
             (() => {
-              const seg = state.segments.find((s) => s.id === state.selectedElementId);
+              const seg = state.segments.find((s) => s.id === fixingSegmentId);
               if (!seg) return null;
               const sp = state.points.find((p) => p.id === seg.startPointId);
               const ep = state.points.find((p) => p.id === seg.endPointId);
@@ -1022,12 +995,12 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
                   positionPx={midPx}
                   onSubmit={(lengthMm) => {
                     dispatch({ type: 'FIX_SEGMENT_LENGTH', segmentId: seg.id, lengthMm });
-                    dispatch({ type: 'SET_SELECTED_ELEMENT', elementId: null });
+                    setFixingSegmentId(null);
                   }}
                   onClear={() => {
                     dispatch({ type: 'UNFIX_SEGMENT_LENGTH', segmentId: seg.id });
                   }}
-                  onDismiss={() => dispatch({ type: 'SET_SELECTED_ELEMENT', elementId: null })}
+                  onDismiss={() => setFixingSegmentId(null)}
                 />
               );
             })()}

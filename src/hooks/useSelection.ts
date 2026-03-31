@@ -12,7 +12,6 @@ interface UseSelectionOptions {
   state: ConstructionState;
   dispatch: (action: ConstructionAction) => void;
   toolIsIdle: boolean;
-  activeTool: ConstructionState['activeTool'];
 }
 
 interface SelectionResult {
@@ -29,7 +28,6 @@ export function useSelection({
   state,
   dispatch,
   toolIsIdle,
-  activeTool,
 }: UseSelectionOptions): SelectionResult {
   const [hoveredElement, setHoveredElement] = useState<HitTestResult | null>(null);
 
@@ -49,7 +47,7 @@ export function useSelection({
 
       // All construction tools act on point clicks when idle — let the tool handle it.
       // Selection only intercepts point clicks for tools that never act on points.
-      if (activeTool !== 'measure' && hit?.type === 'point') {
+      if (hit?.type === 'point') {
         return false;
       }
 
@@ -66,7 +64,7 @@ export function useSelection({
 
       return false;
     },
-    [state, dispatch, toolIsIdle, activeTool],
+    [state, dispatch, toolIsIdle],
   );
 
   const clearSelection = useCallback(() => {

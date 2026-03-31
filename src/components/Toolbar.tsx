@@ -15,7 +15,6 @@ import {
   CircleIcon,
   MoveIcon,
   ReflectionIcon,
-  LengthIcon,
   ReproduceIcon,
   PerpendicularIcon,
   ParallelIcon,
@@ -26,7 +25,6 @@ import {
   TOOL_SEGMENT,
   TOOL_POINT,
   TOOL_MOVE,
-  TOOL_MEASURE,
   TOOL_CIRCLE,
   TOOL_REFLECTION,
   TOOL_SNAP,
@@ -259,18 +257,6 @@ export const Toolbar = memo(function Toolbar({
             <TranslationIcon /> <span className="tool-label">Translation</span>
           </button>
         )}
-        {/* Measure — always visible in complet, behind "Plus d'outils" in simplifie */}
-        {(!isSimple || moreOpen) && (
-          <button
-            onClick={() => onToolChange('measure')}
-            style={{ ...toolBtnBase, ...(activeTool === 'measure' ? activeStyle : {}) }}
-            aria-pressed={activeTool === 'measure'}
-            data-testid="tool-measure"
-          >
-            <LengthIcon /> <span className="tool-label">{TOOL_MEASURE}</span>
-          </button>
-        )}
-
         {/* "Plus d'outils" toggle (2e cycle only, spec §10) */}
         {isSimple && (
           <button

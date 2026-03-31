@@ -28,10 +28,6 @@ export interface ToolHookResult {
   activePointId?: string | null;
   /** Circle tool: ID of the last created circle (for auto-showing RadiusInput). */
   lastCreatedCircleId?: string | null;
-  /** Reflection tool: symmetry check mode toggle (v2). */
-  symmetryCheckMode?: boolean;
-  /** Reflection tool: toggle symmetry check mode (v2). */
-  onToggleSymmetryCheck?: () => void;
   /** Reflection tool: step-by-step animation toggle (v2). */
   stepByStep?: boolean;
   /** Reflection tool: toggle step-by-step mode (v2). */

@@ -10,12 +10,7 @@ import type { ToolHookResult } from './types';
 import { hitTestSegment, hitTestCircle } from '@/engine/hit-test';
 import { findSnap, DEFAULT_TOLERANCES, scaleTolerances } from '@/engine/snap';
 import { TOLERANCE_PROFILES } from '@/config/accessibility';
-import {
-  constrainAxisAngle,
-  checkSymmetry,
-  reflectPoint,
-  type SymmetryResult,
-} from '@/engine/reflection';
+import { constrainAxisAngle, reflectPoint } from '@/engine/reflection';
 import { detectAllFaces, classifyFigures } from '@/engine/figures';
 import { STATUS_REFLECTION_AXIS, STATUS_REFLECTION_SELECT } from '@/config/messages';
 import { CSS_PX_PER_MM } from '@/engine/viewport';
@@ -41,8 +36,6 @@ export function useReflectionTool({
   const [cursorMm, setCursorMm] = useState<{ x: number; y: number } | null>(null);
   const [snapResult, setSnapResult] = useState<SnapResult | null>(null);
   const [lastReflectionMsg, setLastReflectionMsg] = useState<string | null>(null);
-  const [symmetryCheckMode, setSymmetryCheckMode] = useState(false);
-  const [symmetryResult, setSymmetryResult] = useState<SymmetryResult | null>(null);
   const [stepByStep, setStepByStep] = useState(false);
   const [animSteps, setAnimSteps] = useState<
     {
@@ -70,7 +63,6 @@ export function useReflectionTool({
     setCursorMm(null);
     setSnapResult(null);
     setLastReflectionMsg(null);
-    setSymmetryResult(null);
     setAnimSteps([]);
     setAnimIndex(-1);
     setPendingReflect(null);
@@ -183,27 +175,6 @@ export function useReflectionTool({
         if (segId) {
           const figure = findFigureForSegment(segId);
 
-          // Symmetry check mode: verify instead of reflect
-          if (symmetryCheckMode) {
-            const pointIds = figure
-              ? figure.pointIds
-              : (() => {
-                  const seg = state.segments.find((s) => s.id === segId);
-                  return seg ? [seg.startPointId, seg.endPointId] : [];
-                })();
-            if (pointIds.length > 0) {
-              const result = checkSymmetry(pointIds, state, axisP1, axisP2);
-              setSymmetryResult(result);
-              const name = figure?.name ?? 'Figure';
-              setLastReflectionMsg(
-                result.isSymmetric
-                  ? `${name} est symétrique par rapport à cet axe.`
-                  : `${name} n'est pas symétrique (écart max : ${result.maxDeviationMm.toFixed(1)} mm).`,
-              );
-            }
-            return;
-          }
-
           if (figure) {
             // Reflect the entire figure
             const reflectAction: ConstructionAction = {
@@ -251,11 +222,6 @@ export function useReflectionTool({
         if (circleId) {
           const circle = state.circles.find((c) => c.id === circleId);
           if (circle) {
-            if (symmetryCheckMode) {
-              // Can't verify symmetry for a single circle meaningfully
-              setLastReflectionMsg('Clique sur une figure pour vérifier la symétrie.');
-              return;
-            }
             dispatch({
               type: 'REFLECT_ELEMENTS',
               pointIds: [circle.centerPointId],
@@ -283,7 +249,6 @@ export function useReflectionTool({
       dispatch,
       findFigureForSegment,
       reset,
-      symmetryCheckMode,
       tolerances,
       stepByStep,
       launchStepAnimation,
@@ -313,27 +278,16 @@ export function useReflectionTool({
     }
   }, [phase]);
 
-  const toggleSymmetryCheck = useCallback(() => {
-    setSymmetryCheckMode((prev) => !prev);
-    setSymmetryResult(null);
-    setLastReflectionMsg(null);
-  }, []);
-
   // Status message
-  const modeLabel = symmetryCheckMode ? 'Vérification' : 'Réflexion';
   let statusMessage: string;
   if (phase === 'choose_axis') {
-    statusMessage = symmetryCheckMode
-      ? 'Vérification — Clique un segment ou trace un axe pour vérifier la symétrie'
-      : STATUS_REFLECTION_AXIS;
+    statusMessage = STATUS_REFLECTION_AXIS;
   } else if (phase === 'axis_first_point') {
-    statusMessage = `${modeLabel} — Clique pour placer le deuxième point de l'axe`;
+    statusMessage = "Réflexion — Clique pour placer le deuxième point de l'axe";
   } else {
     statusMessage = lastReflectionMsg
-      ? `${modeLabel} — ${lastReflectionMsg} Clique sur un autre élément ou appuie Échap pour terminer.`
-      : symmetryCheckMode
-        ? 'Vérification — Clique sur une figure pour vérifier si elle est symétrique par rapport à cet axe.'
-        : STATUS_REFLECTION_SELECT;
+      ? `Réflexion — ${lastReflectionMsg} Clique sur un autre élément ou appuie Échap pour terminer.`
+      : STATUS_REFLECTION_SELECT;
   }
 
   // Overlay: axis line (dashed red)
@@ -398,30 +352,6 @@ export function useReflectionTool({
       );
     }
 
-    // Symmetry check result feedback: green/red circles at correspondence points
-    if (symmetryResult && phase === 'axis_defined') {
-      const pointMap = new Map(state.points.map((p) => [p.id, p]));
-      const pxPerMm = viewport.zoom * CSS_PX_PER_MM;
-      for (const corr of symmetryResult.correspondences) {
-        const point = pointMap.get(corr.originalId);
-        if (!point) continue;
-        const sx = (point.x - viewport.panX) * pxPerMm;
-        const sy = (point.y - viewport.panY) * pxPerMm;
-        const color = corr.deviationMm <= 1 ? '#22C55E' : '#EF4444';
-        elements.push(
-          createElement('circle', {
-            key: `sym-${corr.originalId}`,
-            cx: sx,
-            cy: sy,
-            r: 8,
-            fill: color,
-            opacity: 0.4,
-            pointerEvents: 'none',
-          }),
-        );
-      }
-    }
-
     // Step-by-step animation: show dashed lines point → foot → image
     if (animSteps.length > 0 && animIndex >= 0) {
       const pxPerMm = viewport.zoom * CSS_PX_PER_MM;
@@ -479,18 +409,7 @@ export function useReflectionTool({
     }
 
     return elements.length > 0 ? elements : null;
-  }, [
-    axisP1,
-    axisP2,
-    phase,
-    cursorMm,
-    viewport,
-    is2eCycle,
-    symmetryResult,
-    state.points,
-    animSteps,
-    animIndex,
-  ]);
+  }, [axisP1, axisP2, phase, cursorMm, viewport, is2eCycle, state.points, animSteps, animIndex]);
 
   return {
     handleClick,
@@ -501,8 +420,6 @@ export function useReflectionTool({
     statusMessage,
     snapResult,
     overlayElements,
-    symmetryCheckMode,
-    onToggleSymmetryCheck: toggleSymmetryCheck,
     stepByStep,
     onToggleStepByStep: () => setStepByStep((prev) => !prev),
   };

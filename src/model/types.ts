@@ -63,7 +63,6 @@ export type ToolType =
   | 'circle'
   | 'reflection'
   | 'move'
-  | 'measure'
   | 'reproduce'
   | 'perpendicular'
   | 'parallel'

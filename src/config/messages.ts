@@ -21,8 +21,6 @@ export const STATUS_REFLECTION_AXIS =
   "Réflexion — Clique deux points pour tracer l'axe de symétrie";
 export const STATUS_REFLECTION_SELECT = 'Réflexion — Clique sur une figure pour la refléter';
 
-export const STATUS_MEASURE_IDLE = 'Longueur — Clique sur un segment pour régler sa longueur';
-
 export const STATUS_POINT_IDLE = 'Point — Clique pour placer un point';
 
 // ── Length input ───────────────────────────────────────────
@@ -59,7 +57,6 @@ export const TOOL_POINT = 'Point';
 export const TOOL_CIRCLE = 'Cercle';
 export const TOOL_REFLECTION = 'Réflexion';
 export const TOOL_MOVE = 'Déplacer';
-export const TOOL_MEASURE = 'Longueur';
 export const TOOL_SNAP = 'Aimant';
 
 // ── Mode selector ─────────────────────────────────────────
