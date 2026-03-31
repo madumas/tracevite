@@ -6,6 +6,10 @@ import {
   pointOnSegmentProjection,
   isPointNearSegment,
   segmentAngle,
+  segmentIntersection,
+  perpendicularDirection,
+  parallelDirection,
+  projectOntoConstrainedLine,
 } from './geometry';
 
 describe('distance', () => {
@@ -151,5 +155,168 @@ describe('segmentAngle', () => {
 
   it('returns 270° for vertical up', () => {
     expect(segmentAngle({ x: 0, y: 0 }, { x: 0, y: -10 })).toBeCloseTo(270);
+  });
+});
+
+describe('segmentIntersection', () => {
+  it('returns intersection of crossing X segments', () => {
+    const result = segmentIntersection(
+      { x: 0, y: 0 },
+      { x: 100, y: 100 },
+      { x: 100, y: 0 },
+      { x: 0, y: 100 },
+    );
+    expect(result).not.toBeNull();
+    expect(result!.x).toBeCloseTo(50);
+    expect(result!.y).toBeCloseTo(50);
+  });
+
+  it('returns null for parallel segments', () => {
+    const result = segmentIntersection(
+      { x: 0, y: 0 },
+      { x: 100, y: 0 },
+      { x: 0, y: 10 },
+      { x: 100, y: 10 },
+    );
+    expect(result).toBeNull();
+  });
+
+  it('returns null for collinear overlapping segments', () => {
+    const result = segmentIntersection(
+      { x: 0, y: 0 },
+      { x: 100, y: 0 },
+      { x: 50, y: 0 },
+      { x: 150, y: 0 },
+    );
+    expect(result).toBeNull();
+  });
+
+  it('returns null when intersection is at endpoint (t=0 or t=1)', () => {
+    // L-shape: segments share an endpoint
+    const result = segmentIntersection(
+      { x: 0, y: 0 },
+      { x: 50, y: 0 },
+      { x: 50, y: 0 },
+      { x: 50, y: 50 },
+    );
+    expect(result).toBeNull();
+  });
+
+  it('returns null when intersection is too close to endpoint', () => {
+    // Cross near endpoint of first segment
+    const result = segmentIntersection(
+      { x: 0, y: 0 },
+      { x: 100, y: 0 },
+      { x: 1, y: -50 },
+      { x: 1, y: 50 },
+      2, // minDistFromEndpoint
+    );
+    expect(result).toBeNull();
+  });
+
+  it('returns intersection when minDistFromEndpoint=0', () => {
+    const result = segmentIntersection(
+      { x: 0, y: 0 },
+      { x: 100, y: 0 },
+      { x: 1, y: -50 },
+      { x: 1, y: 50 },
+      0,
+    );
+    expect(result).not.toBeNull();
+    expect(result!.x).toBeCloseTo(1);
+    expect(result!.y).toBeCloseTo(0);
+  });
+
+  it('returns null for T-junction (one endpoint on body of other)', () => {
+    const result = segmentIntersection(
+      { x: 0, y: 0 },
+      { x: 100, y: 0 },
+      { x: 50, y: 50 },
+      { x: 50, y: 0 }, // touches at (50,0) which is at u=1
+    );
+    expect(result).toBeNull();
+  });
+
+  it('returns null for non-intersecting segments', () => {
+    const result = segmentIntersection(
+      { x: 0, y: 0 },
+      { x: 10, y: 0 },
+      { x: 20, y: 0 },
+      { x: 30, y: 0 },
+    );
+    expect(result).toBeNull();
+  });
+});
+
+describe('perpendicularDirection', () => {
+  it('returns perpendicular for horizontal segment', () => {
+    const dir = perpendicularDirection({ x: 0, y: 0 }, { x: 10, y: 0 });
+    // Formula: {-dy/len, dx/len} = {0, 10/10} = {0, 1}
+    expect(dir.dx).toBeCloseTo(0);
+    expect(dir.dy).toBeCloseTo(1);
+  });
+
+  it('returns perpendicular for vertical segment', () => {
+    const dir = perpendicularDirection({ x: 0, y: 0 }, { x: 0, y: 10 });
+    // {-10/10, 0} = {-1, 0}
+    expect(dir.dx).toBeCloseTo(-1);
+    expect(dir.dy).toBeCloseTo(0);
+  });
+
+  it('returns fallback for zero-length segment', () => {
+    const dir = perpendicularDirection({ x: 5, y: 5 }, { x: 5, y: 5 });
+    expect(dir).toEqual({ dx: 0, dy: -1 });
+  });
+
+  it('returns unit vector for diagonal segment', () => {
+    const dir = perpendicularDirection({ x: 0, y: 0 }, { x: 10, y: 10 });
+    const len = Math.sqrt(dir.dx * dir.dx + dir.dy * dir.dy);
+    expect(len).toBeCloseTo(1);
+  });
+});
+
+describe('parallelDirection', () => {
+  it('returns unit vector for horizontal segment', () => {
+    const dir = parallelDirection({ x: 0, y: 0 }, { x: 10, y: 0 });
+    expect(dir.dx).toBeCloseTo(1);
+    expect(dir.dy).toBeCloseTo(0);
+  });
+
+  it('returns unit vector for 3-4-5 triangle hypotenuse', () => {
+    const dir = parallelDirection({ x: 0, y: 0 }, { x: 30, y: 40 });
+    expect(dir.dx).toBeCloseTo(0.6);
+    expect(dir.dy).toBeCloseTo(0.8);
+  });
+
+  it('returns fallback for zero-length segment', () => {
+    const dir = parallelDirection({ x: 5, y: 5 }, { x: 5, y: 5 });
+    expect(dir).toEqual({ dx: 1, dy: 0 });
+  });
+});
+
+describe('projectOntoConstrainedLine', () => {
+  it('projects onto horizontal line', () => {
+    const result = projectOntoConstrainedLine({ x: 5, y: 3 }, { x: 0, y: 0 }, { dx: 1, dy: 0 });
+    expect(result.x).toBeCloseTo(5);
+    expect(result.y).toBeCloseTo(0);
+  });
+
+  it('projects onto vertical line', () => {
+    const result = projectOntoConstrainedLine({ x: 3, y: 5 }, { x: 0, y: 0 }, { dx: 0, dy: 1 });
+    expect(result.x).toBeCloseTo(0);
+    expect(result.y).toBeCloseTo(5);
+  });
+
+  it('returns cursor position when already on line', () => {
+    const result = projectOntoConstrainedLine({ x: 7, y: 0 }, { x: 0, y: 0 }, { dx: 1, dy: 0 });
+    expect(result.x).toBeCloseTo(7);
+    expect(result.y).toBeCloseTo(0);
+  });
+
+  it('projects onto diagonal line', () => {
+    const dir = { dx: Math.SQRT1_2, dy: Math.SQRT1_2 };
+    const result = projectOntoConstrainedLine({ x: 10, y: 0 }, { x: 0, y: 0 }, dir);
+    expect(result.x).toBeCloseTo(5);
+    expect(result.y).toBeCloseTo(5);
   });
 });
