@@ -772,9 +772,11 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
               )
             : STATUS_DELETE_MODE
           : (() => {
-              const parts = tool.statusMessage.split(' — ');
-              const toolName = parts[0];
-              const instruction = parts.length > 1 ? parts.slice(1).join(' — ') : '';
+              const raw = tool.statusMessage;
+              const dashIdx = raw.indexOf(' — ');
+              if (dashIdx < 0) return raw; // hint messages without separator
+              const toolName = raw.slice(0, dashIdx);
+              const instruction = raw.slice(dashIdx + 3);
               return (
                 <>
                   <span
@@ -796,61 +798,63 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
               );
             })()}
         {shiftConstraintActive && ' — Contrainte 15° active'}
-        {/* "Voir la consigne" — relocated from header (C1 critique) */}
-        {!demoMode && state.consigne && consigneDismissed && (
-          <button
-            onClick={() => setConsigneDismissed(false)}
-            style={{
-              marginLeft: 'auto',
-              padding: '2px 8px',
-              background: '#E6F1FB',
-              border: '1px solid #C5D8EC',
-              borderRadius: 4,
-              cursor: 'pointer',
-              fontSize: 11,
-              color: '#185FA5',
-              whiteSpace: 'nowrap',
-            }}
-            data-testid="consigne-show"
-          >
-            Voir la consigne
-          </button>
-        )}
-        {state.activeTool === 'reflection' && tool.onToggleSymmetryCheck && (
-          <button
-            onClick={tool.onToggleSymmetryCheck}
-            style={{
-              marginLeft: 'auto',
-              padding: '2px 10px',
-              background: tool.symmetryCheckMode ? '#185FA5' : 'transparent',
-              color: tool.symmetryCheckMode ? '#FFF' : '#4A5568',
-              border: '1px solid #D1D8E0',
-              borderRadius: 4,
-              cursor: 'pointer',
-              fontSize: 12,
-              fontWeight: 500,
-            }}
-          >
-            {tool.symmetryCheckMode ? '✓ Vérifier la symétrie' : 'Vérifier la symétrie'}
-          </button>
-        )}
-        {state.activeTool === 'reflection' && tool.onToggleStepByStep && (
-          <button
-            onClick={tool.onToggleStepByStep}
-            style={{
-              marginLeft: 4,
-              padding: '2px 10px',
-              background: tool.stepByStep ? '#185FA5' : 'transparent',
-              color: tool.stepByStep ? '#FFF' : '#4A5568',
-              border: '1px solid #D1D8E0',
-              borderRadius: 4,
-              cursor: 'pointer',
-              fontSize: 12,
-              fontWeight: 500,
-            }}
-          >
-            {tool.stepByStep ? '✓ Voir les étapes' : 'Voir les étapes'}
-          </button>
+        {/* Right-side buttons grouped in a single flex container to avoid double marginLeft:auto */}
+        {((!demoMode && state.consigne && consigneDismissed) ||
+          (state.activeTool === 'reflection' && tool.onToggleSymmetryCheck)) && (
+          <div style={{ marginLeft: 'auto', display: 'flex', gap: 4, alignItems: 'center' }}>
+            {!demoMode && state.consigne && consigneDismissed && (
+              <button
+                onClick={() => setConsigneDismissed(false)}
+                style={{
+                  padding: '2px 8px',
+                  background: '#E6F1FB',
+                  border: '1px solid #C5D8EC',
+                  borderRadius: 4,
+                  cursor: 'pointer',
+                  fontSize: 11,
+                  color: '#185FA5',
+                  whiteSpace: 'nowrap',
+                }}
+                data-testid="consigne-show"
+              >
+                Voir la consigne
+              </button>
+            )}
+            {state.activeTool === 'reflection' && tool.onToggleSymmetryCheck && (
+              <button
+                onClick={tool.onToggleSymmetryCheck}
+                style={{
+                  padding: '2px 10px',
+                  background: tool.symmetryCheckMode ? '#185FA5' : 'transparent',
+                  color: tool.symmetryCheckMode ? '#FFF' : '#4A5568',
+                  border: '1px solid #D1D8E0',
+                  borderRadius: 4,
+                  cursor: 'pointer',
+                  fontSize: 12,
+                  fontWeight: 500,
+                }}
+              >
+                {tool.symmetryCheckMode ? '✓ Vérifier la symétrie' : 'Vérifier la symétrie'}
+              </button>
+            )}
+            {state.activeTool === 'reflection' && tool.onToggleStepByStep && (
+              <button
+                onClick={tool.onToggleStepByStep}
+                style={{
+                  padding: '2px 10px',
+                  background: tool.stepByStep ? '#185FA5' : 'transparent',
+                  color: tool.stepByStep ? '#FFF' : '#4A5568',
+                  border: '1px solid #D1D8E0',
+                  borderRadius: 4,
+                  cursor: 'pointer',
+                  fontSize: 12,
+                  fontWeight: 500,
+                }}
+              >
+                {tool.stepByStep ? '✓ Voir les étapes' : 'Voir les étapes'}
+              </button>
+            )}
+          </div>
         )}
       </div>
 

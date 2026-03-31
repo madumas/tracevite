@@ -227,6 +227,7 @@ export const ActionBar = memo(function ActionBar({
           }}
           aria-label="Mode démonstration"
           title="Mode démonstration (plein écran)"
+          data-testid="demo-toggle"
         >
           {demoMode ? '✕' : '⛶'}
         </button>

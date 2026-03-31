@@ -141,16 +141,22 @@ export const Toolbar = memo(function Toolbar({
         data-testid="toolbar-scroll"
       >
         {/* Logo + About */}
-        {!demoMode && (
-          <img
-            src="/logo.svg"
-            alt="TraceVite"
-            width={24}
-            height={24}
-            style={{ cursor: onShowAbout ? 'pointer' : 'default', flexShrink: 0 }}
+        {!demoMode && onShowAbout && (
+          <button
             onClick={onShowAbout}
-            title="À propos de TraceVite"
-          />
+            style={{
+              background: 'transparent',
+              border: 'none',
+              padding: 0,
+              cursor: 'pointer',
+              flexShrink: 0,
+              display: 'flex',
+              alignItems: 'center',
+            }}
+            aria-label="À propos de TraceVite"
+          >
+            <img src="/logo.svg" alt="" width={24} height={24} />
+          </button>
         )}
         {!demoMode && <SaveIndicator saving={saving} compact />}
 
