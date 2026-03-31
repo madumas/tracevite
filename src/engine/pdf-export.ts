@@ -8,6 +8,7 @@ import { jsPDF } from 'jspdf';
 import type { ConstructionState } from '@/model/types';
 import type { PageFormat } from '@/model/preferences';
 import { computeDerived } from './derived';
+import { isAngleCluttered } from './angles';
 import { formatLength } from './format';
 import {
   MARGIN_MM,
@@ -196,6 +197,100 @@ export function generatePDF(state: ConstructionState, options: PdfOptions): jsPD
             tx(cx + perpX * markLen),
             ty(cy + perpY * markLen),
           );
+        }
+      }
+    }
+  }
+
+  // ── Angle arcs and right-angle squares ────────────
+  // Angles are measurements, not properties — render even when hideProperties is true.
+  if (includeMeasurements) {
+    const angleDerived = computeDerived(state, state.displayMode);
+    const angles = angleDerived.angles;
+    const cluttered = isAngleCluttered(state, state.displayMode);
+
+    const ARC_RADIUS_MM = 5;
+    const SQUARE_SIZE_MM = 3;
+    const ARC_SAMPLES = 24;
+
+    doc.setDrawColor(51, 51, 51); // #333 dark gray for B&W PDF
+    doc.setLineWidth(0.3);
+
+    for (const angle of angles) {
+      const vertex = pointMap.get(angle.vertexPointId);
+      const ray1Pt = pointMap.get(angle.ray1PointId);
+      const ray2Pt = pointMap.get(angle.ray2PointId);
+      if (!vertex || !ray1Pt || !ray2Pt) continue;
+
+      // Compute ray directions
+      const dx1 = ray1Pt.x - vertex.x;
+      const dy1 = ray1Pt.y - vertex.y;
+      const dx2 = ray2Pt.x - vertex.x;
+      const dy2 = ray2Pt.y - vertex.y;
+      const startAngle = Math.atan2(dy1, dx1);
+      const endAngle = Math.atan2(dy2, dx2);
+
+      if (angle.classification === 'droit') {
+        // Right-angle square: 3 lines forming an open corner
+        const cos1 = Math.cos(startAngle);
+        const sin1 = Math.sin(startAngle);
+        const cos2 = Math.cos(endAngle);
+        const sin2 = Math.sin(endAngle);
+        const s = SQUARE_SIZE_MM;
+
+        // Three corners of the open square (vertex is implied, not drawn)
+        const p1x = vertex.x + cos1 * s;
+        const p1y = vertex.y + sin1 * s;
+        const p2x = vertex.x + cos1 * s + cos2 * s;
+        const p2y = vertex.y + sin1 * s + sin2 * s;
+        const p3x = vertex.x + cos2 * s;
+        const p3y = vertex.y + sin2 * s;
+
+        doc.line(tx(p1x), ty(p1y), tx(p2x), ty(p2y));
+        doc.line(tx(p2x), ty(p2y), tx(p3x), ty(p3y));
+      } else {
+        // Arc polyline approximation for non-right angles
+        let ccwSweep = endAngle - startAngle;
+        if (ccwSweep < 0) ccwSweep += 2 * Math.PI;
+
+        // Choose the smaller arc (≤180°)
+        const useSmallArc = ccwSweep <= Math.PI;
+        const sweep = useSmallArc ? ccwSweep : -(2 * Math.PI - ccwSweep);
+
+        const r = ARC_RADIUS_MM;
+        for (let i = 0; i < ARC_SAMPLES; i++) {
+          const t0 = startAngle + (sweep * i) / ARC_SAMPLES;
+          const t1 = startAngle + (sweep * (i + 1)) / ARC_SAMPLES;
+          doc.line(
+            tx(vertex.x + Math.cos(t0) * r),
+            ty(vertex.y + Math.sin(t0) * r),
+            tx(vertex.x + Math.cos(t1) * r),
+            ty(vertex.y + Math.sin(t1) * r),
+          );
+        }
+
+        // Obtus marker: small perpendicular bar at arc midpoint (matching canvas)
+        if (angle.classification === 'obtus') {
+          const midT = startAngle + sweep / 2;
+          const barLen = 1.5; // mm
+          const barMx = vertex.x + Math.cos(midT) * r;
+          const barMy = vertex.y + Math.sin(midT) * r;
+          const perpX = -Math.sin(midT) * barLen;
+          const perpY = Math.cos(midT) * barLen;
+          doc.line(tx(barMx - perpX), ty(barMy - perpY), tx(barMx + perpX), ty(barMy + perpY));
+        }
+
+        // Degree label (complet mode only, hidden when cluttered)
+        if (state.displayMode === 'complet' && !cluttered) {
+          const midT = startAngle + sweep / 2;
+          const labelR = r + 3; // slightly beyond the arc
+          const labelX = vertex.x + Math.cos(midT) * labelR;
+          const labelY = vertex.y + Math.sin(midT) * labelR;
+          doc.setFontSize(7);
+          doc.setTextColor(51);
+          doc.text(`${Math.round(angle.degrees)}°`, tx(labelX), ty(labelY), {
+            align: 'center',
+          });
         }
       }
     }

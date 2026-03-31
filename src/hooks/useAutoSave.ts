@@ -4,6 +4,7 @@ import type { UndoManager } from '@/model/undo';
 import { saveSlotData, saveRegistry, loadRegistry } from '@/model/slot-persistence';
 import { updateSlotMetadata } from '@/model/slots';
 import { AUTO_SAVE_DEBOUNCE_MS } from '@/config/accessibility';
+import { generateThumbnail } from '@/engine/thumbnail';
 
 /**
  * Auto-save hook with 2s debounce — saves to active slot.
@@ -31,10 +32,14 @@ export function useAutoSave(
     setSaving(true);
     try {
       await saveSlotData(activeSlotId, stateRef.current, undoRef.current);
-      // Update slot metadata (updatedAt)
+      // Update slot metadata (updatedAt + thumbnail)
+      const thumbnail = generateThumbnail(stateRef.current);
       const registry = await loadRegistry();
       if (registry) {
-        const updated = updateSlotMetadata(registry, activeSlotId, { updatedAt: Date.now() });
+        const updated = updateSlotMetadata(registry, activeSlotId, {
+          updatedAt: Date.now(),
+          thumbnail,
+        });
         await saveRegistry(updated);
       }
     } catch {

@@ -205,6 +205,33 @@ export function SlotManager({
               }}
               data-testid={`slot-${slot.id}`}
             >
+              {/* Thumbnail */}
+              {slot.thumbnail ? (
+                <img
+                  src={slot.thumbnail}
+                  width={60}
+                  height={40}
+                  alt=""
+                  style={{
+                    objectFit: 'contain',
+                    borderRadius: 3,
+                    border: `1px solid ${UI_BORDER}`,
+                    flexShrink: 0,
+                  }}
+                />
+              ) : (
+                <div
+                  style={{
+                    width: 60,
+                    height: 40,
+                    borderRadius: 3,
+                    border: `1px solid ${UI_BORDER}`,
+                    background: '#F0F0F0',
+                    flexShrink: 0,
+                  }}
+                />
+              )}
+
               <div style={{ flex: 1, minWidth: 0 }}>
                 {editingId === slot.id ? (
                   <input
