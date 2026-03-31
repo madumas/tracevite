@@ -72,7 +72,7 @@ export function AboutDialog({ onClose }: AboutDialogProps) {
         <div style={{ fontSize: 12, color: UI_TEXT_SECONDARY, marginBottom: 8 }}>
           Logiciel libre —{' '}
           <a
-            href="https://github.com/nicmusic/tracevite"
+            href="https://github.com/madumas/tracevite"
             target="_blank"
             rel="noopener"
             style={{ color: UI_PRIMARY }}
@@ -81,8 +81,38 @@ export function AboutDialog({ onClose }: AboutDialogProps) {
           </a>
         </div>
 
-        <div style={{ fontSize: 12, color: UI_TEXT_SECONDARY, marginBottom: 16 }}>
-          Contact : ma@tracevite.ca
+        <div
+          style={{
+            fontSize: 12,
+            color: UI_TEXT_SECONDARY,
+            marginBottom: 16,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 6,
+          }}
+        >
+          Contact :{' '}
+          <a href="mailto:ma@tracevite.ca" style={{ color: UI_PRIMARY }}>
+            ma@tracevite.ca
+          </a>
+          <button
+            onClick={() => {
+              navigator.clipboard?.writeText('ma@tracevite.ca');
+            }}
+            style={{
+              background: 'transparent',
+              border: 'none',
+              cursor: 'pointer',
+              fontSize: 14,
+              padding: '0 2px',
+              color: UI_TEXT_SECONDARY,
+            }}
+            title="Copier l'adresse"
+            aria-label="Copier l'adresse courriel"
+          >
+            📋
+          </button>
         </div>
 
         <div style={{ fontSize: 11, color: UI_TEXT_SECONDARY, marginBottom: 16 }}>
