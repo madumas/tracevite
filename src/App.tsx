@@ -31,10 +31,8 @@ import { CSS_PX_PER_MM, BOUNDS_WIDTH_MM, BOUNDS_HEIGHT_MM } from '@/engine/viewp
 import { isAngleCluttered } from '@/engine/angles';
 import { computeDerived } from '@/engine/derived';
 import { createSoundEngine } from '@/engine/sound';
-import { ExportReminder } from '@/components/ExportReminder';
 import { UpdatePrompt } from '@/components/UpdatePrompt';
 import { detectLaunchStatus } from '@/model/persistence';
-import { serializeState } from '@/model/serialize';
 import { LengthInput } from '@/components/LengthInput';
 import { SettingsDialog } from '@/components/SettingsDialog';
 import { PropertiesPanel } from '@/components/PropertiesPanel';
@@ -761,21 +759,6 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
           </button>
         </div>
       )}
-
-      {/* Export reminder (spec §17.1) */}
-      <ExportReminder
-        hasConstructions={hasElements}
-        onExport={() => {
-          const json = serializeState(state);
-          const blob = new Blob([json], { type: 'application/json' });
-          const url = URL.createObjectURL(blob);
-          const a = document.createElement('a');
-          a.href = url;
-          a.download = 'construction.tracevite';
-          a.click();
-          URL.revokeObjectURL(url);
-        }}
-      />
 
       {/* Toolbar */}
       <Toolbar
