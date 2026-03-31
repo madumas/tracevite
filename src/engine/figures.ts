@@ -197,7 +197,8 @@ export function classifyFigures(
     const segmentIds = findSegmentIds(face, state);
 
     // Classify
-    const vertexLabels = face.map((id) => pointMap.get(id)?.label ?? '?').join('');
+    const labels = face.map((id) => pointMap.get(id)?.label ?? '?');
+    const vertexLabels = labels.every((l) => l.length === 1) ? labels.join('') : labels.join('-');
     let name: string;
     if (face.length === 3) {
       name = `${classifyTriangle(sides, angles, displayMode)} ${vertexLabels}`;
