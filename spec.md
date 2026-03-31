@@ -194,8 +194,8 @@ type ToolType =
   | 'point'
   | 'circle'
   | 'reflection'       // réflexion par rapport à un axe
-  | 'perpendicular'   // tracer une perpendiculaire à un segment existant (v2)
-  | 'parallel'         // tracer une parallèle à un segment existant (v2)
+  | 'perpendicular'   // tracer une perpendiculaire à un segment existant
+  | 'parallel'         // tracer une parallèle à un segment existant
   | 'move'             // déplacer un point existant
   | 'measure';         // cliquer sur un segment pour fixer sa longueur
   // Note : la sélection n'est pas un outil dédié. Un clic sur un élément existant
@@ -313,7 +313,7 @@ Conversion affichage :
 - **Sélection** : un clic sur le trait du cercle le sélectionne (surbrillance bleue). Barre d'actions contextuelle : Supprimer, Fixer rayon/diamètre.
 - **Déplacement** : déplacer le point centre (via l'outil Déplacer ou le clic-glissé sur le point centre dans n'importe quel outil) déplace le cercle entier. Le rayon est conservé.
 - **Snap à la circonférence** : un nouveau type de snap (**priorité 2b** — après le snap au milieu de segment qui est 2a, tolérance 5mm écran physique) est actif quand l'outil Segment est utilisé. Le milieu d'un segment est un point discret (géométriquement plus précis) et prime sur la circonférence (continuum de points). À priorité égale, le plus proche en distance gagne. Un point placé près de la circonférence est snappé exactement sur celle-ci. Feedback visuel : le trait du cercle s'épaissit localement + étiquette « sur le cercle ». Ce snap permet de tracer des rayons et des cordes avec précision.
-- **Intersections** : les points d'intersection segment-cercle ou cercle-cercle ne sont **pas** automatiquement créés. L'enfant place un point manuellement; le snap à la circonférence l'aide à le positionner correctement. (La détection automatique d'intersections est prévue pour v2.)
+- **Intersections segment-segment** : quand un nouveau segment croise un segment existant, un point d'intersection est automatiquement créé et les deux segments sont scindés en sous-segments (auto-intersection, activée par défaut, désactivable dans les Paramètres). Cela compense le geste de précision TDC — l'enfant fait le raisonnement (« je trace une droite à travers cette figure »), l'outil crée les sommets d'intersection. Les intersections segment-cercle et cercle-cercle ne sont **pas** automatiquement créées ; l'enfant place un point manuellement et le snap à la circonférence l'aide à le positionner.
 - **Réflexion** : un cercle peut être réfléchi. Le centre est réfléchi par rapport à l'axe; le rayon est conservé.
 - **Panneau latéral** : un cercle sélectionné affiche dans le panneau : centre (ex. « Centre A »), rayon, diamètre. **Note :** la formule de la circonférence (C = 2πr) relève du secondaire 1. Au primaire, le mot « circonférence » est introduit au 3e cycle mais sans la formule π. TraceVite n'affiche donc **pas** la valeur calculée de la circonférence.
 - **Visibilité par niveau** : en mode 2e cycle, le bouton Cercle est **masqué** dans la toolbar (pas présent du tout, pas désactivé grisé). Tout cercle existant dans une construction reste visible si le niveau est changé après coup. **Les actions contextuelles (sélectionner, supprimer, fixer rayon) restent disponibles** sur les cercles existants en mode 2e cycle — seule la création de nouveaux cercles est interdite. Principe : ne jamais rendre une construction inutilisable par un changement de paramètre.
@@ -655,7 +655,7 @@ Note : les intervalles sont maintenant disjoints. Un angle de 89,7° est classé
 - **Point ou segment partagé entre figures** : un point appartenant à deux figures fermées apparaît une seule fois dans le panneau, étiqueté « Sommet ». Un segment partagé apparaît une seule fois, étiqueté « Côté ». La section contextuelle (sélection) liste les figures : « Sommet A — Carré ABCD, Triangle ABE ». Un clic sur le nom d'une figure dans la section contextuelle **met cette figure en surbrillance** sur le canevas (contour pointillé bleu sur tous ses côtés) sans changer la sélection du point.
 - Quand un point est déplacé ou un segment supprimé, les figures contenant ce point/segment sont **réévaluées**. Si le cycle est brisé, la figure est retirée, le vocabulaire revient à « Point/Segment » (§9.0). **Re-détection à la suppression** : après suppression d'un segment, re-exécuter la détection de face planaire sur les points qui étaient aux extrémités du segment supprimé. Cela permet de re-détecter des figures qui existaient avant l'ajout du segment supprimé (ex. : supprimer la diagonale d'un carré divisé re-détecte le carré original).
 - **Re-classification en temps réel pendant le déplacement** : quand un point est déplacé, la classification de toutes les figures contenant ce point est recalculée en continu. Si le déplacement rend un polygone auto-intersectant, « Figure croisée » s'affiche. La détection d'auto-intersection est en temps réel (O(n²) sur < 50 segments est trivial, < 1ms).
-- **Croisements sans point partagé** : la détection de figures ne considère que les connexions explicites (points partagés). Deux segments qui se croisent visuellement sans partager de point ne forment PAS de figures. La détection automatique d'intersections (création implicite de points aux croisements) est prévue en v2. Conséquence : un X tracé à l'intérieur d'un rectangle ne crée pas 4 triangles — seul le rectangle (4 côtés connectés) est détecté.
+- **Auto-intersection à la création** : quand un nouveau segment croise un segment existant, un point d'intersection est automatiquement créé et les deux segments sont scindés (activé par défaut, désactivable dans les Paramètres). Conséquence : un X tracé à l'intérieur d'un rectangle crée les points d'intersection et les sous-segments, permettant la détection des triangles résultants. **L'auto-intersection ne se déclenche PAS lors du déplacement** de points — le déplacement est un geste d'ajustement, pas de construction ; créer des points imprévus pendant un déplacement serait imprévisible et déstabilisant pour un enfant TDC.
 - Les polygones auto-intersectants (cycle de segments dont les côtés se croisent) sont détectés comme figures fermées mais ne sont pas classifiés. Un message « Figure croisée » apparaît à la place.
 
 **Classification des figures fermées :** Quand une figure est fermée (cycle de segments connectés), tenter d'identifier :
@@ -1077,7 +1077,7 @@ Un enfant TDC qui « ne sait plus où il en est » peut marteler Escape pour rev
 4. Depuis B, tirer vers le bas, le guide de perpendicularité apparaît (vert), longueur "4,0 cm" → cliquer → point C
 5. Depuis C, tirer vers la gauche, le guide de parallélisme avec AB apparaît, longueur "4,0 cm" → cliquer → point D
 6. Depuis D, tirer vers A, le snap au point A s'active → cliquer sur A → figure fermée
-7. Le panneau affiche : "Carré détecté", périmètre 16 cm, aire 16 cm², 4 angles droits, 2 paires de côtés parallèles
+7. Le panneau affiche : "Carré détecté", 4 côtés de 4,0 cm, 4 angles droits, 2 paires de côtés parallèles
 8. Clic sur Imprimer → PDF généré avec le carré propre, à l'échelle, mesurable à la règle
 
 ### 16.2 Construire une figure avec un angle obtus et des côtés parallèles
@@ -1245,25 +1245,25 @@ Le MVP est développé en 3 jalons itératifs :
 ### Version 2
 
 **Priorité haute (compétences PFEQ du 2e cycle non couvertes par le MVP) :**
-- Outil « Reproduire » : dupliquer une figure existante pour créer des figures isométriques (compétence PFEQ **2e cycle**). La réflexion ne suffit pas — les figures isométriques ne sont pas toujours des images miroir.
+- ~~Outil « Reproduire »~~ — **implémenté** : dupliquer une figure existante (sélection par flood-fill ou figure fermée, placement par clic).
 - Vérification d'axe de symétrie : tracer un axe sur une figure existante et vérifier si la figure est symétrique par rapport à cet axe (« Combien d'axes de symétrie a ce carré? »). Compétence PFEQ **2e cycle**.
-- Panneau latéral repositionnable à gauche (accommodation pour gauchers — la main gauche masque le panneau droit quand l'enfant travaille dans la partie droite du canevas). ~10-15% des enfants sont gauchers; la proportion est possiblement plus élevée chez les TDC (latéralité mal établie).
+- ~~Panneau latéral repositionnable à gauche~~ — **implémenté** : toggle « À droite / À gauche » dans les Paramètres. Accommodation pour gauchers.
 
 **Outils de construction avancés :**
-- Outils Perpendiculaire et Parallèle dédiés
-- Translation par flèche de translation (compétence PFEQ 3e cycle)
-- Mode Plan cartésien (1er quadrant en 5e, 4 quadrants en 6e)
+- ~~Outils Perpendiculaire et Parallèle dédiés~~ — **implémentés** (mode Complet uniquement).
+- ~~Translation par flèche de translation~~ — **implémenté** (mode Complet uniquement, compétence PFEQ 3e cycle).
+- ~~Mode Plan cartésien~~ — **implémenté** (1er quadrant et 4 quadrants, dans les Paramètres).
 - Production de frises et dallages
 
 **Personnalisation :**
-- Couleur personnalisable des segments parmi 4 options (bleu #185FA5 par défaut, vert #0F6E56, violet #6D28D9, orange foncé #C24B22 — tous WCAG AA sur fond blanc). Sauvegardé dans le profil `.tracevite-config`. Pas d'impact fonctionnel. Donne un sentiment de propriété psychologique : « c'est MON outil, avec MA couleur » — transforme l'outil d'adaptation imposé en choix personnel (test utilisateur : 3 enfants sur 5 ont spontanément demandé à choisir la couleur de « leurs » lignes).
+- ~~Couleur personnalisable des segments~~ — **implémenté** : 4 options (bleu #185FA5 par défaut, vert #0F6E56, violet #6D28D9, orange foncé #C24B22 — tous WCAG AA sur fond blanc). Sauvegardé dans les préférences localStorage. Donne un sentiment de propriété psychologique : « c'est MON outil, avec MA couleur ».
 
 **Pédagogie et évaluation :**
-- Mode "estimation" : mesures masquées jusqu'à clic sur "Vérifier" (activable par l'enseignant)
+- ~~Mode "estimation"~~ — **implémenté** : mesures masquées, bouton pour révéler (activable dans les Paramètres).
 - Affichage de la formule d'aire utilisée (base × hauteur, etc.) pour renforcer l'apprentissage. Affichage de la **hauteur** d'un triangle ou parallélogramme pour soutenir le calcul de l'aire (vocabulaire PFEQ 3e cycle).
-- Export PDF avec/sans mesures : toggle « Inclure les mesures » / « Figure seule » dans le dialogue d'impression. Utile quand l'exercice demande à l'enfant de mesurer après impression.
+- ~~Export PDF avec/sans mesures~~ — **implémenté** : toggle « Inclure les mesures » dans le dialogue d'impression.
 - Comparaison de figures isométriques (superposition par translation)
-- Choix de format de page A4 / Lettre US dans le dialogue d'impression
+- ~~Choix de format de page A4 / Lettre US~~ — **implémenté** dans le dialogue d'impression.
 
 **Enseignement et projection :**
 - Mode « démonstration » pour TBI/projecteur : un bouton plein écran (ou F11) qui masque le header, réduit la toolbar au minimum, et maximise le canevas. Facteur de police amplifié (×2.0) pour la lisibilité en projection. Essentiel pour l'adoption par les enseignants qui démontrent les constructions au groupe-classe.
@@ -1271,10 +1271,10 @@ Le MVP est développé en 3 jalons itératifs :
 
 **Accommodements TDC avancés :**
 - Support tablette tactile optimisé avec stylet (iPad + Apple Pencil). Le stylet est souvent plus accessible que la souris pour les enfants TDC — plus proche du geste naturel de pointage. (Note : le MVP supporte déjà le stylet via `PointerEvent`, mais des optimisations tactiles — cibles 48px, rejection de paume — sont prévues ici.)
-- Mode contraste élevé (noir sur blanc pur, traits plus épais) pour les enfants avec comorbidités visuelles
+- ~~Mode contraste élevé~~ — **implémenté** (dans les préférences utilisateur).
 - Gestion de la fatigue : rappel discret de pause après 20-30 min d'utilisation continue (les enfants TDC fatiguent plus vite sur les tâches motrices fines). Dans le MVP, le temps d'utilisation continue est affiché discrètement dans le footer (horloge) pour la conscience du temps — le rappel actif est v2.
-- Filtre de lissage du curseur : moyennage mobile sur les 3-5 dernières positions du pointeur, activable dans le profil « Tolérance très large ». Réduit le tremblement involontaire chez les enfants avec une précision motrice très faible. Doit être désactivable car il ajoute une latence perceptible (~30-50ms).
-- Mode « pas à pas » pour la réflexion : animation point par point montrant chaque sommet qui traverse l'axe à distance égale (toggle « Voir les étapes »). Renforce la compréhension de la correspondance point-image dans la réflexion.
+- ~~Filtre de lissage du curseur~~ — **implémenté** : moyennage mobile sur 5 positions, activé automatiquement en profil « Tolérance très large ». Désactivable.
+- ~~Mode « pas à pas » pour la réflexion~~ — **implémenté** : animation point par point avec pied de perpendiculaire (500ms par étape).
 
 ### Version 2bis (post-v2, avant v3)
 
@@ -1557,7 +1557,7 @@ Les questions suivantes ont été posées, débattues et tranchées définitivem
 ### Algorithmes
 - Détection de figures : **leftmost-turn** (pas BFS), des deux côtés du nouveau segment. Faces < 1mm² ignorées.
 - Re-détection à la suppression : **approche locale** (voisinage des extrémités).
-- Croisements sans point partagé : **ignorés** pour la détection de figures (v2 pour intersections automatiques).
+- Auto-intersection segment-segment : **à la création uniquement** (pas au déplacement). Activée par défaut, désactivable dans les Paramètres.
 - Auto-intersection : vérification **en temps réel** pendant le déplacement.
 - Winding order : **signe de l'aire signée** (shoelace sans abs).
 
@@ -1597,12 +1597,12 @@ Les questions suivantes ont été posées, débattues et tranchées définitivem
 - Calibrage DPI par l'utilisateur (v2)
 - Profils utilisateur nommés dans l'app (v2)
 - Seuil de drag par type de pointeur (v2 si nécessaire)
-- Pinch-to-zoom (v2)
+- ~~Pinch-to-zoom~~ — **implémenté** (2 doigts, rejection de paume à 3+ doigts)
 - Navigation clavier dans le canevas SVG (v2)
 - PDF multi-pages (v3)
-- Détection automatique d'intersections segment-segment (v2)
+- ~~Détection automatique d'intersections segment-segment~~ — **implémenté** (activé par défaut, désactivable dans les Paramètres)
 - Mode démonstration TBI (v2)
-- Filtre de lissage du curseur (v2)
+- ~~Filtre de lissage du curseur~~ — **implémenté** (activé automatiquement en profil de tolérance « très large »)
 - Hot-reload des constantes d'accessibilité
 - Partage de figure de départ via URL (v2 — utiliser fichier .tracevite en attendant)
 - Rappel actif de pause/fatigue (v2 — afficher l'heure courante dans le footer au MVP)
