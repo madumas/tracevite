@@ -6,12 +6,13 @@
 
 import { jsPDF } from 'jspdf';
 import type { ConstructionState } from '@/model/types';
+import type { PageFormat } from '@/model/preferences';
 import { computeDerived } from './derived';
 import { formatLength } from './format';
 import {
   MARGIN_MM,
-  PRINTABLE_WIDTH_MM,
-  PRINTABLE_HEIGHT_MM,
+  getPrintableArea,
+  getPageDimensions,
   witnessSegmentCoords,
   footerCoords,
   isInPrintableArea,
@@ -21,6 +22,8 @@ export interface PdfOptions {
   landscape: boolean;
   includeConsigne: boolean;
   includeGrid: boolean;
+  includeMeasurements: boolean;
+  pageFormat: PageFormat;
 }
 
 /**
@@ -28,12 +31,15 @@ export interface PdfOptions {
  * Returns the jsPDF document (caller triggers download).
  */
 export function generatePDF(state: ConstructionState, options: PdfOptions): jsPDF {
-  const { landscape, includeConsigne, includeGrid } = options;
+  const { landscape, includeConsigne, includeGrid, includeMeasurements, pageFormat } = options;
   const orientation = landscape ? 'landscape' : 'portrait';
-  const pw = landscape ? PRINTABLE_HEIGHT_MM : PRINTABLE_WIDTH_MM;
-  const ph = landscape ? PRINTABLE_WIDTH_MM : PRINTABLE_HEIGHT_MM;
+  const area = getPrintableArea(pageFormat, landscape);
+  const pw = area.width;
+  const ph = area.height;
+  const pageDims = getPageDimensions(pageFormat);
+  const jspdfFormat: [number, number] = [pageDims.width, pageDims.height];
 
-  const doc = new jsPDF({ orientation, unit: 'mm', format: 'letter' });
+  const doc = new jsPDF({ orientation, unit: 'mm', format: jspdfFormat });
 
   // Set /PrintScaling /None viewer preference (D4)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -90,24 +96,26 @@ export function generatePDF(state: ConstructionState, options: PdfOptions): jsPD
     const end = pointMap.get(seg.endPointId);
     if (!start || !end) continue;
     if (
-      !isInPrintableArea(start.x + offsetX, start.y + offsetY, landscape) &&
-      !isInPrintableArea(end.x + offsetX, end.y + offsetY, landscape)
+      !isInPrintableArea(start.x + offsetX, start.y + offsetY, landscape, pageFormat) &&
+      !isInPrintableArea(end.x + offsetX, end.y + offsetY, landscape, pageFormat)
     )
       continue;
 
     doc.line(tx(start.x), ty(start.y), tx(end.x), ty(end.y));
 
-    // Length label at midpoint (8pt dark gray)
-    const mx = (start.x + end.x) / 2;
-    const my = (start.y + end.y) / 2;
-    doc.setFontSize(8);
-    doc.setTextColor(80);
-    const lengthText = formatLength(seg.lengthMm, state.displayUnit);
-    doc.text(lengthText, tx(mx) + 2, ty(my) - 2);
+    // Length label at midpoint (8pt dark gray) — omitted in "figure only" mode
+    if (includeMeasurements) {
+      const mx = (start.x + end.x) / 2;
+      const my = (start.y + end.y) / 2;
+      doc.setFontSize(8);
+      doc.setTextColor(80);
+      const lengthText = formatLength(seg.lengthMm, state.displayUnit);
+      doc.text(lengthText, tx(mx) + 2, ty(my) - 2);
+    }
   }
 
   // ── Conventional marks (parallel bars, congruence ticks) ──
-  if (!state.hideProperties) {
+  if (!state.hideProperties && includeMeasurements) {
     const derived = computeDerived(state, state.displayMode);
     doc.setLineWidth(0.3);
     doc.setDrawColor(0);
@@ -205,7 +213,7 @@ export function generatePDF(state: ConstructionState, options: PdfOptions): jsPD
   // ── Points (1mm radius filled) ────────────────────
   doc.setFillColor(0, 0, 0);
   for (const point of state.points) {
-    if (!isInPrintableArea(point.x + offsetX, point.y + offsetY, landscape)) continue;
+    if (!isInPrintableArea(point.x + offsetX, point.y + offsetY, landscape, pageFormat)) continue;
     doc.circle(tx(point.x), ty(point.y), 1, 'F');
 
     // Vertex label (10pt)
@@ -215,7 +223,7 @@ export function generatePDF(state: ConstructionState, options: PdfOptions): jsPD
   }
 
   // ── Witness segment (50mm, bottom-right) ──────────
-  const ws = witnessSegmentCoords(landscape);
+  const ws = witnessSegmentCoords(landscape, pageFormat);
   doc.setDrawColor(0);
   doc.setLineWidth(0.5);
   doc.line(ws.x1 + MARGIN_MM, ws.y1 + MARGIN_MM, ws.x2 + MARGIN_MM, ws.y2 + MARGIN_MM);
@@ -226,7 +234,7 @@ export function generatePDF(state: ConstructionState, options: PdfOptions): jsPD
   });
 
   // ── Footer ────────────────────────────────────────
-  const ft = footerCoords(landscape);
+  const ft = footerCoords(landscape, pageFormat);
   doc.setFontSize(7);
   doc.setTextColor(150);
   doc.text('TraceVite — Échelle 1:1', ft.x + MARGIN_MM, ft.y + MARGIN_MM);
@@ -275,27 +283,33 @@ export function constructionBoundingBox(state: ConstructionState): {
 /**
  * Check if construction fits in printable area.
  */
-export function figureFitsInPage(state: ConstructionState, landscape: boolean): boolean {
+export function figureFitsInPage(
+  state: ConstructionState,
+  landscape: boolean,
+  pageFormat: PageFormat = 'letter',
+): boolean {
   const bb = constructionBoundingBox(state);
   if (!bb) return true;
-  const pw = landscape ? PRINTABLE_HEIGHT_MM : PRINTABLE_WIDTH_MM;
-  const ph = landscape ? PRINTABLE_WIDTH_MM : PRINTABLE_HEIGHT_MM;
-  return bb.maxX <= pw && bb.maxY <= ph;
+  const area = getPrintableArea(pageFormat, landscape);
+  return bb.maxX <= area.width && bb.maxY <= area.height;
 }
 
 /**
  * Check if figure is off-center (>60% offset from center of page).
  */
-export function figureIsOffCenter(state: ConstructionState, landscape: boolean): boolean {
+export function figureIsOffCenter(
+  state: ConstructionState,
+  landscape: boolean,
+  pageFormat: PageFormat = 'letter',
+): boolean {
   const bb = constructionBoundingBox(state);
   if (!bb) return false;
-  const pw = landscape ? PRINTABLE_HEIGHT_MM : PRINTABLE_WIDTH_MM;
-  const ph = landscape ? PRINTABLE_WIDTH_MM : PRINTABLE_HEIGHT_MM;
+  const area = getPrintableArea(pageFormat, landscape);
 
   const figureCenterX = (bb.minX + bb.maxX) / 2;
   const figureCenterY = (bb.minY + bb.maxY) / 2;
-  const pageCenterX = pw / 2;
-  const pageCenterY = ph / 2;
+  const pageCenterX = area.width / 2;
+  const pageCenterY = area.height / 2;
 
   const offsetRatioX = Math.abs(figureCenterX - pageCenterX) / pageCenterX;
   const offsetRatioY = Math.abs(figureCenterY - pageCenterY) / pageCenterY;

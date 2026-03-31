@@ -156,3 +156,70 @@ export function reflectConstruction(
     segments: newSegments,
   };
 }
+
+/**
+ * Check if a set of points is symmetric about a given axis.
+ * For each point, finds its reflection and checks if a matching point exists
+ * within the given tolerance.
+ *
+ * Returns symmetry info with correspondences or deviation data.
+ */
+export interface SymmetryResult {
+  readonly isSymmetric: boolean;
+  readonly maxDeviationMm: number;
+  readonly correspondences: readonly {
+    originalId: string;
+    matchedId: string;
+    deviationMm: number;
+  }[];
+}
+
+export function checkSymmetry(
+  pointIds: readonly string[],
+  state: ConstructionState,
+  axisP1: { x: number; y: number },
+  axisP2: { x: number; y: number },
+  toleranceMm: number = 1,
+): SymmetryResult {
+  const pointMap = new Map(state.points.map((p) => [p.id, p]));
+  const targetPoints = pointIds.map((id) => pointMap.get(id)).filter(Boolean) as Point[];
+
+  const correspondences: { originalId: string; matchedId: string; deviationMm: number }[] = [];
+  let maxDeviation = 0;
+  let isSymmetric = true;
+
+  for (const point of targetPoints) {
+    const reflected = reflectPoint(point, axisP1, axisP2);
+
+    // Find the closest target point to the reflected position
+    let bestMatch: Point | null = null;
+    let bestDist = Infinity;
+
+    for (const candidate of targetPoints) {
+      const d = distance(reflected, candidate);
+      if (d < bestDist) {
+        bestDist = d;
+        bestMatch = candidate;
+      }
+    }
+
+    if (!bestMatch || bestDist > toleranceMm) {
+      isSymmetric = false;
+      correspondences.push({
+        originalId: point.id,
+        matchedId: bestMatch?.id ?? point.id,
+        deviationMm: bestDist === Infinity ? toleranceMm * 2 : bestDist,
+      });
+      if (bestDist !== Infinity && bestDist > maxDeviation) maxDeviation = bestDist;
+    } else {
+      correspondences.push({
+        originalId: point.id,
+        matchedId: bestMatch.id,
+        deviationMm: bestDist,
+      });
+      if (bestDist > maxDeviation) maxDeviation = bestDist;
+    }
+  }
+
+  return { isSymmetric, maxDeviationMm: maxDeviation, correspondences };
+}

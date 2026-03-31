@@ -22,4 +22,8 @@ export interface ToolHookResult {
   snapResult: SnapResult | null;
   /** SVG overlay elements to render in the canvas (ghost segment, circle, etc.). */
   overlayElements: ReactNode;
+  /** Reflection tool: symmetry check mode toggle (v2). */
+  symmetryCheckMode?: boolean;
+  /** Reflection tool: toggle symmetry check mode (v2). */
+  onToggleSymmetryCheck?: () => void;
 }

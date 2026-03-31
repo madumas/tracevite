@@ -14,9 +14,15 @@ interface UseMoveToolOptions {
   state: ConstructionState;
   dispatch: (action: ConstructionAction) => void;
   viewport: ViewportState;
+  isActive?: boolean;
 }
 
-export function useMoveTool({ state, dispatch, viewport }: UseMoveToolOptions): ToolHookResult {
+export function useMoveTool({
+  state,
+  dispatch,
+  viewport,
+  isActive = true,
+}: UseMoveToolOptions): ToolHookResult {
   const [phase, setPhase] = useState<MovePhase>('idle');
   const [pickedPointId, setPickedPointId] = useState<string | null>(null);
   const [_originalPosition, setOriginalPosition] = useState<{ x: number; y: number } | null>(null);
@@ -38,6 +44,7 @@ export function useMoveTool({ state, dispatch, viewport }: UseMoveToolOptions): 
 
   const handleClick = useCallback(
     (mmPos: { x: number; y: number }) => {
+      if (!isActive) return;
       if (phase === 'idle') {
         // Try to pick up a point
         const pointId = hitTestPoint(mmPos, state.points);
@@ -58,18 +65,19 @@ export function useMoveTool({ state, dispatch, viewport }: UseMoveToolOptions): 
         reset();
       }
     },
-    [phase, state, pickedPointId, dispatch, reset],
+    [isActive, phase, state, pickedPointId, dispatch, reset],
   );
 
   const handleCursorMove = useCallback(
     (mmPos: { x: number; y: number }) => {
+      if (!isActive) return;
       setCursorMm(mmPos);
       if (pickedPointId) {
         const snap = findSnap(mmPos, state, tolerances, [pickedPointId]);
         setSnapResult(snap);
       }
     },
-    [state, pickedPointId, tolerances],
+    [isActive, state, pickedPointId, tolerances],
   );
 
   const handleEscape = useCallback(() => {

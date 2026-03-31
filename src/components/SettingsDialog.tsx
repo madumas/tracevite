@@ -7,6 +7,7 @@ import { memo, useEffect } from 'react';
 import type { ToleranceProfile, ChainTimeout, FontScale, SoundMode } from '@/model/types';
 import { UI_PRIMARY, UI_SURFACE, UI_BORDER, UI_TEXT_PRIMARY } from '@/config/theme';
 import { MIN_BUTTON_SIZE_PX } from '@/config/accessibility';
+import { usePreferences, useUpdatePreference, type SegmentColor } from '@/model/preferences';
 
 interface SettingsDialogProps {
   readonly toleranceProfile: ToleranceProfile;
@@ -83,6 +84,8 @@ export const SettingsDialog = memo(function SettingsDialog({
   onPointToolVisibleChange,
   onClose,
 }: SettingsDialogProps) {
+  const prefs = usePreferences();
+  const updatePref = useUpdatePreference();
   // Close on Escape
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -204,6 +207,47 @@ export const SettingsDialog = memo(function SettingsDialog({
             onChange={(e) => onKeyboardShortcutsChange(e.target.checked)}
             style={{ width: 20, height: 20, cursor: 'pointer' }}
           />
+        </div>
+
+        {/* Panel position */}
+        <div style={rowStyle}>
+          <span>Panneau latéral</span>
+          <select
+            value={prefs.panelPosition}
+            onChange={(e) => updatePref('panelPosition', e.target.value as 'left' | 'right')}
+            style={selectStyle}
+          >
+            <option value="right">À droite</option>
+            <option value="left">À gauche</option>
+          </select>
+        </div>
+
+        {/* Segment color */}
+        <div style={rowStyle}>
+          <span>Couleur des traits</span>
+          <div style={{ display: 'flex', gap: 6 }}>
+            {[
+              { color: '#185FA5' as SegmentColor, name: 'Bleu' },
+              { color: '#0F6E56' as SegmentColor, name: 'Vert' },
+              { color: '#6D28D9' as SegmentColor, name: 'Violet' },
+              { color: '#C24B22' as SegmentColor, name: 'Orange' },
+            ].map(({ color, name }) => (
+              <button
+                key={color}
+                onClick={() => updatePref('segmentColor', color)}
+                style={{
+                  width: 28,
+                  height: 28,
+                  borderRadius: '50%',
+                  background: color,
+                  border: prefs.segmentColor === color ? '3px solid #1A2433' : '2px solid #D1D8E0',
+                  cursor: 'pointer',
+                  padding: 0,
+                }}
+                aria-label={name}
+              />
+            ))}
+          </div>
         </div>
 
         {/* Point tool visible toggle */}

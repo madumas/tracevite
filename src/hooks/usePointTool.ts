@@ -16,9 +16,14 @@ interface UsePointToolOptions {
   state: ConstructionState;
   dispatch: (action: ConstructionAction) => void;
   viewport: ViewportState;
+  isActive?: boolean;
 }
 
-export function usePointTool({ state, dispatch }: UsePointToolOptions): ToolHookResult {
+export function usePointTool({
+  state,
+  dispatch,
+  isActive = true,
+}: UsePointToolOptions): ToolHookResult {
   const [snapResult, setSnapResult] = useState<SnapResult | null>(null);
 
   const tolerances = useMemo(
@@ -28,19 +33,21 @@ export function usePointTool({ state, dispatch }: UsePointToolOptions): ToolHook
 
   const handleClick = useCallback(
     (mmPos: { x: number; y: number }) => {
+      if (!isActive) return;
       const snap = findSnap(mmPos, state, tolerances);
       const pos = snap.snappedPosition;
       dispatch({ type: 'CREATE_POINT', x: pos.x, y: pos.y });
     },
-    [state, tolerances, dispatch],
+    [isActive, state, tolerances, dispatch],
   );
 
   const handleCursorMove = useCallback(
     (mmPos: { x: number; y: number }) => {
+      if (!isActive) return;
       const snap = findSnap(mmPos, state, tolerances);
       setSnapResult(snap);
     },
-    [state, tolerances],
+    [isActive, state, tolerances],
   );
 
   const handleEscape = useCallback(() => {

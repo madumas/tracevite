@@ -12,6 +12,7 @@ import { useCircleTool } from './useCircleTool';
 import { useReflectionTool } from './useReflectionTool';
 import { useMeasureTool } from './useMeasureTool';
 import { usePointTool } from './usePointTool';
+import { useReproduceTool } from './useReproduceTool';
 
 interface UseActiveToolOptions {
   state: ConstructionState;
@@ -30,17 +31,35 @@ export function useActiveTool({
   viewport,
   shiftConstraintActive = false,
 }: UseActiveToolOptions): ToolHookResult {
+  const active = state.activeTool;
   const segmentTool = useSegmentTool({
     state,
     dispatch,
     viewport,
     shiftConstraintActive,
+    isActive: active === 'segment',
   });
-  const moveTool = useMoveTool({ state, dispatch, viewport });
-  const circleTool = useCircleTool({ state, dispatch, viewport });
-  const reflectionTool = useReflectionTool({ state, dispatch, viewport });
-  const measureTool = useMeasureTool({ state, dispatch, viewport });
-  const pointTool = usePointTool({ state, dispatch, viewport });
+  const moveTool = useMoveTool({ state, dispatch, viewport, isActive: active === 'move' });
+  const circleTool = useCircleTool({ state, dispatch, viewport, isActive: active === 'circle' });
+  const reflectionTool = useReflectionTool({
+    state,
+    dispatch,
+    viewport,
+    isActive: active === 'reflection',
+  });
+  const measureTool = useMeasureTool({
+    state,
+    dispatch,
+    viewport,
+    isActive: active === 'measure',
+  });
+  const pointTool = usePointTool({ state, dispatch, viewport, isActive: active === 'point' });
+  const reproduceTool = useReproduceTool({
+    state,
+    dispatch,
+    viewport,
+    isActive: active === 'reproduce',
+  });
 
   switch (state.activeTool) {
     case 'segment':
@@ -55,5 +74,7 @@ export function useActiveTool({
       return measureTool;
     case 'point':
       return pointTool;
+    case 'reproduce':
+      return reproduceTool;
   }
 }

@@ -14,24 +14,34 @@ interface UseMeasureToolOptions {
   state: ConstructionState;
   dispatch: (action: ConstructionAction) => void;
   viewport: ViewportState;
+  isActive?: boolean;
 }
 
-export function useMeasureTool({ state, dispatch }: UseMeasureToolOptions): ToolHookResult {
+export function useMeasureTool({
+  state,
+  dispatch,
+  isActive = true,
+}: UseMeasureToolOptions): ToolHookResult {
   const [snapResult, setSnapResult] = useState<SnapResult | null>(null);
 
   const handleClick = useCallback(
     (mmPos: { x: number; y: number }) => {
+      if (!isActive) return;
       const segId = hitTestSegment(mmPos, state.segments, state.points);
       if (segId) {
         dispatch({ type: 'SET_SELECTED_ELEMENT', elementId: segId });
       }
     },
-    [state.segments, state.points, dispatch],
+    [isActive, state.segments, state.points, dispatch],
   );
 
-  const handleCursorMove = useCallback((_mmPos: { x: number; y: number }) => {
-    setSnapResult(null);
-  }, []);
+  const handleCursorMove = useCallback(
+    (_mmPos: { x: number; y: number }) => {
+      if (!isActive) return;
+      setSnapResult(null);
+    },
+    [isActive],
+  );
 
   const handleEscape = useCallback(() => {
     dispatch({ type: 'SET_SELECTED_ELEMENT', elementId: null });

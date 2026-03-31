@@ -10,7 +10,7 @@ import type { ToolHookResult } from './types';
 import { hitTestSegment, hitTestCircle } from '@/engine/hit-test';
 import { findSnap, DEFAULT_TOLERANCES, scaleTolerances } from '@/engine/snap';
 import { TOLERANCE_PROFILES } from '@/config/accessibility';
-import { constrainAxisAngle } from '@/engine/reflection';
+import { constrainAxisAngle, checkSymmetry, type SymmetryResult } from '@/engine/reflection';
 import { detectAllFaces, classifyFigures } from '@/engine/figures';
 import { STATUS_REFLECTION_AXIS, STATUS_REFLECTION_SELECT } from '@/config/messages';
 import { CSS_PX_PER_MM } from '@/engine/viewport';
@@ -21,12 +21,14 @@ interface UseReflectionToolOptions {
   state: ConstructionState;
   dispatch: (action: ConstructionAction) => void;
   viewport: ViewportState;
+  isActive?: boolean;
 }
 
 export function useReflectionTool({
   state,
   dispatch,
   viewport,
+  isActive = true,
 }: UseReflectionToolOptions): ToolHookResult {
   const [phase, setPhase] = useState<ReflectionPhase>('choose_axis');
   const [axisP1, setAxisP1] = useState<{ x: number; y: number } | null>(null);
@@ -34,6 +36,8 @@ export function useReflectionTool({
   const [cursorMm, setCursorMm] = useState<{ x: number; y: number } | null>(null);
   const [snapResult, setSnapResult] = useState<SnapResult | null>(null);
   const [lastReflectionMsg, setLastReflectionMsg] = useState<string | null>(null);
+  const [symmetryCheckMode, setSymmetryCheckMode] = useState(false);
+  const [symmetryResult, setSymmetryResult] = useState<SymmetryResult | null>(null);
 
   const is2eCycle = state.displayMode === 'simplifie';
 
@@ -49,6 +53,7 @@ export function useReflectionTool({
     setCursorMm(null);
     setSnapResult(null);
     setLastReflectionMsg(null);
+    setSymmetryResult(null);
   }, []);
 
   /** Find the smallest figure containing a given segment. */
@@ -67,6 +72,7 @@ export function useReflectionTool({
 
   const handleClick = useCallback(
     (mmPos: { x: number; y: number }) => {
+      if (!isActive) return;
       const snap = findSnap(mmPos, state, tolerances);
       const snapped = snap.snappedPosition;
 
@@ -110,6 +116,28 @@ export function useReflectionTool({
         const segId = hitTestSegment(mmPos, state.segments, state.points);
         if (segId) {
           const figure = findFigureForSegment(segId);
+
+          // Symmetry check mode: verify instead of reflect
+          if (symmetryCheckMode) {
+            const pointIds = figure
+              ? figure.pointIds
+              : (() => {
+                  const seg = state.segments.find((s) => s.id === segId);
+                  return seg ? [seg.startPointId, seg.endPointId] : [];
+                })();
+            if (pointIds.length > 0) {
+              const result = checkSymmetry(pointIds, state, axisP1, axisP2);
+              setSymmetryResult(result);
+              const name = figure?.name ?? 'Figure';
+              setLastReflectionMsg(
+                result.isSymmetric
+                  ? `${name} est symétrique par rapport à cet axe.`
+                  : `${name} n'est pas symétrique (écart max : ${result.maxDeviationMm.toFixed(1)} mm).`,
+              );
+            }
+            return;
+          }
+
           if (figure) {
             // Reflect the entire figure
             dispatch({
@@ -145,6 +173,11 @@ export function useReflectionTool({
         if (circleId) {
           const circle = state.circles.find((c) => c.id === circleId);
           if (circle) {
+            if (symmetryCheckMode) {
+              // Can't verify symmetry for a single circle meaningfully
+              setLastReflectionMsg('Clique sur une figure pour vérifier la symétrie.');
+              return;
+            }
             dispatch({
               type: 'REFLECT_ELEMENTS',
               pointIds: [circle.centerPointId],
@@ -161,16 +194,29 @@ export function useReflectionTool({
         reset();
       }
     },
-    [state, phase, axisP1, axisP2, is2eCycle, dispatch, findFigureForSegment, reset],
+    [
+      isActive,
+      state,
+      phase,
+      axisP1,
+      axisP2,
+      is2eCycle,
+      dispatch,
+      findFigureForSegment,
+      reset,
+      symmetryCheckMode,
+      tolerances,
+    ],
   );
 
   const handleCursorMove = useCallback(
     (mmPos: { x: number; y: number }) => {
+      if (!isActive) return;
       setCursorMm(mmPos);
       const snap = findSnap(mmPos, state, tolerances);
       setSnapResult(snap);
     },
-    [state],
+    [isActive, state, tolerances],
   );
 
   const handleEscape = useCallback(() => {
@@ -186,16 +232,27 @@ export function useReflectionTool({
     }
   }, [phase]);
 
+  const toggleSymmetryCheck = useCallback(() => {
+    setSymmetryCheckMode((prev) => !prev);
+    setSymmetryResult(null);
+    setLastReflectionMsg(null);
+  }, []);
+
   // Status message
+  const modeLabel = symmetryCheckMode ? 'Vérification' : 'Réflexion';
   let statusMessage: string;
   if (phase === 'choose_axis') {
-    statusMessage = STATUS_REFLECTION_AXIS;
+    statusMessage = symmetryCheckMode
+      ? 'Vérification — Clique un segment ou trace un axe pour vérifier la symétrie'
+      : STATUS_REFLECTION_AXIS;
   } else if (phase === 'axis_first_point') {
-    statusMessage = "Réflexion — Clique pour placer le deuxième point de l'axe";
+    statusMessage = `${modeLabel} — Clique pour placer le deuxième point de l'axe`;
   } else {
     statusMessage = lastReflectionMsg
-      ? `Réflexion — ${lastReflectionMsg} Clique sur un autre élément ou appuie Échap pour terminer.`
-      : STATUS_REFLECTION_SELECT;
+      ? `${modeLabel} — ${lastReflectionMsg} Clique sur un autre élément ou appuie Échap pour terminer.`
+      : symmetryCheckMode
+        ? 'Vérification — Clique sur une figure pour vérifier si elle est symétrique par rapport à cet axe.'
+        : STATUS_REFLECTION_SELECT;
   }
 
   // Overlay: axis line (dashed red)
@@ -260,17 +317,43 @@ export function useReflectionTool({
       );
     }
 
+    // Symmetry check result feedback: green/red circles at correspondence points
+    if (symmetryResult && phase === 'axis_defined') {
+      const pointMap = new Map(state.points.map((p) => [p.id, p]));
+      const pxPerMm = viewport.zoom * CSS_PX_PER_MM;
+      for (const corr of symmetryResult.correspondences) {
+        const point = pointMap.get(corr.originalId);
+        if (!point) continue;
+        const sx = (point.x - viewport.panX) * pxPerMm;
+        const sy = (point.y - viewport.panY) * pxPerMm;
+        const color = corr.deviationMm <= 1 ? '#22C55E' : '#EF4444';
+        elements.push(
+          createElement('circle', {
+            key: `sym-${corr.originalId}`,
+            cx: sx,
+            cy: sy,
+            r: 8,
+            fill: color,
+            opacity: 0.4,
+            pointerEvents: 'none',
+          }),
+        );
+      }
+    }
+
     return elements.length > 0 ? elements : null;
-  }, [axisP1, axisP2, phase, cursorMm, viewport, is2eCycle]);
+  }, [axisP1, axisP2, phase, cursorMm, viewport, is2eCycle, symmetryResult, state.points]);
 
   return {
     handleClick,
     handleCursorMove,
     handleEscape,
     reset,
-    isIdle: false, // Reflection tool always captures clicks (axis selection or element selection)
+    isIdle: false,
     statusMessage,
     snapResult,
     overlayElements,
+    symmetryCheckMode,
+    onToggleSymmetryCheck: toggleSymmetryCheck,
   };
 }

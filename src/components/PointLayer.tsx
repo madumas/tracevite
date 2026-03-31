@@ -1,6 +1,6 @@
 import { memo } from 'react';
 import type { Point, ViewportState } from '@/model/types';
-import { CANVAS_POINT, CANVAS_LABEL } from '@/config/theme';
+import { CANVAS_POINT } from '@/config/theme';
 import { POINT_DISPLAY_RADIUS_MM, MIN_CANVAS_FONT_PX } from '@/config/accessibility';
 import { CSS_PX_PER_MM } from '@/engine/viewport';
 
@@ -9,6 +9,7 @@ interface PointLayerProps {
   readonly viewport: ViewportState;
   readonly selectedElementId: string | null;
   readonly fontScale?: number;
+  readonly pointColor?: string;
 }
 
 export const PointLayer = memo(function PointLayer({
@@ -16,6 +17,7 @@ export const PointLayer = memo(function PointLayer({
   viewport,
   selectedElementId,
   fontScale = 1,
+  pointColor = CANVAS_POINT,
 }: PointLayerProps) {
   const pxPerMm = viewport.zoom * CSS_PX_PER_MM;
   const radiusPx = POINT_DISPLAY_RADIUS_MM * CSS_PX_PER_MM; // Physical mm to CSS px (independent of zoom for consistent screen size)
@@ -33,14 +35,14 @@ export const PointLayer = memo(function PointLayer({
               cx={sx}
               cy={sy}
               r={radiusPx}
-              fill={CANVAS_POINT}
+              fill={pointColor}
               opacity={isSelected ? 1 : 0.8}
               data-testid={`point-${point.id}`}
             />
             <text
               x={sx + radiusPx + 4}
               y={sy - radiusPx - 2}
-              fill={CANVAS_LABEL}
+              fill={pointColor}
               fontSize={Math.max(MIN_CANVAS_FONT_PX, 14) * fontScale}
               fontFamily="system-ui, sans-serif"
             >

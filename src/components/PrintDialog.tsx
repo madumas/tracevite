@@ -11,6 +11,8 @@ import {
 import { MIN_BUTTON_SIZE_PX } from '@/config/accessibility';
 import { generatePDF, figureFitsInPage, figureIsOffCenter } from '@/engine/pdf-export';
 import { sanitizeFilename } from '@/model/file-io';
+import { usePreferences, useUpdatePreference } from '@/model/preferences';
+import type { PageFormat } from '@/model/preferences';
 
 interface PrintDialogProps {
   readonly state: ConstructionState;
@@ -37,12 +39,23 @@ export function PrintDialog({
     }
   });
   const [includeConsigne, setIncludeConsigne] = useState(false);
+  const [includeMeasurements, setIncludeMeasurements] = useState(true);
+  const prefs = usePreferences();
+  const updatePref = useUpdatePreference();
+  const pageFormat = prefs.pageFormat;
+  const setPageFormat = (format: PageFormat) => updatePref('pageFormat', format);
 
-  const fitsPage = figureFitsInPage(state, landscape);
-  const offCenter = figureIsOffCenter(state, landscape);
+  const fitsPage = figureFitsInPage(state, landscape, pageFormat);
+  const offCenter = figureIsOffCenter(state, landscape, pageFormat);
 
   const handleDownloadPDF = () => {
-    const doc = generatePDF(state, { landscape, includeConsigne, includeGrid: false });
+    const doc = generatePDF(state, {
+      landscape,
+      includeConsigne,
+      includeGrid: false,
+      includeMeasurements,
+      pageFormat,
+    });
     const filename = `${sanitizeFilename(slotName)}.pdf`;
     doc.save(filename);
     onClose();
@@ -51,7 +64,8 @@ export function PrintDialog({
   const handleDirectPrint = () => {
     // Inject dynamic @page with correct orientation
     const style = document.createElement('style');
-    style.textContent = `@page { size: letter${landscape ? ' landscape' : ''}; margin: 15mm; }`;
+    const size = pageFormat === 'a4' ? 'A4' : 'letter';
+    style.textContent = `@page { size: ${size}${landscape ? ' landscape' : ''}; margin: 15mm; }`;
     document.head.appendChild(style);
     window.print();
     document.head.removeChild(style);
@@ -130,6 +144,40 @@ export function PrintDialog({
             }}
           >
             Paysage
+          </button>
+        </div>
+
+        {/* Page format selector */}
+        <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
+          <button
+            onClick={() => setPageFormat('letter')}
+            style={{
+              flex: 1,
+              padding: '8px',
+              border: `2px solid ${pageFormat === 'letter' ? UI_PRIMARY : UI_BORDER}`,
+              borderRadius: 6,
+              background: pageFormat === 'letter' ? '#E8F0FA' : 'transparent',
+              cursor: 'pointer',
+              fontSize: 13,
+              color: UI_TEXT_PRIMARY,
+            }}
+          >
+            Lettre US
+          </button>
+          <button
+            onClick={() => setPageFormat('a4')}
+            style={{
+              flex: 1,
+              padding: '8px',
+              border: `2px solid ${pageFormat === 'a4' ? UI_PRIMARY : UI_BORDER}`,
+              borderRadius: 6,
+              background: pageFormat === 'a4' ? '#E8F0FA' : 'transparent',
+              cursor: 'pointer',
+              fontSize: 13,
+              color: UI_TEXT_PRIMARY,
+            }}
+          >
+            A4
           </button>
         </div>
 
@@ -234,6 +282,25 @@ export function PrintDialog({
             Inclure la consigne
           </label>
         )}
+
+        {/* Measurements toggle */}
+        <label
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 6,
+            marginBottom: 12,
+            cursor: 'pointer',
+            fontSize: 13,
+          }}
+        >
+          <input
+            type="checkbox"
+            checked={includeMeasurements}
+            onChange={() => setIncludeMeasurements(!includeMeasurements)}
+          />
+          {includeMeasurements ? 'Avec mesures' : 'Figure seule'}
+        </label>
 
         {/* Buttons */}
         <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>

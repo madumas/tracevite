@@ -21,6 +21,7 @@ interface UseSegmentToolOptions {
   dispatch: (action: ConstructionAction) => void;
   viewport: ViewportState;
   shiftConstraintActive?: boolean;
+  isActive?: boolean;
 }
 
 export function useSegmentTool({
@@ -28,6 +29,7 @@ export function useSegmentTool({
   dispatch,
   viewport,
   shiftConstraintActive = false,
+  isActive = true,
 }: UseSegmentToolOptions): ToolHookResult {
   const [phase, setPhase] = useState<SegmentToolPhase>('idle');
   const [firstPoint, setFirstPoint] = useState<{
@@ -78,6 +80,7 @@ export function useSegmentTool({
 
   const handleClick = useCallback(
     (mmPos: { x: number; y: number }) => {
+      if (!isActive) return;
       const excludeIds = firstPoint?.existingId ? [firstPoint.existingId] : [];
       // Enable angle snap when a first point is placed
       const fromPt = firstPoint?.mm ?? undefined;
@@ -122,6 +125,7 @@ export function useSegmentTool({
       }
     },
     [
+      isActive,
       state,
       phase,
       firstPoint,
@@ -135,6 +139,7 @@ export function useSegmentTool({
 
   const handleCursorMove = useCallback(
     (mmPos: { x: number; y: number }) => {
+      if (!isActive) return;
       setCursorMm(mmPos);
       const excludeIds = firstPoint?.existingId ? [firstPoint.existingId] : [];
       const fromPt = firstPoint?.mm ?? undefined;
@@ -149,7 +154,7 @@ export function useSegmentTool({
       }
       lastMoveMm.current = mmPos;
     },
-    [state, phase, firstPoint, startChainTimer, tolerances, shiftConstraintActive],
+    [isActive, state, phase, firstPoint, startChainTimer, tolerances, shiftConstraintActive],
   );
 
   const handleEscape = useCallback(() => {

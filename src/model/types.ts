@@ -57,7 +57,14 @@ export type DisplayMode = 'simplifie' | 'complet';
 export type DisplayUnit = 'cm' | 'mm';
 
 /** All available tool types. Only some active per milestone/level. */
-export type ToolType = 'segment' | 'point' | 'circle' | 'reflection' | 'move' | 'measure';
+export type ToolType =
+  | 'segment'
+  | 'point'
+  | 'circle'
+  | 'reflection'
+  | 'move'
+  | 'measure'
+  | 'reproduce';
 
 /** Selectable grid sizes in mm. */
 export type GridSize = 5 | 10 | 20;

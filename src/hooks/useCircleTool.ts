@@ -14,9 +14,15 @@ interface UseCircleToolOptions {
   state: ConstructionState;
   dispatch: (action: ConstructionAction) => void;
   viewport: ViewportState;
+  isActive?: boolean;
 }
 
-export function useCircleTool({ state, dispatch, viewport }: UseCircleToolOptions): ToolHookResult {
+export function useCircleTool({
+  state,
+  dispatch,
+  viewport,
+  isActive = true,
+}: UseCircleToolOptions): ToolHookResult {
   const [phase, setPhase] = useState<CirclePhase>('idle');
   const [centerPointId, setCenterPointId] = useState<string | null>(null);
   const [centerMm, setCenterMm] = useState<{ x: number; y: number } | null>(null);
@@ -54,6 +60,7 @@ export function useCircleTool({ state, dispatch, viewport }: UseCircleToolOption
 
   const handleClick = useCallback(
     (mmPos: { x: number; y: number }) => {
+      if (!isActive) return;
       if (phase === 'idle') {
         const snap = findSnap(mmPos, state, tolerances);
         const snapped = snap.snappedPosition;
@@ -81,17 +88,18 @@ export function useCircleTool({ state, dispatch, viewport }: UseCircleToolOption
         reset();
       }
     },
-    [phase, state, centerPointId, centerMm, dispatch, reset],
+    [isActive, phase, state, centerPointId, centerMm, dispatch, reset],
   );
 
   const handleCursorMove = useCallback(
     (mmPos: { x: number; y: number }) => {
+      if (!isActive) return;
       setCursorMm(mmPos);
       const excludeIds = centerPointId ? [centerPointId] : [];
       const snap = findSnap(mmPos, state, tolerances, excludeIds);
       setSnapResult(snap);
     },
-    [state, centerPointId, tolerances],
+    [isActive, state, centerPointId, tolerances],
   );
 
   const handleEscape = useCallback(() => {

@@ -19,6 +19,7 @@ interface SegmentLayerProps {
   readonly properties: readonly DetectedProperty[];
   readonly hideProperties: boolean;
   readonly fontScale: number;
+  readonly segmentColor?: string;
 }
 
 export const SegmentLayer = memo(function SegmentLayer({
@@ -30,6 +31,7 @@ export const SegmentLayer = memo(function SegmentLayer({
   properties,
   hideProperties,
   fontScale,
+  segmentColor = CANVAS_SEGMENT,
 }: SegmentLayerProps) {
   const pxPerMm = viewport.zoom * CSS_PX_PER_MM;
   const hitZonePx = SEGMENT_HIT_ZONE_MM * pxPerMm * 2;
@@ -151,7 +153,7 @@ export const SegmentLayer = memo(function SegmentLayer({
               y1={sy1}
               x2={sx2}
               y2={sy2}
-              stroke={CANVAS_SEGMENT}
+              stroke={segmentColor}
               strokeWidth={2}
               strokeLinecap="round"
               data-testid={`segment-${segment.id}`}

@@ -17,6 +17,7 @@ import type { UndoManager } from './undo';
 import * as State from './state';
 import * as Undo from './undo';
 import { reflectConstruction } from '@/engine/reflection';
+import { reproduceElements } from '@/engine/reproduce';
 import { pointOnSegmentProjection } from '@/engine/geometry';
 import { MIN_POINT_DISTANCE_MM } from '@/config/accessibility';
 
@@ -42,6 +43,14 @@ export type ConstructionAction =
       axisP2: { x: number; y: number };
     }
   | { type: 'SPLIT_SEGMENT'; segmentId: string; x: number; y: number }
+  | {
+      type: 'REPRODUCE_ELEMENTS';
+      pointIds: readonly string[];
+      segmentIds: readonly string[];
+      circleIds: readonly string[];
+      offsetX: number;
+      offsetY: number;
+    }
   | { type: 'SET_GRID_SIZE'; gridSizeMm: GridSize }
   | { type: 'SET_DISPLAY_MODE'; displayMode: DisplayMode }
   | { type: 'SET_DISPLAY_UNIT'; displayUnit: DisplayUnit }
@@ -148,6 +157,24 @@ export function reduce(state: ReducerState, action: ConstructionAction): Reducer
         ...current,
         points: [...current.points, ...newPoints],
         segments: [...current.segments, ...newSegments],
+      };
+      return { undoManager: Undo.pushState(undoManager, newState) };
+    }
+
+    case 'REPRODUCE_ELEMENTS': {
+      const result = reproduceElements(
+        action.pointIds,
+        action.segmentIds,
+        action.circleIds,
+        current,
+        action.offsetX,
+        action.offsetY,
+      );
+      const newState: typeof current = {
+        ...current,
+        points: [...current.points, ...result.points],
+        segments: [...current.segments, ...result.segments],
+        circles: [...current.circles, ...result.circles],
       };
       return { undoManager: Undo.pushState(undoManager, newState) };
     }

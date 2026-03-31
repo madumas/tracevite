@@ -43,3 +43,62 @@ export const PANEL_WIDTH = 220;
 export const PDF_STROKE = '#000000';
 export const PDF_LABEL = '#000000';
 export const PDF_MEASUREMENT = '#333333';
+
+// ── High-contrast canvas colors (v2) ──────────────────────
+const HC_CANVAS_BG = '#FFFFFF';
+const HC_CANVAS_GRID = '#CCCCCC';
+const HC_CANVAS_SEGMENT = '#000000';
+const HC_CANVAS_POINT = '#000000';
+const HC_CANVAS_LABEL = '#000000';
+const HC_CANVAS_GUIDE = '#000000';
+const HC_CANVAS_ANGLE = '#000000';
+const HC_CANVAS_MEASUREMENT = '#000000';
+const HC_CANVAS_GHOST = '#666666';
+const HC_CANVAS_SELECTION_BG = '#E0E0E0';
+
+export interface CanvasColors {
+  readonly bg: string;
+  readonly grid: string;
+  readonly segment: string;
+  readonly point: string;
+  readonly label: string;
+  readonly guide: string;
+  readonly angle: string;
+  readonly measurement: string;
+  readonly ghost: string;
+  readonly selectionBg: string;
+  readonly strokeWidth: number; // normal: 2, high contrast: 3
+}
+
+const NORMAL_COLORS: CanvasColors = {
+  bg: CANVAS_BG,
+  grid: CANVAS_GRID,
+  segment: CANVAS_SEGMENT,
+  point: CANVAS_POINT,
+  label: CANVAS_LABEL,
+  guide: CANVAS_GUIDE,
+  angle: CANVAS_ANGLE,
+  measurement: CANVAS_MEASUREMENT,
+  ghost: CANVAS_GHOST,
+  selectionBg: CANVAS_SELECTION_BG,
+  strokeWidth: 2,
+};
+
+const HIGH_CONTRAST_COLORS: CanvasColors = {
+  bg: HC_CANVAS_BG,
+  grid: HC_CANVAS_GRID,
+  segment: HC_CANVAS_SEGMENT,
+  point: HC_CANVAS_POINT,
+  label: HC_CANVAS_LABEL,
+  guide: HC_CANVAS_GUIDE,
+  angle: HC_CANVAS_ANGLE,
+  measurement: HC_CANVAS_MEASUREMENT,
+  ghost: HC_CANVAS_GHOST,
+  selectionBg: HC_CANVAS_SELECTION_BG,
+  strokeWidth: 3,
+};
+
+/** Get canvas color set based on contrast mode. */
+export function getCanvasColors(highContrast: boolean): CanvasColors {
+  return highContrast ? HIGH_CONTRAST_COLORS : NORMAL_COLORS;
+}

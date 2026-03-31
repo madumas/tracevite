@@ -59,7 +59,8 @@ import { PrintSvg } from '@/components/PrintSvg';
 import { TutorialOverlay } from '@/components/TutorialOverlay';
 import { useTutorial } from '@/hooks/useTutorial';
 import type { ToolType, GridSize, DisplayUnit, DisplayMode } from '@/model/types';
-import { PreferencesProvider } from '@/model/preferences.js';
+import { PreferencesProvider, usePreferences } from '@/model/preferences';
+import { AboutDialog } from '@/components/AboutDialog';
 
 const TOOL_SHORTCUT_MAP: Record<string, ToolType> = {
   s: 'segment',
@@ -77,6 +78,7 @@ const TOOL_DISPLAY_NAMES: Record<ToolType, string> = {
   move: 'Déplacer',
   measure: 'Mesurer',
   reflection: 'Réflexion',
+  reproduce: 'Reproduire',
 };
 
 import type { SlotRegistry } from '@/model/slots';
@@ -95,6 +97,7 @@ interface AppProps {
 function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps) {
   const { state, canUndo, canRedo, undoManager } = useConstructionState();
   const dispatch = useConstructionDispatch();
+  const preferences = usePreferences();
   const containerRef = useRef<HTMLDivElement>(null);
   const { viewport, zoomIn, zoomOut, panUp, panDown, panLeft, panRight } =
     useViewport(containerRef);
@@ -104,6 +107,7 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
 
   const [showSlotManager, setShowSlotManager] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [showAbout, setShowAbout] = useState(false);
 
   const [pendingDeleteFromKeyboard, setPendingDeleteFromKeyboard] = useState(false);
   const [deleteMode, setDeleteMode] = useState(false);
@@ -561,7 +565,13 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
         }}
       >
         <img src="/logo.svg" alt="" width={28} height={28} style={{ marginRight: -4 }} />
-        <strong style={{ fontSize: 16 }}>TraceVite</strong>
+        <strong
+          style={{ fontSize: 16, cursor: 'pointer' }}
+          onClick={() => setShowAbout(true)}
+          title="À propos de TraceVite"
+        >
+          TraceVite
+        </strong>
         <SaveIndicator saving={saving} />
         <button
           onClick={() => setShowSlotManager(true)}
@@ -734,10 +744,35 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
             : STATUS_DELETE_MODE
           : tool.statusMessage}
         {shiftConstraintActive && ' — Contrainte 15° active'}
+        {state.activeTool === 'reflection' && tool.onToggleSymmetryCheck && (
+          <button
+            onClick={tool.onToggleSymmetryCheck}
+            style={{
+              marginLeft: 'auto',
+              padding: '2px 10px',
+              background: tool.symmetryCheckMode ? '#185FA5' : 'transparent',
+              color: tool.symmetryCheckMode ? '#FFF' : '#4A5568',
+              border: '1px solid #D1D8E0',
+              borderRadius: 4,
+              cursor: 'pointer',
+              fontSize: 12,
+              fontWeight: 500,
+            }}
+          >
+            {tool.symmetryCheckMode ? '✓ Vérifier la symétrie' : 'Vérifier la symétrie'}
+          </button>
+        )}
       </div>
 
       {/* Canvas + Panel row */}
-      <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: preferences.panelPosition === 'left' ? 'row-reverse' : 'row',
+          flex: 1,
+          overflow: 'hidden',
+        }}
+      >
         {/* Canvas area */}
         <div
           ref={containerRef}
@@ -783,6 +818,7 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
               properties={derived.properties}
               hideProperties={state.hideProperties}
               fontScale={state.fontScale}
+              segmentColor={preferences.segmentColor}
             />
             <CircleLayer
               circles={state.circles}
@@ -795,6 +831,7 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
               viewport={viewport}
               selectedElementId={state.selectedElementId}
               fontScale={state.fontScale}
+              pointColor={preferences.segmentColor}
             />
 
             {/* Angle arcs and markers */}
@@ -1030,6 +1067,9 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
           onClose={() => setShowSettings(false)}
         />
       )}
+
+      {/* About dialog */}
+      {showAbout && <AboutDialog onClose={() => setShowAbout(false)} />}
     </div>
   );
 }

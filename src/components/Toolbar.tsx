@@ -144,6 +144,17 @@ export const Toolbar = memo(function Toolbar({
       >
         <ReflectionIcon /> {TOOL_REFLECTION}
       </button>
+      {/* Reproduce — behind "Plus d'outils" in simplifie */}
+      {(!isSimple || moreOpen) && (
+        <button
+          onClick={() => onToolChange('reproduce')}
+          style={{ ...toolBtnBase, ...(activeTool === 'reproduce' ? activeStyle : {}) }}
+          aria-pressed={activeTool === 'reproduce'}
+          data-testid="tool-reproduce"
+        >
+          Reproduire
+        </button>
+      )}
       {/* Measure — always visible in complet, behind "Plus d'outils" in simplifie */}
       {(!isSimple || moreOpen) && (
         <button
