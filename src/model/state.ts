@@ -222,6 +222,18 @@ export function addCircle(
   };
 }
 
+/** Set a circle's radius to an exact value (spec §6.3). */
+export function setCircleRadius(
+  state: ConstructionState,
+  circleId: string,
+  radiusMm: number,
+): ConstructionState {
+  const existing = state.circles.find((c) => c.id === circleId);
+  if (!existing || radiusMm <= 0) return state;
+  const circles = state.circles.map((c) => (c.id === circleId ? { ...c, radiusMm } : c));
+  return { ...state, circles };
+}
+
 /**
  * Move a point with constraint resolution (spec §6.7).
  * - If connected segment has fixedLength: other endpoint pivots to maintain length.

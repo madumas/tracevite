@@ -9,6 +9,7 @@ interface ContextActionBarProps {
   readonly viewport: ViewportState;
   readonly onDelete: (elementId: string) => void;
   readonly onToggleLock?: (pointId: string) => void;
+  readonly onFixCircleRadius?: (circleId: string) => void;
   /** When true, auto-trigger micro-confirmation (from keyboard Delete). */
   readonly triggerConfirm?: boolean;
   readonly onConfirmHandled?: () => void;
@@ -24,6 +25,7 @@ export function ContextActionBar({
   viewport,
   onDelete,
   onToggleLock,
+  onFixCircleRadius,
   fontScale = 1,
   triggerConfirm,
   onConfirmHandled,
@@ -176,6 +178,27 @@ export function ContextActionBar({
           data-testid="context-lock"
         >
           {point.locked ? 'Déverrouiller' : 'Verrouiller'}
+        </button>
+      )}
+
+      {circle && onFixCircleRadius && (
+        <button
+          onClick={() => onFixCircleRadius(circle.id)}
+          style={{
+            minWidth: MIN_BUTTON_SIZE_PX,
+            height: MIN_BUTTON_SIZE_PX,
+            padding: '0 10px',
+            border: `1px solid ${UI_BORDER}`,
+            borderRadius: 4,
+            background: 'transparent',
+            color: UI_TEXT_PRIMARY,
+            cursor: 'pointer',
+            fontSize: 'inherit',
+          }}
+          aria-label="Fixer le rayon ou le diamètre du cercle"
+          data-testid="context-fix-radius"
+        >
+          Fixer rayon
         </button>
       )}
     </div>

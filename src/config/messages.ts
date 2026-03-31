@@ -30,6 +30,8 @@ export const STATUS_POINT_IDLE = 'Point — Clique pour placer un point';
 export const LENGTH_PLACEHOLDER = 'Tape une longueur ou clique ailleurs';
 export const LENGTH_LABEL = (segLabel: string) => `Longueur du segment ${segLabel} :`;
 
+export const RADIUS_PLACEHOLDER = 'ex: 3,5';
+
 // ── Action bar ────────────────────────────────────────────
 
 export const ACTION_UNDO = 'Annuler';

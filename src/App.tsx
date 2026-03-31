@@ -34,6 +34,7 @@ import { createSoundEngine } from '@/engine/sound';
 import { UpdatePrompt } from '@/components/UpdatePrompt';
 import { detectLaunchStatus } from '@/model/persistence';
 import { LengthInput } from '@/components/LengthInput';
+import { RadiusInput } from '@/components/RadiusInput';
 import { SettingsDialog } from '@/components/SettingsDialog';
 import { PropertiesPanel } from '@/components/PropertiesPanel';
 import { GridLayer } from '@/components/GridLayer';
@@ -99,6 +100,9 @@ interface AppProps {
   initialUndoManager?: UndoManager;
 }
 
+// SVG cursor for 15° angle constraint (spec §14) — distinct from native crosshair
+const SHIFT_CONSTRAINT_CURSOR = `url("data:image/svg+xml,${encodeURIComponent("<svg xmlns='http://www.w3.org/2000/svg' width='32' height='32'><line x1='4' y1='28' x2='28' y2='28' stroke='%23185FA5' stroke-width='2'/><line x1='4' y1='28' x2='24' y2='14' stroke='%23185FA5' stroke-width='2'/><path d='M14,28 A10,10 0 0,1 15,22' fill='none' stroke='%23185FA5' stroke-width='1.5'/></svg>")}") 4 28, crosshair`;
+
 /** Canvas cursor based on active tool + interaction state (TDC affordance). */
 function getCanvasCursor(
   activeTool: ToolType,
@@ -106,8 +110,10 @@ function getCanvasCursor(
   isActiveGesture: boolean | undefined,
   isIdle: boolean,
   isHoveringElement: boolean,
+  shiftConstraintActive: boolean,
 ): string {
   if (deleteMode) return 'crosshair';
+  if (shiftConstraintActive) return SHIFT_CONSTRAINT_CURSOR;
   if (isIdle && isHoveringElement) return 'pointer';
   switch (activeTool) {
     case 'segment':
@@ -182,6 +188,9 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
   const [deleteMode, setDeleteMode] = useState(false);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
 
+  // RadiusInput state for circle radius/diameter fixing (spec §6.3)
+  const [fixingCircleId, setFixingCircleId] = useState<string | null>(null);
+
   // Toast for keyboard tool changes (spec §14)
   const [toastText, setToastText] = useState<string | null>(null);
   const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -255,6 +264,26 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
 
   // Accommodation TDC : masquer décorations pendant gestes moteurs actifs (déficit double tâche)
   const gestureHideProperties = state.hideProperties || !!tool.isActiveGesture;
+
+  // Auto-show RadiusInput after circle creation (spec §6.3)
+  useEffect(() => {
+    if (tool.lastCreatedCircleId) {
+      const timer = setTimeout(() => setFixingCircleId(tool.lastCreatedCircleId!), 300);
+      return () => clearTimeout(timer);
+    }
+  }, [tool.lastCreatedCircleId]);
+
+  // Close RadiusInput when circle is deleted (undo, delete)
+  useEffect(() => {
+    if (fixingCircleId && !state.circles.some((c) => c.id === fixingCircleId)) {
+      setFixingCircleId(null);
+    }
+  }, [fixingCircleId, state.circles]);
+
+  // Close RadiusInput on tool change
+  useEffect(() => {
+    setFixingCircleId(null);
+  }, [state.activeTool]);
 
   // Selection system
   const selection = useSelection({
@@ -929,6 +958,7 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
                   tool.isActiveGesture,
                   tool.isIdle,
                   !!selection.hoveredElement,
+                  shiftConstraintActive,
                 ),
               }}
               onPointerDown={handlePointerDown}
@@ -1007,6 +1037,7 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
                 viewport={viewport}
                 onDelete={handleContextDelete}
                 onToggleLock={handleToggleLock}
+                onFixCircleRadius={setFixingCircleId}
                 triggerConfirm={pendingDeleteFromKeyboard}
                 onConfirmHandled={() => setPendingDeleteFromKeyboard(false)}
                 fontScale={effectiveFontScale}
@@ -1032,6 +1063,26 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
                     dispatch({ type: 'SET_SELECTED_ELEMENT', elementId: null });
                   }}
                   onDismiss={() => dispatch({ type: 'SET_SELECTED_ELEMENT', elementId: null })}
+                />
+              );
+            })()}
+
+          {/* Radius/Diameter input for circles (spec §6.3) */}
+          {fixingCircleId &&
+            (() => {
+              const circle = state.circles.find((c) => c.id === fixingCircleId);
+              if (!circle) return null;
+              const center = state.points.find((p) => p.id === circle.centerPointId);
+              return (
+                <RadiusInput
+                  circleLabel={center?.label ?? ''}
+                  currentRadiusMm={circle.radiusMm}
+                  displayUnit={state.displayUnit}
+                  onSubmit={(radiusMm) => {
+                    dispatch({ type: 'SET_CIRCLE_RADIUS', circleId: circle.id, radiusMm });
+                    setFixingCircleId(null);
+                  }}
+                  onDismiss={() => setFixingCircleId(null)}
                 />
               );
             })()}

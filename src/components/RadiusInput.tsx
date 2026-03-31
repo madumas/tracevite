@@ -1,43 +1,42 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { UI_SURFACE, UI_BORDER, UI_TEXT_PRIMARY } from '@/config/theme';
+import { UI_SURFACE, UI_BORDER, UI_TEXT_PRIMARY, UI_PRIMARY } from '@/config/theme';
 import { MIN_BUTTON_SIZE_PX } from '@/config/accessibility';
-import { LENGTH_PLACEHOLDER } from '@/config/messages';
+import { RADIUS_PLACEHOLDER } from '@/config/messages';
 import { parseFrenchNumber } from '@/engine/format';
 import type { DisplayUnit } from '@/model/types';
 
-interface LengthInputProps {
-  readonly segmentLabel: string;
-  readonly currentLengthMm: number;
+interface RadiusInputProps {
+  readonly circleLabel: string;
+  readonly currentRadiusMm: number;
   readonly displayUnit: DisplayUnit;
-  readonly onSubmit: (lengthMm: number) => void;
+  readonly onSubmit: (radiusMm: number) => void;
   readonly onDismiss: () => void;
 }
 
 /**
- * Inline length input field.
- * Appears after segment creation. Accepts French comma format.
+ * Inline radius/diameter input field for circles (spec §6.3).
+ * Toggle between Rayon and Diametre modes.
  * Enter confirms, Escape/click elsewhere dismisses.
  */
-export function LengthInput({
-  segmentLabel,
-  currentLengthMm: _currentLengthMm,
+export function RadiusInput({
+  circleLabel,
+  currentRadiusMm: _currentRadiusMm,
   displayUnit,
   onSubmit,
   onDismiss,
-}: LengthInputProps) {
+}: RadiusInputProps) {
   const [value, setValue] = useState('');
+  const [mode, setMode] = useState<'rayon' | 'diametre'>('rayon');
   const inputRef = useRef<HTMLInputElement>(null);
-
   const containerRef = useRef<HTMLDivElement>(null);
   const [keyboardVisible, setKeyboardVisible] = useState(false);
 
   useEffect(() => {
-    // Focus input after a brief delay (don't steal from canvas immediately)
     const timer = setTimeout(() => inputRef.current?.focus(), 100);
     return () => clearTimeout(timer);
   }, []);
 
-  // Detect virtual keyboard via visualViewport (spec §6.1)
+  // Detect virtual keyboard via visualViewport (spec §21.1)
   useEffect(() => {
     const vv = window.visualViewport;
     if (!vv) return;
@@ -49,18 +48,17 @@ export function LengthInput({
     return () => vv.removeEventListener('resize', onResize);
   }, []);
 
-  // Dismiss on click/tap outside (pointerdown for touch compatibility, I5 fix)
+  // Dismiss on click outside
   useEffect(() => {
-    const handler = (e: PointerEvent) => {
+    const handler = (e: MouseEvent) => {
       if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
         onDismiss();
       }
     };
-    // Delay to avoid catching the click that opened us
-    const timer = setTimeout(() => document.addEventListener('pointerdown', handler), 200);
+    const timer = setTimeout(() => document.addEventListener('mousedown', handler), 200);
     return () => {
       clearTimeout(timer);
-      document.removeEventListener('pointerdown', handler);
+      document.removeEventListener('mousedown', handler);
     };
   }, [onDismiss]);
 
@@ -68,10 +66,11 @@ export function LengthInput({
     const parsed = parseFrenchNumber(value);
     if (parsed !== null && parsed > 0) {
       const mm = displayUnit === 'cm' ? parsed * 10 : parsed;
-      onSubmit(mm);
+      const radiusMm = mode === 'diametre' ? mm / 2 : mm;
+      onSubmit(radiusMm);
     }
     onDismiss();
-  }, [value, displayUnit, onSubmit, onDismiss]);
+  }, [value, displayUnit, mode, onSubmit, onDismiss]);
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
@@ -85,6 +84,9 @@ export function LengthInput({
     },
     [handleSubmit, onDismiss],
   );
+
+  const label =
+    mode === 'rayon' ? `Rayon du cercle ${circleLabel} :` : `Diamètre du cercle ${circleLabel} :`;
 
   return (
     <div
@@ -104,12 +106,30 @@ export function LengthInput({
         boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
         zIndex: 20,
       }}
-      data-testid="length-input"
+      data-testid="radius-input"
     >
-      <label style={{ fontSize: 12, color: UI_TEXT_PRIMARY }}>
-        Longueur du segment {segmentLabel} :
-      </label>
+      <label style={{ fontSize: 12, color: UI_TEXT_PRIMARY }}>{label}</label>
       <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+        <button
+          onClick={() => setMode((m) => (m === 'rayon' ? 'diametre' : 'rayon'))}
+          style={{
+            minWidth: MIN_BUTTON_SIZE_PX,
+            height: MIN_BUTTON_SIZE_PX - 8,
+            padding: '4px 8px',
+            border: `1px solid ${UI_BORDER}`,
+            borderRadius: 4,
+            background: UI_PRIMARY,
+            color: '#FFF',
+            cursor: 'pointer',
+            fontSize: 12,
+            fontWeight: 600,
+            whiteSpace: 'nowrap',
+          }}
+          aria-label={mode === 'rayon' ? 'Passer au diamètre' : 'Passer au rayon'}
+          data-testid="radius-mode-toggle"
+        >
+          {mode === 'rayon' ? 'Rayon' : 'Diamètre'}
+        </button>
         <input
           ref={inputRef}
           type="text"
@@ -117,9 +137,9 @@ export function LengthInput({
           value={value}
           onChange={(e) => setValue(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder={LENGTH_PLACEHOLDER}
+          placeholder={RADIUS_PLACEHOLDER}
           style={{
-            width: 160,
+            width: 120,
             height: MIN_BUTTON_SIZE_PX - 8,
             padding: '4px 8px',
             border: `1px solid ${UI_BORDER}`,
@@ -127,7 +147,7 @@ export function LengthInput({
             fontSize: 14,
             outline: 'none',
           }}
-          data-testid="length-input-field"
+          data-testid="radius-input-field"
         />
         <span style={{ fontSize: 13, color: UI_TEXT_PRIMARY }}>{displayUnit}</span>
       </div>

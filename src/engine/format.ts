@@ -32,3 +32,10 @@ function formatFrenchDecimal(value: number, decimals: number): string {
   const fixed = value.toFixed(decimals);
   return fixed.replace('.', ',');
 }
+
+/** Parse a French-formatted number (comma as decimal separator). */
+export function parseFrenchNumber(input: string): number | null {
+  const normalized = input.trim().replace(',', '.');
+  const num = parseFloat(normalized);
+  return isNaN(num) ? null : num;
+}

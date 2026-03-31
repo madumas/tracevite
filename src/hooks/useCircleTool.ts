@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo, useEffect, createElement } from 'react';
+import { useState, useCallback, useMemo, useEffect, useRef, createElement } from 'react';
 import type { ConstructionState, ViewportState, SnapResult } from '@/model/types';
 import type { ConstructionAction } from '@/model/reducer';
 import type { ToolHookResult } from './types';
@@ -30,6 +30,9 @@ export function useCircleTool({
   const [snapResult, setSnapResult] = useState<SnapResult | null>(null);
   // Track pending center creation (point created, waiting for state update to get ID)
   const [pendingCenterMm, setPendingCenterMm] = useState<{ x: number; y: number } | null>(null);
+  // Track last created circle for RadiusInput auto-show (spec §6.3)
+  const [lastCreatedCircleId, setLastCreatedCircleId] = useState<string | null>(null);
+  const circlesCountRef = useRef(state.circles.length);
 
   const tolerances = useMemo(
     () => scaleTolerances(DEFAULT_TOLERANCES, TOLERANCE_PROFILES[state.toleranceProfile]),
@@ -58,6 +61,15 @@ export function useCircleTool({
     }
   }, [phase, pendingCenterMm, centerPointId, state.points]);
 
+  // Detect newly created circle for RadiusInput auto-show
+  useEffect(() => {
+    if (state.circles.length > circlesCountRef.current) {
+      const newCircle = state.circles[state.circles.length - 1];
+      if (newCircle) setLastCreatedCircleId(newCircle.id);
+    }
+    circlesCountRef.current = state.circles.length;
+  }, [state.circles]);
+
   const handleClick = useCallback(
     (mmPos: { x: number; y: number }) => {
       if (!isActive) return;
@@ -82,6 +94,7 @@ export function useCircleTool({
         const radiusMm = distance(centerMm, snap.snappedPosition);
 
         if (radiusMm >= 2) {
+          circlesCountRef.current = state.circles.length;
           dispatch({ type: 'CREATE_CIRCLE', centerPointId, radiusMm });
         }
 
@@ -133,5 +146,6 @@ export function useCircleTool({
     snapResult: phase === 'center_placed' ? snapResult : null,
     overlayElements,
     isActiveGesture: phase === 'center_placed' && !!centerMm && !!cursorMm,
+    lastCreatedCircleId,
   };
 }

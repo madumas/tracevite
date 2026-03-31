@@ -36,6 +36,7 @@ export type ConstructionAction =
   | { type: 'FIX_SEGMENT_LENGTH'; segmentId: string; lengthMm: number }
   | { type: 'MOVE_POINT'; pointId: string; x: number; y: number }
   | { type: 'CREATE_CIRCLE'; centerPointId: string; radiusMm: number }
+  | { type: 'SET_CIRCLE_RADIUS'; circleId: string; radiusMm: number }
   | {
       type: 'REFLECT_ELEMENTS';
       pointIds: string[];
@@ -207,6 +208,12 @@ export function reduce(state: ReducerState, action: ConstructionAction): Reducer
       const result = State.addCircle(current, action.centerPointId, action.radiusMm);
       if (!result) return state;
       return { undoManager: Undo.pushState(undoManager, result.state) };
+    }
+
+    case 'SET_CIRCLE_RADIUS': {
+      const newState = State.setCircleRadius(current, action.circleId, action.radiusMm);
+      if (newState === current) return state;
+      return { undoManager: Undo.pushState(undoManager, newState) };
     }
 
     case 'REFLECT_ELEMENTS': {

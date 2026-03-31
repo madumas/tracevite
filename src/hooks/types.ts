@@ -26,6 +26,8 @@ export interface ToolHookResult {
   isActiveGesture?: boolean;
   /** During move: ID of the point being moved. */
   activePointId?: string | null;
+  /** Circle tool: ID of the last created circle (for auto-showing RadiusInput). */
+  lastCreatedCircleId?: string | null;
   /** Reflection tool: symmetry check mode toggle (v2). */
   symmetryCheckMode?: boolean;
   /** Reflection tool: toggle symmetry check mode (v2). */

@@ -241,6 +241,39 @@ export const PropertiesPanel = memo(function PropertiesPanel({
         )}
       </AccordionSection>
 
+      {/* Cercles (spec §6.3) */}
+      {state.circles.length > 0 && (
+        <AccordionSection title="Cercles">
+          {state.circles.map((circle) => {
+            const center = state.points.find((p) => p.id === circle.centerPointId);
+            if (!center) return null;
+            const isSelected = circle.id === state.selectedElementId;
+            return (
+              <div
+                key={circle.id}
+                onClick={() => onSelectElement(circle.id)}
+                style={{
+                  padding: '2px 0',
+                  cursor: 'pointer',
+                  color: UI_TEXT_PRIMARY,
+                  fontWeight: isSelected ? 600 : 400,
+                  background: isSelected ? '#E8F0FA' : 'transparent',
+                  borderRadius: 2,
+                }}
+              >
+                <span style={{ fontWeight: 500 }}>Centre {center.label}</span>
+                {!estimationActive && (
+                  <span style={{ color: UI_TEXT_SECONDARY, marginLeft: 6 }}>
+                    r = {formatLength(circle.radiusMm, state.displayUnit)}, d ={' '}
+                    {formatLength(circle.radiusMm * 2, state.displayUnit)}
+                  </span>
+                )}
+              </div>
+            );
+          })}
+        </AccordionSection>
+      )}
+
       {/* Points / Sommets */}
       <AccordionSection title="Points">
         {state.points.map((point) => {
