@@ -35,7 +35,8 @@ export function TutorialOverlay({ step, onSkip, onFinish, onDismissPost }: Tutor
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          pointerEvents: 'none',
+          pointerEvents: 'auto',
+          cursor: 'pointer',
           zIndex: 25,
         }}
         onClick={onDismissPost}
