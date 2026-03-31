@@ -1241,7 +1241,7 @@ Le MVP est développé en 3 jalons itératifs :
 
 **Priorité haute (compétences PFEQ du 2e cycle non couvertes par le MVP) :**
 - ~~Outil « Reproduire »~~ — **implémenté** : dupliquer une figure existante (sélection par flood-fill ou figure fermée, placement par clic).
-- Vérification d'axe de symétrie : tracer un axe sur une figure existante et vérifier si la figure est symétrique par rapport à cet axe (« Combien d'axes de symétrie a ce carré? »). Compétence PFEQ **2e cycle**.
+- ~~Vérification d'axe de symétrie~~ — **implémenté** : mode de vérification dans l'outil Réflexion (`checkSymmetry()`) avec feedback visuel (cercles vert/rouge pour les correspondances).
 - ~~Panneau latéral repositionnable à gauche~~ — **implémenté** : toggle « À droite / À gauche » dans les Paramètres. Accommodation pour gauchers.
 
 **Outils de construction avancés :**
@@ -1255,19 +1255,19 @@ Le MVP est développé en 3 jalons itératifs :
 
 **Pédagogie et évaluation :**
 - ~~Mode "estimation"~~ — **implémenté** : mesures masquées, bouton pour révéler (activable dans les Paramètres).
-- Affichage de la formule d'aire utilisée (base × hauteur, etc.) pour renforcer l'apprentissage. Affichage de la **hauteur** d'un triangle ou parallélogramme pour soutenir le calcul de l'aire (vocabulaire PFEQ 3e cycle).
+- ~~Affichage de la formule d'aire et de la hauteur~~ — **implémenté** : formule (« Aire = base × hauteur ÷ 2 » pour triangles, « Aire = base × hauteur » pour parallélogrammes) + hauteur calculée avec pied de la perpendiculaire. Affiché en mode Complet uniquement.
 - ~~Export PDF avec/sans mesures~~ — **implémenté** : toggle « Inclure les mesures » dans le dialogue d'impression.
 - Comparaison de figures isométriques (superposition par translation)
 - ~~Choix de format de page A4 / Lettre US~~ — **implémenté** dans le dialogue d'impression.
 
 **Enseignement et projection :**
-- Mode « démonstration » pour TBI/projecteur : un bouton plein écran (ou F11) qui masque le header, réduit la toolbar au minimum, et maximise le canevas. Facteur de police amplifié (×2.0) pour la lisibilité en projection. Essentiel pour l'adoption par les enseignants qui démontrent les constructions au groupe-classe.
+- ~~Mode « démonstration » pour TBI/projecteur~~ — **implémenté** : bouton plein écran dans la barre d'actions, masque le header, police ×2.0 minimum, synchronisé avec l'API Fullscreen.
 - Association du fichier `.tracevite` via le Web App Manifest (`file_handlers`) : sur les Chromebooks et Windows récents, cliquer sur un fichier `.tracevite` ouvre automatiquement TraceVite (si installé comme PWA).
 
 **Accommodements TDC avancés :**
-- Support tablette tactile optimisé avec stylet (iPad + Apple Pencil). Le stylet est souvent plus accessible que la souris pour les enfants TDC — plus proche du geste naturel de pointage. (Note : le MVP supporte déjà le stylet via `PointerEvent`, mais des optimisations tactiles — cibles 48px, rejection de paume — sont prévues ici.)
+- ~~Support tablette tactile optimisé avec stylet~~ — **implémenté** : discrimination `pointerType` (pen/touch/mouse), rejection de paume (3+ doigts ignorés), délai tactile 80ms pour détection pinch.
 - ~~Mode contraste élevé~~ — **implémenté** (dans les préférences utilisateur).
-- Gestion de la fatigue : rappel discret de pause après 20-30 min d'utilisation continue (les enfants TDC fatiguent plus vite sur les tâches motrices fines). Dans le MVP, le temps d'utilisation continue est affiché discrètement dans le footer (horloge) pour la conscience du temps — le rappel actif est v2.
+- ~~Gestion de la fatigue~~ — **implémenté** : `FatigueReminder` avec intervalle configurable, bannière jaune dismissible (« Tu travailles depuis un moment. Prends une petite pause! »).
 - ~~Filtre de lissage du curseur~~ — **implémenté** : moyennage mobile sur 5 positions, activé automatiquement en profil « Tolérance très large ». Désactivable.
 - ~~Mode « pas à pas » pour la réflexion~~ — **implémenté** : animation point par point avec pied de perpendiculaire (500ms par étape).
 
@@ -1596,11 +1596,11 @@ Les questions suivantes ont été posées, débattues et tranchées définitivem
 - Navigation clavier dans le canevas SVG (v2)
 - PDF multi-pages (v3)
 - ~~Détection automatique d'intersections segment-segment~~ — **implémenté** (activé par défaut, désactivable dans les Paramètres)
-- Mode démonstration TBI (v2)
+- ~~Mode démonstration TBI~~ — **implémenté** (bouton plein écran dans la barre d'actions, police ×2.0)
 - ~~Filtre de lissage du curseur~~ — **implémenté** (activé automatiquement en profil de tolérance « très large »)
 - Hot-reload des constantes d'accessibilité
 - Partage de figure de départ via URL (v2 — utiliser fichier .tracevite en attendant)
-- Rappel actif de pause/fatigue (v2 — afficher l'heure courante dans le footer au MVP)
+- ~~Rappel actif de pause/fatigue~~ — **implémenté** (FatigueReminder avec intervalle configurable)
 
 ### Choix d'interface pour l'accessibilité TDC
 
