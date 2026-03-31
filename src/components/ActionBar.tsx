@@ -201,6 +201,12 @@ export const ActionBar = memo(function ActionBar({
       </button>
 
       {/* Grid selector */}
+      <span
+        className="action-label"
+        style={{ fontSize: 11, color: '#9CA3AF', whiteSpace: 'nowrap' }}
+      >
+        Grille
+      </span>
       <div style={{ display: 'flex', gap: 2 }}>
         {([5, 10, 20] as GridSize[]).map((size) => (
           <button
@@ -225,23 +231,28 @@ export const ActionBar = memo(function ActionBar({
         ))}
       </div>
 
+      {/* ─ sep ─ */}
+      <div style={{ width: 1, height: 24, background: UI_BORDER, margin: '0 4px' }} />
+
       {/* Unit toggle */}
       <button
         onClick={() => onUnitChange(displayUnit === 'cm' ? 'mm' : 'cm')}
         style={{
           minWidth: 36,
           height: MIN_BUTTON_SIZE_PX - 8,
-          padding: '0 6px',
+          padding: '0 8px',
           border: `1px solid ${UI_BORDER}`,
           borderRadius: 4,
           background: UI_SURFACE,
           color: UI_TEXT_PRIMARY,
           cursor: 'pointer',
           fontSize: 'inherit',
+          whiteSpace: 'nowrap',
         }}
         data-testid="unit-toggle"
+        title="Changer l'unité d'affichage des mesures"
       >
-        {displayUnit}
+        Unité : {displayUnit}
       </button>
 
       {/* Estimation mode: Vérifier button */}
