@@ -140,7 +140,7 @@ export const PropertiesPanel = memo(function PropertiesPanel({
         ▶
       </button>
 
-      {/* Segments / Côtés — titre adapté au contexte (spec §989) */}
+      {/* Segments / Côtés — titre adapté au contexte (spec §9.0) */}
       <AccordionSection
         title={
           state.segments.length > 0 && state.segments.every((s) => figureSegmentIds.has(s.id))
@@ -170,7 +170,7 @@ export const PropertiesPanel = memo(function PropertiesPanel({
                   {formatLength(seg.lengthMm, state.displayUnit)}
                 </span>
               )}
-              {rightAngleSideIds.has(seg.id) && (
+              {!estimationActive && rightAngleSideIds.has(seg.id) && (
                 <span style={{ color: UI_TEXT_SECONDARY, marginLeft: 4, fontSize: '0.9em' }}>
                   (côté de l'angle droit)
                 </span>
@@ -309,7 +309,7 @@ export const PropertiesPanel = memo(function PropertiesPanel({
         </AccordionSection>
       )}
 
-      {/* Points / Sommets — titre adapté au contexte (spec §989) */}
+      {/* Points / Sommets — titre adapté au contexte (spec §9.0) */}
       <AccordionSection
         title={
           state.points.length > 0 && state.points.every((p) => figurePointIds.has(p.id))
