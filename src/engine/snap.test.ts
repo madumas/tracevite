@@ -20,7 +20,7 @@ function makeStateWithSegments(
     segments: segments.map((s) => ({
       ...s,
       lengthMm: 0, // computed elsewhere
-      fixedLength: false,
+      fixedLength: undefined,
     })),
     circles: circles.map((c) => ({ ...c })),
   };
