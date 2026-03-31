@@ -17,6 +17,7 @@ interface AngleLayerProps {
   /** When true, congruence arcs are hidden. */
   readonly hideProperties?: boolean;
   readonly fontScale?: number;
+  readonly estimationMode?: boolean;
 }
 
 const ARC_RADIUS_PX = 22;
@@ -37,6 +38,7 @@ export const AngleLayer = memo(function AngleLayer({
   selectedFigurePointIds,
   hideProperties,
   fontScale = 1,
+  estimationMode = false,
 }: AngleLayerProps) {
   const pxPerMm = viewport.zoom * CSS_PX_PER_MM;
 
@@ -218,8 +220,8 @@ export const AngleLayer = memo(function AngleLayer({
                   />
                 );
               })}
-            {/* 3e cycle: show degrees */}
-            {displayMode === 'complet' && (
+            {/* 3e cycle: show degrees — hidden in estimation mode */}
+            {displayMode === 'complet' && !estimationMode && (
               <text
                 x={labelX}
                 y={labelY}

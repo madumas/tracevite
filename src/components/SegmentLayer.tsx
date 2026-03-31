@@ -20,6 +20,7 @@ interface SegmentLayerProps {
   readonly hideProperties: boolean;
   readonly fontScale: number;
   readonly segmentColor?: string;
+  readonly estimationMode?: boolean;
 }
 
 export const SegmentLayer = memo(function SegmentLayer({
@@ -32,6 +33,7 @@ export const SegmentLayer = memo(function SegmentLayer({
   hideProperties,
   fontScale,
   segmentColor = CANVAS_SEGMENT,
+  estimationMode = false,
 }: SegmentLayerProps) {
   const pxPerMm = viewport.zoom * CSS_PX_PER_MM;
   const hitZonePx = SEGMENT_HIT_ZONE_MM * pxPerMm * 2;
@@ -158,18 +160,20 @@ export const SegmentLayer = memo(function SegmentLayer({
               strokeLinecap="round"
               data-testid={`segment-${segment.id}`}
             />
-            {/* Length label */}
-            <text
-              x={midSx + offsetX}
-              y={midSy + offsetY}
-              fill={CANVAS_MEASUREMENT}
-              fontSize={Math.max(MIN_CANVAS_FONT_PX, 13) * fontScale}
-              fontFamily="system-ui, sans-serif"
-              textAnchor="middle"
-              dominantBaseline="central"
-            >
-              {lengthText}
-            </text>
+            {/* Length label — hidden in estimation mode */}
+            {!estimationMode && (
+              <text
+                x={midSx + offsetX}
+                y={midSy + offsetY}
+                fill={CANVAS_MEASUREMENT}
+                fontSize={Math.max(MIN_CANVAS_FONT_PX, 13) * fontScale}
+                fontFamily="system-ui, sans-serif"
+                textAnchor="middle"
+                dominantBaseline="central"
+              >
+                {lengthText}
+              </text>
+            )}
             {/* Parallel marks: // (two diagonal slashes) colored by pair, at 1/3 of segment */}
             {parallelSegColor.has(segment.id) && len > 0 && (
               <g>

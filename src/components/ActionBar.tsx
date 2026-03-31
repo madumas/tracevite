@@ -30,6 +30,8 @@ interface ActionBarProps {
   readonly onPrint: () => void;
   readonly onNewConstruction: () => void;
   readonly fontScale?: number;
+  readonly estimationMode?: boolean;
+  readonly onToggleEstimation?: () => void;
 }
 
 export const ActionBar = memo(function ActionBar({
@@ -43,6 +45,8 @@ export const ActionBar = memo(function ActionBar({
   onPrint,
   onNewConstruction,
   fontScale = 1,
+  estimationMode = false,
+  onToggleEstimation,
 }: ActionBarProps) {
   return (
     <div
@@ -121,6 +125,27 @@ export const ActionBar = memo(function ActionBar({
       >
         🗑 {ACTION_DELETE}
       </button>
+
+      {/* Estimation mode: Vérifier button */}
+      {estimationMode && onToggleEstimation && (
+        <button
+          onClick={onToggleEstimation}
+          style={{
+            minWidth: MIN_BUTTON_SIZE_PX,
+            height: MIN_BUTTON_SIZE_PX - 8,
+            padding: '0 10px',
+            border: `1px solid ${UI_PRIMARY}`,
+            borderRadius: 4,
+            background: '#E8F0FA',
+            color: UI_PRIMARY,
+            cursor: 'pointer',
+            fontSize: 'inherit',
+            fontWeight: 600,
+          }}
+        >
+          Vérifier
+        </button>
+      )}
 
       {/* Spacer */}
       <div style={{ flex: 1, display: 'flex', justifyContent: 'center' }}>

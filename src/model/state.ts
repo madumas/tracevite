@@ -37,6 +37,7 @@ export function createInitialState(): ConstructionState {
     soundMode: 'off',
     soundGain: 0.5,
     pointToolVisible: false,
+    estimationMode: false,
   };
 }
 

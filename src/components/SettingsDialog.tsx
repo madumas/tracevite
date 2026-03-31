@@ -24,6 +24,8 @@ interface SettingsDialogProps {
   readonly onSoundGainChange: (v: number) => void;
   readonly onKeyboardShortcutsChange: (v: boolean) => void;
   readonly onPointToolVisibleChange: (v: boolean) => void;
+  readonly estimationMode: boolean;
+  readonly onEstimationModeChange: (v: boolean) => void;
   readonly onClose: () => void;
 }
 
@@ -82,6 +84,8 @@ export const SettingsDialog = memo(function SettingsDialog({
   onSoundGainChange,
   onKeyboardShortcutsChange,
   onPointToolVisibleChange,
+  estimationMode,
+  onEstimationModeChange,
   onClose,
 }: SettingsDialogProps) {
   const prefs = usePreferences();
@@ -249,6 +253,59 @@ export const SettingsDialog = memo(function SettingsDialog({
             ))}
           </div>
         </div>
+
+        {/* Fatigue reminder */}
+        <div style={rowStyle}>
+          <span>Rappel de pause</span>
+          <select
+            value={prefs.fatigueReminderMinutes ?? 0}
+            onChange={(e) => {
+              const v = Number(e.target.value);
+              updatePref('fatigueReminderMinutes', v === 0 ? null : v);
+            }}
+            style={selectStyle}
+          >
+            <option value={0}>Désactivé</option>
+            <option value={20}>20 minutes</option>
+            <option value={25}>25 minutes</option>
+            <option value={30}>30 minutes</option>
+          </select>
+        </div>
+
+        {/* Estimation mode toggle */}
+        <div style={rowStyle}>
+          <span>Mode estimation (mesures masquées)</span>
+          <input
+            type="checkbox"
+            checked={estimationMode}
+            onChange={(e) => onEstimationModeChange(e.target.checked)}
+            style={{ width: 20, height: 20, cursor: 'pointer' }}
+          />
+        </div>
+
+        {/* High contrast toggle */}
+        <div style={rowStyle}>
+          <span>Contraste élevé</span>
+          <input
+            type="checkbox"
+            checked={prefs.highContrast}
+            onChange={(e) => updatePref('highContrast', e.target.checked)}
+            style={{ width: 20, height: 20, cursor: 'pointer' }}
+          />
+        </div>
+
+        {/* Cursor smoothing — only when tolerance is very_large */}
+        {toleranceProfile === 'very_large' && (
+          <div style={rowStyle}>
+            <span>Lissage du curseur</span>
+            <input
+              type="checkbox"
+              checked={prefs.cursorSmoothing}
+              onChange={(e) => updatePref('cursorSmoothing', e.target.checked)}
+              style={{ width: 20, height: 20, cursor: 'pointer' }}
+            />
+          </div>
+        )}
 
         {/* Point tool visible toggle */}
         <div style={{ ...rowStyle, borderBottom: 'none' }}>

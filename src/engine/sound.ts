@@ -40,6 +40,11 @@ export function createSoundEngine(): SoundEngine {
     }
   }
 
+  function vibrate(ms: number) {
+    if (mode === 'off') return;
+    navigator.vibrate?.(ms);
+  }
+
   function playSnap() {
     if (mode !== 'full') return; // Reduced mode skips snap
     const now = Date.now();
@@ -67,6 +72,7 @@ export function createSoundEngine(): SoundEngine {
     source.connect(filter);
     filter.connect(gainNode);
     source.start();
+    vibrate(20);
   }
 
   function playSegmentCreated() {
@@ -87,6 +93,7 @@ export function createSoundEngine(): SoundEngine {
     env.connect(gainNode);
     osc.start();
     osc.stop(ctx.currentTime + 0.05);
+    vibrate(30);
   }
 
   function playFigureClosed() {

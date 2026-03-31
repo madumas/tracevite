@@ -13,6 +13,7 @@ interface UsePointerInteractionOptions {
   viewport: ViewportState;
   onCanvasClick: (mmPos: { x: number; y: number }) => void;
   onCursorMove: (mmPos: { x: number; y: number }) => void;
+  cursorSmoothing?: boolean;
 }
 
 /**
@@ -21,13 +22,17 @@ interface UsePointerInteractionOptions {
  * - Discriminates click vs drag via 1.5mm physical threshold
  * - Debounces clicks at 150ms
  */
+const SMOOTHING_WINDOW = 5;
+
 export function usePointerInteraction({
   viewport,
   onCanvasClick,
   onCursorMove,
+  cursorSmoothing = false,
 }: UsePointerInteractionOptions) {
   const pointerDownPos = useRef<{ x: number; y: number } | null>(null);
   const lastClickTime = useRef(0);
+  const smoothingBuffer = useRef<{ x: number; y: number }[]>([]);
 
   const screenToMmPos = useCallback(
     (e: React.PointerEvent<SVGSVGElement>) => {
@@ -51,9 +56,20 @@ export function usePointerInteraction({
   const handlePointerMove = useCallback(
     (e: React.PointerEvent<SVGSVGElement>) => {
       const mmPos = screenToMmPos(e);
-      onCursorMove(mmPos);
+
+      if (cursorSmoothing) {
+        const buf = smoothingBuffer.current;
+        buf.push(mmPos);
+        if (buf.length > SMOOTHING_WINDOW) buf.shift();
+        const avgX = buf.reduce((s, p) => s + p.x, 0) / buf.length;
+        const avgY = buf.reduce((s, p) => s + p.y, 0) / buf.length;
+        onCursorMove({ x: avgX, y: avgY });
+      } else {
+        smoothingBuffer.current = [];
+        onCursorMove(mmPos);
+      }
     },
-    [screenToMmPos, onCursorMove],
+    [screenToMmPos, onCursorMove, cursorSmoothing],
   );
 
   const handlePointerUp = useCallback(

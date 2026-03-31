@@ -107,6 +107,7 @@ export interface ConstructionState {
   readonly soundMode: SoundMode;
   readonly soundGain: number; // 0–1, default 0.5
   readonly pointToolVisible: boolean;
+  readonly estimationMode: boolean;
 }
 
 /** Snap result from the snap engine. */

@@ -22,9 +22,9 @@ import {
   UI_BG,
   UI_PRIMARY,
   UI_TEXT_PRIMARY,
-  CANVAS_BG,
   HEADER_HEIGHT,
   STATUS_BAR_HEIGHT,
+  getCanvasColors,
 } from '@/config/theme';
 import { CSS_PX_PER_MM, BOUNDS_WIDTH_MM, BOUNDS_HEIGHT_MM } from '@/engine/viewport';
 import { isAngleCluttered } from '@/engine/angles';
@@ -61,6 +61,7 @@ import { useTutorial } from '@/hooks/useTutorial';
 import type { ToolType, GridSize, DisplayUnit, DisplayMode } from '@/model/types';
 import { PreferencesProvider, usePreferences } from '@/model/preferences';
 import { AboutDialog } from '@/components/AboutDialog';
+import { FatigueReminder } from '@/components/FatigueReminder';
 
 const TOOL_SHORTCUT_MAP: Record<string, ToolType> = {
   s: 'segment',
@@ -101,6 +102,10 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
   const { state, canUndo, canRedo, undoManager } = useConstructionState();
   const dispatch = useConstructionDispatch();
   const preferences = usePreferences();
+  const canvasColors = getCanvasColors(preferences.highContrast);
+  const effectiveSegmentColor = preferences.highContrast
+    ? canvasColors.segment
+    : preferences.segmentColor;
   const containerRef = useRef<HTMLDivElement>(null);
   const { viewport, zoomIn, zoomOut, panUp, panDown, panLeft, panRight } =
     useViewport(containerRef);
@@ -111,6 +116,37 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
   const [showSlotManager, setShowSlotManager] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showAbout, setShowAbout] = useState(false);
+
+  const [estimationRevealed, setEstimationRevealed] = useState(false);
+  const [demoMode, setDemoMode] = useState(false);
+  const [showFatigueReminder, setShowFatigueReminder] = useState(false);
+  const fatigueTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const effectiveFontScale = demoMode ? Math.max(state.fontScale, 2) : state.fontScale;
+
+  // Sync demoMode with fullscreen state
+  useEffect(() => {
+    const handler = () => {
+      if (!document.fullscreenElement) setDemoMode(false);
+    };
+    document.addEventListener('fullscreenchange', handler);
+    return () => document.removeEventListener('fullscreenchange', handler);
+  }, []);
+
+  // Fatigue reminder timer
+  useEffect(() => {
+    const minutes = preferences.fatigueReminderMinutes;
+    if (fatigueTimerRef.current) clearTimeout(fatigueTimerRef.current);
+    if (minutes == null) return;
+    fatigueTimerRef.current = setTimeout(
+      () => {
+        setShowFatigueReminder(true);
+      },
+      minutes * 60 * 1000,
+    );
+    return () => {
+      if (fatigueTimerRef.current) clearTimeout(fatigueTimerRef.current);
+    };
+  }, [preferences.fatigueReminderMinutes, showFatigueReminder]);
 
   const [pendingDeleteFromKeyboard, setPendingDeleteFromKeyboard] = useState(false);
   const [deleteMode, setDeleteMode] = useState(false);
@@ -262,6 +298,7 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
     viewport,
     onCanvasClick: handleCanvasClick,
     onCursorMove: handleCursorMove,
+    cursorSmoothing: preferences.cursorSmoothing && state.toleranceProfile === 'very_large',
   });
 
   const hasElements = state.points.length > 0;
@@ -320,6 +357,7 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
     dispatch({ type: 'NEW_CONSTRUCTION' });
     tool.reset();
     setShowNewConfirm(false);
+    setEstimationRevealed(false);
   }, [dispatch, tool]);
 
   // Context action bar handlers
@@ -575,23 +613,25 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
         >
           TraceVite
         </strong>
-        <SaveIndicator saving={saving} />
-        <button
-          onClick={() => setShowSlotManager(true)}
-          style={{
-            padding: '3px 10px',
-            background: 'transparent',
-            border: `1px solid #D1D8E0`,
-            borderRadius: 4,
-            cursor: 'pointer',
-            fontSize: 12,
-            color: '#4A5568',
-          }}
-          data-testid="slot-manager-btn"
-        >
-          Mes constructions
-        </button>
-        {state.consigne && consigneDismissed && (
+        {!demoMode && <SaveIndicator saving={saving} />}
+        {!demoMode && (
+          <button
+            onClick={() => setShowSlotManager(true)}
+            style={{
+              padding: '3px 10px',
+              background: 'transparent',
+              border: `1px solid #D1D8E0`,
+              borderRadius: 4,
+              cursor: 'pointer',
+              fontSize: 12,
+              color: '#4A5568',
+            }}
+            data-testid="slot-manager-btn"
+          >
+            Mes constructions
+          </button>
+        )}
+        {!demoMode && state.consigne && consigneDismissed && (
           <button
             onClick={() => setConsigneDismissed(false)}
             style={{
@@ -609,26 +649,60 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
           </button>
         )}
         <div style={{ flex: 1 }} />
-        <ModeSelector mode={state.displayMode} onChange={handleModeChange} />
+        {!demoMode && <ModeSelector mode={state.displayMode} onChange={handleModeChange} />}
         <button
-          onClick={() => setShowSettings(true)}
+          onClick={() => {
+            if (document.fullscreenElement) {
+              document.exitFullscreen();
+              setDemoMode(false);
+            } else {
+              document.documentElement.requestFullscreen?.()?.then(
+                () => setDemoMode(true),
+                () => {
+                  /* fullscreen refused — stay in normal mode */
+                },
+              );
+            }
+          }}
           style={{
             width: 44,
             height: 44,
-            background: 'transparent',
+            background: demoMode ? '#185FA5' : 'transparent',
+            color: demoMode ? '#FFF' : '#4A5568',
             border: 'none',
             cursor: 'pointer',
-            fontSize: 22,
+            fontSize: 18,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
+            borderRadius: 4,
           }}
-          aria-label="Paramètres"
-          data-testid="settings-button"
+          aria-label="Mode démonstration"
+          title="Mode démonstration (plein écran)"
         >
-          ⚙
+          {demoMode ? '✕' : '⛶'}
         </button>
-        <span style={{ fontSize: 11, color: '#9CA3AF' }}>v0.1.0</span>
+        {!demoMode && (
+          <button
+            onClick={() => setShowSettings(true)}
+            style={{
+              width: 44,
+              height: 44,
+              background: 'transparent',
+              border: 'none',
+              cursor: 'pointer',
+              fontSize: 22,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+            aria-label="Paramètres"
+            data-testid="settings-button"
+          >
+            ⚙
+          </button>
+        )}
+        {!demoMode && <span style={{ fontSize: 11, color: '#9CA3AF' }}>v0.1.0</span>}
       </header>
 
       {/* Deep Freeze warning (spec §17.1) */}
@@ -710,7 +784,7 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
         onUnitChange={handleUnitChange}
         onSnapToggle={handleSnapToggle}
         pointToolVisible={state.pointToolVisible}
-        fontScale={state.fontScale}
+        fontScale={effectiveFontScale}
       />
 
       {/* Status Bar */}
@@ -722,7 +796,7 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
           padding: '0 12px',
           background: '#EDF1F5',
           borderBottom: '1px solid #D1D8E0',
-          fontSize: 13 * state.fontScale,
+          fontSize: 13 * effectiveFontScale,
           color: '#4A5568',
         }}
         role="status"
@@ -783,7 +857,7 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
             flex: 1,
             position: 'relative',
             overflow: 'auto',
-            background: CANVAS_BG,
+            background: canvasColors.bg,
           }}
           data-testid="canvas-container"
         >
@@ -820,8 +894,9 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
               selectedElementId={state.selectedElementId}
               properties={derived.properties}
               hideProperties={state.hideProperties}
-              fontScale={state.fontScale}
-              segmentColor={preferences.segmentColor}
+              fontScale={effectiveFontScale}
+              segmentColor={effectiveSegmentColor}
+              estimationMode={state.estimationMode && !estimationRevealed}
             />
             <CircleLayer
               circles={state.circles}
@@ -833,8 +908,8 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
               points={state.points}
               viewport={viewport}
               selectedElementId={state.selectedElementId}
-              fontScale={state.fontScale}
-              pointColor={preferences.segmentColor}
+              fontScale={effectiveFontScale}
+              pointColor={effectiveSegmentColor}
             />
 
             {/* Angle arcs and markers */}
@@ -847,7 +922,8 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
               selectedElementId={state.selectedElementId}
               hoveredElementId={selection.hoveredElement?.id ?? null}
               hideProperties={state.hideProperties}
-              fontScale={state.fontScale}
+              fontScale={effectiveFontScale}
+              estimationMode={state.estimationMode && !estimationRevealed}
             />
 
             {/* Tool-specific overlays (ghost segment, ghost circle, etc.) */}
@@ -866,7 +942,7 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
               onToggleLock={handleToggleLock}
               triggerConfirm={pendingDeleteFromKeyboard}
               onConfirmHandled={() => setPendingDeleteFromKeyboard(false)}
-              fontScale={state.fontScale}
+              fontScale={effectiveFontScale}
             />
           )}
 
@@ -928,7 +1004,8 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
           collapsed={panelCollapsed}
           onToggleCollapsed={() => setPanelCollapsed(!panelCollapsed)}
           hasNewProperties={hasNewProperties}
-          fontScale={state.fontScale}
+          fontScale={effectiveFontScale}
+          estimationActive={state.estimationMode && !estimationRevealed}
         />
       </div>
 
@@ -958,7 +1035,9 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
         }}
         onPrint={handlePrint}
         onNewConstruction={handleNewConstruction}
-        fontScale={state.fontScale}
+        fontScale={effectiveFontScale}
+        estimationMode={state.estimationMode}
+        onToggleEstimation={() => setEstimationRevealed((prev) => !prev)}
       />
 
       {showNewConfirm && (
@@ -1067,12 +1146,20 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
             dispatch({ type: 'SET_KEYBOARD_SHORTCUTS', enabled: v })
           }
           onPointToolVisibleChange={(v) => dispatch({ type: 'SET_POINT_TOOL_VISIBLE', visible: v })}
+          estimationMode={state.estimationMode}
+          onEstimationModeChange={(v) => {
+            dispatch({ type: 'SET_ESTIMATION_MODE', enabled: v });
+            setEstimationRevealed(false);
+          }}
           onClose={() => setShowSettings(false)}
         />
       )}
 
       {/* About dialog */}
       {showAbout && <AboutDialog onClose={() => setShowAbout(false)} />}
+
+      {/* Fatigue reminder */}
+      {showFatigueReminder && <FatigueReminder onDismiss={() => setShowFatigueReminder(false)} />}
     </div>
   );
 }

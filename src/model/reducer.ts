@@ -69,6 +69,7 @@ export type ConstructionAction =
   | { type: 'SET_SOUND_MODE'; soundMode: SoundMode }
   | { type: 'SET_SOUND_GAIN'; soundGain: number }
   | { type: 'SET_POINT_TOOL_VISIBLE'; visible: boolean }
+  | { type: 'SET_ESTIMATION_MODE'; enabled: boolean }
   | { type: 'LOAD_CONSTRUCTION'; undoManager: UndoManager }
   | { type: 'UNDO' }
   | { type: 'REDO' }
@@ -317,6 +318,14 @@ export function reduce(state: ReducerState, action: ConstructionAction): Reducer
         undoManager: Undo.updateCurrent(undoManager, {
           ...current,
           pointToolVisible: action.visible,
+        }),
+      };
+
+    case 'SET_ESTIMATION_MODE':
+      return {
+        undoManager: Undo.updateCurrent(undoManager, {
+          ...current,
+          estimationMode: action.enabled,
         }),
       };
 

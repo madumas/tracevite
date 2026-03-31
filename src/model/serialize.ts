@@ -18,6 +18,7 @@ interface SerializedConstruction {
     displayMode: ConstructionState['displayMode'];
     displayUnit: ConstructionState['displayUnit'];
     hideProperties: ConstructionState['hideProperties'];
+    estimationMode?: ConstructionState['estimationMode'];
   };
   consigne: string | null;
 }
@@ -35,6 +36,7 @@ export function serializeState(state: ConstructionState): string {
       displayMode: state.displayMode,
       displayUnit: state.displayUnit,
       hideProperties: state.hideProperties,
+      estimationMode: state.estimationMode || undefined,
     },
     consigne: state.consigne,
   };
@@ -104,6 +106,10 @@ export function deserializeState(json: string): ConstructionState {
     soundMode: defaults.soundMode,
     soundGain: defaults.soundGain,
     pointToolVisible: defaults.pointToolVisible,
+    estimationMode:
+      typeof settings['estimationMode'] === 'boolean'
+        ? settings['estimationMode']
+        : defaults.estimationMode,
   };
 }
 

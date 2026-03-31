@@ -25,6 +25,7 @@ interface PropertiesPanelProps {
   readonly onToggleCollapsed: () => void;
   readonly hasNewProperties?: boolean;
   readonly fontScale?: number;
+  readonly estimationActive?: boolean;
 }
 
 export const PropertiesPanel = memo(function PropertiesPanel({
@@ -40,6 +41,7 @@ export const PropertiesPanel = memo(function PropertiesPanel({
   onToggleCollapsed,
   hasNewProperties,
   fontScale = 1,
+  estimationActive = false,
 }: PropertiesPanelProps) {
   if (collapsed) {
     return (
@@ -133,9 +135,11 @@ export const PropertiesPanel = memo(function PropertiesPanel({
               <span style={{ fontWeight: 500 }}>
                 {prefix} {label}
               </span>
-              <span style={{ color: UI_TEXT_SECONDARY, marginLeft: 6 }}>
-                {formatLength(seg.lengthMm, state.displayUnit)}
-              </span>
+              {!estimationActive && (
+                <span style={{ color: UI_TEXT_SECONDARY, marginLeft: 6 }}>
+                  {formatLength(seg.lengthMm, state.displayUnit)}
+                </span>
+              )}
             </div>
           );
         })}
@@ -158,7 +162,9 @@ export const PropertiesPanel = memo(function PropertiesPanel({
             >
               <span>∠{vertex.label}</span>
               <span style={{ color: UI_TEXT_SECONDARY, marginLeft: 6 }}>
-                {displayMode === 'complet' ? `${Math.round(angle.degrees)}°` : ''}{' '}
+                {displayMode === 'complet' && !estimationActive
+                  ? `${Math.round(angle.degrees)}°`
+                  : ''}{' '}
                 {angle.classification === 'droit'
                   ? '(droit)'
                   : angle.classification === 'aigu'
