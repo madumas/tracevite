@@ -145,24 +145,24 @@ export function TranslationIcon() {
 export function FriezeIcon() {
   return (
     <svg {...S}>
-      <polygon points="2,16 6,8 10,16" stroke={stroke} strokeWidth="1.5" fill="none" />
+      <polygon points="1,16 5,8 9,16" stroke={stroke} strokeWidth="1.5" fill="none" />
       <polygon
-        points="8,16 12,8 16,16"
+        points="6,16 10,8 14,16"
         stroke={stroke}
         strokeWidth="1.5"
         fill="none"
         opacity="0.6"
       />
       <polygon
-        points="14,16 18,8 22,16"
+        points="11,16 15,8 19,16"
         stroke={stroke}
         strokeWidth="1.5"
         fill="none"
         opacity="0.3"
       />
-      <line x1="2" y1="4" x2="17" y2="4" stroke={stroke} strokeWidth="1" strokeDasharray="2 1" />
+      <line x1="2" y1="4" x2="16" y2="4" stroke={stroke} strokeWidth="1" strokeDasharray="2 1" />
       <path
-        d="M15 2l2 2-2 2"
+        d="M14 2l2 2-2 2"
         stroke={stroke}
         strokeWidth="1"
         strokeLinecap="round"

@@ -101,6 +101,10 @@ export function useFriezeTool({
     : MAX_FRIEZE_COUNT;
   const maxCount2 = Math.min(MAX_FRIEZE_COUNT, Math.floor(MAX_TOTAL_COPIES / count1));
 
+  // Clamp counts to current max (prevents exceeding budget when other axis changes)
+  const effectiveCount1 = Math.min(count1, maxCount1);
+  const effectiveCount2 = Math.min(count2, maxCount2);
+
   const handleClick = useCallback(
     (mmPos: { x: number; y: number }) => {
       if (!isActive) return;
@@ -191,6 +195,7 @@ export function useFriezeTool({
         }
         break;
       case 'vector2_end':
+        setVectorStart2(null);
         setPhase('vector2_start');
         break;
       case 'vector2_start':
@@ -216,12 +221,12 @@ export function useFriezeTool({
       segmentIds: selected.segmentIds,
       circleIds: selected.circleIds,
       vector1,
-      count1,
+      count1: effectiveCount1,
       vector2: isTiling && vector2 ? vector2 : undefined,
-      count2: isTiling && vector2 ? count2 : undefined,
+      count2: isTiling && vector2 ? effectiveCount2 : undefined,
     });
     reset();
-  }, [selected, vector1, vector2, count1, count2, isTiling, dispatch, reset]);
+  }, [selected, vector1, vector2, effectiveCount1, effectiveCount2, isTiling, dispatch, reset]);
 
   const handleStartTiling = useCallback(() => {
     setIsTiling(true);
@@ -241,7 +246,8 @@ export function useFriezeTool({
       statusMessage = 'Frise — Clique pour placer la fin de la flèche';
       break;
     case 'choose_count': {
-      const totalCopies = isTiling && vector2 ? count1 * count2 - 1 : count1 - 1;
+      const totalCopies =
+        isTiling && vector2 ? effectiveCount1 * effectiveCount2 - 1 : effectiveCount1 - 1;
       const totalSegs = totalCopies * (selected?.segmentIds.length ?? 0);
       const prefix = isTiling && vector2 ? 'Dallage' : 'Frise';
       statusMessage = `${prefix} — ${totalCopies} copie${totalCopies > 1 ? 's' : ''} (${totalSegs} segments). Utilise + et − pour changer.`;
@@ -352,9 +358,9 @@ export function useFriezeTool({
 
     // Ghost copies (during choose_count)
     if (phase === 'choose_count' && vector1) {
-      const rows = isTiling && vector2 ? count2 : 1;
+      const rows = isTiling && vector2 ? effectiveCount2 : 1;
       for (let j = 0; j < rows; j++) {
-        for (let i = 0; i < count1; i++) {
+        for (let i = 0; i < effectiveCount1; i++) {
           if (i === 0 && j === 0) continue; // Original figure
           const ox = i * vector1.dx + (vector2 && isTiling ? j * vector2.dx : 0);
           const oy = i * vector1.dy + (vector2 && isTiling ? j * vector2.dy : 0);
@@ -395,8 +401,8 @@ export function useFriezeTool({
     vectorEnd2,
     vector1,
     vector2,
-    count1,
-    count2,
+    effectiveCount1,
+    effectiveCount2,
     isTiling,
     cursorMm,
     snapResult,
@@ -408,7 +414,7 @@ export function useFriezeTool({
   const toolPanel = useMemo(() => {
     if (phase !== 'choose_count' || !selected) return undefined;
     return createElement(FriezePanel, {
-      count: count1,
+      count: effectiveCount1,
       segmentCount: selected.segmentIds.length,
       maxCount: maxCount1,
       onIncrement: () => setCount1((c) => Math.min(c + 1, maxCount1)),
@@ -416,15 +422,16 @@ export function useFriezeTool({
       onValidate: handleValidate,
       showTilingButton: !isTiling || !vector2,
       onStartTiling: handleStartTiling,
-      count2: isTiling && vector2 ? count2 : undefined,
+      count2: isTiling && vector2 ? effectiveCount2 : undefined,
+      maxCount2: isTiling && vector2 ? maxCount2 : undefined,
       onIncrement2: () => setCount2((c) => Math.min(c + 1, maxCount2)),
       onDecrement2: () => setCount2((c) => Math.max(c - 1, 2)),
     });
   }, [
     phase,
     selected,
-    count1,
-    count2,
+    effectiveCount1,
+    effectiveCount2,
     maxCount1,
     maxCount2,
     isTiling,

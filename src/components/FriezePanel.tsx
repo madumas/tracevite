@@ -19,6 +19,7 @@ interface FriezePanelProps {
   readonly onStartTiling?: () => void;
   /** Second axis count (tiling mode). */
   readonly count2?: number;
+  readonly maxCount2?: number;
   readonly onIncrement2?: () => void;
   readonly onDecrement2?: () => void;
 }
@@ -48,9 +49,11 @@ export function FriezePanel({
   showTilingButton,
   onStartTiling,
   count2,
+  maxCount2: maxCount2Prop,
   onIncrement2,
   onDecrement2,
 }: FriezePanelProps) {
+  const maxCount2 = maxCount2Prop ?? maxCount;
   const isTiling = count2 != null;
   const totalCopies = isTiling ? count * count2 - 1 : count - 1;
   const totalSegments = totalCopies * segmentCount;
@@ -108,8 +111,8 @@ export function FriezePanel({
           <span style={{ minWidth: 24, textAlign: 'center', fontWeight: 600 }}>{count2}</span>
           <button
             onClick={onIncrement2}
-            disabled={count2 >= maxCount}
-            style={{ ...btnStyle, opacity: count2 >= maxCount ? 0.4 : 1 }}
+            disabled={count2 >= maxCount2}
+            style={{ ...btnStyle, opacity: count2 >= maxCount2 ? 0.4 : 1 }}
             aria-label="Plus de rangées"
             data-testid="frieze-increment2"
           >
