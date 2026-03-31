@@ -97,19 +97,23 @@ describe('compareFiguresByTranslation', () => {
     expect(result.maxDeviationMm).toBeGreaterThan(1);
   });
 
-  it('deviation within tolerance (0.5mm on all vertices) passes', () => {
-    // Triangle A
-    // Triangle B = same + (50,10) + uniform 0.5mm shift on x
+  it('deviation within tolerance (non-uniform shift survives centroid alignment) passes', () => {
+    // Non-uniform shift: each vertex deviates differently so centroid
+    // alignment doesn't absorb the deviation entirely
     const points: Point[] = [
       makePoint('a1', 0, 0),
       makePoint('a2', 30, 0),
       makePoint('a3', 15, 20),
-      makePoint('b1', 50.5, 10),
-      makePoint('b2', 80.5, 10),
-      makePoint('b3', 65.5, 30),
+      // b1: +0.7mm x, b2: -0.3mm x, b3: +0.6mm x from ideal (50,10)+(0,30,15), (0,0,20)
+      // Centroid shift in x = (0.7 - 0.3 + 0.6) / 3 = +0.333mm
+      // Residual deviations: 0.7-0.333=0.367, -0.3-(-0.333)=0.033, 0.6-0.333=0.267
+      makePoint('b1', 50.7, 10),
+      makePoint('b2', 79.7, 10),
+      makePoint('b3', 65.6, 30),
     ];
     const result = compareFiguresByTranslation(['a1', 'a2', 'a3'], ['b1', 'b2', 'b3'], points);
     expect(result.isIsometric).toBe(true);
+    expect(result.maxDeviationMm).toBeGreaterThan(0);
     expect(result.maxDeviationMm).toBeLessThanOrEqual(1.0);
   });
 
