@@ -48,17 +48,17 @@ export function RadiusInput({
     return () => vv.removeEventListener('resize', onResize);
   }, []);
 
-  // Dismiss on click outside
+  // Dismiss on click/tap outside (pointerdown for touch compatibility)
   useEffect(() => {
-    const handler = (e: MouseEvent) => {
+    const handler = (e: PointerEvent) => {
       if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
         onDismiss();
       }
     };
-    const timer = setTimeout(() => document.addEventListener('mousedown', handler), 200);
+    const timer = setTimeout(() => document.addEventListener('pointerdown', handler), 200);
     return () => {
       clearTimeout(timer);
-      document.removeEventListener('mousedown', handler);
+      document.removeEventListener('pointerdown', handler);
     };
   }, [onDismiss]);
 
