@@ -1,11 +1,11 @@
 /**
- * SVG icons for toolbar tools — inline, 20×20, stroke-based.
+ * SVG icons for toolbar tools — inline, 24×24 rendered (viewBox 20×20), stroke-based.
  * Simple geometric shapes recognizable by children.
  */
 
 const S = {
-  width: 20,
-  height: 20,
+  width: 24,
+  height: 24,
   viewBox: '0 0 20 20',
   fill: 'none',
   xmlns: 'http://www.w3.org/2000/svg',

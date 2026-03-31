@@ -100,6 +100,9 @@ export const Toolbar = memo(function Toolbar({
   const [moreOpen, setMoreOpen] = useState(false);
   const isSimple = displayMode === 'simplifie';
 
+  // Reset "Plus d'outils" when switching display mode
+  useEffect(() => setMoreOpen(false), [displayMode]);
+
   // Auto-scroll toolbar to show active tool button on mobile
   const activeButtonRef = useRef<HTMLButtonElement>(null);
   useEffect(() => {
@@ -169,7 +172,7 @@ export const Toolbar = memo(function Toolbar({
           />
         )}
 
-        {/* Tool buttons */}
+        {/* ═══ GROUP: Construire ═══ */}
         <button
           ref={refIfActive('segment')}
           onClick={() => onToolChange('segment')}
@@ -190,14 +193,6 @@ export const Toolbar = memo(function Toolbar({
             <PointIcon /> <span className="tool-label">{TOOL_POINT}</span>
           </button>
         )}
-        <button
-          onClick={() => onToolChange('move')}
-          style={{ ...toolBtnBase, ...(activeTool === 'move' ? activeStyle : {}) }}
-          aria-pressed={activeTool === 'move'}
-          data-testid="tool-move"
-        >
-          <MoveIcon /> <span className="tool-label">{TOOL_MOVE}</span>
-        </button>
         {/* Circle — 3e cycle only */}
         {displayMode === 'complet' && (
           <button
@@ -209,61 +204,33 @@ export const Toolbar = memo(function Toolbar({
             <CircleIcon /> <span className="tool-label">{TOOL_CIRCLE}</span>
           </button>
         )}
+
+        {/* ─ sep ─ */}
+        <div
+          style={{ width: 1, height: 24, background: UI_BORDER, margin: '0 4px', flexShrink: 0 }}
+        />
+
+        {/* ═══ GROUP: Modifier ═══ */}
         <button
-          onClick={() => onToolChange('reflection')}
-          style={{ ...toolBtnBase, ...(activeTool === 'reflection' ? activeStyle : {}) }}
-          aria-pressed={activeTool === 'reflection'}
-          data-testid="tool-reflection"
+          ref={refIfActive('move')}
+          onClick={() => onToolChange('move')}
+          style={{ ...toolBtnBase, ...(activeTool === 'move' ? activeStyle : {}) }}
+          aria-pressed={activeTool === 'move'}
+          data-testid="tool-move"
         >
-          <ReflectionIcon /> <span className="tool-label">{TOOL_REFLECTION}</span>
+          <MoveIcon /> <span className="tool-label">{TOOL_MOVE}</span>
         </button>
-        {/* Reproduce — behind "Plus d'outils" in simplifie */}
-        {(!isSimple || moreOpen) && (
-          <button
-            onClick={() => onToolChange('reproduce')}
-            style={{ ...toolBtnBase, ...(activeTool === 'reproduce' ? activeStyle : {}) }}
-            aria-pressed={activeTool === 'reproduce'}
-            data-testid="tool-reproduce"
-          >
-            <ReproduceIcon /> <span className="tool-label">Reproduire</span>
-          </button>
-        )}
-        {/* Frieze — behind "Plus d'outils" in simplifie */}
-        {(!isSimple || moreOpen) && (
-          <button
-            onClick={() => onToolChange('frieze')}
-            style={{ ...toolBtnBase, ...(activeTool === 'frieze' ? activeStyle : {}) }}
-            aria-pressed={activeTool === 'frieze'}
-            data-testid="tool-frieze"
-          >
-            <FriezeIcon /> <span className="tool-label">Frise</span>
-          </button>
-        )}
-        {/* Compare — behind "Plus d'outils" in simplifie */}
-        {(!isSimple || moreOpen) && (
-          <button
-            onClick={() => onToolChange('compare')}
-            style={{ ...toolBtnBase, ...(activeTool === 'compare' ? activeStyle : {}) }}
-            aria-pressed={activeTool === 'compare'}
-            data-testid="tool-compare"
-          >
-            <CompareIcon /> <span className="tool-label">{TOOL_COMPARE}</span>
-          </button>
-        )}
-        {/* Symmetry — behind "Plus d'outils" in simplifie */}
-        {(!isSimple || moreOpen) && (
-          <button
-            onClick={() => onToolChange('symmetry')}
-            style={{ ...toolBtnBase, ...(activeTool === 'symmetry' ? activeStyle : {}) }}
-            aria-pressed={activeTool === 'symmetry'}
-            data-testid="tool-symmetry"
-          >
-            <SymmetryIcon /> <span className="tool-label">Symétrie</span>
-          </button>
-        )}
+
+        {/* ─ sep ─ */}
+        <div
+          style={{ width: 1, height: 24, background: UI_BORDER, margin: '0 4px', flexShrink: 0 }}
+        />
+
+        {/* ═══ GROUP: Transformer ═══ */}
         {/* Perpendicular — behind "Plus d'outils" in simplifie */}
         {(!isSimple || moreOpen) && (
           <button
+            ref={refIfActive('perpendicular')}
             onClick={() => onToolChange('perpendicular')}
             style={{ ...toolBtnBase, ...(activeTool === 'perpendicular' ? activeStyle : {}) }}
             aria-pressed={activeTool === 'perpendicular'}
@@ -275,6 +242,7 @@ export const Toolbar = memo(function Toolbar({
         {/* Parallel — behind "Plus d'outils" in simplifie */}
         {(!isSimple || moreOpen) && (
           <button
+            ref={refIfActive('parallel')}
             onClick={() => onToolChange('parallel')}
             style={{ ...toolBtnBase, ...(activeTool === 'parallel' ? activeStyle : {}) }}
             aria-pressed={activeTool === 'parallel'}
@@ -283,9 +251,43 @@ export const Toolbar = memo(function Toolbar({
             <ParallelIcon /> <span className="tool-label">Parallèle</span>
           </button>
         )}
+        <button
+          ref={refIfActive('reflection')}
+          onClick={() => onToolChange('reflection')}
+          style={{ ...toolBtnBase, ...(activeTool === 'reflection' ? activeStyle : {}) }}
+          aria-pressed={activeTool === 'reflection'}
+          data-testid="tool-reflection"
+        >
+          <ReflectionIcon /> <span className="tool-label">{TOOL_REFLECTION}</span>
+        </button>
+        {/* Reproduce — behind "Plus d'outils" in simplifie */}
+        {(!isSimple || moreOpen) && (
+          <button
+            ref={refIfActive('reproduce')}
+            onClick={() => onToolChange('reproduce')}
+            style={{ ...toolBtnBase, ...(activeTool === 'reproduce' ? activeStyle : {}) }}
+            aria-pressed={activeTool === 'reproduce'}
+            data-testid="tool-reproduce"
+          >
+            <ReproduceIcon /> <span className="tool-label">Reproduire</span>
+          </button>
+        )}
+        {/* Frieze — behind "Plus d'outils" in simplifie */}
+        {(!isSimple || moreOpen) && (
+          <button
+            ref={refIfActive('frieze')}
+            onClick={() => onToolChange('frieze')}
+            style={{ ...toolBtnBase, ...(activeTool === 'frieze' ? activeStyle : {}) }}
+            aria-pressed={activeTool === 'frieze'}
+            data-testid="tool-frieze"
+          >
+            <FriezeIcon /> <span className="tool-label">Frise</span>
+          </button>
+        )}
         {/* Translation — complet only (3e cycle) */}
         {!isSimple && (
           <button
+            ref={refIfActive('translation')}
             onClick={() => onToolChange('translation')}
             style={{ ...toolBtnBase, ...(activeTool === 'translation' ? activeStyle : {}) }}
             aria-pressed={activeTool === 'translation'}
@@ -294,6 +296,40 @@ export const Toolbar = memo(function Toolbar({
             <TranslationIcon /> <span className="tool-label">Translation</span>
           </button>
         )}
+
+        {/* ─ sep ─ */}
+        {(!isSimple || moreOpen) && (
+          <div
+            style={{ width: 1, height: 24, background: UI_BORDER, margin: '0 4px', flexShrink: 0 }}
+          />
+        )}
+
+        {/* ═══ GROUP: Vérifier ═══ */}
+        {/* Compare — behind "Plus d'outils" in simplifie */}
+        {(!isSimple || moreOpen) && (
+          <button
+            ref={refIfActive('compare')}
+            onClick={() => onToolChange('compare')}
+            style={{ ...toolBtnBase, ...(activeTool === 'compare' ? activeStyle : {}) }}
+            aria-pressed={activeTool === 'compare'}
+            data-testid="tool-compare"
+          >
+            <CompareIcon /> <span className="tool-label">{TOOL_COMPARE}</span>
+          </button>
+        )}
+        {/* Symmetry — behind "Plus d'outils" in simplifie */}
+        {(!isSimple || moreOpen) && (
+          <button
+            ref={refIfActive('symmetry')}
+            onClick={() => onToolChange('symmetry')}
+            style={{ ...toolBtnBase, ...(activeTool === 'symmetry' ? activeStyle : {}) }}
+            aria-pressed={activeTool === 'symmetry'}
+            data-testid="tool-symmetry"
+          >
+            <SymmetryIcon /> <span className="tool-label">Symétrie</span>
+          </button>
+        )}
+
         {/* "Plus d'outils" toggle (2e cycle only, spec §10) */}
         {isSimple && (
           <button
@@ -310,51 +346,12 @@ export const Toolbar = memo(function Toolbar({
           </button>
         )}
 
-        {/* Separator */}
-        {(!isSimple || moreOpen) && (
-          <div style={{ width: 1, height: 24, background: UI_BORDER, margin: '0 4px' }} />
-        )}
+        {/* ─ sep ─ */}
+        <div
+          style={{ width: 1, height: 24, background: UI_BORDER, margin: '0 4px', flexShrink: 0 }}
+        />
 
-        {/* Grid selector — always visible in complet, behind "Plus d'outils" in simplifie */}
-        {(!isSimple || moreOpen) && (
-          <div style={{ display: 'flex', gap: 2 }}>
-            {([5, 10, 20] as GridSize[]).map((size) => (
-              <button
-                key={size}
-                onClick={() => onGridChange(size)}
-                style={{
-                  ...toolBtnBase,
-                  minWidth: 36,
-                  padding: '0 6px',
-                  fontSize: 'inherit',
-                  background: gridSizeMm === size ? '#E8F0FA' : 'transparent',
-                  border: gridSizeMm === size ? `1px solid ${UI_PRIMARY}` : `1px solid transparent`,
-                }}
-                aria-pressed={gridSizeMm === size}
-                data-testid={`grid-${size}`}
-              >
-                {size === 5 ? GRID_5MM : size === 10 ? GRID_1CM : GRID_2CM}
-              </button>
-            ))}
-          </div>
-        )}
-
-        {/* Separator */}
-        {(!isSimple || moreOpen) && (
-          <div style={{ width: 1, height: 24, background: UI_BORDER, margin: '0 4px' }} />
-        )}
-
-        {/* Unit toggle */}
-        {(!isSimple || moreOpen) && (
-          <button
-            onClick={() => onUnitChange(displayUnit === 'cm' ? 'mm' : 'cm')}
-            style={{ ...toolBtnBase, minWidth: 36 }}
-            data-testid="unit-toggle"
-          >
-            {displayUnit}
-          </button>
-        )}
-
+        {/* ═══ GROUP: Affichage ═══ */}
         {/* Snap toggle — always visible, LED indicator for state */}
         <button
           onClick={onSnapToggle}
@@ -381,6 +378,41 @@ export const Toolbar = memo(function Toolbar({
             }}
           />
         </button>
+
+        {/* Grid selector — always visible in complet, behind "Plus d'outils" in simplifie */}
+        {(!isSimple || moreOpen) && (
+          <div style={{ display: 'flex', gap: 2 }}>
+            {([5, 10, 20] as GridSize[]).map((size) => (
+              <button
+                key={size}
+                onClick={() => onGridChange(size)}
+                style={{
+                  ...toolBtnBase,
+                  minWidth: 36,
+                  padding: '0 6px',
+                  fontSize: 'inherit',
+                  background: gridSizeMm === size ? '#E8F0FA' : 'transparent',
+                  border: gridSizeMm === size ? `1px solid ${UI_PRIMARY}` : `1px solid transparent`,
+                }}
+                aria-pressed={gridSizeMm === size}
+                data-testid={`grid-${size}`}
+              >
+                {size === 5 ? GRID_5MM : size === 10 ? GRID_1CM : GRID_2CM}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* Unit toggle */}
+        {(!isSimple || moreOpen) && (
+          <button
+            onClick={() => onUnitChange(displayUnit === 'cm' ? 'mm' : 'cm')}
+            style={{ ...toolBtnBase, minWidth: 36 }}
+            data-testid="unit-toggle"
+          >
+            {displayUnit}
+          </button>
+        )}
       </div>
       {/* end zone scrollable */}
 

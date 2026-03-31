@@ -763,7 +763,7 @@ De gauche à droite (tous les outils ont une icône + texte) :
 
 Note : « Fixer la longueur » n'est plus un outil dans la toolbar — c'est une action contextuelle (§6.8).
 
-Toutes les icônes sont des SVG 20×20 en stroke, couleur `currentColor` (héritée du bouton). Style uniforme pour la reconnaissance rapide — les enfants TDC balayent visuellement plutôt que lire.
+Toutes les icônes sont des SVG 24×24 rendues (viewBox 20×20) en stroke, couleur `currentColor` (héritée du bouton). Style uniforme pour la reconnaissance rapide — les enfants TDC balayent visuellement plutôt que lire.
 
 À droite de la barre :
 - Toggle « 🧲 Aimant » (on/off). **Ne pas utiliser le mot « Accrochage »** dans l'interface — terme abstrait pour les 8-9 ans. Le terme technique « snap » reste dans le code et la spec; l'interface dit « Aimant ».
