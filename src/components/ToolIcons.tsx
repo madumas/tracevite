@@ -78,19 +78,6 @@ export function ReflectionIcon() {
   );
 }
 
-/** Measure/Length: ruler with marks */
-export function LengthIcon() {
-  return (
-    <svg {...S}>
-      <rect x="2" y="7" width="16" height="6" rx="1" stroke={stroke} strokeWidth="1.5" />
-      <line x1="5" y1="7" x2="5" y2="10" stroke={stroke} strokeWidth="1" />
-      <line x1="8" y1="7" x2="8" y2="11" stroke={stroke} strokeWidth="1" />
-      <line x1="11" y1="7" x2="11" y2="10" stroke={stroke} strokeWidth="1" />
-      <line x1="14" y1="7" x2="14" y2="11" stroke={stroke} strokeWidth="1" />
-    </svg>
-  );
-}
-
 /** Reproduce: two offset segments (copy metaphor) */
 export function ReproduceIcon() {
   return (

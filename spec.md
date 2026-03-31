@@ -195,9 +195,10 @@ type ToolType =
   | 'reflection'       // réflexion par rapport à un axe
   | 'perpendicular'   // tracer une perpendiculaire à un segment existant
   | 'parallel'         // tracer une parallèle à un segment existant
-  | 'move'             // déplacer un point existant
-  | 'measure';         // cliquer sur un segment pour fixer sa longueur
-  // Note : la sélection n'est pas un outil dédié. Un clic sur un élément existant
+  | 'move';            // déplacer un point existant
+  // Note : « Fixer la longueur » n'est plus un outil dédié — c'est une action
+  // contextuelle dans la barre qui apparaît à la sélection d'un segment (§6.9).
+  // La sélection n'est pas un outil dédié. Un clic sur un élément existant
   // (quand aucune action n'est en cours) le sélectionne dans n'importe quel outil.
   // Voir §6.9 pour le comportement de sélection transversal.
 ```
@@ -389,11 +390,13 @@ Conversion affichage :
 - **Propagation des contraintes** : la résolution s'arrête après **un seul niveau**. Si l'extrémité déplacée par la résolution d'un `fixedLength` est elle-même liée à un autre segment `fixedLength`, cette deuxième contrainte est **relâchée** (flash orange). Un système de contraintes en chaîne dépasserait le scope d'un outil primaire et serait imprévisible pour l'enfant.
 - Ces mises à jour se font en temps réel pendant le déplacement.
 
-### 6.8 Outil Longueur
-- Clic sur un segment → le champ "longueur" dans le panneau latéral devient éditable
+### 6.8 Fixer la longueur (action contextuelle)
+- Sélectionner un segment (clic dessus en mode idle) → la barre contextuelle affiche « Fixer la longueur »
+- Clic sur « Fixer la longueur » → le champ de saisie apparaît près du segment
 - L'utilisateur tape une valeur exacte (ex : "5") → le segment s'ajuste automatiquement à cette longueur dans l'unité d'affichage active (cm ou mm)
 - Le point le plus récemment créé (timestamp de création le plus élevé) se déplace pour respecter la longueur fixée, le long de la direction actuelle du segment (l'autre extrémité reste ancrée). Si ce point est verrouillé, c'est l'autre extrémité qui se déplace.
 - Fixer une longueur est une étape distincte dans l'historique undo (séparée de la création du segment).
+- Si le segment a déjà une longueur fixée, le bouton affiche « Modifier la longueur ».
 
 ### 6.9 Sélection et suppression
 
@@ -401,17 +404,17 @@ Conversion affichage :
 - **En mode Segment** : un clic sur un segment (pas un point) le sélectionne si l'outil est à l'état IDLE (pas de premier point posé, pas de chaînage actif). Un clic sur un point en IDLE commence un nouveau segment depuis ce point (§6.1), pas la sélection. **Pendant le chaînage**, aucune sélection n'est possible — tout clic est interprété comme continuation de la chaîne. Les **règles de snap normales** s'appliquent au clic (points existants > milieu de segment > grille > angle > alignement). Il n'y a pas de snap spécial « projection sur segment » — un clic près d'un segment snap au milieu si dans la tolérance 2a, sinon à la grille, sinon à la position du clic. L'enfant qui veut vérifier une mesure pendant le chaînage peut consulter le panneau latéral (toujours visible) sans interrompre le chaînage.
 - **En mode Cercle** : un clic sur un cercle existant le sélectionne si l'outil est à l'état IDLE (pas de centre posé).
 - **En mode Déplacer** : un clic sur un élément (point, segment, cercle) le sélectionne ET initie le déplacement pour les points. Pour sélectionner un segment ou cercle sans action, cliquer dessus.
-- **En mode Longueur** : un clic sur un segment le sélectionne ET ouvre le champ de longueur.
 - **En mode Réflexion** : la sélection est gérée par le workflow de l'outil (§6.6).
 
 **Barre d'actions contextuelle :**
 - Position : centrée au-dessus de l'élément sélectionné, avec un décalage de 8px. Si cette position dépasse le haut du canevas, la barre passe en dessous de l'élément. Si elle dépasse les bords latéraux, elle est poussée vers l'intérieur.
 - Pour un segment : la barre est centrée au milieu du segment.
 - Pour un point partagé par plusieurs segments : le clic sélectionne le **point** (pas un segment). Les actions contextuelles sont celles du point.
-- **Boutons par type d'élément** (le bouton Supprimer inclut le **nom de l'élément ciblé** pour rassurer l'enfant anxieux — « Supprimer » seul fait peur sans contexte) :
-  - Point : « Supprimer le point A », Verrouiller/Déverrouiller
-  - Segment : « Supprimer le côté AB » / « Supprimer le segment AB », Fixer longueur
-  - Cercle : « Supprimer le cercle », Fixer rayon/diamètre
+- **Boutons par type d'élément** :
+  - Point : Verrouiller/Déverrouiller
+  - Segment : Fixer la longueur / Modifier la longueur
+  - Cercle : Fixer rayon
+- La suppression n'est **pas** dans la barre contextuelle — elle passe exclusivement par le mode poubelle (§6.9 Suppression) pour éviter les suppressions accidentelles.
 - Tous les boutons : 44×44px minimum.
 - Un seul élément est sélectionné à la fois. Cliquer sur un autre élément remplace la sélection (pas de multi-sélection dans le MVP).
 - Les mêmes actions sont aussi disponibles dans le panneau latéral droit (section contextuelle)
@@ -757,7 +760,8 @@ De gauche à droite (tous les outils ont une icône + texte) :
 7. **Perpendiculaire** (icône : angle droit avec carré marqueur) — derrière « Plus d'outils » en 2e cycle
 8. **Parallèle** (icône : deux lignes diagonales parallèles) — derrière « Plus d'outils » en 2e cycle
 9. **Translation** (icône : point source → flèche pointillée → point destination) — visible uniquement en mode 3e cycle
-10. **Longueur** (icône : règle avec graduations) — derrière « Plus d'outils » en 2e cycle
+
+Note : « Fixer la longueur » n'est plus un outil dans la toolbar — c'est une action contextuelle (§6.8).
 
 Toutes les icônes sont des SVG 20×20 en stroke, couleur `currentColor` (héritée du bouton). Style uniforme pour la reconnaissance rapide — les enfants TDC balayent visuellement plutôt que lire.
 
@@ -771,7 +775,7 @@ Toutes les icônes sont des SVG 20×20 en stroke, couleur `currentColor` (hérit
 
 | Outil(s) | Curseur | Raison |
 |----------|---------|--------|
-| Segment, Point, Cercle, Réflexion, Perpendiculaire, Parallèle, Translation, Longueur, Reproduire | `crosshair` | Construction / placement de points |
+| Segment, Point, Cercle, Réflexion, Perpendiculaire, Parallèle, Translation, Reproduire | `crosshair` | Construction / placement de points |
 | Déplacer (idle) | `grab` | Invite à « ramasser » un point |
 | Déplacer (point ramassé) | `grabbing` | Point en cours de déplacement |
 | Tout outil idle + survol d'un élément | `pointer` | Signale la sélection possible (cross-cutting) |
@@ -794,7 +798,6 @@ Barre fine immédiatement sous la toolbar, fond bleu pâle distinct (#E3EBF5), a
 | Outil Déplacer, point ramassé | « **Déplacer** — Clique pour déposer le point. Clique ailleurs ou appuie Échap pour annuler. » |
 | Outil Réflexion, aucun axe | « **Réflexion** — Clique deux points pour tracer l'axe de symétrie » |
 | Outil Réflexion, axe tracé | « **Réflexion** — Clique sur une figure pour la refléter » |
-| Outil Longueur | « **Longueur** — Clique sur un segment pour régler sa longueur » |
 
 **Note de conception :** Cet indicateur de séquençage est un accommodement courant pour les difficultés de planification motrice associées au TDC (réf. : littérature sur les aides procédurales externes). Il soutient la mémoire de travail et la planification motrice sans gêner l'enfant avancé.
 
@@ -1002,11 +1005,10 @@ Quand les raccourcis à lettre unique sont activés :
 | P | Outil Point | Non (lettre) |
 | C | Outil Cercle | Non (lettre) |
 | V | Outil Déplacer | Non (lettre) |
-| M | Outil Longueur | Non (lettre) |
 | R | Outil Réflexion | Non (lettre) |
 | G | Toggle accrochage grille | Non (lettre) |
 | Escape | Annuler action / désélectionner / revenir à l'outil Segment / fermer tout dialogue | **Oui** |
-| Delete ou Backspace | Supprimer l'élément sélectionné | **Oui** |
+| Delete ou Backspace | _(retiré — suppression uniquement via mode poubelle)_ | — |
 | Ctrl+Z | Annuler | **Oui** |
 | Ctrl+Y ou Ctrl+Shift+Z | Rétablir | **Oui** |
 | Ctrl+P | Imprimer (export PDF) | **Oui** |
@@ -1214,7 +1216,7 @@ Le MVP est développé en 3 jalons itératifs :
 8. Sélecteur de mode d'affichage (Simplifié / Complet) pour adapter l'information et les outils visibles
 9. Détection de parallélisme et perpendicularité (affichage dans le panneau)
 10. Snap de parallélisme et perpendicularité (guides visuels pendant la construction)
-11. Outil Longueur (fixer une longueur exacte) + saisie rapide après création de segment
+11. Fixer la longueur (action contextuelle sur segment sélectionné) + saisie rapide après création de segment
 12. Panneau latéral avec segments, angles, propriétés
 13. Sélection par clic simple + barre d'actions contextuelle (pas de clic droit)
 14. Export PDF à l'échelle 1:1 avec dialogue d'instructions d'impression
@@ -1326,7 +1328,7 @@ Le canevas doit fonctionner indépendamment de la résolution de l'écran. Les c
 **Pan (défilement)** : Si la construction dépasse la zone visible, plusieurs méthodes de pan sont disponibles, en cohérence avec le principe « pas de geste dual (maintien + mouvement) » :
 1. **Boutons fléchés** (méthode par défaut, adaptée TDC) : 4 boutons fléchés (44×44px) **superposés** aux bords du canevas (haut, bas, gauche, droite) qui défilent le canevas par incréments d'un carreau dans les coordonnées internes (mm). Appui maintenu = défilement continu. Les boutons ne réduisent pas la zone de dessin. **Opacité adaptative** : **50% au repos** (test utilisateur : 20-30% est quasi-invisible pour les TDC, surtout les 8-9 ans), 80% au survol du bouton. Les boutons **capturent toujours les clics** dans tous les outils (la navigation prime sur la construction au bord du canevas). Pour placer un point sous un bouton, l'enfant panne d'abord pour éloigner la zone de travail du bord.
 2. **Barres de défilement** : barres de défilement standard du navigateur, toujours visibles quand le contenu dépasse la zone visible.
-3. **Clic-glissé sur le fond vide** (alternatif) : disponible uniquement en mode **Déplacer** (quand aucun point n'est sous le curseur) et **Longueur** (quand aucun segment n'est sous le curseur). **Non disponible en mode Segment/Point/Cercle** car clic-sur-fond = création de géométrie dans ces outils.
+3. **Clic-glissé sur le fond vide** (alternatif) : disponible uniquement en mode **Déplacer** (quand aucun point n'est sous le curseur). **Non disponible en mode Segment/Point/Cercle** car clic-sur-fond = création de géométrie dans ces outils.
 4. **Clic-molette drag** (middle-click) : disponible dans tous les outils comme raccourci power-user. Le bouton molette n'est pas utilisé par les enfants TDC mais peut l'être par l'enseignant ou l'accompagnateur.
 5. **Shift+molette** : défilement horizontal (complément du défilement vertical par molette seule).
 6. ~~Maintien barre d'espace + glissé~~ — **retiré** : c'est un geste dual (hold + move), en contradiction avec les principes TDC.
@@ -1538,7 +1540,7 @@ Les questions suivantes ont été posées, débattues et tranchées définitivem
 ### Interactions — règles de désambiguïsation
 - **Drag > 1,5mm = déplacement** dans tous les outils, y compris pendant le chaînage (chaînage suspendu, reprend au relâchement).
 - **Clic < 1,5mm = action contextuelle** de l'outil actif (nouveau segment, continuation chaîne, etc.).
-- **Pan par clic-glissé** : uniquement en mode Déplacer/Longueur (fond vide). Pas en Segment/Point/Cercle.
+- **Pan par clic-glissé** : uniquement en mode Déplacer (fond vide). Pas en Segment/Point/Cercle.
 - **Boutons de pan** : capturent toujours les clics, dans tous les outils. L'enfant panne d'abord.
 - **Barre contextuelle** : centrée au-dessus du milieu du segment/point. Plus large que le segment = normal. Fallback en-dessous si hors canevas.
 
