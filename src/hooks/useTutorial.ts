@@ -3,27 +3,8 @@ import type { ConstructionState } from '@/model/types';
 
 export type TutorialStep = 1 | 2 | 3 | 'post' | 'done';
 
-const TUTORIAL_KEY = 'tracevite_tutorial_completed';
-
-/** Detect if this is the first launch (no tutorial completed flag). */
-function isFirstLaunch(): boolean {
-  try {
-    return localStorage.getItem(TUTORIAL_KEY) !== 'true';
-  } catch {
-    return true;
-  }
-}
-
-function markCompleted(): void {
-  try {
-    localStorage.setItem(TUTORIAL_KEY, 'true');
-  } catch {
-    // non-critical
-  }
-}
-
 export function useTutorial(state: ConstructionState) {
-  const [step, setStep] = useState<TutorialStep>(() => (isFirstLaunch() ? 1 : 'done'));
+  const [step, setStep] = useState<TutorialStep>('done');
   const prevPointsRef = useRef(state.points.length);
   const prevSegmentsRef = useRef(state.segments.length);
 
@@ -58,19 +39,23 @@ export function useTutorial(state: ConstructionState) {
 
   const skip = () => {
     setStep('done');
-    markCompleted();
   };
 
   const finish = () => {
     setStep('post');
-    markCompleted();
   };
 
   const dismissPost = () => {
     setStep('done');
   };
 
+  const start = () => {
+    setStep(1);
+    prevPointsRef.current = state.points.length;
+    prevSegmentsRef.current = state.segments.length;
+  };
+
   const isActive = step !== 'done';
 
-  return { step, skip, finish, dismissPost, isActive };
+  return { step, skip, finish, dismissPost, start, isActive };
 }

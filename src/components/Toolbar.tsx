@@ -42,6 +42,7 @@ interface ToolbarProps {
   readonly onSnapToggle: () => void;
   readonly pointToolVisible: boolean;
   readonly fontScale?: number;
+  readonly onTutorialStart?: () => void;
 }
 
 const toolBtnBase: React.CSSProperties = {
@@ -77,6 +78,7 @@ export const Toolbar = memo(function Toolbar({
   onSnapToggle,
   pointToolVisible,
   fontScale = 1,
+  onTutorialStart,
 }: ToolbarProps) {
   const [moreOpen, setMoreOpen] = useState(false);
   const isSimple = displayMode === 'simplifie';
@@ -275,6 +277,28 @@ export const Toolbar = memo(function Toolbar({
       >
         {TOOL_SNAP}
       </button>
+
+      {/* Spacer to push help button to far right */}
+      <div style={{ flex: 1 }} />
+
+      {/* Help / tutorial button */}
+      {onTutorialStart && (
+        <button
+          onClick={onTutorialStart}
+          style={{
+            ...toolBtnBase,
+            minWidth: MIN_BUTTON_SIZE_PX,
+            padding: 0,
+            justifyContent: 'center',
+            color: UI_TEXT_PRIMARY,
+            fontSize: 'inherit',
+          }}
+          aria-label="Aide — tutoriel"
+          data-testid="help-tutorial"
+        >
+          ?
+        </button>
+      )}
     </div>
   );
 });
