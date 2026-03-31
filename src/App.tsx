@@ -252,27 +252,7 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
     return () => navigator.serviceWorker?.removeEventListener('message', handler);
   }, []);
 
-  // Apply URL params once at mount
-  useEffect(() => {
-    if (initializedRef.current) return;
-    initializedRef.current = true;
-    if (initialConsigne) {
-      dispatch({ type: 'SET_CONSIGNE', consigne: initialConsigne });
-    }
-    const mode =
-      initialLevel === '2e_cycle'
-        ? 'simplifie'
-        : initialLevel === '3e_cycle'
-          ? 'complet'
-          : initialLevel === 'simplifie'
-            ? 'simplifie'
-            : initialLevel === 'complet'
-              ? 'complet'
-              : null;
-    if (mode) {
-      dispatch({ type: 'SET_DISPLAY_MODE', displayMode: mode });
-    }
-  }, [initialConsigne, initialLevel, dispatch]);
+  // Apply URL params once at mount (moved after slotManager — see below)
 
   // Tool router — returns unified ToolHookResult
   const tool = useActiveTool({ state, dispatch, viewport, shiftConstraintActive });
@@ -334,7 +314,36 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
     }
   }, [state.points.length, slotManager.activeSlotId, slotManager]);
 
-  const { saving } = useAutoSave(state, undoManager, slotManager.activeSlotId);
+  // Apply URL params once at mount — create a new blank slot when consigne is present
+  useEffect(() => {
+    if (initializedRef.current) return;
+    initializedRef.current = true;
+
+    const mode =
+      initialLevel === '2e_cycle'
+        ? 'simplifie'
+        : initialLevel === '3e_cycle'
+          ? 'complet'
+          : initialLevel === 'simplifie'
+            ? 'simplifie'
+            : initialLevel === 'complet'
+              ? 'complet'
+              : null;
+
+    if (initialConsigne) {
+      (async () => {
+        await slotManager.createNewSlot();
+        dispatch({ type: 'SET_CONSIGNE', consigne: initialConsigne });
+        if (mode) {
+          dispatch({ type: 'SET_DISPLAY_MODE', displayMode: mode });
+        }
+      })();
+    } else if (mode) {
+      dispatch({ type: 'SET_DISPLAY_MODE', displayMode: mode });
+    }
+  }, [initialConsigne, initialLevel, dispatch, slotManager]);
+
+  useAutoSave(state, undoManager, slotManager.activeSlotId);
 
   // Pointer events — route to delete mode, selection, or tool
   const handleCanvasClick = useCallback(
@@ -743,7 +752,6 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
         pointToolVisible={state.pointToolVisible}
         fontScale={effectiveFontScale}
         onTutorialStart={tutorial.start}
-        saving={saving}
         demoMode={demoMode}
         onShowAbout={() => setShowAbout(true)}
         onModeChange={handleModeChange}

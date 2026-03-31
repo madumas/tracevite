@@ -40,11 +40,6 @@ describe('App', () => {
     expect(screen.getByTestId('action-print')).toBeDisabled();
   });
 
-  it('renders save indicator', () => {
-    render(<App />);
-    expect(screen.getByTestId('save-indicator')).toBeInTheDocument();
-  });
-
   it('renders mode selector', () => {
     render(<App />);
     expect(screen.getByTestId('mode-selector')).toBeInTheDocument();

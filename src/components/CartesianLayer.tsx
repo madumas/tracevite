@@ -6,7 +6,7 @@
 
 import { memo } from 'react';
 import type { ViewportState, CartesianMode, DisplayUnit } from '@/model/types';
-import { useCanvasColors } from '@/config/theme';
+import { useCanvasColors, CANVAS_GRID_LABEL } from '@/config/theme';
 import { CSS_PX_PER_MM, BOUNDS_WIDTH_MM, BOUNDS_HEIGHT_MM } from '@/engine/viewport';
 import { formatLength } from '@/engine/format';
 
@@ -44,7 +44,7 @@ export const CartesianLayer = memo(function CartesianLayer({
   const yMax = (BOUNDS_HEIGHT_MM - viewport.panY) * pxPerMm;
 
   const axisColor = colors.segment;
-  const tickColor = colors.measurement;
+  const tickColor = CANVAS_GRID_LABEL;
 
   // Generate tick marks along X axis
   const ticks: React.ReactNode[] = [];

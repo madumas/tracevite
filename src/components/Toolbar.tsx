@@ -24,7 +24,6 @@ import {
   TOOL_REFLECTION,
   TOOL_COMPARE,
 } from '@/config/messages';
-import { SaveIndicator } from './SaveIndicator';
 import { ModeSelector } from './ModeSelector';
 
 interface ToolbarProps {
@@ -34,7 +33,6 @@ interface ToolbarProps {
   readonly pointToolVisible: boolean;
   readonly fontScale?: number;
   readonly onTutorialStart?: () => void;
-  readonly saving?: boolean;
   readonly demoMode?: boolean;
   readonly onShowAbout?: () => void;
   readonly onModeChange?: (mode: DisplayMode) => void;
@@ -70,7 +68,6 @@ export const Toolbar = memo(function Toolbar({
   pointToolVisible,
   fontScale = 1,
   onTutorialStart,
-  saving = false,
   demoMode = false,
   onShowAbout,
   onModeChange,
@@ -139,10 +136,9 @@ export const Toolbar = memo(function Toolbar({
             }}
             aria-label="À propos de TraceVite"
           >
-            <img src="/logo.svg" alt="" width={24} height={24} />
+            <img src="/logo.svg" alt="" width={36} height={36} />
           </button>
         )}
-        {!demoMode && <SaveIndicator saving={saving} compact />}
 
         {/* Separator */}
         {!demoMode && (
@@ -339,6 +335,10 @@ export const Toolbar = memo(function Toolbar({
           gap: MIN_BUTTON_GAP_PX,
         }}
       >
+        {/* ─ sep ─ */}
+        <div
+          style={{ width: 1, height: 40, background: UI_BORDER, margin: '0 4px', flexShrink: 0 }}
+        />
         {!demoMode && onModeChange && <ModeSelector mode={displayMode} onChange={onModeChange} />}
 
         {onTutorialStart && (

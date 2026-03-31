@@ -13,6 +13,7 @@ export const CANVAS_LABEL = '#185FA5';
 export const CANVAS_GUIDE = '#0B7285';
 export const CANVAS_ANGLE = '#C24B22';
 export const CANVAS_MEASUREMENT = '#4A5568';
+export const CANVAS_GRID_LABEL = '#9CA3AF';
 export const CANVAS_GHOST = '#85B7EB';
 export const CANVAS_GHOST_OPACITY = 0.6;
 export const CANVAS_SELECTION_BG = '#D0E2F5';

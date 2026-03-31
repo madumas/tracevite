@@ -344,17 +344,18 @@ export function NewIcon() {
   );
 }
 
-/** Settings: gear */
+/** Settings: gear with teeth */
 export function SettingsIcon() {
   return (
     <svg {...SA}>
-      <circle cx="10" cy="10" r="3" stroke={stroke} strokeWidth="1.5" fill="none" />
       <path
-        d="M10 2v2M10 16v2M2 10h2M16 10h2M4.2 4.2l1.4 1.4M14.4 14.4l1.4 1.4M15.8 4.2l-1.4 1.4M5.6 14.4l-1.4 1.4"
+        d="M9 2h2v1.5a5 5 0 0 1 2.1.9l1.1-1.1 1.4 1.4-1.1 1.1a5 5 0 0 1 .9 2.1H17v2h-1.5a5 5 0 0 1-.9 2.1l1.1 1.1-1.4 1.4-1.1-1.1a5 5 0 0 1-2.1.9V17H9v-1.5a5 5 0 0 1-2.1-.9l-1.1 1.1-1.4-1.4 1.1-1.1A5 5 0 0 1 4.5 11H3V9h1.5a5 5 0 0 1 .9-2.1L4.3 5.7l1.4-1.4 1.1 1.1A5 5 0 0 1 9 4.5V2z"
         stroke={stroke}
         strokeWidth="1.5"
-        strokeLinecap="round"
+        strokeLinejoin="round"
+        fill="none"
       />
+      <circle cx="10" cy="10" r="2.5" stroke={stroke} strokeWidth="1.5" fill="none" />
     </svg>
   );
 }
