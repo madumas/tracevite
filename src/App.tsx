@@ -411,6 +411,39 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
     showToast,
   ]);
 
+  // Right-click = cancel (same hierarchy as Escape, spec-compatible "physical Escape")
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      e.preventDefault();
+      if (showNewConfirm) {
+        setShowNewConfirm(false);
+      } else if (showSettings) {
+        setShowSettings(false);
+      } else if (showPrintDialog) {
+        setShowPrintDialog(false);
+      } else if (deleteMode) {
+        setDeleteMode(false);
+        setDeleteConfirmId(null);
+        selection.clearSelection();
+      } else if (state.selectedElementId) {
+        selection.clearSelection();
+      } else if (!tool.isIdle) {
+        tool.handleEscape();
+        setShiftConstraintActive(false);
+      }
+    };
+    window.addEventListener('contextmenu', handler);
+    return () => window.removeEventListener('contextmenu', handler);
+  }, [
+    tool,
+    showNewConfirm,
+    showSettings,
+    showPrintDialog,
+    deleteMode,
+    state.selectedElementId,
+    selection,
+  ]);
+
   const [panelCollapsed, setPanelCollapsed] = useState(() => {
     // Restore from localStorage, auto-collapse on small screens
     const saved = localStorage.getItem('tracevite_panel_collapsed');
