@@ -821,32 +821,36 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
                 })(),
               )
             : STATUS_DELETE_MODE
-          : (() => {
-              const raw = tool.statusMessage;
-              const dashIdx = raw.indexOf(' — ');
-              if (dashIdx < 0) return raw; // hint messages without separator
-              const toolName = raw.slice(0, dashIdx);
-              const instruction = raw.slice(dashIdx + 3);
-              return (
-                <>
-                  <span
-                    style={{
-                      background: UI_PRIMARY,
-                      color: '#FFF',
-                      padding: '1px 8px',
-                      borderRadius: 4,
-                      fontSize: 12 * effectiveFontScale,
-                      fontWeight: 600,
-                      marginRight: 6,
-                      whiteSpace: 'nowrap',
-                    }}
-                  >
-                    {toolName}
-                  </span>
-                  {instruction}
-                </>
-              );
-            })()}
+          : symmetryResult
+            ? symmetryResult.isSymmetric
+              ? 'Symétrie — La figure est symétrique par rapport à cet axe!'
+              : 'Symétrie — La figure n\u2019est pas symétrique par rapport à cet axe. Clique ailleurs pour fermer.'
+            : (() => {
+                const raw = tool.statusMessage;
+                const dashIdx = raw.indexOf(' — ');
+                if (dashIdx < 0) return raw; // hint messages without separator
+                const toolName = raw.slice(0, dashIdx);
+                const instruction = raw.slice(dashIdx + 3);
+                return (
+                  <>
+                    <span
+                      style={{
+                        background: UI_PRIMARY,
+                        color: '#FFF',
+                        padding: '1px 8px',
+                        borderRadius: 4,
+                        fontSize: 12 * effectiveFontScale,
+                        fontWeight: 600,
+                        marginRight: 6,
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      {toolName}
+                    </span>
+                    {instruction}
+                  </>
+                );
+              })()}
         {shiftConstraintActive && ' — Contrainte 15° active'}
         {/* Right-side buttons grouped in a single flex container to avoid double marginLeft:auto */}
         {((!demoMode && state.consigne && consigneDismissed) ||
@@ -1027,17 +1031,20 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
 
           {/* Context action bar — hidden during compound tool workflows
              where clicking an element is a tool action, not a general selection */}
-          {state.selectedElementId && !COMPOUND_TOOLS.includes(state.activeTool) && (
-            <ContextActionBar
-              state={state}
-              viewport={viewport}
-              onToggleLock={handleToggleLock}
-              onFixCircleRadius={setFixingCircleId}
-              onFixSegmentLength={handleFixSegmentLength}
-              onCheckSymmetry={handleCheckSymmetry}
-              fontScale={effectiveFontScale}
-            />
-          )}
+          {state.selectedElementId &&
+            !COMPOUND_TOOLS.includes(state.activeTool) &&
+            !fixingSegmentId &&
+            !fixingCircleId && (
+              <ContextActionBar
+                state={state}
+                viewport={viewport}
+                onToggleLock={handleToggleLock}
+                onFixCircleRadius={setFixingCircleId}
+                onFixSegmentLength={handleFixSegmentLength}
+                onCheckSymmetry={handleCheckSymmetry}
+                fontScale={effectiveFontScale}
+              />
+            )}
 
           {/* Tool-specific floating panel (e.g. frieze count stepper) */}
           {tool.toolPanel && (
