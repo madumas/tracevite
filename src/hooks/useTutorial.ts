@@ -8,31 +8,21 @@ export function useTutorial(state: ConstructionState) {
   const prevPointsRef = useRef(state.points.length);
   const prevSegmentsRef = useRef(state.segments.length);
 
-  // Auto-advance based on construction changes.
-  // Step 1→2: first segment created (both points + segment added atomically on 2nd click)
-  // Step 2→3: waits for undo (handled below)
+  // Auto-advance based on construction changes (single effect to avoid ref race).
+  // Step 1→2: first segment created
+  // Step 2→3: undo detected (points or segments decreased)
   useEffect(() => {
     if (step === 'done' || step === 'post') return;
 
-    const segmentsAdded = state.segments.length > prevSegmentsRef.current;
+    const prevPts = prevPointsRef.current;
+    const prevSegs = prevSegmentsRef.current;
 
-    if (step === 1 && segmentsAdded) {
+    if (step === 1 && state.segments.length > prevSegs) {
       setStep(2);
-    }
-
-    prevPointsRef.current = state.points.length;
-    prevSegmentsRef.current = state.segments.length;
-  }, [state.points.length, state.segments.length, step]);
-
-  // Step 2: detect undo (points or segments decreased)
-  useEffect(() => {
-    if (step !== 2) return;
-    if (
-      state.points.length < prevPointsRef.current ||
-      state.segments.length < prevSegmentsRef.current
-    ) {
+    } else if (step === 2 && (state.points.length < prevPts || state.segments.length < prevSegs)) {
       setStep(3);
     }
+
     prevPointsRef.current = state.points.length;
     prevSegmentsRef.current = state.segments.length;
   }, [state.points.length, state.segments.length, step]);
