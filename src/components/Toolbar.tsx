@@ -136,7 +136,13 @@ export const Toolbar = memo(function Toolbar({
             }}
             aria-label="À propos de TraceVite"
           >
-            <img src="/logo.svg" alt="" width={44} height={44} style={{ marginRight: 4 }} />
+            <img src="/logo.svg" alt="" width={44} height={44} />
+            <span
+              className="tool-label"
+              style={{ fontWeight: 700, fontSize: 16, color: '#185FA5', letterSpacing: '-0.5px' }}
+            >
+              TraceVite
+            </span>
           </button>
         )}
 
