@@ -1,4 +1,4 @@
-import { type Page, expect } from '@playwright/test';
+import { type Page, type TestInfo, expect } from '@playwright/test';
 
 // Mirrors src/engine/viewport.ts
 const BOUNDS_WIDTH_MM = 215.9 * 2; // ~431.8mm
@@ -59,6 +59,20 @@ export async function tapCanvas(page: Page, xMm: number, yMm: number): Promise<v
   await page.touchscreen.tap(pageX, pageY);
   // 80ms touch delay in usePointerInteraction + 150ms click debounce
   await page.waitForTimeout(300);
+}
+
+/**
+ * Platform-agnostic canvas interaction: uses mouse click on Desktop Chrome,
+ * touch tap on Chromebook Touch and Mobile iPad.
+ */
+export async function interactCanvas(
+  page: Page,
+  testInfo: TestInfo,
+  xMm: number,
+  yMm: number,
+): Promise<void> {
+  const isTouchProject = testInfo.project.name !== 'Desktop Chrome';
+  return isTouchProject ? tapCanvas(page, xMm, yMm) : clickCanvas(page, xMm, yMm);
 }
 
 /**
