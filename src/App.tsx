@@ -934,8 +934,9 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
           style={{
             flex: 1,
             position: 'relative',
-            overflow: 'auto',
+            overflow: 'hidden',
             background: canvasColors.bg,
+            touchAction: 'none',
           }}
           data-testid="canvas-container"
         >
