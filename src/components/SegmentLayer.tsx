@@ -16,6 +16,8 @@ interface SegmentLayerProps {
   readonly fontScale: number;
   readonly segmentColor?: string;
   readonly estimationMode?: boolean;
+  readonly cluttered?: boolean;
+  readonly hoveredElementId?: string | null;
 }
 
 export const SegmentLayer = memo(function SegmentLayer({
@@ -29,6 +31,8 @@ export const SegmentLayer = memo(function SegmentLayer({
   fontScale,
   segmentColor = CANVAS_SEGMENT,
   estimationMode = false,
+  cluttered = false,
+  hoveredElementId = null,
 }: SegmentLayerProps) {
   const colors = useCanvasColors();
   const pxPerMm = viewport.zoom * CSS_PX_PER_MM;
@@ -156,20 +160,23 @@ export const SegmentLayer = memo(function SegmentLayer({
               strokeLinecap="round"
               data-testid={`segment-${segment.id}`}
             />
-            {/* Length label — hidden in estimation mode */}
-            {!estimationMode && (
-              <text
-                x={midSx + offsetX}
-                y={midSy + offsetY}
-                fill={colors.measurement}
-                fontSize={Math.max(MIN_CANVAS_FONT_PX, 13) * fontScale}
-                fontFamily="system-ui, sans-serif"
-                textAnchor="middle"
-                dominantBaseline="central"
-              >
-                {lengthText}
-              </text>
-            )}
+            {/* Length label — hidden in estimation mode or when cluttered (unless selected/hovered) */}
+            {!estimationMode &&
+              (!cluttered ||
+                segment.id === selectedElementId ||
+                segment.id === hoveredElementId) && (
+                <text
+                  x={midSx + offsetX}
+                  y={midSy + offsetY}
+                  fill={colors.measurement}
+                  fontSize={Math.max(MIN_CANVAS_FONT_PX, 13) * fontScale}
+                  fontFamily="system-ui, sans-serif"
+                  textAnchor="middle"
+                  dominantBaseline="central"
+                >
+                  {lengthText}
+                </text>
+              )}
             {/* Parallel marks: // (two diagonal slashes) colored by pair, at 1/3 of segment */}
             {parallelSegColor.has(segment.id) && len > 0 && (
               <g>
@@ -220,7 +227,7 @@ export const SegmentLayer = memo(function SegmentLayer({
                       x2={twoThirdSx + (dx / len) * centerOffset + perpX}
                       y2={twoThirdSy + (dy / len) * centerOffset + perpY}
                       stroke={colors.guide}
-                      strokeWidth={1.5}
+                      strokeWidth={2.5}
                     />
                   );
                 })}

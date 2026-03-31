@@ -23,7 +23,17 @@ import {
   GRID_1CM,
   GRID_2CM,
 } from '@/config/messages';
-import { SnapIcon } from './ToolIcons';
+import {
+  UndoIcon,
+  RedoIcon,
+  DeleteIcon,
+  PrintIcon,
+  NewIcon,
+  SettingsIcon,
+  FullscreenIcon,
+  ExitFullscreenIcon,
+  SnapIconSmall,
+} from './ToolIcons';
 
 interface ActionBarProps {
   readonly canUndo: boolean;
@@ -106,7 +116,7 @@ export const ActionBar = memo(function ActionBar({
         aria-label={ACTION_UNDO}
         data-testid="action-undo"
       >
-        ↩ <span className="action-label">{ACTION_UNDO}</span>
+        <UndoIcon /> <span className="action-label">{ACTION_UNDO}</span>
       </button>
 
       {/* Redo */}
@@ -127,7 +137,7 @@ export const ActionBar = memo(function ActionBar({
         aria-label={ACTION_REDO}
         data-testid="action-redo"
       >
-        ↪ <span className="action-label">{ACTION_REDO}</span>
+        <RedoIcon /> <span className="action-label">{ACTION_REDO}</span>
       </button>
 
       {/* Delete mode toggle */}
@@ -149,7 +159,7 @@ export const ActionBar = memo(function ActionBar({
         aria-pressed={deleteMode}
         data-testid="action-delete"
       >
-        🗑 <span className="action-label">{ACTION_DELETE}</span>
+        <DeleteIcon /> <span className="action-label">{ACTION_DELETE}</span>
       </button>
 
       {/* ─ sep ─ */}
@@ -177,7 +187,7 @@ export const ActionBar = memo(function ActionBar({
         data-testid="snap-toggle"
         title={snapEnabled ? 'Aimant activé' : 'Aimant désactivé'}
       >
-        <SnapIcon /> <span className="action-label">{TOOL_SNAP}</span>
+        <SnapIconSmall /> <span className="action-label">{TOOL_SNAP}</span>
         <span
           style={{
             width: 6,
@@ -304,7 +314,7 @@ export const ActionBar = memo(function ActionBar({
           aria-label="Paramètres"
           data-testid="settings-button"
         >
-          ⚙
+          <SettingsIcon />
         </button>
       )}
 
@@ -330,9 +340,12 @@ export const ActionBar = memo(function ActionBar({
           title="Mode démonstration (plein écran)"
           data-testid="demo-toggle"
         >
-          {demoMode ? '✕' : '⛶'}
+          {demoMode ? <ExitFullscreenIcon /> : <FullscreenIcon />}
         </button>
       )}
+
+      {/* ─ sep ─ */}
+      <div style={{ width: 1, height: 24, background: UI_BORDER, margin: '0 4px' }} />
 
       {/* Print */}
       <button
@@ -353,7 +366,7 @@ export const ActionBar = memo(function ActionBar({
         aria-label={ACTION_PRINT}
         data-testid="action-print"
       >
-        🖨 <span className="action-label">{ACTION_PRINT}</span>
+        <PrintIcon /> <span className="action-label">{ACTION_PRINT}</span>
       </button>
 
       {/* Separator */}
@@ -377,7 +390,7 @@ export const ActionBar = memo(function ActionBar({
         }}
         data-testid="action-new"
       >
-        ✚ <span className="action-label">{ACTION_NEW}</span>
+        <NewIcon /> <span className="action-label">{ACTION_NEW}</span>
       </button>
     </div>
   );

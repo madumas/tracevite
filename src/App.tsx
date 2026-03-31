@@ -926,6 +926,8 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
                 fontScale={effectiveFontScale}
                 segmentColor={effectiveSegmentColor}
                 estimationMode={state.estimationMode && !estimationRevealed}
+                cluttered={cluttered}
+                hoveredElementId={selection.hoveredElement?.id ?? null}
               />
               <CircleLayer
                 circles={state.circles}

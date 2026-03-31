@@ -4,6 +4,7 @@
  */
 
 import type { ConstructionState, AngleInfo, AngleClassification, DisplayMode } from '@/model/types';
+import { CLUTTER_THRESHOLDS } from '@/config/accessibility';
 
 /**
  * Classify an angle in degrees using spec priority:
@@ -126,10 +127,10 @@ export function isAlignedAngle(angle: AngleInfo): boolean {
 }
 
 /**
- * Determine the angle clutter threshold for the current state.
- * Spec: hide angle labels after 5 segments (2e) / 6 segments (3e).
+ * Determine if canvas labels should be hidden due to visual clutter.
+ * Spec: hide after 5 segments (2e cycle) / 6 segments (3e cycle).
  */
 export function isAngleCluttered(state: ConstructionState, displayMode: DisplayMode): boolean {
-  const threshold = displayMode === 'simplifie' ? 5 : 6;
+  const threshold = CLUTTER_THRESHOLDS[displayMode === 'simplifie' ? 'simplifie' : 'complet'];
   return state.segments.length > threshold;
 }

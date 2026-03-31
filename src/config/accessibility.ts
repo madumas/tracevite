@@ -34,7 +34,7 @@ export const CHAIN_TIMEOUT_MS = 8000;
 export const CHAIN_MOVEMENT_THRESHOLD_MM = 3;
 
 /** Point display radius on screen. */
-export const POINT_DISPLAY_RADIUS_MM = 4;
+export const POINT_DISPLAY_RADIUS_MM = 3;
 
 /** Point display radius on PDF. */
 export const POINT_PDF_RADIUS_MM = 1;
@@ -56,6 +56,12 @@ export const MIN_BUTTON_SIZE_PX = 44;
 
 /** Minimum spacing between adjacent buttons (px). */
 export const MIN_BUTTON_GAP_PX = 8;
+
+/** Visual clutter thresholds — hide canvas labels when segment count exceeds. */
+export const CLUTTER_THRESHOLDS = {
+  simplifie: 5,
+  complet: 6,
+} as const;
 
 /** Undo history depth. */
 export const MAX_UNDO_LEVELS = 100;
