@@ -95,14 +95,40 @@ test.describe('Label overlap detection', () => {
       }
     }
 
-    // Known limitations: angle degree labels (°) can overlap with other labels
-    // at dense vertices. Point labels are repositioned dynamically; angle label
-    // repositioning is future work. Filter out any overlap involving angle labels.
-    const nonAngleOverlaps = overlaps.filter((o) => !o.includes('°'));
-    expect(
-      nonAngleOverlaps,
-      `Non-angle label overlaps:\n${nonAngleOverlaps.join('\n')}`,
-    ).toHaveLength(0);
+    // After filtering reflex angles, all remaining labels should not overlap > 30%
+    expect(overlaps, `Label overlaps detected:\n${overlaps.join('\n')}`).toHaveLength(0);
+  });
+
+  test('no reflex angle (>180°) is displayed at a vertex with 3+ segments', async ({
+    page,
+  }, testInfo) => {
+    // Create 3 segments meeting at B(80,80): A-B, B-C, B-D
+    // This creates angles at B, one of which is reflex (>180°)
+    const segments = [
+      [30, 80, 80, 80], // A-B
+      [80, 80, 130, 80], // B-C
+      [80, 80, 80, 30], // B-D
+    ];
+
+    for (const [x1, y1, x2, y2] of segments) {
+      await interactCanvas(page, testInfo, x1!, y1!);
+      await waitForStatus(page, /deuxième point/);
+      await interactCanvas(page, testInfo, x2!, y2!);
+      await page.keyboard.press('Escape');
+    }
+
+    // Read all angle labels — none should show a value > 180
+    const angleTexts = await page.evaluate(() => {
+      const texts = document.querySelectorAll('[data-testid="angle-layer"] text');
+      return Array.from(texts).map((el) => el.textContent ?? '');
+    });
+
+    for (const text of angleTexts) {
+      const degrees = parseInt(text.replace('°', ''));
+      if (!isNaN(degrees)) {
+        expect(degrees, `Reflex angle "${text}" should not be displayed`).toBeLessThanOrEqual(180);
+      }
+    }
   });
 
   test('point labels near shared vertex are not at identical positions', async ({

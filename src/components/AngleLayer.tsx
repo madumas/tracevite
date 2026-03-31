@@ -86,6 +86,11 @@ export const AngleLayer = memo(function AngleLayer({
         if (activeGestureHideAll) return null;
         if (activeVertexPointId && angle.vertexPointId !== activeVertexPointId) return null;
 
+        // Filter reflex angles — removed from MVP (spec: "hors programme primaire")
+        if (angle.classification === 'reflex') return null;
+        // Filter flat angles in Simplifié mode (spec: "plat hidden in Simplifié")
+        if (displayMode === 'simplifie' && angle.classification === 'plat') return null;
+
         // Check visibility (clutter management)
         if (cluttered) {
           const isVertexHovered = hoveredElementId === angle.vertexPointId;
