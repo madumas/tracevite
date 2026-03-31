@@ -108,6 +108,7 @@ export const Toolbar = memo(function Toolbar({
       role="toolbar"
       aria-label="Outils de construction"
       data-testid="toolbar"
+      data-toolbar-mode={displayMode}
     >
       {/* Zone scrollable — logo, save, tools, grid, unit, snap */}
       <div
