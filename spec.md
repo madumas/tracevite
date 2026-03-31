@@ -763,7 +763,7 @@ De gauche à droite (tous les outils ont une icône + texte) :
 
 Note : « Fixer la longueur » n'est plus un outil dans la toolbar — c'est une action contextuelle (§6.8).
 
-Toutes les icônes sont des SVG 24×24 rendues (viewBox 20×20) en stroke, couleur `currentColor` (héritée du bouton). Style uniforme pour la reconnaissance rapide — les enfants TDC balayent visuellement plutôt que lire.
+Toutes les icônes toolbar sont des SVG 28×28 rendues (viewBox 20×20) en stroke, couleur `currentColor` (héritée du bouton), disposées au-dessus du label texte (layout vertical). Les icônes de l'ActionBar (barre du bas) utilisent des SVG 18×18 (même viewBox). Style uniforme pour la reconnaissance rapide — les enfants TDC balayent visuellement plutôt que lire.
 
 À droite de la barre :
 - Toggle « 🧲 Aimant » (on/off). **Ne pas utiliser le mot « Accrochage »** dans l'interface — terme abstrait pour les 8-9 ans. Le terme technique « snap » reste dans le code et la spec; l'interface dit « Aimant ».
@@ -933,12 +933,12 @@ Utiliser un thème clair par défaut (cohérent avec le milieu scolaire). Princi
 | Guides d'accrochage (parallèle, perpendiculaire) | Sarcelle (#0B7285) en pointillé | 5,6:1 |
 | Arc/carré d'angle droit | Sarcelle (#0B7285) | 5,6:1 |
 | Arc d'angle aigu/obtus | Orange brûlé (#C24B22) | 4,9:1 |
-| Mesures de longueur (texte) | Bleu gris foncé (#3A6291) | 6,5:1 |
+| Mesures de longueur (texte) | Gris foncé (#4A5568) | ~7:1 |
 | Sélection | Bleu pâle (#D0E2F5) + contour pointillé | — (décoratif) |
 | Accrochage (snap feedback) | Sarcelle (#0B7285) + pulsation | 5,6:1 |
 | Fond du canevas | Blanc légèrement bleuté (#FAFCFF) | — (évoque le papier quadrillé, familier pour l'enfant — transforme l'impression « logiciel » en « cahier numérique ») |
 
-**Note daltonisme :** L'ancien vert (#0F6E56) a été remplacé par sarcelle (#0B7285) pour améliorer la distinction avec l'orange (#C24B22) chez les personnes avec daltonisme rouge-vert (~8% des garçons). En simulation deutéranopie : sarcelle → bleu-gris, orange → brun-jaune — nettement distinguables. Les mesures ont été assombries (#4A6FA5 → #3A6291) pour un ratio plus confortable à 13px. Tous les ratios WCAG AA ≥ 4,5:1 sur fond blanc.
+**Note daltonisme :** L'ancien vert (#0F6E56) a été remplacé par sarcelle (#0B7285) pour améliorer la distinction avec l'orange (#C24B22) chez les personnes avec daltonisme rouge-vert (~8% des garçons). En simulation deutéranopie : sarcelle → bleu-gris, orange → brun-jaune — nettement distinguables. Les mesures utilisent un gris foncé (#4A5568, ratio ~7:1) distinct du bleu des segments pour créer une hiérarchie visuelle. Tous les ratios WCAG AA ≥ 4,5:1 sur fond blanc.
 
 #### Interface (UI)
 
@@ -978,7 +978,7 @@ Utiliser un thème clair par défaut (cohérent avec le milieu scolaire). Princi
 - **Pas de geste dual (maintien + mouvement)** : le mode pick-up/put-down est le défaut pour toutes les actions de déplacement. La contrainte d'angle (Shift) fonctionne en toggle (appui unique), pas en maintien.
 - **Seuil de détection du glissé (drag)** : un mouvement de souris n'est interprété comme un clic-glissé qu'après **1,5mm physiques de déplacement** depuis le point initial (pointerdown). En deçà, c'est un clic simple. Ce seuil est en mm physiques (comme les tolérances de snap) et converti en pixels CSS au runtime via `devicePixelRatio` et densité écran (~8px CSS sur Chromebook 135dpi, ~11px CSS sur Retina 2x). Les enfants TDC bougent involontairement de 0,5-1mm pendant un clic — un seuil trop bas provoque des micro-drags parasites et des placements erratiques. Ce seuil s'applique à toutes les interactions (canevas, boutons, barre d'actions). **Configurable** dans `.tracevite-config` (plage 1,0-3,0mm) pour ajustement par l'ergo après observation. Non multiplié par le profil de tolérance (c'est un seuil de détection d'intention, pas de précision motrice).
 - **Note sur les constantes d'accessibilité** : toutes les valeurs issues d'estimations de conception (seuil de drag, tolérances de snap, timeout de chaînage, seuil de surcharge visuelle, durée micro-confirmation) sont des **estimations à ajuster après observation**. Les stocker comme constantes nommées dans un fichier dédié (`src/config/accessibility-constants.ts`) pour faciliter les ajustements.
-- **Taille d'affichage des points à l'écran** : les points sont affichés avec un rayon de **4mm physiques** à l'écran (~15px sur un écran 96dpi, ~18px sur un Chromebook 135dpi). La zone de hit-detection est couverte par le snap aux points existants (7mm, §7.1), mais la cible visuelle doit être proportionnelle pour que l'enfant puisse la voir et la viser. Le rayon de 1mm spécifié au §12.2 ne s'applique qu'au **PDF imprimé** (trait fin sur papier, cohérent avec un tracé à la règle).
+- **Taille d'affichage des points à l'écran** : les points sont affichés avec un rayon de **3mm physiques** à l'écran (~11px sur un écran 96dpi, ~14px sur un Chromebook 135dpi). Réduit de 4mm à 3mm pour diminuer la dominance visuelle des points sur les constructions complexes — la géométrie (segments, angles) doit rester l'élément principal. La zone de hit-detection est couverte par le snap aux points existants (7mm, §7.1). Le rayon de 1mm spécifié au §12.2 ne s'applique qu'au **PDF imprimé** (trait fin sur papier, cohérent avec un tracé à la règle).
 - **Pas de geste de précision** : le snap compense le manque de précision motrice
 - **Feedback visuel immédiat** : chaque action a un retour visuel dans les 16ms (pas de latence perceptible)
 - **Pas de menus déroulants imbriqués** : tous les outils sont visibles d'un coup

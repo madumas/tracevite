@@ -85,7 +85,7 @@ These principles are non-negotiable — they determine whether the tool is usabl
 - **No dual gestures (hold + move).** Shift for angle constraint is a toggle (single press), not hold-while-dragging.
 - **Optional sounds.** Three modes: Off (default), Reduced (segment creation + figure closure only), Full (snap + segment creation + figure closure). 50ms synthesized sounds via Web Audio API. Gain slider (0-1). Haptic feedback (30ms vibrate) on supported devices. Compensates proprioceptive feedback deficit.
 - **Drag detection threshold: 1.5mm physical** (~8px CSS on Chromebook 135dpi). Movement < 1.5mm from pointerdown is a click, not a drag. DCD children involuntarily move 0.5-1mm during clicks. Converted to CSS px at runtime via devicePixelRatio.
-- **Point display radius: 4mm physical** on screen (~15-18px). PDF uses 1mm radius. Hit detection covered by 7mm snap zone.
+- **Point display radius: 3mm physical** on screen (~11-14px). PDF uses 1mm radius. Hit detection covered by 7mm snap zone.
 - **Font minimum 13px** on canvas. Adjustable larger via settings (1x / 1.25x / 1.5x).
 - **Progressive disclosure (Simplifié mode):** Only Segment, Déplacer, and Réflexion visible by default in toolbar. Other tools via "Plus d'outils" button. Reduces choice overload for younger children with executive function difficulties.
 - **Angle "rentrant" removed from MVP.** Entirely out of primary curriculum. Only aigu/droit/obtus/plat (plat hidden in Simplifié mode).

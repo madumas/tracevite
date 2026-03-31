@@ -33,6 +33,7 @@ import {
   FullscreenIcon,
   ExitFullscreenIcon,
   SnapIconSmall,
+  FolderIcon,
 } from './ToolIcons';
 
 interface ActionBarProps {
@@ -289,7 +290,7 @@ export const ActionBar = memo(function ActionBar({
           aria-label="Mes constructions"
           data-testid="slot-manager-btn"
         >
-          <span className="action-label">Mes constructions</span>
+          <FolderIcon /> <span className="action-label">Mes constructions</span>
         </button>
       )}
 

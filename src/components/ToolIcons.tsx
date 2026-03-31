@@ -391,6 +391,21 @@ export function ExitFullscreenIcon() {
   );
 }
 
+/** Folder: constructions list */
+export function FolderIcon() {
+  return (
+    <svg {...SA}>
+      <path
+        d="M3 5a1 1 0 0 1 1-1h4l2 2h6a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V5z"
+        stroke={stroke}
+        strokeWidth="1.5"
+        strokeLinejoin="round"
+        fill="none"
+      />
+    </svg>
+  );
+}
+
 /** Magnet small: U-shape for ActionBar snap toggle */
 export function SnapIconSmall() {
   return (
