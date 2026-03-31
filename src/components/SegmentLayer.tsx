@@ -173,6 +173,9 @@ export const SegmentLayer = memo(function SegmentLayer({
                   fontFamily="system-ui, sans-serif"
                   textAnchor="middle"
                   dominantBaseline="central"
+                  paintOrder="stroke"
+                  stroke="white"
+                  strokeWidth={3}
                 >
                   {lengthText}
                 </text>

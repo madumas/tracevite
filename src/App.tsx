@@ -28,6 +28,7 @@ import {
 import { CSS_PX_PER_MM, BOUNDS_WIDTH_MM, BOUNDS_HEIGHT_MM } from '@/engine/viewport';
 import { isAngleCluttered } from '@/engine/angles';
 import { computeDerived } from '@/engine/derived';
+import { getAngleLabelPosition, getSegmentLabelPosition } from '@/engine/label-positions';
 import { createSoundEngine } from '@/engine/sound';
 import { UpdatePrompt } from '@/components/UpdatePrompt';
 import { detectLaunchStatus } from '@/model/persistence';
@@ -611,6 +612,49 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
     [state.points],
   );
 
+  // Pre-compute label obstacles for point label placement (anti-overlap)
+  const labelObstacles = useMemo(() => {
+    const pxPerMm = viewport.zoom * CSS_PX_PER_MM;
+    const map = new Map<string, import('@/engine/label-placement').Obstacle[]>();
+
+    for (const point of state.points) {
+      const sx = (point.x - viewport.panX) * pxPerMm;
+      const sy = (point.y - viewport.panY) * pxPerMm;
+      const obstacles: import('@/engine/label-placement').Obstacle[] = [];
+
+      // Angle labels at this vertex
+      for (const angle of derived.angles) {
+        if (angle.vertexPointId !== point.id) continue;
+        const ray1 = state.points.find((p) => p.id === angle.ray1PointId);
+        const ray2 = state.points.find((p) => p.id === angle.ray2PointId);
+        if (!ray1 || !ray2) continue;
+        const a1 = Math.atan2((ray1.y - point.y) * pxPerMm, (ray1.x - point.x) * pxPerMm);
+        const a2 = Math.atan2((ray2.y - point.y) * pxPerMm, (ray2.x - point.x) * pxPerMm);
+        let sweep = a2 - a1;
+        if (sweep < 0) sweep += 2 * Math.PI;
+        const pos = getAngleLabelPosition(sx, sy, a1, sweep);
+        obstacles.push({ x: pos.x - sx - 15, y: pos.y - sy - 8, width: 30, height: 16 });
+      }
+
+      // Segment length labels for segments touching this point
+      for (const seg of state.segments) {
+        if (seg.startPointId !== point.id && seg.endPointId !== point.id) continue;
+        const sp = state.points.find((p) => p.id === seg.startPointId);
+        const ep = state.points.find((p) => p.id === seg.endPointId);
+        if (!sp || !ep) continue;
+        const sx1 = (sp.x - viewport.panX) * pxPerMm;
+        const sy1 = (sp.y - viewport.panY) * pxPerMm;
+        const sx2 = (ep.x - viewport.panX) * pxPerMm;
+        const sy2 = (ep.y - viewport.panY) * pxPerMm;
+        const pos = getSegmentLabelPosition(sx1, sy1, sx2, sy2);
+        obstacles.push({ x: pos.x - sx - 20, y: pos.y - sy - 8, width: 40, height: 16 });
+      }
+
+      map.set(point.id, obstacles);
+    }
+    return map;
+  }, [state.points, state.segments, derived.angles, viewport]);
+
   // ── Sound engine integration (spec §7.2) ────────────────
   const soundEngineRef = useRef<ReturnType<typeof createSoundEngine> | null>(null);
 
@@ -949,6 +993,7 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
                 selectedElementId={state.selectedElementId}
                 fontScale={effectiveFontScale}
                 pointColor={effectiveSegmentColor}
+                labelObstacles={labelObstacles}
               />
 
               {/* Angle arcs and markers */}

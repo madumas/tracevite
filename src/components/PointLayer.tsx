@@ -3,6 +3,7 @@ import type { Point, ViewportState } from '@/model/types';
 import { CANVAS_POINT } from '@/config/theme';
 import { POINT_DISPLAY_RADIUS_MM, MIN_CANVAS_FONT_PX } from '@/config/accessibility';
 import { CSS_PX_PER_MM } from '@/engine/viewport';
+import { chooseLabelOffset, type Obstacle } from '@/engine/label-placement';
 
 interface PointLayerProps {
   readonly points: readonly Point[];
@@ -10,6 +11,7 @@ interface PointLayerProps {
   readonly selectedElementId: string | null;
   readonly fontScale?: number;
   readonly pointColor?: string;
+  readonly labelObstacles?: Map<string, Obstacle[]>;
 }
 
 export const PointLayer = memo(function PointLayer({
@@ -18,16 +20,47 @@ export const PointLayer = memo(function PointLayer({
   selectedElementId,
   fontScale = 1,
   pointColor = CANVAS_POINT,
+  labelObstacles,
 }: PointLayerProps) {
   const pxPerMm = viewport.zoom * CSS_PX_PER_MM;
-  const radiusPx = POINT_DISPLAY_RADIUS_MM * CSS_PX_PER_MM; // Physical mm to CSS px (independent of zoom for consistent screen size)
+  const radiusPx = POINT_DISPLAY_RADIUS_MM * CSS_PX_PER_MM;
+  const fontSize = Math.max(MIN_CANVAS_FONT_PX, 14) * fontScale;
+  const labelHeight = fontSize * 1.2;
+
+  // Sort by ID for deterministic placement (accumulator order matters)
+  const sortedPoints = [...points].sort((a, b) => a.id.localeCompare(b.id));
+
+  // Accumulate placed labels as obstacles for subsequent points
+  const placedLabels: Obstacle[] = [];
 
   return (
     <g data-testid="point-layer">
-      {points.map((point) => {
+      {sortedPoints.map((point) => {
         const sx = (point.x - viewport.panX) * pxPerMm;
         const sy = (point.y - viewport.panY) * pxPerMm;
         const isSelected = point.id === selectedElementId;
+        const labelWidth = point.label.length * fontSize * 0.6;
+
+        // Combine pre-computed obstacles with already-placed point labels
+        const pointObstacles = labelObstacles?.get(point.id) ?? [];
+        const allObstacles = [...pointObstacles, ...placedLabels];
+
+        const offset = chooseLabelOffset(radiusPx, labelWidth, labelHeight, allObstacles);
+
+        // Register this label as obstacle for subsequent points
+        const labelCx =
+          offset.textAnchor === 'start'
+            ? offset.dx + labelWidth / 2
+            : offset.textAnchor === 'end'
+              ? offset.dx - labelWidth / 2
+              : offset.dx;
+        const labelCy = offset.dy - labelHeight / 2;
+        placedLabels.push({
+          x: sx + labelCx - labelWidth / 2 - sx, // relative to next point
+          y: sy + labelCy - labelHeight / 2 - sy,
+          width: labelWidth,
+          height: labelHeight,
+        });
 
         return (
           <g key={point.id}>
@@ -40,11 +73,15 @@ export const PointLayer = memo(function PointLayer({
               data-testid={`point-${point.id}`}
             />
             <text
-              x={sx + radiusPx + 4}
-              y={sy - radiusPx - 2}
+              x={sx + offset.dx}
+              y={sy + offset.dy}
               fill={pointColor}
-              fontSize={Math.max(MIN_CANVAS_FONT_PX, 14) * fontScale}
+              fontSize={fontSize}
               fontFamily="system-ui, sans-serif"
+              textAnchor={offset.textAnchor}
+              paintOrder="stroke"
+              stroke="white"
+              strokeWidth={3}
             >
               {point.label}
             </text>

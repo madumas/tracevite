@@ -241,6 +241,9 @@ export const AngleLayer = memo(function AngleLayer({
                 fontFamily="system-ui, sans-serif"
                 textAnchor="middle"
                 dominantBaseline="central"
+                paintOrder="stroke"
+                stroke="white"
+                strokeWidth={3}
               >
                 {Math.round(angle.degrees)}°
               </text>
