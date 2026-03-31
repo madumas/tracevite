@@ -41,8 +41,7 @@ L'outil couvre les champs Géométrie et Mesure de la Progression des apprentiss
 ### 3.2 Mesure intégrée (priorité 1 — affichée automatiquement pendant la construction)
 - Longueurs de segments en cm (avec mm au 2e cycle et au-delà)
 - Angles en degrés avec classification automatique (aigu < 90°, droit = 90°, obtus > 90°)
-- Périmètre des figures fermées
-- Aire des figures fermées (pour les figures dont la formule est connue)
+- ~~Périmètre et aire~~ : **NON AFFICHÉS** — l'outil compense les gestes moteurs, pas les calculs. L'enfant voit les longueurs de chaque côté et calcule le périmètre et l'aire lui-même (voir §8.4)
 
 ### 3.3 Transformations
 - Réflexion par rapport à un axe (2e cycle) — **priorité 1 (MVP)** car enseigné dès le 2e cycle
@@ -728,9 +727,8 @@ Quand les propriétés sont visibles, la section affiche :
 - Angles congrus (∠A = ∠C)
 - Nom de la figure fermée si détectée
 
-### 9.4 Section "Mesures"
-- Périmètre (si figure fermée)
-- Aire (si figure fermée et dont la formule est au programme du cycle sélectionné — voir §8.4)
+### ~~9.4 Section "Mesures"~~
+**Supprimée.** Le périmètre et l'aire ne sont pas affichés (voir §8.4). L'enfant voit les longueurs de chaque côté et les angles ; il calcule le périmètre et l'aire lui-même.
 
 ### 9.5 Section "Longueur du segment" (contextuelle)
 - Apparaît quand un segment est sélectionné
@@ -888,7 +886,7 @@ Les deux chemins (PDF et impression directe) produisent un résultat identique :
 
 ```
 ┌──────────────────────────────────────────────────────────────┐
-│ [Logo] TraceVite  [2e cycle (3e-4e année) ▾] [Mes constr.]  │  ← Header
+│ [Logo] TraceVite  [Simplifié ▾] [Mes constr.]               │  ← Header
 ├──────────────────────────────────────────────────────────────┤
 │ [▣Segment] [Cercle] | [Réflexion] | [Déplacer] [📏] │ [5mm/1cm/2cm] [cm/mm] [Accrochage ON] │  ← Toolbar
 ├──────────────────────────────────────────────────────────────┤
@@ -907,9 +905,6 @@ Les deux chemins (PDF et impression directe) produisent un résultat identique :
 │                                         │ Propriétés         │
 │                                         │  [AB // CD]        │
 │                                         │  « Carré »         │
-│                                         │                    │
-│                                         │ Périmètre          │
-│                                         │  16,1 cm           │
 │                                         │                    │
 │                                         │ [Fixer long.]      │
 ├─────────────────────────────────────────┴────────────────────┤
@@ -960,7 +955,7 @@ Utiliser un thème clair par défaut (cohérent avec le milieu scolaire). Princi
 | Désactivé (fond) | Gris pâle (#E8ECF0) |
 | Désactivé (texte) | Gris moyen (#9CA3AF) — ratio 2,7:1 (intentionnel) |
 | Toast / notification | Fond quasi-noir (#1A2433), texte blanc |
-| Barre de statut (fond) | Gris bleuté (#EDF1F5) |
+| Barre de statut (fond) | Bleu pâle (#E3EBF5) |
 
 ### 13.3 Typographie
 
@@ -1039,10 +1034,10 @@ Un enfant TDC qui « ne sait plus où il en est » peut marteler Escape pour rev
 
 ## 15. Undo / Redo
 
-**Architecture : snapshots complets.** Chaque étape de l'historique est un snapshot de l'état géométrique (~10-20 Ko par snapshot pour une construction typique). 100 snapshots ≈ 1-2 Mo en IndexedDB — négligeable. **Contenu du snapshot** : `points`, `segments`, `circles`, `gridSizeMm`, `snapEnabled`, `activeTool`, `schoolLevel`, `displayUnit`, `consigne`, `selectedElementId`. Les propriétés détectées (`detectedAngles`, `detectedProperties`, figures fermées) ne sont **PAS sérialisées** — elles sont recalculées au restore (déterministes depuis l'état géométrique, <1ms pour <50 segments). L'approche snapshot est retenue pour sa simplicité et sa fiabilité (pas de bugs de « replay » de commandes inverses). Le debounce de 2s sur la sauvegarde IndexedDB ne sérialise que le snapshot courant, pas tout l'historique à chaque action.
+**Architecture : snapshots complets.** Chaque étape de l'historique est un snapshot de l'état géométrique (~10-20 Ko par snapshot pour une construction typique). 100 snapshots ≈ 1-2 Mo en IndexedDB — négligeable. **Contenu du snapshot** : `points`, `segments`, `circles`, `gridSizeMm`, `snapEnabled`, `activeTool`, `displayMode`, `displayUnit`, `consigne`, `selectedElementId`. Les propriétés détectées (`detectedAngles`, `detectedProperties`, figures fermées) ne sont **PAS sérialisées** — elles sont recalculées au restore (déterministes depuis l'état géométrique, <1ms pour <50 segments). L'approche snapshot est retenue pour sa simplicité et sa fiabilité (pas de bugs de « replay » de commandes inverses). Le debounce de 2s sur la sauvegarde IndexedDB ne sérialise que le snapshot courant, pas tout l'historique à chaque action.
 
 - Chaque action modifiant l'état géométrique est enregistrée dans l'historique
-- Profondeur : 100 niveaux minimum (un enfant TDC qui ajuste et réajuste un même point peut consommer 50 niveaux en quelques minutes)
+- Profondeur : 100 niveaux (un enfant TDC qui ajuste et réajuste un même point peut consommer 50 niveaux en quelques minutes)
 - Ctrl+Z retire la dernière action, Ctrl+Y la rétablit
 - Toute nouvelle action après un undo efface la pile de redo (comportement standard)
 - "Nouvelle construction" est une action unique dans l'historique (annulable d'un seul Ctrl+Z — restaure l'état depuis la **mémoire volatile JavaScript**, pas depuis IndexedDB). Si le navigateur est fermé après « Nouvelle construction », le Ctrl+Z n'est plus disponible — mais l'ancienne construction reste accessible dans son créneau « Mes constructions ». **Le créneau sauvegardé n'est PAS supprimé par le Ctrl+Z** — l'enfant se retrouve avec la construction restaurée comme active ET la copie dans ses créneaux. Aucune perte de données.
@@ -1062,7 +1057,7 @@ Un enfant TDC qui « ne sait plus où il en est » peut marteler Escape pour rev
 | Créer un cercle | 1 |
 
 **Actions qui ne sont PAS dans l'historique undo :**
-- Changements de paramètres : niveau scolaire, unité d'affichage, taille de grille, taille de police, toggle sons, toggle accrochage, toggle « Masquer les propriétés »
+- Changements de paramètres : mode d'affichage, unité d'affichage, taille de grille, taille de police, toggle sons, toggle accrochage, toggle « Masquer les propriétés »
 - Zoom et pan du canevas
 - Sauvegarde/chargement de constructions
 
@@ -1149,8 +1144,8 @@ Un enfant TDC qui « ne sait plus où il en est » peut marteler Escape pour rev
 - **Pourquoi** : c'est la solution la plus robuste pour la portabilité. L'enfant peut sauvegarder sur sa clé USB, son dossier OneDrive/Google Drive scolaire, ou transférer entre deux postes. Élimine les risques liés au nettoyage automatique du navigateur par l'IT scolaire.
 
 **Format du fichier `.tracevite` :**
-- JSON avec un champ `version` (entier, commençant à 1) à la racine pour la compatibilité future.
-- Champs requis : `version`, `points`, `segments`, `circles`, `settings` (niveau, unité, grille).
+- JSON avec un champ `version` (entier) à la racine. La version courante est **2**. La version 1 utilisait `schoolLevel` (valeur `'2e_cycle'` | `'3e_cycle'`) ; la version 2 utilise `displayMode` (valeur `'simplifie'` | `'complet'`). La migration v1→v2 est automatique et silencieuse à l'import.
+- Champs requis : `version`, `points`, `segments`, `circles`, `settings` (displayMode, unité, grille).
 - Champ optionnel : `consigne` (string, max 1000 caractères). Texte de l'instruction d'exercice défini par l'enseignant (voir §8.0.1). Si présent, affiché dans le bandeau de consigne à l'ouverture du fichier. Si absent ou chaîne vide, aucun bandeau.
 - L'historique undo/redo est **exclu** de l'export (l'import démarre avec un historique vide). Cela simplifie drastiquement la migration de schéma entre versions (migrer 1 état courant vs. 100 snapshots) et réduit la taille du fichier (~20 Ko au lieu de ~2 Mo). L'import est une action délibérée qui marque un « nouveau départ » — la perte de l'undo est acceptable.
 - Limite : maximum 500 éléments (points + segments + cercles) **à l'import uniquement** (garde-fou contre les fichiers anormalement gros). Pas de limite en temps réel pendant la construction — la performance se dégrade naturellement au-delà de ~100-200 éléments (§20).
@@ -1166,11 +1161,11 @@ Un enfant TDC qui « ne sait plus où il en est » peut marteler Escape pour rev
 
 ### 17.3 Export / import de profil de paramètres
 
-**Pourquoi :** en classe, l'enseignant ou le professionnel accompagnateur configure les paramètres de l'outil pour chaque élève TDC (niveau scolaire, tolérance large/très large, sons activés, taille de police, timeout de chaînage, etc.). Sans export de profil, cette configuration doit être refaite manuellement sur chaque poste ou après chaque effacement Deep Freeze.
+**Pourquoi :** en classe, l'enseignant ou le professionnel accompagnateur configure les paramètres de l'outil pour chaque élève TDC (mode d'affichage, tolérance large/très large, sons activés, taille de police, timeout de chaînage, etc.). Sans export de profil, cette configuration doit être refaite manuellement sur chaque poste ou après chaque effacement Deep Freeze.
 
 - Bouton « Exporter les paramètres » / « Importer les paramètres » dans le panneau Paramètres
 - Fichier JSON, extension `.tracevite-config`
-- Contient : niveau scolaire, profil de tolérance, sons on/off, taille de police, timeout de chaînage, raccourcis clavier on/off, unité d'affichage, taille de grille par défaut
+- Contient : mode d'affichage (Simplifié/Complet), profil de tolérance, sons off/réduits/complets, taille de police, timeout de chaînage, raccourcis clavier on/off, unité d'affichage, taille de grille par défaut
 - Ne contient **pas** de constructions ni d'historique
 - L'import remplace les paramètres actuels (avec confirmation)
 
@@ -1216,7 +1211,7 @@ Le MVP est développé en 3 jalons itératifs :
 5. Outil Réflexion par rapport à un axe — nécessaire au 2e cycle
 6. Affichage temps réel des longueurs (cm ou mm, configurable)
 7. Affichage temps réel des angles avec classification (aigu/droit/obtus) ; mesure en degrés en mode 3e cycle
-8. Sélecteur de niveau scolaire (2e cycle / 3e cycle) pour adapter l'affichage
+8. Sélecteur de mode d'affichage (Simplifié / Complet) pour adapter l'information et les outils visibles
 9. Détection de parallélisme et perpendicularité (affichage dans le panneau)
 10. Snap de parallélisme et perpendicularité (guides visuels pendant la construction)
 11. Outil Longueur (fixer une longueur exacte) + saisie rapide après création de segment
