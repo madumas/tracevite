@@ -58,6 +58,7 @@ export const TOOL_CIRCLE = 'Cercle';
 export const TOOL_REFLECTION = 'Réflexion';
 export const TOOL_MOVE = 'Déplacer';
 export const TOOL_SNAP = 'Aimant';
+export const TOOL_COMPARE = 'Comparer';
 
 // ── Mode selector ─────────────────────────────────────────
 

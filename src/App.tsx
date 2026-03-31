@@ -64,6 +64,17 @@ import { AboutDialog } from '@/components/AboutDialog';
 import { FatigueReminder } from '@/components/FatigueReminder';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 
+/** Tools where clicking an element is a tool action, not a general selection.
+ * Used to (1) forward clicks to the tool and (2) hide ContextActionBar. */
+const COMPOUND_TOOLS: readonly ToolType[] = [
+  'reproduce',
+  'perpendicular',
+  'parallel',
+  'translation',
+  'reflection',
+  'compare',
+];
+
 const TOOL_SHORTCUT_MAP: Record<string, ToolType> = {
   s: 'segment',
   p: 'point',
@@ -82,6 +93,7 @@ const TOOL_DISPLAY_NAMES: Record<ToolType, string> = {
   perpendicular: 'Perpendiculaire',
   parallel: 'Parallèle',
   translation: 'Translation',
+  compare: 'Comparer',
 };
 
 import type { SlotRegistry } from '@/model/slots';
@@ -121,6 +133,7 @@ function getCanvasCursor(
     case 'reflection':
     case 'translation':
     case 'reproduce':
+    case 'compare':
       return 'crosshair';
     case 'move':
       return isActiveGesture ? 'grabbing' : 'grab';
@@ -344,8 +357,8 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
         return;
       }
       // Normal mode: if tool is mid-action, forward to tool directly.
-      // Tools that need clicks on elements (reproduce) get priority over selection.
-      const toolNeedsElementClick = state.activeTool === 'reproduce';
+      // Compound tools that need clicks on elements get priority over selection.
+      const toolNeedsElementClick = COMPOUND_TOOLS.includes(state.activeTool);
       if (!tool.isIdle || toolNeedsElementClick) {
         tool.handleClick(mmPos);
       } else {
@@ -954,21 +967,18 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
             </svg>
           </CanvasColorsProvider>
 
-          {/* Context action bar — hidden during compound tool workflows (reproduce, perpendicular, etc.)
+          {/* Context action bar — hidden during compound tool workflows
              where clicking an element is a tool action, not a general selection */}
-          {state.selectedElementId &&
-            !['reproduce', 'perpendicular', 'parallel', 'translation', 'reflection'].includes(
-              state.activeTool,
-            ) && (
-              <ContextActionBar
-                state={state}
-                viewport={viewport}
-                onToggleLock={handleToggleLock}
-                onFixCircleRadius={setFixingCircleId}
-                onFixSegmentLength={handleFixSegmentLength}
-                fontScale={effectiveFontScale}
-              />
-            )}
+          {state.selectedElementId && !COMPOUND_TOOLS.includes(state.activeTool) && (
+            <ContextActionBar
+              state={state}
+              viewport={viewport}
+              onToggleLock={handleToggleLock}
+              onFixCircleRadius={setFixingCircleId}
+              onFixSegmentLength={handleFixSegmentLength}
+              fontScale={effectiveFontScale}
+            />
+          )}
 
           {/* Length input for segment fixing (contextual action, spec §6.8, §9.5) */}
           {fixingSegmentId &&

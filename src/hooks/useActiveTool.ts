@@ -14,6 +14,7 @@ import { usePointTool } from './usePointTool';
 import { useReproduceTool } from './useReproduceTool';
 import { useConstrainedLineTool } from './useConstrainedLineTool';
 import { useTranslationTool } from './useTranslationTool';
+import { useCompareTool } from './useCompareTool';
 
 interface UseActiveToolOptions {
   state: ConstructionState;
@@ -75,6 +76,12 @@ export function useActiveTool({
     viewport,
     isActive: active === 'translation',
   });
+  const compareTool = useCompareTool({
+    state,
+    dispatch,
+    viewport,
+    isActive: active === 'compare',
+  });
 
   switch (state.activeTool) {
     case 'segment':
@@ -95,5 +102,7 @@ export function useActiveTool({
       return parallelTool;
     case 'translation':
       return translationTool;
+    case 'compare':
+      return compareTool;
   }
 }

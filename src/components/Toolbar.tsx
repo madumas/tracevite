@@ -19,6 +19,7 @@ import {
   PerpendicularIcon,
   ParallelIcon,
   TranslationIcon,
+  CompareIcon,
   SnapIcon,
 } from './ToolIcons';
 import {
@@ -27,6 +28,7 @@ import {
   TOOL_MOVE,
   TOOL_CIRCLE,
   TOOL_REFLECTION,
+  TOOL_COMPARE,
   TOOL_SNAP,
   GRID_5MM,
   GRID_1CM,
@@ -222,6 +224,17 @@ export const Toolbar = memo(function Toolbar({
             data-testid="tool-reproduce"
           >
             <ReproduceIcon /> <span className="tool-label">Reproduire</span>
+          </button>
+        )}
+        {/* Compare — behind "Plus d'outils" in simplifie */}
+        {(!isSimple || moreOpen) && (
+          <button
+            onClick={() => onToolChange('compare')}
+            style={{ ...toolBtnBase, ...(activeTool === 'compare' ? activeStyle : {}) }}
+            aria-pressed={activeTool === 'compare'}
+            data-testid="tool-compare"
+          >
+            <CompareIcon /> <span className="tool-label">{TOOL_COMPARE}</span>
           </button>
         )}
         {/* Perpendicular — behind "Plus d'outils" in simplifie */}

@@ -141,6 +141,25 @@ export function TranslationIcon() {
   );
 }
 
+/** Compare: two overlapping squares suggesting superposition */
+export function CompareIcon() {
+  return (
+    <svg {...S}>
+      <rect x="2" y="6" width="10" height="10" stroke={stroke} strokeWidth="1.5" fill="none" />
+      <rect
+        x="8"
+        y="4"
+        width="10"
+        height="10"
+        stroke={stroke}
+        strokeWidth="1.5"
+        fill="none"
+        strokeDasharray="3 2"
+      />
+    </svg>
+  );
+}
+
 /** Magnet: U-shape for snap toggle */
 export function SnapIcon() {
   return (

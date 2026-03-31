@@ -66,7 +66,8 @@ export type ToolType =
   | 'reproduce'
   | 'perpendicular'
   | 'parallel'
-  | 'translation';
+  | 'translation'
+  | 'compare';
 
 /** Selectable grid sizes in mm. */
 export type GridSize = 5 | 10 | 20;
