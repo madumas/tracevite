@@ -660,7 +660,7 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
       style={{
         display: 'flex',
         flexDirection: 'column',
-        height: '100vh',
+        height: '100dvh',
         background: UI_BG,
         color: UI_TEXT_PRIMARY,
         fontFamily: 'system-ui, sans-serif',
