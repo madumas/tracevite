@@ -446,11 +446,11 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
   const handlePrint = useCallback(() => setShowPrintDialog(true), []);
   const handleNewConstruction = useCallback(() => setShowNewConfirm(true), []);
   const handleConfirmNew = useCallback(() => {
-    dispatch({ type: 'NEW_CONSTRUCTION' });
+    slotManager.createNewSlot();
     tool.reset();
     setShowNewConfirm(false);
     setEstimationRevealed(false);
-  }, [dispatch, tool]);
+  }, [slotManager, tool]);
 
   // Context action bar handlers
   const handleToggleLock = useCallback(
