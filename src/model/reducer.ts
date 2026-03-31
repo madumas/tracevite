@@ -458,7 +458,26 @@ export function reduce(state: ReducerState, action: ConstructionAction): Reducer
     case 'LOAD_CONSTRUCTION':
       return { undoManager: action.undoManager };
 
-    case 'NEW_CONSTRUCTION':
-      return { undoManager: Undo.createUndoManager(State.createInitialState()) };
+    case 'NEW_CONSTRUCTION': {
+      return {
+        undoManager: Undo.createUndoManager({
+          ...State.createInitialState(),
+          // Preserve user config from current state
+          gridSizeMm: current.gridSizeMm,
+          snapEnabled: current.snapEnabled,
+          displayMode: current.displayMode,
+          displayUnit: current.displayUnit,
+          toleranceProfile: current.toleranceProfile,
+          chainTimeoutMs: current.chainTimeoutMs,
+          fontScale: current.fontScale,
+          keyboardShortcutsEnabled: current.keyboardShortcutsEnabled,
+          soundMode: current.soundMode,
+          soundGain: current.soundGain,
+          pointToolVisible: current.pointToolVisible,
+          cartesianMode: current.cartesianMode,
+          autoIntersection: current.autoIntersection,
+        }),
+      };
+    }
   }
 }
