@@ -132,5 +132,6 @@ export function useCircleTool({
     statusMessage,
     snapResult: phase === 'center_placed' ? snapResult : null,
     overlayElements,
+    isActiveGesture: phase === 'center_placed' && !!centerMm && !!cursorMm,
   };
 }

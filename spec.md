@@ -618,6 +618,20 @@ Affichées dans le panneau latéral droit en temps réel :
 - Angles congrus : étiquette "∠A = ∠C" + marques d'arc conventionnelles (simples, doubles, triples) sur les angles de même mesure dans une figure fermée. Utile pour identifier les isocèles et les parallélogrammes. Tolérance : ±0,5°.
 - Figure fermée : nom de la figure si détectée (ex : "Parallélogramme", "Trapèze", "Triangle rectangle")
 
+### 8.3.1 Masquage dynamique pendant les gestes actifs (accommodation TDC)
+
+Pendant un geste moteur actif (tracé de segment, cercle ou ligne contrainte ; déplacement d'un point), les indicateurs non essentiels sont temporairement masqués **sur le canevas uniquement** pour réduire la charge visuelle. Le panneau de propriétés latéral continue de tout afficher en temps réel.
+
+**Justification :** Les enfants TDC ont un déficit de double tâche. Quand leurs ressources cognitives sont allouées au contrôle moteur, leur capacité à traiter l'information visuelle périphérique chute. Les indicateurs de propriétés sont utiles avant (planification) et après (vérification) le geste, pas pendant.
+
+| État | Angles sur canevas | Congruence / Parallélisme | Longueurs |
+|------|-------------------|---------------------------|-----------|
+| Au repos | Tous visibles | Visibles | Visibles |
+| Tracé actif (segment, cercle, ligne contrainte) | Tous masqués | Masqués | Visibles |
+| Déplacement actif | Seulement au sommet déplacé | Masqués | Visibles (temps réel) |
+
+Le retour à l'affichage complet est immédiat dès que le geste se termine (clic du 2e point, lâché du point, Escape).
+
 ### 8.4 Algorithmes de détection de propriétés
 
 **Parallélisme :** Deux segments sont considérés parallèles si l'angle entre leurs directions est < 0,5°. Utiliser le produit vectoriel normalisé pour la détection.

@@ -22,6 +22,10 @@ export interface ToolHookResult {
   snapResult: SnapResult | null;
   /** SVG overlay elements to render in the canvas (ghost segment, circle, etc.). */
   overlayElements: ReactNode;
+  /** True when active motor gesture in progress (drawing, moving). */
+  isActiveGesture?: boolean;
+  /** During move: ID of the point being moved. */
+  activePointId?: string | null;
   /** Reflection tool: symmetry check mode toggle (v2). */
   symmetryCheckMode?: boolean;
   /** Reflection tool: toggle symmetry check mode (v2). */

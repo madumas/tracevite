@@ -247,5 +247,9 @@ export function useSegmentTool({
     statusMessage,
     snapResult,
     overlayElements,
+    isActiveGesture:
+      (phase === 'first_point_placed' || phase === 'segment_created') &&
+      !!firstPoint?.mm &&
+      !!cursorMm,
   };
 }

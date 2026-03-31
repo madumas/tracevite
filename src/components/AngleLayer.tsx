@@ -18,6 +18,10 @@ interface AngleLayerProps {
   readonly hideProperties?: boolean;
   readonly fontScale?: number;
   readonly estimationMode?: boolean;
+  /** When true, all angles hidden (active drawing gesture — TDC accommodation). */
+  readonly activeGestureHideAll?: boolean;
+  /** When set, only angles at this vertex are shown (active move gesture). */
+  readonly activeVertexPointId?: string;
 }
 
 const ARC_RADIUS_PX = 22;
@@ -39,6 +43,8 @@ export const AngleLayer = memo(function AngleLayer({
   hideProperties,
   fontScale = 1,
   estimationMode = false,
+  activeGestureHideAll,
+  activeVertexPointId,
 }: AngleLayerProps) {
   const colors = useCanvasColors();
   const pxPerMm = viewport.zoom * CSS_PX_PER_MM;
@@ -75,6 +81,10 @@ export const AngleLayer = memo(function AngleLayer({
         const ray1 = points.get(angle.ray1PointId);
         const ray2 = points.get(angle.ray2PointId);
         if (!vertex || !ray1 || !ray2) return null;
+
+        // Accommodation TDC : masquer angles pendant gestes moteurs actifs
+        if (activeGestureHideAll) return null;
+        if (activeVertexPointId && angle.vertexPointId !== activeVertexPointId) return null;
 
         // Check visibility (clutter management)
         if (cluttered) {

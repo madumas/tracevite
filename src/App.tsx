@@ -225,6 +225,9 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
   // Tool router — returns unified ToolHookResult
   const tool = useActiveTool({ state, dispatch, viewport, shiftConstraintActive });
 
+  // Accommodation TDC : masquer décorations pendant gestes moteurs actifs (déficit double tâche)
+  const gestureHideProperties = state.hideProperties || !!tool.isActiveGesture;
+
   // Selection system
   const selection = useSelection({
     state,
@@ -921,7 +924,7 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
                 displayUnit={state.displayUnit}
                 selectedElementId={state.selectedElementId}
                 properties={derived.properties}
-                hideProperties={state.hideProperties}
+                hideProperties={gestureHideProperties}
                 fontScale={effectiveFontScale}
                 segmentColor={effectiveSegmentColor}
                 estimationMode={state.estimationMode && !estimationRevealed}
@@ -949,9 +952,11 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
                 cluttered={cluttered}
                 selectedElementId={state.selectedElementId}
                 hoveredElementId={selection.hoveredElement?.id ?? null}
-                hideProperties={state.hideProperties}
+                hideProperties={gestureHideProperties}
                 fontScale={effectiveFontScale}
                 estimationMode={state.estimationMode && !estimationRevealed}
+                activeGestureHideAll={!!tool.isActiveGesture && !tool.activePointId}
+                activeVertexPointId={tool.activePointId ?? undefined}
               />
 
               {/* Tool-specific overlays (ghost segment, ghost circle, etc.) */}

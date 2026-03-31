@@ -119,5 +119,7 @@ export function useMoveTool({
     statusMessage,
     snapResult: phase === 'point_picked' ? snapResult : null,
     overlayElements,
+    isActiveGesture: phase === 'point_picked' && !!pickedPointId && !!cursorMm,
+    activePointId: phase === 'point_picked' ? pickedPointId : null,
   };
 }

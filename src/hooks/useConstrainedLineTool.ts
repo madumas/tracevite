@@ -225,5 +225,6 @@ export function useConstrainedLineTool({
     statusMessage,
     snapResult: phase !== 'select_reference' ? snapResult : null,
     overlayElements,
+    isActiveGesture: phase === 'place_end' && !!cursorMm,
   };
 }
