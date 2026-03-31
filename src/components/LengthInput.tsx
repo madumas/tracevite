@@ -140,48 +140,56 @@ export function LengthInput({
           : `Longueur du segment ${segmentLabel} :`}
       </label>
       <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-        <input
-          ref={inputRef}
-          type="text"
-          inputMode="decimal"
-          value={value}
-          onChange={(e) => setValue(e.target.value)}
-          onKeyDown={handleKeyDown}
-          placeholder={LENGTH_PLACEHOLDER}
-          style={{
-            width: 160,
-            height: MIN_BUTTON_SIZE_PX - 8,
-            padding: '4px 8px',
-            border: `1px solid ${UI_BORDER}`,
-            borderRadius: 4,
-            fontSize: 14,
-            outline: 'none',
-          }}
-          data-testid="length-input-field"
-        />
-        <span style={{ fontSize: 13, color: UI_TEXT_PRIMARY }}>{displayUnit}</span>
-        {fixedLengthMm != null && onClear && (
-          <button
-            onClick={handleClear}
+        <div style={{ position: 'relative', width: 160 }}>
+          <input
+            ref={inputRef}
+            type="text"
+            inputMode="decimal"
+            value={value}
+            onChange={(e) => setValue(e.target.value)}
+            onKeyDown={handleKeyDown}
+            placeholder={LENGTH_PLACEHOLDER}
             style={{
-              minWidth: MIN_BUTTON_SIZE_PX,
-              height: MIN_BUTTON_SIZE_PX,
+              width: '100%',
+              height: MIN_BUTTON_SIZE_PX - 8,
+              padding: fixedLengthMm != null && onClear ? '4px 36px 4px 8px' : '4px 8px',
               border: `1px solid ${UI_BORDER}`,
               borderRadius: 4,
-              background: 'transparent',
-              color: UI_TEXT_PRIMARY,
-              cursor: 'pointer',
-              fontSize: 16,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
+              fontSize: 14,
+              outline: 'none',
+              boxSizing: 'border-box',
             }}
-            aria-label="Libérer la longueur fixée"
-            data-testid="length-clear"
-          >
-            ✕
-          </button>
-        )}
+            data-testid="length-input-field"
+          />
+          {fixedLengthMm != null && onClear && (
+            <button
+              onClick={handleClear}
+              style={{
+                position: 'absolute',
+                right: 4,
+                top: '50%',
+                transform: 'translateY(-50%)',
+                width: 28,
+                height: 28,
+                border: 'none',
+                borderRadius: 4,
+                background: 'transparent',
+                color: UI_TEXT_PRIMARY,
+                cursor: 'pointer',
+                fontSize: 16,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: 0,
+              }}
+              aria-label="Libérer la longueur fixée"
+              data-testid="length-clear"
+            >
+              ✕
+            </button>
+          )}
+        </div>
+        <span style={{ fontSize: 13, color: UI_TEXT_PRIMARY }}>{displayUnit}</span>
       </div>
     </div>
   );

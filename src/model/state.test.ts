@@ -7,6 +7,7 @@ import {
   updatePointPosition,
   movePointWithConstraints,
   fixSegmentLength,
+  unfixSegmentLength,
   splitSegmentAtPoint,
   togglePointLock,
   setGridSize,
@@ -267,6 +268,62 @@ describe('fixSegmentLength', () => {
     expect(endPoint.x).toBeCloseTo(100);
     expect(endPoint.y).toBeCloseTo(0);
     expect(state.segments[0]!.fixedLength).toBe(100);
+  });
+});
+
+describe('unfixSegmentLength', () => {
+  it('removes fixedLength from a fixed segment', () => {
+    let state = createInitialState();
+    const p1 = addPoint(state, 0, 0);
+    state = p1.state;
+    const p2 = addPoint(state, 50, 0);
+    state = p2.state;
+    const seg = addSegment(state, p1.pointId, p2.pointId);
+    state = seg!.state;
+
+    state = fixSegmentLength(state, seg!.segmentId, 100);
+    expect(state.segments[0]!.fixedLength).toBe(100);
+
+    state = unfixSegmentLength(state, seg!.segmentId);
+    expect(state.segments[0]!.fixedLength).toBeUndefined();
+  });
+
+  it('returns same state when segment has no fixedLength', () => {
+    let state = createInitialState();
+    const p1 = addPoint(state, 0, 0);
+    state = p1.state;
+    const p2 = addPoint(state, 50, 0);
+    state = p2.state;
+    const seg = addSegment(state, p1.pointId, p2.pointId);
+    state = seg!.state;
+
+    const result = unfixSegmentLength(state, seg!.segmentId);
+    expect(result).toBe(state); // same reference
+  });
+
+  it('returns same state for nonexistent segment id', () => {
+    const state = createInitialState();
+    const result = unfixSegmentLength(state, 'nonexistent');
+    expect(result).toBe(state);
+  });
+
+  it('allows free movement after unfix', () => {
+    let state = createInitialState();
+    const p1 = addPoint(state, 0, 0);
+    state = p1.state;
+    const p2 = addPoint(state, 50, 0);
+    state = p2.state;
+    const seg = addSegment(state, p1.pointId, p2.pointId);
+    state = seg!.state;
+
+    state = fixSegmentLength(state, seg!.segmentId, 50);
+    state = unfixSegmentLength(state, seg!.segmentId);
+
+    // Move p1 — p2 should NOT pivot (no constraint)
+    state = movePointWithConstraints(state, p1.pointId, 0, 50);
+    const p2After = state.points.find((p) => p.id === p2.pointId)!;
+    expect(p2After.x).toBeCloseTo(50);
+    expect(p2After.y).toBeCloseTo(0);
   });
 });
 

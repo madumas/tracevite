@@ -1024,7 +1024,6 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
                   }}
                   onClear={() => {
                     dispatch({ type: 'UNFIX_SEGMENT_LENGTH', segmentId: seg.id });
-                    dispatch({ type: 'SET_SELECTED_ELEMENT', elementId: null });
                   }}
                   onDismiss={() => dispatch({ type: 'SET_SELECTED_ELEMENT', elementId: null })}
                 />
