@@ -390,6 +390,21 @@ export function fixSegmentLength(
   };
 }
 
+/** Remove fixedLength constraint from a segment. */
+export function unfixSegmentLength(state: ConstructionState, segmentId: string): ConstructionState {
+  const segment = state.segments.find((s) => s.id === segmentId);
+  if (!segment || segment.fixedLength == null) return state;
+
+  return {
+    ...state,
+    segments: state.segments.map((s) => {
+      if (s.id !== segmentId) return s;
+      const { fixedLength: _, ...rest } = s;
+      return rest;
+    }),
+  };
+}
+
 /**
  * Split a segment at a T-junction point (spec §17).
  * Creates a new point on the segment body and splits the original

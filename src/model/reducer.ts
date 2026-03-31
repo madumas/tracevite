@@ -34,6 +34,7 @@ export type ConstructionAction =
   | { type: 'REMOVE_ELEMENT'; elementId: string }
   | { type: 'UPDATE_POINT_POSITION'; pointId: string; x: number; y: number }
   | { type: 'FIX_SEGMENT_LENGTH'; segmentId: string; lengthMm: number }
+  | { type: 'UNFIX_SEGMENT_LENGTH'; segmentId: string }
   | { type: 'MOVE_POINT'; pointId: string; x: number; y: number }
   | { type: 'CREATE_CIRCLE'; centerPointId: string; radiusMm: number }
   | { type: 'SET_CIRCLE_RADIUS'; circleId: string; radiusMm: number }
@@ -200,6 +201,12 @@ export function reduce(state: ReducerState, action: ConstructionAction): Reducer
 
     case 'FIX_SEGMENT_LENGTH': {
       const newState = State.fixSegmentLength(current, action.segmentId, action.lengthMm);
+      if (newState === current) return state;
+      return { undoManager: Undo.pushState(undoManager, newState) };
+    }
+
+    case 'UNFIX_SEGMENT_LENGTH': {
+      const newState = State.unfixSegmentLength(current, action.segmentId);
       if (newState === current) return state;
       return { undoManager: Undo.pushState(undoManager, newState) };
     }

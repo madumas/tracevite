@@ -11,6 +11,10 @@ interface LengthInputProps {
   readonly displayUnit: DisplayUnit;
   readonly onSubmit: (lengthMm: number) => void;
   readonly onDismiss: () => void;
+  /** Called when user clears a fixed length (× button or empty submit). */
+  readonly onClear?: () => void;
+  /** If the segment already has a fixed length, show it pre-filled. */
+  readonly fixedLengthMm?: number;
   /** Position near segment midpoint (CSS px relative to canvas container). */
   readonly positionPx?: { x: number; y: number };
 }
@@ -26,9 +30,15 @@ export function LengthInput({
   displayUnit,
   onSubmit,
   onDismiss,
+  onClear,
+  fixedLengthMm,
   positionPx,
 }: LengthInputProps) {
-  const [value, setValue] = useState('');
+  const [value, setValue] = useState(() => {
+    if (fixedLengthMm == null) return '';
+    const displayValue = displayUnit === 'cm' ? fixedLengthMm / 10 : fixedLengthMm;
+    return displayValue.toFixed(1).replace('.', ',');
+  });
   const inputRef = useRef<HTMLInputElement>(null);
 
   const containerRef = useRef<HTMLDivElement>(null);
@@ -67,14 +77,24 @@ export function LengthInput({
     };
   }, [onDismiss]);
 
+  const handleClear = useCallback(() => {
+    if (onClear) onClear();
+    onDismiss();
+  }, [onClear, onDismiss]);
+
   const handleSubmit = useCallback(() => {
-    const parsed = parseFrenchNumber(value);
+    const trimmed = value.trim();
+    if (trimmed === '' && fixedLengthMm != null) {
+      handleClear();
+      return;
+    }
+    const parsed = parseFrenchNumber(trimmed);
     if (parsed !== null && parsed > 0) {
       const mm = displayUnit === 'cm' ? parsed * 10 : parsed;
       onSubmit(mm);
     }
     onDismiss();
-  }, [value, displayUnit, onSubmit, onDismiss]);
+  }, [value, fixedLengthMm, displayUnit, onSubmit, onDismiss, handleClear]);
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
@@ -115,7 +135,9 @@ export function LengthInput({
       data-testid="length-input"
     >
       <label style={{ fontSize: 12, color: UI_TEXT_PRIMARY }}>
-        Longueur du segment {segmentLabel} :
+        {fixedLengthMm != null
+          ? `Longueur fixée — segment ${segmentLabel} :`
+          : `Longueur du segment ${segmentLabel} :`}
       </label>
       <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
         <input
@@ -138,6 +160,28 @@ export function LengthInput({
           data-testid="length-input-field"
         />
         <span style={{ fontSize: 13, color: UI_TEXT_PRIMARY }}>{displayUnit}</span>
+        {fixedLengthMm != null && onClear && (
+          <button
+            onClick={handleClear}
+            style={{
+              minWidth: MIN_BUTTON_SIZE_PX,
+              height: MIN_BUTTON_SIZE_PX,
+              border: `1px solid ${UI_BORDER}`,
+              borderRadius: 4,
+              background: 'transparent',
+              color: UI_TEXT_PRIMARY,
+              cursor: 'pointer',
+              fontSize: 16,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+            aria-label="Libérer la longueur fixée"
+            data-testid="length-clear"
+          >
+            ✕
+          </button>
+        )}
       </div>
     </div>
   );

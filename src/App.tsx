@@ -1016,9 +1016,14 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
                   segmentLabel={label}
                   currentLengthMm={seg.lengthMm}
                   displayUnit={state.displayUnit}
+                  fixedLengthMm={seg.fixedLength}
                   positionPx={midPx}
                   onSubmit={(lengthMm) => {
                     dispatch({ type: 'FIX_SEGMENT_LENGTH', segmentId: seg.id, lengthMm });
+                    dispatch({ type: 'SET_SELECTED_ELEMENT', elementId: null });
+                  }}
+                  onClear={() => {
+                    dispatch({ type: 'UNFIX_SEGMENT_LENGTH', segmentId: seg.id });
                     dispatch({ type: 'SET_SELECTED_ELEMENT', elementId: null });
                   }}
                   onDismiss={() => dispatch({ type: 'SET_SELECTED_ELEMENT', elementId: null })}
