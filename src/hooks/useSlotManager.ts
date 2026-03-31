@@ -8,8 +8,16 @@ import type { ConstructionState } from '@/model/types';
 import type { UndoManager } from '@/model/undo';
 import type { ConstructionAction } from '@/model/reducer';
 import type { SlotRegistry } from '@/model/slots';
-import { createSlot, renameSlot, deleteSlot, setActiveSlot, canCreateSlot } from '@/model/slots';
+import {
+  createSlot,
+  renameSlot,
+  deleteSlot,
+  setActiveSlot,
+  canCreateSlot,
+  updateSlotMetadata,
+} from '@/model/slots';
 import { saveSlotData, loadSlotData, saveRegistry, deleteSlotData } from '@/model/slot-persistence';
+import { generateThumbnail } from '@/engine/thumbnail';
 
 interface UseSlotManagerOptions {
   initialRegistry: SlotRegistry;
@@ -34,9 +42,15 @@ export function useSlotManager({
     async (targetSlotId: string) => {
       if (targetSlotId === activeSlotId) return;
 
-      // 1. Auto-save current slot
+      // 1. Auto-save current slot with thumbnail
       if (activeSlotId) {
         await saveSlotData(activeSlotId, state, undoManager);
+        const thumbnail = generateThumbnail(state);
+        const updatedReg = updateSlotMetadata(registry, activeSlotId, {
+          updatedAt: Date.now(),
+          thumbnail,
+        });
+        await saveRegistry(updatedReg);
       }
 
       // 2. Load target slot
@@ -71,9 +85,15 @@ export function useSlotManager({
     async (name?: string, keepCurrentState = false) => {
       if (!canCreateSlot(registry)) return;
 
-      // Auto-save current
+      // Auto-save current with thumbnail
       if (activeSlotId) {
         await saveSlotData(activeSlotId, state, undoManager);
+        const thumbnail = generateThumbnail(state);
+        const updatedReg = updateSlotMetadata(registry, activeSlotId, {
+          updatedAt: Date.now(),
+          thumbnail,
+        });
+        await saveRegistry(updatedReg);
       }
 
       // Create slot
@@ -89,9 +109,16 @@ export function useSlotManager({
       setRegistry(result.registry);
       await saveRegistry(result.registry);
 
-      // If keeping current state, immediately save it to the new slot
+      // If keeping current state, immediately save it to the new slot with thumbnail
       if (keepCurrentState) {
         await saveSlotData(result.slotId, state, undoManager);
+        const thumb = generateThumbnail(state);
+        const reg2 = updateSlotMetadata(result.registry, result.slotId, {
+          updatedAt: Date.now(),
+          thumbnail: thumb,
+        });
+        setRegistry(reg2);
+        await saveRegistry(reg2);
       }
     },
     [registry, activeSlotId, state, undoManager, dispatch, onBeforeSwitch],
