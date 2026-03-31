@@ -1,6 +1,6 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="10 40 180 160" width="200" height="200">
   <!-- Compact icon version: T as geometric construction, no labels -->
-  <!-- Points are visually dominant, matching the tool's canvas appearance -->
+  <!-- viewBox cropped to content bounds for proper vertical centering -->
 
   <!-- Horizontal segment -->
   <line x1="30" y1="60" x2="170" y2="60" stroke="#185FA5" stroke-width="12" stroke-linecap="round"/>
