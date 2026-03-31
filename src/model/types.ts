@@ -64,7 +64,10 @@ export type ToolType =
   | 'reflection'
   | 'move'
   | 'measure'
-  | 'reproduce';
+  | 'reproduce'
+  | 'perpendicular'
+  | 'parallel'
+  | 'translation';
 
 /** Selectable grid sizes in mm. */
 export type GridSize = 5 | 10 | 20;

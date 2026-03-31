@@ -182,6 +182,7 @@ export function useReflectionTool({
               type: 'REFLECT_ELEMENTS',
               pointIds: [circle.centerPointId],
               segmentIds: [],
+              circleIds: [circleId],
               axisP1,
               axisP2,
             });

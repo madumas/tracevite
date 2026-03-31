@@ -1,28 +1,30 @@
 import { memo } from 'react';
 import type { ConstructionState } from '@/model/types';
 import { formatLength } from '@/engine/format';
-import {
-  PRINTABLE_WIDTH_MM,
-  PRINTABLE_HEIGHT_MM,
-  witnessSegmentCoords,
-  footerCoords,
-} from '@/engine/print-shared';
+import { getPrintableArea, witnessSegmentCoords, footerCoords } from '@/engine/print-shared';
+import type { PageFormat } from '@/model/preferences';
 
 interface PrintSvgProps {
   readonly state: ConstructionState;
   readonly landscape: boolean;
+  readonly pageFormat?: PageFormat;
 }
 
 /**
  * Dedicated print SVG — display:none normally, display:block in @media print.
  * viewBox in mm (D5), B&W, witness segment, footer.
  */
-export const PrintSvg = memo(function PrintSvg({ state, landscape }: PrintSvgProps) {
-  const pw = landscape ? PRINTABLE_HEIGHT_MM : PRINTABLE_WIDTH_MM;
-  const ph = landscape ? PRINTABLE_WIDTH_MM : PRINTABLE_HEIGHT_MM;
+export const PrintSvg = memo(function PrintSvg({
+  state,
+  landscape,
+  pageFormat = 'letter',
+}: PrintSvgProps) {
+  const area = getPrintableArea(pageFormat, landscape);
+  const pw = area.width;
+  const ph = area.height;
   const pointMap = new Map(state.points.map((p) => [p.id, p]));
-  const ws = witnessSegmentCoords(landscape);
-  const ft = footerCoords(landscape);
+  const ws = witnessSegmentCoords(landscape, pageFormat);
+  const ft = footerCoords(landscape, pageFormat);
 
   return (
     <svg

@@ -117,3 +117,53 @@ export function segmentAngle(
   const angle = Math.atan2(p2.y - p1.y, p2.x - p1.x) * (180 / Math.PI);
   return ((angle % 360) + 360) % 360;
 }
+
+/**
+ * Compute a perpendicular line through a given point, relative to a reference segment direction.
+ * Returns the direction unit vector (rotated 90°) from the reference segment.
+ */
+export function perpendicularDirection(
+  refP1: { readonly x: number; readonly y: number },
+  refP2: { readonly x: number; readonly y: number },
+): { dx: number; dy: number } {
+  const dx = refP2.x - refP1.x;
+  const dy = refP2.y - refP1.y;
+  const len = Math.sqrt(dx * dx + dy * dy);
+  if (len === 0) return { dx: 0, dy: -1 };
+  // Rotate 90° counterclockwise
+  return { dx: -dy / len, dy: dx / len };
+}
+
+/**
+ * Compute a parallel direction from a reference segment.
+ * Returns the direction unit vector along the reference segment.
+ */
+export function parallelDirection(
+  refP1: { readonly x: number; readonly y: number },
+  refP2: { readonly x: number; readonly y: number },
+): { dx: number; dy: number } {
+  const dx = refP2.x - refP1.x;
+  const dy = refP2.y - refP1.y;
+  const len = Math.sqrt(dx * dx + dy * dy);
+  if (len === 0) return { dx: 1, dy: 0 };
+  return { dx: dx / len, dy: dy / len };
+}
+
+/**
+ * Project a cursor position onto a constrained line through a start point.
+ * The line direction is given by (dx, dy) unit vector.
+ * Returns the projected position on the line.
+ */
+export function projectOntoConstrainedLine(
+  cursor: { readonly x: number; readonly y: number },
+  start: { readonly x: number; readonly y: number },
+  dir: { dx: number; dy: number },
+): { x: number; y: number } {
+  const vx = cursor.x - start.x;
+  const vy = cursor.y - start.y;
+  const t = vx * dir.dx + vy * dir.dy;
+  return {
+    x: start.x + t * dir.dx,
+    y: start.y + t * dir.dy,
+  };
+}

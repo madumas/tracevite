@@ -17,6 +17,7 @@ import type { UndoManager } from './undo';
 import * as State from './state';
 import * as Undo from './undo';
 import { reflectConstruction } from '@/engine/reflection';
+import { generateId } from './id';
 import { reproduceElements } from '@/engine/reproduce';
 import { pointOnSegmentProjection } from '@/engine/geometry';
 import { MIN_POINT_DISTANCE_MM } from '@/config/accessibility';
@@ -39,6 +40,7 @@ export type ConstructionAction =
       type: 'REFLECT_ELEMENTS';
       pointIds: string[];
       segmentIds: string[];
+      circleIds?: string[];
       axisP1: { x: number; y: number };
       axisP2: { x: number; y: number };
     }
@@ -153,10 +155,35 @@ export function reduce(state: ReducerState, action: ConstructionAction): Reducer
         action.axisP1,
         action.axisP2,
       );
+
+      // Build mapping from original point ID → reflected point ID
+      const reflectedPointMap = new Map<string, string>();
+      for (let i = 0; i < action.pointIds.length; i++) {
+        if (i < newPoints.length) {
+          reflectedPointMap.set(action.pointIds[i]!, newPoints[i]!.id);
+        }
+      }
+
+      // Reflect circles: create new circle with reflected center and same radius
+      const newCircles = (action.circleIds ?? [])
+        .map((cid) => {
+          const original = current.circles.find((c) => c.id === cid);
+          if (!original) return null;
+          const newCenterId = reflectedPointMap.get(original.centerPointId);
+          if (!newCenterId) return null;
+          return {
+            id: generateId(),
+            centerPointId: newCenterId,
+            radiusMm: original.radiusMm,
+          };
+        })
+        .filter(Boolean) as (typeof current.circles)[number][];
+
       const newState: typeof current = {
         ...current,
         points: [...current.points, ...newPoints],
         segments: [...current.segments, ...newSegments],
+        circles: [...current.circles, ...newCircles],
       };
       return { undoManager: Undo.pushState(undoManager, newState) };
     }

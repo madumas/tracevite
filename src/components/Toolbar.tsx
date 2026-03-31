@@ -155,6 +155,39 @@ export const Toolbar = memo(function Toolbar({
           Reproduire
         </button>
       )}
+      {/* Perpendicular — behind "Plus d'outils" in simplifie */}
+      {(!isSimple || moreOpen) && (
+        <button
+          onClick={() => onToolChange('perpendicular')}
+          style={{ ...toolBtnBase, ...(activeTool === 'perpendicular' ? activeStyle : {}) }}
+          aria-pressed={activeTool === 'perpendicular'}
+          data-testid="tool-perpendicular"
+        >
+          Perpendiculaire
+        </button>
+      )}
+      {/* Parallel — behind "Plus d'outils" in simplifie */}
+      {(!isSimple || moreOpen) && (
+        <button
+          onClick={() => onToolChange('parallel')}
+          style={{ ...toolBtnBase, ...(activeTool === 'parallel' ? activeStyle : {}) }}
+          aria-pressed={activeTool === 'parallel'}
+          data-testid="tool-parallel"
+        >
+          Parallèle
+        </button>
+      )}
+      {/* Translation — complet only (3e cycle) */}
+      {!isSimple && (
+        <button
+          onClick={() => onToolChange('translation')}
+          style={{ ...toolBtnBase, ...(activeTool === 'translation' ? activeStyle : {}) }}
+          aria-pressed={activeTool === 'translation'}
+          data-testid="tool-translation"
+        >
+          Translation
+        </button>
+      )}
       {/* Measure — always visible in complet, behind "Plus d'outils" in simplifie */}
       {(!isSimple || moreOpen) && (
         <button

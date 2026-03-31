@@ -221,5 +221,17 @@ export function checkSymmetry(
     }
   }
 
+  // Verify bijection: each matchedId must be unique
+  if (isSymmetric) {
+    const matchedIds = new Set<string>();
+    for (const corr of correspondences) {
+      if (matchedIds.has(corr.matchedId)) {
+        isSymmetric = false;
+        break;
+      }
+      matchedIds.add(corr.matchedId);
+    }
+  }
+
   return { isSymmetric, maxDeviationMm: maxDeviation, correspondences };
 }

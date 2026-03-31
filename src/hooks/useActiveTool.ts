@@ -13,6 +13,8 @@ import { useReflectionTool } from './useReflectionTool';
 import { useMeasureTool } from './useMeasureTool';
 import { usePointTool } from './usePointTool';
 import { useReproduceTool } from './useReproduceTool';
+import { useConstrainedLineTool } from './useConstrainedLineTool';
+import { useTranslationTool } from './useTranslationTool';
 
 interface UseActiveToolOptions {
   state: ConstructionState;
@@ -60,6 +62,26 @@ export function useActiveTool({
     viewport,
     isActive: active === 'reproduce',
   });
+  const perpendicularTool = useConstrainedLineTool({
+    state,
+    dispatch,
+    viewport,
+    isActive: active === 'perpendicular',
+    toolType: 'perpendicular',
+  });
+  const parallelTool = useConstrainedLineTool({
+    state,
+    dispatch,
+    viewport,
+    isActive: active === 'parallel',
+    toolType: 'parallel',
+  });
+  const translationTool = useTranslationTool({
+    state,
+    dispatch,
+    viewport,
+    isActive: active === 'translation',
+  });
 
   switch (state.activeTool) {
     case 'segment':
@@ -76,5 +98,11 @@ export function useActiveTool({
       return pointTool;
     case 'reproduce':
       return reproduceTool;
+    case 'perpendicular':
+      return perpendicularTool;
+    case 'parallel':
+      return parallelTool;
+    case 'translation':
+      return translationTool;
   }
 }

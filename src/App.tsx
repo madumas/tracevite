@@ -79,6 +79,9 @@ const TOOL_DISPLAY_NAMES: Record<ToolType, string> = {
   measure: 'Mesurer',
   reflection: 'Réflexion',
   reproduce: 'Reproduire',
+  perpendicular: 'Perpendiculaire',
+  parallel: 'Parallèle',
+  translation: 'Translation',
 };
 
 import type { SlotRegistry } from '@/model/slots';
@@ -990,7 +993,7 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
       )}
 
       {/* Hidden print SVG — visible only in @media print */}
-      <PrintSvg state={state} landscape={printLandscape} />
+      <PrintSvg state={state} landscape={printLandscape} pageFormat={preferences.pageFormat} />
 
       {/* Slot manager modal */}
       {showSlotManager && (
