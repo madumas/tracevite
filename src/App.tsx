@@ -655,6 +655,35 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
     return map;
   }, [state.points, state.segments, derived.angles, viewport]);
 
+  // Pre-compute ALL segment length label positions as obstacles for angle labels
+  const angleLabelObstacles = useMemo(() => {
+    const pxPerMm = viewport.zoom * CSS_PX_PER_MM;
+    const segFontSize = Math.max(13, 13 * effectiveFontScale);
+    const estW = 6 * segFontSize * 0.65;
+    const estH = segFontSize * 1.3;
+
+    // Compute all segment label bboxes once
+    const allSegLabels: import('@/engine/label-placement').Obstacle[] = [];
+    for (const seg of state.segments) {
+      const sp = state.points.find((p) => p.id === seg.startPointId);
+      const ep = state.points.find((p) => p.id === seg.endPointId);
+      if (!sp || !ep) continue;
+      const sx1 = (sp.x - viewport.panX) * pxPerMm;
+      const sy1 = (sp.y - viewport.panY) * pxPerMm;
+      const sx2 = (ep.x - viewport.panX) * pxPerMm;
+      const sy2 = (ep.y - viewport.panY) * pxPerMm;
+      const pos = getSegmentLabelPosition(sx1, sy1, sx2, sy2);
+      allSegLabels.push({ x: pos.x - estW / 2, y: pos.y - estH / 2, width: estW, height: estH });
+    }
+
+    // Every vertex gets ALL segment labels as potential obstacles
+    const map = new Map<string, import('@/engine/label-placement').Obstacle[]>();
+    for (const point of state.points) {
+      map.set(point.id, allSegLabels);
+    }
+    return map;
+  }, [state.points, state.segments, viewport, effectiveFontScale]);
+
   // ── Sound engine integration (spec §7.2) ────────────────
   const soundEngineRef = useRef<ReturnType<typeof createSoundEngine> | null>(null);
 
@@ -1010,6 +1039,7 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
                 estimationMode={state.estimationMode && !estimationRevealed}
                 activeGestureHideAll={!!tool.isActiveGesture && !tool.activePointId}
                 activeVertexPointId={tool.activePointId ?? undefined}
+                angleLabelObstacles={angleLabelObstacles}
               />
 
               {/* Tool-specific overlays (ghost segment, ghost circle, etc.) */}

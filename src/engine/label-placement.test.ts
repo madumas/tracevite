@@ -1,4 +1,4 @@
-import { chooseLabelOffset, type Obstacle } from './label-placement';
+import { chooseLabelOffset, chooseAngleLabelPosition, type Obstacle } from './label-placement';
 
 const RADIUS = 11.34; // POINT_DISPLAY_RADIUS_MM * CSS_PX_PER_MM
 const LABEL_W = 8; // ~1 char at 14px
@@ -67,5 +67,55 @@ describe('chooseLabelOffset', () => {
     expect(r1.dx).toBe(r2.dx);
     expect(r1.dy).toBe(r2.dy);
     expect(r1.textAnchor).toBe(r2.textAnchor);
+  });
+});
+
+describe('chooseAngleLabelPosition', () => {
+  const VX = 200;
+  const VY = 200;
+  const MID = Math.PI / 4; // 45°
+  const LW = 25;
+  const LH = 14;
+
+  it('returns default (34, midAngle) when no obstacles', () => {
+    const result = chooseAngleLabelPosition(VX, VY, MID, LW, LH, []);
+    expect(result.radius).toBe(34);
+    expect(result.angle).toBe(MID);
+  });
+
+  it('pushes to larger radius when default overlaps', () => {
+    // Place obstacle exactly at default label position
+    const cx = VX + Math.cos(MID) * 34;
+    const cy = VY + Math.sin(MID) * 34;
+    const obstacle: Obstacle = { x: cx - 12, y: cy - 7, width: 25, height: 14 };
+    const result = chooseAngleLabelPosition(VX, VY, MID, LW, LH, [obstacle]);
+    expect(result.radius).not.toBe(34);
+  });
+
+  it('shifts angle when all radii in same direction are blocked', () => {
+    // Block all 3 radii on the midAngle direction
+    const obstacles: Obstacle[] = [34, 48, 62].map((r) => {
+      const cx = VX + Math.cos(MID) * r;
+      const cy = VY + Math.sin(MID) * r;
+      return { x: cx - 12, y: cy - 7, width: 25, height: 14 };
+    });
+    const result = chooseAngleLabelPosition(VX, VY, MID, LW, LH, obstacles);
+    // Should use an angular offset
+    expect(Math.abs(result.angle - MID)).toBeGreaterThan(0.1);
+  });
+
+  it('returns best option when all 9 candidates have obstacles', () => {
+    const obstacles: Obstacle[] = [];
+    for (const r of [34, 48, 62]) {
+      for (const da of [0, -0.26, 0.26]) {
+        const a = MID + da;
+        const cx = VX + Math.cos(a) * r;
+        const cy = VY + Math.sin(a) * r;
+        obstacles.push({ x: cx - 12, y: cy - 7, width: 25, height: 14 });
+      }
+    }
+    const result = chooseAngleLabelPosition(VX, VY, MID, LW, LH, obstacles);
+    expect(result.radius).toBeDefined();
+    expect(result.angle).toBeDefined();
   });
 });

@@ -3,6 +3,7 @@ import type { AngleInfo, ViewportState, DisplayMode } from '@/model/types';
 import { useCanvasColors } from '@/config/theme';
 import { CSS_PX_PER_MM } from '@/engine/viewport';
 import { MIN_CANVAS_FONT_PX, POINT_DISPLAY_RADIUS_MM } from '@/config/accessibility';
+import { chooseAngleLabelPosition, type Obstacle } from '@/engine/label-placement';
 
 interface AngleLayerProps {
   readonly angles: readonly AngleInfo[];
@@ -22,6 +23,8 @@ interface AngleLayerProps {
   readonly activeGestureHideAll?: boolean;
   /** When set, only angles at this vertex are shown (active move gesture). */
   readonly activeVertexPointId?: string;
+  /** Pre-computed obstacles per vertex for angle label anti-overlap. */
+  readonly angleLabelObstacles?: Map<string, Obstacle[]>;
 }
 
 const ARC_RADIUS_PX = 22;
@@ -45,9 +48,84 @@ export const AngleLayer = memo(function AngleLayer({
   estimationMode = false,
   activeGestureHideAll,
   activeVertexPointId,
+  angleLabelObstacles,
 }: AngleLayerProps) {
   const colors = useCanvasColors();
   const pxPerMm = viewport.zoom * CSS_PX_PER_MM;
+
+  // Pre-compute dynamic label positions per vertex to avoid angle-angle and angle-length overlaps
+  const angleLabelPositions = new Map<number, { radius: number; angle: number }>();
+  if (displayMode === 'complet' && !estimationMode && angleLabelObstacles) {
+    const fontSize = Math.max(MIN_CANVAS_FONT_PX, 11) * fontScale;
+    const labelH = fontSize * 1.2;
+
+    // Group visible angle indices by vertex
+    const vertexGroups = new Map<string, number[]>();
+    angles.forEach((angle, idx) => {
+      if (angle.classification === 'reflex') return;
+      if (displayMode === 'simplifie' && angle.classification === 'plat') return;
+      if (angle.classification === 'droit') return; // right angles use square, no text
+      const group = vertexGroups.get(angle.vertexPointId) ?? [];
+      group.push(idx);
+      vertexGroups.set(angle.vertexPointId, group);
+    });
+
+    for (const [vertexId, indices] of vertexGroups) {
+      const vertex = points.get(vertexId);
+      if (!vertex) continue;
+      const sx = (vertex.x - viewport.panX) * pxPerMm;
+      const sy = (vertex.y - viewport.panY) * pxPerMm;
+
+      // External obstacles (segment length labels) + accumulator for placed labels
+      const externalObs = angleLabelObstacles.get(vertexId) ?? [];
+      const placedObs: Obstacle[] = [...externalObs];
+
+      // Sort by midAngle for deterministic processing
+      const sorted = [...indices].sort((a, b) => {
+        const aa = angles[a]!,
+          ab = angles[b]!;
+        const ray1a = points.get(aa.ray1PointId),
+          ray2a = points.get(aa.ray2PointId);
+        const ray1b = points.get(ab.ray1PointId),
+          ray2b = points.get(ab.ray2PointId);
+        if (!ray1a || !ray2a || !ray1b || !ray2b) return 0;
+        const midA =
+          Math.atan2(ray1a.y - vertex.y, ray1a.x - vertex.x) +
+          Math.atan2(ray2a.y - vertex.y, ray2a.x - vertex.x);
+        const midB =
+          Math.atan2(ray1b.y - vertex.y, ray1b.x - vertex.x) +
+          Math.atan2(ray2b.y - vertex.y, ray2b.x - vertex.x);
+        return midA - midB;
+      });
+
+      for (const idx of sorted) {
+        const angle = angles[idx]!;
+        const ray1 = points.get(angle.ray1PointId);
+        const ray2 = points.get(angle.ray2PointId);
+        if (!ray1 || !ray2) continue;
+
+        const startAngle = Math.atan2(ray1.y - vertex.y, ray1.x - vertex.x);
+        const endAngle = Math.atan2(ray2.y - vertex.y, ray2.x - vertex.x);
+        let ccwSweep = endAngle - startAngle;
+        if (ccwSweep < 0) ccwSweep += 2 * Math.PI;
+        const useSmallArc = ccwSweep <= Math.PI;
+        const midAngle = useSmallArc
+          ? startAngle + ccwSweep / 2
+          : startAngle - (2 * Math.PI - ccwSweep) / 2;
+
+        const labelText = `${Math.round(angle.degrees)}°`;
+        const labelW = labelText.length * fontSize * 0.6;
+
+        const pos = chooseAngleLabelPosition(sx, sy, midAngle, labelW, labelH, placedObs);
+        angleLabelPositions.set(idx, pos);
+
+        // Add this label as obstacle for subsequent angles at this vertex
+        const cx = sx + Math.cos(pos.angle) * pos.radius;
+        const cy = sy + Math.sin(pos.angle) * pos.radius;
+        placedObs.push({ x: cx - labelW / 2, y: cy - labelH / 2, width: labelW, height: labelH });
+      }
+    }
+  }
 
   // Build congruence groups for angle arcs (±0.5° tolerance, spec §8.3)
   const congruenceArcCount = new Map<number, number>(); // index → number of arcs
@@ -181,13 +259,15 @@ export const AngleLayer = memo(function AngleLayer({
 
         const arcPath = `M ${x1} ${y1} A ${r} ${r} 0 ${largeArc} ${sweepFlag} ${x2} ${y2}`;
 
-        // Degree label position (midpoint of the displayed arc)
+        // Degree label position — use dynamic position if computed, else default
+        const precomputed = angleLabelPositions.get(index);
         const midAngle = useSmallArc
           ? startAngle + ccwSweep / 2
           : startAngle - (2 * Math.PI - ccwSweep) / 2;
-        const labelR = r + 12;
-        const labelX = sx + Math.cos(midAngle) * labelR;
-        const labelY = sy + Math.sin(midAngle) * labelR;
+        const labelR = precomputed?.radius ?? r + 12;
+        const labelAngle = precomputed?.angle ?? midAngle;
+        const labelX = sx + Math.cos(labelAngle) * labelR;
+        const labelY = sy + Math.sin(labelAngle) * labelR;
 
         return (
           <g key={index}>

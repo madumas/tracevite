@@ -13,14 +13,14 @@ test.beforeEach(async ({ page }) => {
 
 test.describe('Label overlap detection', () => {
   test('no text labels overlap > 30% on a dense construction', async ({ page }, testInfo) => {
-    // Build a construction with shared vertices, angles, and parallel segments
-    // A(30,80) → B(80,80) → C(130,80) colinear + B(80,80) → D(80,40) perpendicular
+    // Dense construction: star 3 branches + closed triangle = 6 segments (= complet clutter threshold)
     const segments = [
-      [30, 80, 80, 80], // A-B
-      [80, 80, 130, 80], // B-C (colinear with A-B)
-      [80, 80, 80, 40], // B-D (perpendicular)
-      [30, 80, 80, 40], // A-D
-      [130, 80, 80, 40], // C-D
+      [80, 80, 40, 40], // center → upper-left
+      [80, 80, 120, 40], // center → upper-right
+      [80, 80, 80, 130], // center → bottom
+      [40, 40, 120, 40], // top edge
+      [120, 40, 80, 130], // right edge
+      [80, 130, 40, 40], // left edge (closes triangle)
     ];
 
     for (const [x1, y1, x2, y2] of segments) {
@@ -30,7 +30,7 @@ test.describe('Label overlap detection', () => {
       await page.keyboard.press('Escape');
     }
 
-    await expectSegmentCount(page, 5);
+    await expectSegmentCount(page, 6);
 
     // Read all visible text bounding boxes from the SVG
     const boxes = await page.evaluate(() => {

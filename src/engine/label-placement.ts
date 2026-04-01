@@ -113,3 +113,67 @@ export function chooseLabelOffset(
   const best = candidates[bestIdx]!;
   return { dx: best.dx, dy: best.dy, textAnchor: best.textAnchor };
 }
+
+/**
+ * Choose the best position for an angle degree label.
+ * Tests a 3×3 grid: 3 radii × 3 angular offsets (±15°).
+ * Returns the radius and angle with the least overlap.
+ */
+export function chooseAngleLabelPosition(
+  vertexX: number,
+  vertexY: number,
+  midAngle: number,
+  labelWidth: number,
+  labelHeight: number,
+  obstacles: readonly Obstacle[],
+): { radius: number; angle: number } {
+  const RADII = [34, 48, 62];
+  const ANGLE_OFFSETS = [0, -0.26, 0.26]; // ~±15°
+  const halfW = labelWidth / 2;
+  const halfH = labelHeight / 2;
+
+  if (obstacles.length === 0) {
+    return { radius: 34, angle: midAngle };
+  }
+
+  let bestRadius = 34;
+  let bestAngle = midAngle;
+  let bestScore = Infinity;
+
+  for (const r of RADII) {
+    for (const dAngle of ANGLE_OFFSETS) {
+      const a = midAngle + dAngle;
+      const cx = vertexX + Math.cos(a) * r;
+      const cy = vertexY + Math.sin(a) * r;
+
+      // Label bbox (centered at cx, cy)
+      const lx = cx - halfW;
+      const ly = cy - halfH;
+
+      let score = 0;
+      for (const obs of obstacles) {
+        const overlapX = Math.max(
+          0,
+          Math.min(lx + labelWidth, obs.x + obs.width) - Math.max(lx, obs.x),
+        );
+        const overlapY = Math.max(
+          0,
+          Math.min(ly + labelHeight, obs.y + obs.height) - Math.max(ly, obs.y),
+        );
+        score += overlapX * overlapY;
+      }
+
+      if (score === 0) {
+        return { radius: r, angle: a };
+      }
+
+      if (score < bestScore) {
+        bestScore = score;
+        bestRadius = r;
+        bestAngle = a;
+      }
+    }
+  }
+
+  return { radius: bestRadius, angle: bestAngle };
+}
