@@ -9,6 +9,7 @@ interface ContextActionBarProps {
   readonly onToggleLock?: (pointId: string) => void;
   readonly onFixCircleRadius?: (circleId: string) => void;
   readonly onFixSegmentLength?: (segmentId: string) => void;
+  readonly containerWidth?: number;
   readonly fontScale?: number;
 }
 
@@ -22,6 +23,7 @@ export function ContextActionBar({
   onToggleLock,
   onFixCircleRadius,
   onFixSegmentLength,
+  containerWidth,
   fontScale = 1,
 }: ContextActionBarProps) {
   const { selectedElementId } = state;
@@ -65,7 +67,9 @@ export function ContextActionBar({
     estimatedHalfWidth + 8,
     Math.min(
       posX,
-      (typeof window !== 'undefined' ? window.innerWidth : 1200) - estimatedHalfWidth - 8,
+      (containerWidth || (typeof window !== 'undefined' ? window.innerWidth : 1200)) -
+        estimatedHalfWidth -
+        8,
     ),
   );
 

@@ -17,6 +17,8 @@ interface LengthInputProps {
   readonly fixedLengthMm?: number;
   /** Position near segment midpoint (CSS px relative to canvas container). */
   readonly positionPx?: { x: number; y: number };
+  /** Container width for position clamping (falls back to window.innerWidth). */
+  readonly containerWidth?: number;
 }
 
 /**
@@ -33,6 +35,7 @@ export function LengthInput({
   onClear,
   fixedLengthMm,
   positionPx,
+  containerWidth,
 }: LengthInputProps) {
   const [value, setValue] = useState(() => {
     if (fixedLengthMm == null) return '';
@@ -119,7 +122,10 @@ export function LengthInput({
           : positionPx
             ? {
                 top: Math.max(10, positionPx.y - 60),
-                left: Math.max(10, Math.min(positionPx.x - 100, window.innerWidth - 220)),
+                left: Math.max(
+                  10,
+                  Math.min(positionPx.x - 100, (containerWidth ?? window.innerWidth) - 220),
+                ),
               }
             : { bottom: 60, left: '50%', transform: 'translateX(-50%)' }),
         background: UI_SURFACE,

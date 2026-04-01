@@ -1,24 +1,38 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import type { ViewportState } from '@/model/types';
 import { computeInitialZoom, clampViewport, clampZoom, CSS_PX_PER_MM } from '@/engine/viewport';
+import { useMediaQuery } from '@/hooks/useMediaQuery';
 
 const ZOOM_STEP = 0.1;
 const PAN_STEP_MM = 10;
 
-export function useViewport(containerRef: React.RefObject<HTMLElement | null>) {
+export function useViewport(
+  containerRef: React.RefObject<HTMLElement | null>,
+  containerSize: { width: number; height: number },
+) {
   const [viewport, setViewport] = useState<ViewportState>({ panX: 0, panY: 0, zoom: 1.0 });
   const initializedRef = useRef(false);
+  const isPortrait = useMediaQuery('(orientation: portrait)');
+  const orientationRef = useRef(isPortrait);
 
-  // Compute initial zoom when container mounts
+  // Effect 1: Initialize zoom on mount (once, when container size is known)
   useEffect(() => {
-    if (initializedRef.current) return;
+    if (initializedRef.current || containerSize.width === 0) return;
+    initializedRef.current = true;
+    const zoom = computeInitialZoom(containerSize.width, containerSize.height);
+    setViewport(clampViewport({ panX: 0, panY: 0, zoom }));
+  }, [containerSize.width, containerSize.height]);
+
+  // Effect 2: Recalculate zoom on orientation change
+  useEffect(() => {
+    if (!initializedRef.current) return;
+    if (isPortrait === orientationRef.current) return;
+    orientationRef.current = isPortrait;
     const el = containerRef.current;
     if (!el) return;
-
     const zoom = computeInitialZoom(el.clientWidth, el.clientHeight);
     setViewport(clampViewport({ panX: 0, panY: 0, zoom }));
-    initializedRef.current = true;
-  }, [containerRef]);
+  }, [isPortrait, containerRef]);
 
   const zoomIn = useCallback(() => {
     setViewport((v) => clampViewport({ ...v, zoom: clampZoom(v.zoom + ZOOM_STEP) }));

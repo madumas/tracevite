@@ -14,6 +14,7 @@ import { useActiveTool } from '@/hooks/useActiveTool';
 import { useSelection } from '@/hooks/useSelection';
 import { usePointerInteraction } from '@/hooks/usePointerInteraction';
 import { useViewport } from '@/hooks/useViewport';
+import { useContainerSize } from '@/hooks/useContainerSize';
 import { useBeforeUnload } from '@/hooks/useBeforeUnload';
 import { useAutoSave } from '@/hooks/useAutoSave';
 import {
@@ -160,8 +161,9 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
   const isNarrow = useMediaQuery('(max-width: 768px)');
 
   const containerRef = useRef<HTMLDivElement>(null);
+  const containerSize = useContainerSize(containerRef);
   const { viewport, zoomIn, zoomOut, panUp, panDown, panLeft, panRight, pinchZoomPan } =
-    useViewport(containerRef);
+    useViewport(containerRef, containerSize);
   const [showNewConfirm, setShowNewConfirm] = useState(false);
   const [consigneDismissed, setConsigneDismissed] = useState(false);
   const initializedRef = useRef(false);
@@ -755,8 +757,8 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
   }, [derived.properties.length, derived.figures.length, panelCollapsed]);
 
   const pxPerMm = viewport.zoom * CSS_PX_PER_MM;
-  const containerW = containerRef.current?.clientWidth ?? window.innerWidth;
-  const containerH = containerRef.current?.clientHeight ?? window.innerHeight;
+  const containerW = containerSize.width || window.innerWidth;
+  const containerH = containerSize.height || window.innerHeight;
   const svgWidth = Math.max(BOUNDS_WIDTH_MM * pxPerMm, containerW);
   const svgHeight = Math.max(BOUNDS_HEIGHT_MM * pxPerMm, containerH);
 
@@ -1079,6 +1081,7 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
                 onToggleLock={handleToggleLock}
                 onFixCircleRadius={setFixingCircleId}
                 onFixSegmentLength={handleFixSegmentLength}
+                containerWidth={containerSize.width}
                 fontScale={effectiveFontScale}
               />
             )}
@@ -1121,6 +1124,7 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
                   displayUnit={state.displayUnit}
                   fixedLengthMm={seg.fixedLength}
                   positionPx={midPx}
+                  containerWidth={containerSize.width}
                   onSubmit={(lengthMm) => {
                     dispatch({ type: 'FIX_SEGMENT_LENGTH', segmentId: seg.id, lengthMm });
                     setFixingSegmentId(null);
