@@ -49,22 +49,20 @@ export function mmToCssPx(mm: number): number {
 }
 
 /**
- * Compute initial zoom so the page fits in the window.
+ * Compute initial zoom so the page fills the container width.
+ * Height may overflow — the canvas is scrollable via pan controls.
  * @param containerWidth - available canvas width in CSS px
- * @param containerHeight - available canvas height in CSS px
+ * @param _containerHeight - unused (kept for API compat)
  * @param pageWidthMm - total page width in mm (default: Letter landscape)
- * @param pageHeightMm - total page height in mm (default: Letter landscape)
  */
 export function computeInitialZoom(
   containerWidth: number,
-  containerHeight: number,
+  _containerHeight?: number,
   pageWidthMm: number = LETTER_HEIGHT_MM, // landscape: width = 279.4
-  pageHeightMm: number = LETTER_WIDTH_MM, // landscape: height = 215.9
 ): number {
   const pxPerMm = 96 / 25.4;
   const zoomX = containerWidth / (pageWidthMm * pxPerMm);
-  const zoomY = containerHeight / (pageHeightMm * pxPerMm);
-  const zoom = Math.min(zoomX, zoomY) * 0.95; // 5% margin
+  const zoom = zoomX * 0.95; // fill width first, scroll vertically if needed
   return clampZoom(zoom);
 }
 

@@ -48,25 +48,24 @@ describe('computeInitialZoom', () => {
     expect(zoom).toBeLessThanOrEqual(2.0);
   });
 
-  it('landscape Letter fits in Chromebook height (1366×624)', () => {
+  it('landscape Letter fills Chromebook width (1366×624)', () => {
     const zoom = computeInitialZoom(1366, 624);
-    // Page height in landscape = LETTER_WIDTH_MM (215.9mm). Must fit in 624px.
-    const pageHeightPx = LETTER_WIDTH_MM * CSS_PX_PER_MM * zoom;
-    expect(pageHeightPx).toBeLessThanOrEqual(624);
-    expect(pageHeightPx).toBeGreaterThan(624 * 0.85); // fills at least 85% of height
+    const pageWidthPx = LETTER_HEIGHT_MM * CSS_PX_PER_MM * zoom; // landscape width
+    expect(pageWidthPx).toBeLessThanOrEqual(1366);
+    expect(pageWidthPx).toBeGreaterThan(1366 * 0.9); // fills at least 90% of width
   });
 
-  it('landscape Letter fits in iPad Pro 11 (1194×690)', () => {
+  it('landscape Letter fills iPad Pro 11 width (1194×690)', () => {
     const zoom = computeInitialZoom(1194, 690);
-    const pageHeightPx = LETTER_WIDTH_MM * CSS_PX_PER_MM * zoom;
-    expect(pageHeightPx).toBeLessThanOrEqual(690);
-    expect(pageHeightPx).toBeGreaterThan(690 * 0.85);
+    const pageWidthPx = LETTER_HEIGHT_MM * CSS_PX_PER_MM * zoom;
+    expect(pageWidthPx).toBeLessThanOrEqual(1194);
+    expect(pageWidthPx).toBeGreaterThan(1194 * 0.9);
   });
 
-  it('landscape default produces larger zoom than portrait on wide screen', () => {
-    const landscape = computeInitialZoom(1366, 624);
-    const portrait = computeInitialZoom(1366, 624, LETTER_WIDTH_MM, LETTER_HEIGHT_MM);
-    expect(landscape).toBeGreaterThan(portrait);
+  it('wider page needs smaller zoom to fill same width', () => {
+    const landscape = computeInitialZoom(1366, 624); // 279.4mm wide
+    const portrait = computeInitialZoom(1366, 624, LETTER_WIDTH_MM); // 215.9mm wide
+    expect(landscape).toBeLessThan(portrait);
   });
 });
 
