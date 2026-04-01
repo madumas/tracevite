@@ -620,9 +620,18 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
   const effectiveCluttered = cluttered && !forceShowLabels;
 
   const handleForceShowLabels = useCallback(() => {
-    setForceShowLabels(true);
-    if (forceShowTimerRef.current) clearTimeout(forceShowTimerRef.current);
-    forceShowTimerRef.current = setTimeout(() => setForceShowLabels(false), 8000);
+    setForceShowLabels((prev) => {
+      if (prev) {
+        // Turning off — cancel timer
+        if (forceShowTimerRef.current) clearTimeout(forceShowTimerRef.current);
+        forceShowTimerRef.current = null;
+        return false;
+      }
+      // Turning on — start 8s auto-off timer
+      if (forceShowTimerRef.current) clearTimeout(forceShowTimerRef.current);
+      forceShowTimerRef.current = setTimeout(() => setForceShowLabels(false), 8000);
+      return true;
+    });
   }, []);
 
   const pointMap = useMemo(
