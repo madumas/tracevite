@@ -43,7 +43,6 @@ export const AngleLayer = memo(function AngleLayer({
   selectedElementId,
   hoveredElementId,
   selectedFigurePointIds,
-  hideProperties,
   fontScale = 1,
   estimationMode = false,
   activeGestureHideAll,
@@ -123,31 +122,6 @@ export const AngleLayer = memo(function AngleLayer({
         const cx = sx + Math.cos(pos.angle) * pos.radius;
         const cy = sy + Math.sin(pos.angle) * pos.radius;
         placedObs.push({ x: cx - labelW / 2, y: cy - labelH / 2, width: labelW, height: labelH });
-      }
-    }
-  }
-
-  // Build congruence groups for angle arcs (±0.5° tolerance, spec §8.3)
-  const congruenceArcCount = new Map<number, number>(); // index → number of arcs
-  if (!hideProperties) {
-    const degreeGroups = new Map<number, number[]>(); // rounded degree → angle indices
-    angles.forEach((angle, idx) => {
-      if (angle.classification === 'droit') return; // right angles use square
-      const rounded = Math.round(angle.degrees * 2) / 2; // 0.5° precision
-      const group = degreeGroups.get(rounded) ?? [];
-      group.push(idx);
-      degreeGroups.set(rounded, group);
-    });
-    let arcCounter = 1;
-    const groupArcMap = new Map<number, number>(); // rounded degree → arc count
-    for (const [deg, indices] of degreeGroups) {
-      if (indices.length >= 2) {
-        if (!groupArcMap.has(deg)) {
-          groupArcMap.set(deg, arcCounter++);
-        }
-        for (const idx of indices) {
-          congruenceArcCount.set(idx, groupArcMap.get(deg)!);
-        }
       }
     }
   }
