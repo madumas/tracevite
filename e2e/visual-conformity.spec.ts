@@ -781,6 +781,137 @@ test('visual conformity audit', async ({ page }, testInfo) => {
   }
 });
 
+// --- Separate test: PFEQ pedagogical conformity scenarios ---
+test('visual conformity — PFEQ pedagogical', async ({ page }, testInfo) => {
+  const dir = path.join(SCREENSHOT_BASE, projectDir(testInfo.project.name));
+  await fs.mkdir(dir, { recursive: true });
+  const shot = (name: string) => path.join(dir, name);
+  const interact = (xMm: number, yMm: number) => interactCanvas(page, testInfo, xMm, yMm);
+
+  // ── 60: Simple triangle with classification (Simplifié) ──
+  await page.goto('/');
+  await page.waitForSelector('[data-testid="canvas-svg"]');
+  await page.waitForTimeout(300);
+  // Create a clean right triangle: A(50,50), B(100,50), C(100,90)
+  await interact(50, 50);
+  await page.waitForTimeout(300);
+  await interact(100, 50);
+  await page.waitForTimeout(300);
+  await interact(100, 90);
+  await page.waitForTimeout(300);
+  await interact(50, 50); // close
+  await page.waitForTimeout(300);
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(300);
+  // Open panel and expand all sections
+  const panel = page.locator('[data-testid="properties-panel"]');
+  if (!(await panel.isVisible())) {
+    const toggle = page.locator('[data-testid="panel-toggle"], [data-testid="panel-toggle-mobile"]');
+    await toggle.click();
+    await panel.waitFor();
+    await page.waitForTimeout(300);
+  }
+  // Expand Angles
+  const anglesAcc = page.locator('[data-testid="accordion-Angles"]');
+  if (await anglesAcc.isVisible()) await anglesAcc.click();
+  await page.waitForTimeout(200);
+  // Expand Propriétés
+  const propsAcc = page.locator('[data-testid="accordion-Propriétés"]');
+  if (await propsAcc.isVisible()) await propsAcc.click();
+  await page.waitForTimeout(200);
+  // Expand Sommets
+  const sommetsAcc = page.locator('[data-testid="accordion-Sommets"]');
+  if (await sommetsAcc.isVisible()) await sommetsAcc.click();
+  await page.waitForTimeout(200);
+  await page.screenshot({ path: shot('60-pfeq-triangle-simplifie.png'), fullPage: true });
+  await panel.screenshot({ path: shot('60b-pfeq-triangle-panel.png') });
+
+  // ── 61: Same triangle in Complet mode (angles with degrees) ──
+  await page.locator('[data-testid="mode-selector"]').click();
+  await page.locator('[data-testid="mode-option-complet"]').click();
+  await page.waitForTimeout(300);
+  await page.screenshot({ path: shot('61-pfeq-triangle-complet.png'), fullPage: true });
+  await panel.screenshot({ path: shot('61b-pfeq-angles-degrees.png') });
+
+  // ── 62: Rectangle with properties (parallelism, perpendicularity) ──
+  await page.goto('/');
+  await page.waitForSelector('[data-testid="canvas-svg"]');
+  await page.waitForTimeout(300);
+  // Switch to complet
+  await page.locator('[data-testid="mode-selector"]').click();
+  await page.locator('[data-testid="mode-option-complet"]').click();
+  await page.waitForTimeout(300);
+  // Create rectangle: A(40,40), B(120,40), C(120,80), D(40,80)
+  await interact(40, 40);
+  await page.waitForTimeout(300);
+  await interact(120, 40);
+  await page.waitForTimeout(300);
+  await interact(120, 80);
+  await page.waitForTimeout(300);
+  await interact(40, 80);
+  await page.waitForTimeout(300);
+  await interact(40, 40); // close
+  await page.waitForTimeout(300);
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(300);
+  // Open panel
+  const panel62 = page.locator('[data-testid="properties-panel"]');
+  if (!(await panel62.isVisible())) {
+    const toggle = page.locator('[data-testid="panel-toggle"], [data-testid="panel-toggle-mobile"]');
+    await toggle.click();
+    await panel62.waitFor();
+    await page.waitForTimeout(300);
+  }
+  // Expand all
+  for (const name of ['Angles', 'Propriétés', 'Sommets']) {
+    const acc = page.locator(`[data-testid="accordion-${name}"]`);
+    if (await acc.isVisible()) { await acc.click(); await page.waitForTimeout(150); }
+  }
+  await page.screenshot({ path: shot('62-pfeq-rectangle.png'), fullPage: true });
+  await panel62.screenshot({ path: shot('62b-pfeq-rectangle-panel.png') });
+
+  // ── 63: Properties hidden (evaluation mode toggle) ──
+  const hideCheck = page.locator('text=Masquer les propriétés').locator('..').locator('input[type="checkbox"]');
+  if (await hideCheck.isVisible({ timeout: 1000 }).catch(() => false)) {
+    await hideCheck.click({ force: true });
+    await page.waitForTimeout(300);
+    await page.screenshot({ path: shot('63-pfeq-properties-hidden.png'), fullPage: true });
+    await panel62.screenshot({ path: shot('63b-pfeq-properties-hidden-panel.png') });
+    // Restore
+    await hideCheck.click({ force: true });
+    await page.waitForTimeout(200);
+  }
+
+  // ── 64: Consigne with mode parameter ──
+  await page.goto('/?consigne=Trace%20un%20rectangle%20ABCD%20tel%20que%20AB%20%3D%206%20cm%20et%20BC%20%3D%204%20cm.&mode=simplifie');
+  await page.waitForSelector('[data-testid="canvas-svg"]');
+  await page.waitForTimeout(500);
+  await page.screenshot({ path: shot('64-pfeq-consigne-mode.png'), fullPage: true });
+
+  // ── 65: Print dialog — "Avec mesures" checked ──
+  // Create a quick segment for print context
+  await interact(60, 60);
+  await page.waitForTimeout(300);
+  await interact(120, 60);
+  await page.waitForTimeout(300);
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(200);
+  await page.locator('[data-testid="action-print"]').click({ force: true });
+  await page.locator('[data-testid="print-dialog"]').waitFor();
+  await page.waitForTimeout(200);
+  await page.locator('[data-testid="print-dialog"]').screenshot({ path: shot('65-pfeq-print-with-measures.png') });
+
+  // ── 66: Print dialog — "Figure seule" (sans mesures) ──
+  const measuresCheck = page.locator('text=Avec mesures').locator('..').locator('input[type="checkbox"]');
+  if (await measuresCheck.isVisible({ timeout: 1000 }).catch(() => false)) {
+    await measuresCheck.click({ force: true });
+    await page.waitForTimeout(200);
+    await page.locator('[data-testid="print-dialog"]').screenshot({ path: shot('66-pfeq-print-figure-only.png') });
+  }
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(200);
+});
+
 // --- Separate test: iPad landscape layout ---
 test('visual conformity — iPad landscape', async ({ page, browserName }, testInfo) => {
   // Only run on Mobile iPad project
