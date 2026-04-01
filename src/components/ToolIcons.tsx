@@ -429,31 +429,42 @@ export function FolderIcon() {
   );
 }
 
-/** Magnet small: red horseshoe with rectangular colored poles for ActionBar */
+/** Magnet small: squat tilted horseshoe with spark for ActionBar */
 export function SnapIconSmall() {
   return (
     <svg {...SA}>
-      {/* Horseshoe body — red */}
-      <path d="M4 7v5a6 6 0 0 0 12 0V7" stroke="#C82828" strokeWidth="2.5" fill="none" />
-      {/* Left pole — silver/gray (same width as stroke) */}
-      <rect
-        x="2.75"
-        y="1.5"
-        width="2.5"
-        height="6"
-        fill="#9CA3AF"
-        stroke="#6B7280"
-        strokeWidth="0.8"
-      />
-      {/* Right pole — darker (same width as stroke) */}
-      <rect
-        x="14.75"
-        y="1.5"
-        width="2.5"
-        height="6"
-        fill="#6B7280"
-        stroke="#4A5568"
-        strokeWidth="0.8"
+      <g transform="rotate(-25, 10, 11)">
+        {/* Horseshoe body — red, squat */}
+        <path d="M5 9v1.5a5 5 0 0 0 10 0V9" stroke="#C82828" strokeWidth="2.5" fill="none" />
+        {/* Left pole — silver/gray */}
+        <rect
+          x="3.75"
+          y="4"
+          width="2.5"
+          height="5.5"
+          fill="#9CA3AF"
+          stroke="#6B7280"
+          strokeWidth="0.8"
+        />
+        {/* Right pole — darker */}
+        <rect
+          x="13.75"
+          y="4"
+          width="2.5"
+          height="5.5"
+          fill="#6B7280"
+          stroke="#4A5568"
+          strokeWidth="0.8"
+        />
+      </g>
+      {/* Spark — snap attraction */}
+      <path
+        d="M11.5 3.5l-1.5 2.5h2l-1.5 2.5"
+        stroke="#F59E0B"
+        strokeWidth="1.2"
+        fill="none"
+        strokeLinecap="round"
+        strokeLinejoin="round"
       />
     </svg>
   );
@@ -461,16 +472,43 @@ export function SnapIconSmall() {
 
 // ── Toolbar icons (28×28 rendered) ──────────────────────────
 
-/** Magnet: red horseshoe with rectangular colored poles for toolbar */
+/** Magnet: squat tilted horseshoe with spark for toolbar */
 export function SnapIcon() {
   return (
     <svg {...S}>
-      {/* Horseshoe body — red */}
-      <path d="M4 7v5a6 6 0 0 0 12 0V7" stroke="#C82828" strokeWidth="3" fill="none" />
-      {/* Left pole — silver/gray (same width as stroke) */}
-      <rect x="2.5" y="1" width="3" height="6.5" fill="#9CA3AF" stroke="#6B7280" strokeWidth="1" />
-      {/* Right pole — darker (same width as stroke) */}
-      <rect x="14.5" y="1" width="3" height="6.5" fill="#6B7280" stroke="#4A5568" strokeWidth="1" />
+      <g transform="rotate(-25, 10, 11)">
+        {/* Horseshoe body — red, squat */}
+        <path d="M5 9v1.5a5 5 0 0 0 10 0V9" stroke="#C82828" strokeWidth="3" fill="none" />
+        {/* Left pole — silver/gray */}
+        <rect
+          x="3.5"
+          y="3.5"
+          width="3"
+          height="6"
+          fill="#9CA3AF"
+          stroke="#6B7280"
+          strokeWidth="1"
+        />
+        {/* Right pole — darker */}
+        <rect
+          x="13.5"
+          y="3.5"
+          width="3"
+          height="6"
+          fill="#6B7280"
+          stroke="#4A5568"
+          strokeWidth="1"
+        />
+      </g>
+      {/* Spark — snap attraction */}
+      <path
+        d="M11.5 3l-1.5 2.5h2l-1.5 2.5"
+        stroke="#F59E0B"
+        strokeWidth="1.4"
+        fill="none"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
     </svg>
   );
 }
