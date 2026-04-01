@@ -76,21 +76,26 @@ export function useSymmetryTool({
       }
 
       if (phase === 'choose_axis') {
-        // Try to hit an existing segment → use as axis
-        const segId = hitTestSegment(mmPos, state.segments, state.points);
-        if (segId) {
-          const seg = state.segments.find((s) => s.id === segId);
-          if (seg) {
-            const sp = state.points.find((p) => p.id === seg.startPointId);
-            const ep = state.points.find((p) => p.id === seg.endPointId);
-            if (sp && ep) {
-              runCheck(sp, ep);
-              return;
+        // Check if clicking near an existing point → prefer manual axis (2 clicks)
+        const snap = findSnap(mmPos, state, tolerances);
+        const clickedOnPoint = snap.snapType === 'point';
+
+        if (!clickedOnPoint) {
+          // Try to hit an existing segment → use as axis
+          const segId = hitTestSegment(mmPos, state.segments, state.points);
+          if (segId) {
+            const seg = state.segments.find((s) => s.id === segId);
+            if (seg) {
+              const sp = state.points.find((p) => p.id === seg.startPointId);
+              const ep = state.points.find((p) => p.id === seg.endPointId);
+              if (sp && ep) {
+                runCheck(sp, ep);
+                return;
+              }
             }
           }
         }
-        // No segment hit → start drawing axis manually
-        const snap = findSnap(mmPos, state, tolerances);
+        // Manual axis: use snapped position as first point
         setAxisP1(snap.snappedPosition);
         setPhase('axis_second_point');
       } else if (phase === 'axis_second_point' && axisP1) {
