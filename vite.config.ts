@@ -16,7 +16,7 @@ const gitHash = (() => {
 })();
 
 const gitBranch = (() => {
-  // CI systems (Cloudflare Workers Builds, GitHub Actions) often use detached HEAD.
+  // CI systems (Cloudflare Workers/Pages, GitHub Actions) often use detached HEAD.
   // Check CI env vars first, then fall back to git.
   if (process.env.CF_PAGES_BRANCH) return process.env.CF_PAGES_BRANCH;
   if (process.env.GITHUB_REF_NAME) return process.env.GITHUB_REF_NAME;
@@ -28,6 +28,11 @@ const gitBranch = (() => {
       execSync('git describe --exact-match --tags HEAD', { stdio: 'pipe' });
       return 'main'; // Tagged commit = release = main
     } catch {
+      // No tag — check if commit message is a release commit (npm version creates these)
+      try {
+        const msg = execSync('git log -1 --format=%s').toString().trim();
+        if (msg.startsWith('release: v')) return 'main';
+      } catch { /* ignore */ }
       return 'dev';
     }
   } catch {

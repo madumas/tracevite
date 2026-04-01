@@ -37,9 +37,9 @@ npm run test         # Run tests
 
 - **Branches:** `dev` for development, `main` for production. Cloudflare auto-deploys on push to `main`.
 - **Conventional commits:** `fix:` → patch, `feat:` → minor, `BREAKING CHANGE` → major.
-- **Release script:** `npm run release` (or `./scripts/release.sh`). Auto-detects bump from commits since last tag, merges `dev` → `main`, runs `npm version`, creates git tag, pushes, syncs `dev`.
-- **Build hash:** `__BUILD_HASH__` (git short hash) injected at build time via `vite.config.ts`, displayed in the About dialog next to the version.
-- **Tags:** Semver with `v` prefix (`v0.1.0`, `v0.2.0`). Created by the release script, never manually.
+- **Release script:** `npm run release` (or `./scripts/release.sh`). Auto-detects bump from commits since last tag, merges `dev` → `main`, runs `npm version`, creates lightweight git tag, pushes branch and tag separately (not `--follow-tags` which only pushes annotated tags), syncs `dev`.
+- **Build hash & branch:** `__BUILD_HASH__` (git short hash) and `__GIT_BRANCH__` injected at build time via `vite.config.ts`. The About dialog shows `v{version}` on main, `dev ({hash})` otherwise. Branch detection: `CF_PAGES_BRANCH` env → git branch → tag match → release commit message match → fallback `dev`.
+- **Tags:** Lightweight semver with `v` prefix (`v0.1.0`, `v0.2.0`). Created by the release script, never manually. Must be pushed explicitly (`git push origin v{version}`).
 
 ## Architecture
 

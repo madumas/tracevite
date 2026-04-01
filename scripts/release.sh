@@ -77,9 +77,10 @@ git add package.json package-lock.json
 git commit -m "release: v${NEW_VERSION}"
 git tag "v${NEW_VERSION}"
 
-# Push
+# Push (explicit tag push — --follow-tags only pushes annotated tags)
 echo -e "${GREEN}Push main + tags...${NC}"
-git push origin main --follow-tags
+git push origin main
+git push origin "v${NEW_VERSION}"
 
 # Back to dev, sync version
 echo -e "${GREEN}Sync version sur dev...${NC}"
