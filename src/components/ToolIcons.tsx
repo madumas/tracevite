@@ -429,38 +429,58 @@ export function FolderIcon() {
   );
 }
 
-/** Magnet small: U-shape for ActionBar snap toggle */
+/** Magnet small: horseshoe magnet with pole bands for ActionBar */
 export function SnapIconSmall() {
   return (
     <svg {...SA}>
-      <path
-        d="M5 4v8a5 5 0 0 0 10 0V4"
-        stroke={stroke}
-        strokeWidth="2"
-        strokeLinecap="round"
-        fill="none"
-      />
-      <line x1="5" y1="4" x2="5" y2="2" stroke={stroke} strokeWidth="3" strokeLinecap="round" />
-      <line x1="15" y1="4" x2="15" y2="2" stroke={stroke} strokeWidth="3" strokeLinecap="round" />
+      {/* Horseshoe body */}
+      <path d="M6 6v6a4 4 0 0 0 8 0V6" stroke={stroke} strokeWidth="1.5" fill="none" />
+      {/* Left pole band */}
+      <rect x="4" y="2" width="4" height="4" rx="1" stroke={stroke} strokeWidth="1" fill="none" />
+      {/* Right pole band */}
+      <rect x="12" y="2" width="4" height="4" rx="1" stroke={stroke} strokeWidth="1" fill="none" />
+      {/* Pole lines (N/S indicator) */}
+      <line x1="6" y1="4" x2="8" y2="4" stroke={stroke} strokeWidth="1" />
+      <line x1="14" y1="3.5" x2="14" y2="4.5" stroke={stroke} strokeWidth="1" />
+      <line x1="13.5" y1="4" x2="14.5" y2="4" stroke={stroke} strokeWidth="1" />
     </svg>
   );
 }
 
 // ── Toolbar icons (28×28 rendered) ──────────────────────────
 
-/** Magnet: U-shape for snap toggle */
+/** Magnet: horseshoe magnet with pole bands for toolbar */
 export function SnapIcon() {
   return (
     <svg {...S}>
-      <path
-        d="M5 4v8a5 5 0 0 0 10 0V4"
+      {/* Horseshoe body */}
+      <path d="M6 6v6a4 4 0 0 0 8 0V6" stroke={stroke} strokeWidth="2" fill="none" />
+      {/* Left pole band */}
+      <rect
+        x="3.5"
+        y="2"
+        width="5"
+        height="4"
+        rx="1"
         stroke={stroke}
-        strokeWidth="2"
-        strokeLinecap="round"
+        strokeWidth="1.5"
         fill="none"
       />
-      <line x1="5" y1="4" x2="5" y2="2" stroke={stroke} strokeWidth="3" strokeLinecap="round" />
-      <line x1="15" y1="4" x2="15" y2="2" stroke={stroke} strokeWidth="3" strokeLinecap="round" />
+      {/* Right pole band */}
+      <rect
+        x="11.5"
+        y="2"
+        width="5"
+        height="4"
+        rx="1"
+        stroke={stroke}
+        strokeWidth="1.5"
+        fill="none"
+      />
+      {/* Pole lines (— and +) */}
+      <line x1="5" y1="4" x2="7" y2="4" stroke={stroke} strokeWidth="1.2" />
+      <line x1="13" y1="3.3" x2="13" y2="4.7" stroke={stroke} strokeWidth="1.2" />
+      <line x1="12.3" y1="4" x2="13.7" y2="4" stroke={stroke} strokeWidth="1.2" />
     </svg>
   );
 }
