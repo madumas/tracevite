@@ -1,6 +1,7 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useMemo } from 'react';
 import type { SlotRegistry, SlotMetadata } from '@/model/slots';
 import { canCreateSlot, shouldWarnSlotLimit, MAX_SLOTS } from '@/model/slots';
+import { generateThumbnail } from '@/engine/thumbnail';
 import {
   exportToTracevite,
   importFromTracevite,
@@ -42,6 +43,9 @@ export function SlotManager({
   onImport,
   onClose,
 }: SlotManagerProps) {
+  // Live thumbnail for the active slot (always fresh)
+  const activeThumbnail = useMemo(() => generateThumbnail(state), [state]);
+
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editName, setEditName] = useState('');
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
@@ -205,32 +209,35 @@ export function SlotManager({
               }}
               data-testid={`slot-${slot.id}`}
             >
-              {/* Thumbnail */}
-              {slot.thumbnail ? (
-                <img
-                  src={slot.thumbnail}
-                  width={60}
-                  height={40}
-                  alt=""
-                  style={{
-                    objectFit: 'contain',
-                    borderRadius: 3,
-                    border: `1px solid ${UI_BORDER}`,
-                    flexShrink: 0,
-                  }}
-                />
-              ) : (
-                <div
-                  style={{
-                    width: 60,
-                    height: 40,
-                    borderRadius: 3,
-                    border: `1px solid ${UI_BORDER}`,
-                    background: '#F0F0F0',
-                    flexShrink: 0,
-                  }}
-                />
-              )}
+              {/* Thumbnail — use live thumbnail for active slot */}
+              {(() => {
+                const thumb = slot.id === activeSlotId ? activeThumbnail : slot.thumbnail;
+                return thumb ? (
+                  <img
+                    src={thumb}
+                    width={60}
+                    height={40}
+                    alt=""
+                    style={{
+                      objectFit: 'contain',
+                      borderRadius: 3,
+                      border: `1px solid ${UI_BORDER}`,
+                      flexShrink: 0,
+                    }}
+                  />
+                ) : (
+                  <div
+                    style={{
+                      width: 60,
+                      height: 40,
+                      borderRadius: 3,
+                      border: `1px solid ${UI_BORDER}`,
+                      background: '#F0F0F0',
+                      flexShrink: 0,
+                    }}
+                  />
+                );
+              })()}
 
               <div style={{ flex: 1, minWidth: 0 }}>
                 {editingId === slot.id ? (
@@ -261,9 +268,27 @@ export function SlotManager({
                         overflow: 'hidden',
                         textOverflow: 'ellipsis',
                         whiteSpace: 'nowrap',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 6,
                       }}
                     >
                       {slot.name}
+                      {slot.id === activeSlotId && (
+                        <span
+                          style={{
+                            fontSize: 10,
+                            fontWeight: 600,
+                            color: UI_PRIMARY,
+                            background: '#D4E4F7',
+                            padding: '1px 6px',
+                            borderRadius: 3,
+                            flexShrink: 0,
+                          }}
+                        >
+                          En cours
+                        </span>
+                      )}
                     </div>
                     <div style={{ fontSize: 11, color: UI_TEXT_SECONDARY }}>
                       {new Date(slot.updatedAt).toLocaleDateString('fr-CA')}
