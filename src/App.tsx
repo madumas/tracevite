@@ -904,7 +904,8 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
                   fontSize: 12 * effectiveFontScale,
                   fontWeight: 600,
                   whiteSpace: 'nowrap',
-                  minHeight: 28,
+                  minHeight: 44,
+                  minWidth: 44,
                 }}
                 data-testid="status-escape-btn"
               >

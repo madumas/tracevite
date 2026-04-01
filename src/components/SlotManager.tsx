@@ -125,6 +125,7 @@ export function SlotManager({
             disabled={!canCreateSlot(registry)}
             style={{
               padding: '6px 12px',
+              minHeight: 44,
               background: UI_PRIMARY,
               color: '#FFF',
               border: 'none',
@@ -141,6 +142,7 @@ export function SlotManager({
             onClick={() => fileInputRef.current?.click()}
             style={{
               padding: '6px 12px',
+              minHeight: 44,
               background: 'transparent',
               border: `1px solid ${UI_BORDER}`,
               borderRadius: 4,
@@ -319,14 +321,25 @@ export function SlotManager({
                     onDelete(slot.id);
                     setConfirmDeleteId(null);
                   }}
-                  style={{ ...smallBtn, background: UI_DESTRUCTIVE, color: '#FFF' }}
+                  style={{
+                    ...smallBtn,
+                    marginLeft: 8,
+                    background: UI_DESTRUCTIVE,
+                    color: '#FFF',
+                    border: 'none',
+                  }}
                 >
                   Confirmer
                 </button>
               ) : (
                 <button
                   onClick={() => setConfirmDeleteId(slot.id)}
-                  style={{ ...smallBtn, color: UI_DESTRUCTIVE }}
+                  style={{
+                    ...smallBtn,
+                    marginLeft: 8,
+                    color: UI_DESTRUCTIVE,
+                    border: `1px solid ${UI_DESTRUCTIVE}`,
+                  }}
                 >
                   ×
                 </button>
@@ -354,6 +367,7 @@ export function SlotManager({
             marginTop: 16,
             width: '100%',
             padding: '8px',
+            minHeight: 44,
             background: 'transparent',
             border: `1px solid ${UI_BORDER}`,
             borderRadius: 4,
@@ -370,11 +384,13 @@ export function SlotManager({
 }
 
 const smallBtn: React.CSSProperties = {
-  padding: '3px 8px',
+  padding: '6px 12px',
+  minHeight: 44,
   background: 'transparent',
-  border: 'none',
+  border: `1px solid #D1D8E0`,
+  borderRadius: 4,
   cursor: 'pointer',
-  fontSize: 11,
+  fontSize: 13,
   color: '#4A5568',
   whiteSpace: 'nowrap',
 };

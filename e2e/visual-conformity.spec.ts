@@ -257,4 +257,102 @@ test('visual conformity audit', async ({ page }, testInfo) => {
       await page.waitForTimeout(200);
     }
   }
+
+  // =====================================================================
+  // Pedagogical & workflow screenshots
+  // =====================================================================
+
+  // --- 26: Consigne banner (teacher exercise instruction) ---
+  // Navigate with consigne URL param
+  await page.goto('/?consigne=Construis%20un%20triangle%20rectangle%20dont%20l%27hypot%C3%A9nuse%20mesure%207%20cm.');
+  await page.waitForSelector('[data-testid="canvas-svg"]');
+  await page.waitForTimeout(500);
+  await page.screenshot({ path: shot('26-consigne-banner.png'), fullPage: true });
+
+  // --- 27: Slot manager (Mes constructions) ---
+  const slotBtn = page.locator('[data-testid="slot-manager-btn"]');
+  if (await slotBtn.isVisible()) {
+    await slotBtn.click();
+    const slotManager = page.locator('[data-testid="slot-manager"]');
+    if (await slotManager.isVisible({ timeout: 2000 }).catch(() => false)) {
+      await page.screenshot({ path: shot('27-slot-manager.png'), fullPage: true });
+      await slotManager.screenshot({ path: shot('27b-slot-manager-detail.png') });
+      await page.keyboard.press('Escape');
+      await page.waitForTimeout(200);
+    }
+  }
+
+  // --- 28: "Terminer" button during chaining (status bar detail) ---
+  // Dismiss any overlay (consigne popover, etc.)
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(300);
+  await page.locator('[data-testid="tool-segment"]').click({ force: true });
+  await page.waitForTimeout(200);
+  await interact(40, 50);
+  await page.waitForTimeout(300);
+  await interact(90, 50);
+  await page.waitForTimeout(300);
+  // Now in chaining state — "Terminer" button should be visible
+  await page.locator('[data-testid="status-bar"]').screenshot({ path: shot('28-terminer-button.png') });
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(200);
+
+  // --- 29: "Annuler" button during move (status bar detail) ---
+  await selectTool(page, 'move');
+  await page.waitForTimeout(200);
+  await interact(40, 50); // pick up a point
+  await page.waitForTimeout(300);
+  const escapeBtn = page.locator('[data-testid="status-escape-btn"]');
+  if (await escapeBtn.isVisible({ timeout: 2000 }).catch(() => false)) {
+    await page.locator('[data-testid="status-bar"]').screenshot({ path: shot('29-annuler-button.png') });
+    await escapeBtn.click(); // cancel the move
+  } else {
+    await page.keyboard.press('Escape');
+  }
+  await page.waitForTimeout(200);
+
+  // --- 30: Angles accordion expanded in properties panel ---
+  const panelForAngles = page.locator('[data-testid="properties-panel"]');
+  const panelOpenForAngles = await panelForAngles.isVisible();
+  if (!panelOpenForAngles) {
+    const toggle = page.locator('[data-testid="panel-toggle"], [data-testid="panel-toggle-mobile"]');
+    await toggle.click();
+    await panelForAngles.waitFor();
+  }
+  await page.waitForTimeout(200);
+  const anglesAccordion = page.locator('[data-testid="accordion-Angles"]');
+  if (await anglesAccordion.isVisible()) {
+    await anglesAccordion.click();
+    await page.waitForTimeout(300);
+    await panelForAngles.screenshot({ path: shot('30-angles-accordion.png') });
+  }
+
+  // --- 31: Figure classification (Propriétés accordion) ---
+  const propsAccordion = page.locator('[data-testid="accordion-Propriétés"]');
+  if (await propsAccordion.isVisible()) {
+    await propsAccordion.click();
+    await page.waitForTimeout(300);
+    await panelForAngles.screenshot({ path: shot('31-figure-classification.png') });
+  }
+
+  // Close panel if we opened it
+  if (!panelOpenForAngles) {
+    await page.locator('[aria-label="Fermer le panneau"]').click({ force: true });
+    await page.waitForTimeout(200);
+  }
+
+  // --- 32: Measure/Fix length (context action bar on segment) ---
+  await page.locator('[data-testid="tool-segment"]').click();
+  await page.waitForTimeout(200);
+  await interact(40, 50); // click near existing point to select segment
+  await page.waitForTimeout(300);
+  const fixBtn = page.locator('[data-testid="context-fix-length"]');
+  if (await fixBtn.isVisible({ timeout: 2000 }).catch(() => false)) {
+    await page.screenshot({ path: shot('32-fix-length-context.png'), fullPage: true });
+  }
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(200);
+
+  // --- 33: Print dialog (already in 13-14, but verify PDF button visible) ---
+  // Reuse existing screenshot 13/14 — no need to duplicate
 });
