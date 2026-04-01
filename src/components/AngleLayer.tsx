@@ -174,16 +174,24 @@ export const AngleLayer = memo(function AngleLayer({
           const isVertexHovered = hoveredElementId === angle.vertexPointId;
           const isVertexSelected = selectedElementId === angle.vertexPointId;
           const isInSelectedFigure = selectedFigurePointIds?.includes(angle.vertexPointId);
-          // Also show if a connected segment is hovered
-          const isSegmentHovered =
-            hoveredElementId !== null &&
+          // Also show if a connected segment is hovered or selected (touch equivalent)
+          const isSegmentHoveredOrSelected =
+            (hoveredElementId !== null || selectedElementId !== null) &&
             angles.some(
               (a) =>
                 a.vertexPointId === angle.vertexPointId &&
-                (a.ray1PointId === hoveredElementId || a.ray2PointId === hoveredElementId),
+                (a.ray1PointId === hoveredElementId ||
+                  a.ray2PointId === hoveredElementId ||
+                  a.ray1PointId === selectedElementId ||
+                  a.ray2PointId === selectedElementId),
             );
 
-          if (!isVertexHovered && !isVertexSelected && !isInSelectedFigure && !isSegmentHovered) {
+          if (
+            !isVertexHovered &&
+            !isVertexSelected &&
+            !isInSelectedFigure &&
+            !isSegmentHoveredOrSelected
+          ) {
             return null;
           }
         }

@@ -212,7 +212,8 @@ export const SegmentLayer = memo(function SegmentLayer({
               (!cluttered ||
                 isSelected ||
                 segment.id === hoveredElementId ||
-                parallelPeers.get(segment.id)?.includes(hoveredElementId ?? '')) && (
+                parallelPeers.get(segment.id)?.includes(hoveredElementId ?? '') ||
+                parallelPeers.get(segment.id)?.includes(selectedElementId ?? '')) && (
                 <g>
                   {[-3, 3].map((along) => {
                     const dirX = dx / len;
@@ -248,7 +249,8 @@ export const SegmentLayer = memo(function SegmentLayer({
               (!cluttered ||
                 isSelected ||
                 segment.id === hoveredElementId ||
-                congruencePeers.get(segment.id)?.includes(hoveredElementId ?? '')) && (
+                congruencePeers.get(segment.id)?.includes(hoveredElementId ?? '') ||
+                congruencePeers.get(segment.id)?.includes(selectedElementId ?? '')) && (
                 <g>
                   {Array.from({ length: congruenceTickMap.get(segment.id)! }, (_, i) => {
                     const tickSpacing = 4;
