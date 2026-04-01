@@ -49,14 +49,21 @@ export function mmToCssPx(mm: number): number {
 }
 
 /**
- * Compute initial zoom so the full Letter page fits in the window.
+ * Compute initial zoom so the page fits in the window.
  * @param containerWidth - available canvas width in CSS px
  * @param containerHeight - available canvas height in CSS px
+ * @param pageWidthMm - total page width in mm (default: Letter landscape)
+ * @param pageHeightMm - total page height in mm (default: Letter landscape)
  */
-export function computeInitialZoom(containerWidth: number, containerHeight: number): number {
+export function computeInitialZoom(
+  containerWidth: number,
+  containerHeight: number,
+  pageWidthMm: number = LETTER_HEIGHT_MM, // landscape: width = 279.4
+  pageHeightMm: number = LETTER_WIDTH_MM, // landscape: height = 215.9
+): number {
   const pxPerMm = 96 / 25.4;
-  const zoomX = containerWidth / (LETTER_WIDTH_MM * pxPerMm);
-  const zoomY = containerHeight / (LETTER_HEIGHT_MM * pxPerMm);
+  const zoomX = containerWidth / (pageWidthMm * pxPerMm);
+  const zoomY = containerHeight / (pageHeightMm * pxPerMm);
   const zoom = Math.min(zoomX, zoomY) * 0.95; // 5% margin
   return clampZoom(zoom);
 }

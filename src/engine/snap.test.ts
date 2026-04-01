@@ -160,16 +160,19 @@ describe('findSnap', () => {
 
   describe('angle snap (priority 4, with fromPoint)', () => {
     it('snaps parallel to existing segment', () => {
-      const state = makeStateWithSegments(
-        [
-          { id: 'p1', x: 0, y: 0 },
-          { id: 'p2', x: 100, y: 0 },
-        ],
-        [{ id: 's1', startPointId: 'p1', endPointId: 'p2' }],
-      );
-      // Must be >5mm from any grid intersection so grid snap (priority 3) doesn't fire first
+      const state = {
+        ...makeStateWithSegments(
+          [
+            { id: 'p1', x: 0, y: 0 },
+            { id: 'p2', x: 100, y: 0 },
+          ],
+          [{ id: 's1', startPointId: 'p1', endPointId: 'p2' }],
+        ),
+        gridSizeMm: 10 as const, // coarser grid so angle snap can fire between grid points
+      };
+      // Must be >5mm from any 10mm grid intersection so grid snap (priority 3) doesn't fire first
       const fromPoint = { x: 53, y: 53 };
-      const cursor = { x: 117, y: 55 }; // angle ≈ 1.8° from horizontal, > 5mm from nearest grid
+      const cursor = { x: 117, y: 55 }; // angle ≈ 1.8° from horizontal
       const result = findSnap(cursor, state, DEFAULT_TOLERANCES, [], fromPoint);
       expect(result.snapType).toBe('angle');
       expect(result.guideType).toBe('parallel');
@@ -177,14 +180,17 @@ describe('findSnap', () => {
     });
 
     it('snaps perpendicular to existing segment', () => {
-      const state = makeStateWithSegments(
-        [
-          { id: 'p1', x: 0, y: 0 },
-          { id: 'p2', x: 100, y: 0 },
-        ],
-        [{ id: 's1', startPointId: 'p1', endPointId: 'p2' }],
-      );
-      // >5mm from grid so grid snap doesn't fire first
+      const state = {
+        ...makeStateWithSegments(
+          [
+            { id: 'p1', x: 0, y: 0 },
+            { id: 'p2', x: 100, y: 0 },
+          ],
+          [{ id: 's1', startPointId: 'p1', endPointId: 'p2' }],
+        ),
+        gridSizeMm: 10 as const,
+      };
+      // >5mm from 10mm grid so grid snap doesn't fire first
       const fromPoint = { x: 53, y: 3 };
       const cursor = { x: 55, y: 67 }; // angle ≈ 88.2° from horizontal (near vertical)
       const result = findSnap(cursor, state, DEFAULT_TOLERANCES, [], fromPoint);
@@ -193,10 +199,10 @@ describe('findSnap', () => {
     });
 
     it('snaps to 15° canonical angle when no segment match', () => {
-      const state = makeStateWithSegments([], []);
-      const fromPoint = { x: 50, y: 50 };
+      const state = { ...makeStateWithSegments([], []), gridSizeMm: 10 as const };
+      const fromPoint = { x: 55, y: 55 };
       // Cursor at ~46° from horizontal — should snap to 45°
-      const dist = 50;
+      const dist = 70;
       const angle = 46 * (Math.PI / 180);
       const cursor = {
         x: fromPoint.x + Math.cos(angle) * dist,

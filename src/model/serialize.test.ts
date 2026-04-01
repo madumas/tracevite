@@ -9,7 +9,7 @@ describe('serializeState / deserializeState', () => {
 
     expect(restored.points).toEqual([]);
     expect(restored.segments).toEqual([]);
-    expect(restored.gridSizeMm).toBe(10);
+    expect(restored.gridSizeMm).toBe(5);
     expect(restored.displayMode).toBe('simplifie');
   });
 
@@ -68,7 +68,7 @@ describe('serializeState / deserializeState', () => {
   it('uses defaults for missing settings', () => {
     const json = JSON.stringify({ version: 1, points: [], segments: [] });
     const state = deserializeState(json);
-    expect(state.gridSizeMm).toBe(10);
+    expect(state.gridSizeMm).toBe(5);
     expect(state.displayMode).toBe('simplifie');
     expect(state.displayUnit).toBe('cm');
     expect(state.snapEnabled).toBe(true);

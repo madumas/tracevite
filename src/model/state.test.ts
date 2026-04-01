@@ -24,7 +24,7 @@ describe('createInitialState', () => {
     expect(state.points).toEqual([]);
     expect(state.segments).toEqual([]);
     expect(state.circles).toEqual([]);
-    expect(state.gridSizeMm).toBe(10);
+    expect(state.gridSizeMm).toBe(5);
     expect(state.snapEnabled).toBe(true);
     expect(state.activeTool).toBe('segment');
     expect(state.displayMode).toBe('simplifie');

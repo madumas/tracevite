@@ -8,7 +8,7 @@ describe('settings-io', () => {
     const result = importSettings(json);
     expect(result.displayMode).toBe('simplifie');
     expect(result.displayUnit).toBe('cm');
-    expect(result.gridSizeMm).toBe(10);
+    expect(result.gridSizeMm).toBe(5);
     expect(result.snapEnabled).toBe(true);
   });
 
