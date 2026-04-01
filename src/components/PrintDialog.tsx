@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import type { ConstructionState } from '@/model/types';
 import {
   UI_PRIMARY,
@@ -39,13 +38,6 @@ export function PrintDialog({
   onClose,
   onRecenter,
 }: PrintDialogProps) {
-  const [hideWarning, setHideWarning] = useState(() => {
-    try {
-      return localStorage.getItem('tracevite_hide_print_warning') === 'true';
-    } catch {
-      return false;
-    }
-  });
   const prefs = usePreferences();
   const updatePref = useUpdatePreference();
   const pageFormat = prefs.pageFormat;
@@ -76,16 +68,6 @@ export function PrintDialog({
     window.print();
     document.head.removeChild(style);
     onClose();
-  };
-
-  const handleToggleWarning = () => {
-    const next = !hideWarning;
-    setHideWarning(next);
-    try {
-      localStorage.setItem('tracevite_hide_print_warning', String(next));
-    } catch {
-      /* non-critical */
-    }
   };
 
   return (
@@ -187,39 +169,6 @@ export function PrintDialog({
           </button>
         </div>
 
-        {/* Scale warning */}
-        {!hideWarning && (
-          <div
-            style={{
-              background: '#FFF8E1',
-              border: '1px solid #FFE082',
-              borderRadius: 8,
-              padding: '12px',
-              marginBottom: 12,
-            }}
-          >
-            <div style={{ fontSize: 16, fontWeight: 700, color: '#E65100' }}>
-              IMPRIME À 100% (taille réelle)
-            </div>
-            <div style={{ fontSize: 12, color: UI_TEXT_SECONDARY, marginTop: 4 }}>
-              Dans les paramètres d'impression, choisis « Taille réelle » ou « 100% ».
-            </div>
-            <label
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 6,
-                marginTop: 8,
-                cursor: 'pointer',
-                fontSize: 11,
-              }}
-            >
-              <input type="checkbox" onChange={handleToggleWarning} />
-              Ne plus afficher
-            </label>
-          </div>
-        )}
-
         {/* Figure warnings */}
         {!fitsPage && (
           <div
@@ -307,6 +256,11 @@ export function PrintDialog({
           />
           {includeMeasurements ? 'Avec mesures' : 'Figure seule'}
         </label>
+
+        {/* Scale reminder */}
+        <div style={{ fontSize: 11, color: UI_TEXT_SECONDARY, marginBottom: 8 }}>
+          Imprime à 100 % (taille réelle) pour respecter l'échelle 1:1.
+        </div>
 
         {/* Buttons */}
         <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>

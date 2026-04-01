@@ -386,7 +386,7 @@ export function figureFitsInPage(
   const bb = constructionBoundingBox(state);
   if (!bb) return true;
   const area = getPrintableArea(pageFormat, landscape);
-  return bb.maxX <= area.width && bb.maxY <= area.height;
+  return bb.width <= area.width && bb.height <= area.height;
 }
 
 /**
