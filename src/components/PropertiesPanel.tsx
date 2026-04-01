@@ -12,6 +12,7 @@ import {
   UI_PRIMARY,
 } from '@/config/theme';
 import { formatLength } from '@/engine/format';
+import { BOUNDS_WIDTH_MM, BOUNDS_HEIGHT_MM } from '@/engine/viewport';
 import type { PanelPosition } from '@/model/preferences';
 
 interface PropertiesPanelProps {
@@ -56,12 +57,12 @@ export const PropertiesPanel = memo(function PropertiesPanel({
         style={{
           position: 'absolute',
           ...(isLeft ? { left: 0 } : { right: 0 }),
-          top: 0,
+          top: 8,
           width: 44,
           height: 44,
           background: UI_SURFACE,
           border: `1px solid ${UI_BORDER}`,
-          borderRadius: isLeft ? '0 0 8px 0' : '0 0 0 8px',
+          borderRadius: isLeft ? '0 8px 8px 0' : '8px 0 0 8px',
           cursor: 'pointer',
           fontSize: 16,
           zIndex: 20,
@@ -80,6 +81,7 @@ export const PropertiesPanel = memo(function PropertiesPanel({
               height: 8,
               borderRadius: '50%',
               background: '#185FA5',
+              animation: 'glow-pulse 0.6s ease-in-out 3',
             }}
             data-testid="panel-badge"
           />
@@ -358,6 +360,19 @@ export const PropertiesPanel = memo(function PropertiesPanel({
                 {prefix} {point.label}
               </span>
               {point.locked && <span style={{ color: UI_TEXT_SECONDARY, marginLeft: 4 }}>🔒</span>}
+              {state.cartesianMode !== 'off' &&
+                (() => {
+                  const originX = state.cartesianMode === '1quadrant' ? 0 : BOUNDS_WIDTH_MM / 2;
+                  const originY =
+                    state.cartesianMode === '1quadrant' ? BOUNDS_HEIGHT_MM : BOUNDS_HEIGHT_MM / 2;
+                  const cx = point.x - originX;
+                  const cy = originY - point.y;
+                  return (
+                    <span style={{ color: UI_TEXT_SECONDARY, marginLeft: 6, fontSize: '0.9em' }}>
+                      ({formatLength(cx, state.displayUnit)}, {formatLength(cy, state.displayUnit)})
+                    </span>
+                  );
+                })()}
             </div>
           );
         })}
