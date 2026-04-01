@@ -77,17 +77,6 @@ export function useSymmetryTool({
 
       if (phase === 'choose_axis') {
         // Try to hit an existing segment → use as axis
-        const dbgSnap = findSnap(mmPos, state, tolerances);
-        console.log(
-          '[Symmetry] click at',
-          mmPos,
-          'snap:',
-          dbgSnap.snapType,
-          'pos:',
-          dbgSnap.snappedPosition,
-          'pointId:',
-          dbgSnap.snappedToPointId,
-        );
         const segId = hitTestSegment(mmPos, state.segments, state.points);
         if (segId) {
           const seg = state.segments.find((s) => s.id === segId);
