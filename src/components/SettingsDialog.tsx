@@ -223,7 +223,7 @@ export const SettingsDialog = memo(function SettingsDialog({
             type="checkbox"
             checked={keyboardShortcutsEnabled}
             onChange={(e) => onKeyboardShortcutsChange(e.target.checked)}
-            style={{ width: 20, height: 20, cursor: 'pointer' }}
+            style={{ width: 20, height: 20, cursor: 'pointer', minWidth: 44, minHeight: 44 }}
           />
         </div>
 
@@ -254,8 +254,8 @@ export const SettingsDialog = memo(function SettingsDialog({
                 key={color}
                 onClick={() => updatePref('segmentColor', color)}
                 style={{
-                  width: 28,
-                  height: 28,
+                  width: 44,
+                  height: 44,
                   borderRadius: '50%',
                   background: color,
                   border: prefs.segmentColor === color ? '3px solid #1A2433' : '2px solid #D1D8E0',
@@ -293,7 +293,7 @@ export const SettingsDialog = memo(function SettingsDialog({
             type="checkbox"
             checked={estimationMode}
             onChange={(e) => onEstimationModeChange(e.target.checked)}
-            style={{ width: 20, height: 20, cursor: 'pointer' }}
+            style={{ width: 20, height: 20, cursor: 'pointer', minWidth: 44, minHeight: 44 }}
           />
         </div>
 
@@ -322,7 +322,7 @@ export const SettingsDialog = memo(function SettingsDialog({
             type="checkbox"
             checked={autoIntersection}
             onChange={(e) => onAutoIntersectionChange(e.target.checked)}
-            style={{ width: 20, height: 20, cursor: 'pointer' }}
+            style={{ width: 20, height: 20, cursor: 'pointer', minWidth: 44, minHeight: 44 }}
           />
         </div>
 
@@ -352,7 +352,7 @@ export const SettingsDialog = memo(function SettingsDialog({
             type="checkbox"
             checked={prefs.highContrast}
             onChange={(e) => updatePref('highContrast', e.target.checked)}
-            style={{ width: 20, height: 20, cursor: 'pointer' }}
+            style={{ width: 20, height: 20, cursor: 'pointer', minWidth: 44, minHeight: 44 }}
           />
         </div>
 
@@ -364,7 +364,7 @@ export const SettingsDialog = memo(function SettingsDialog({
               type="checkbox"
               checked={prefs.cursorSmoothing}
               onChange={(e) => updatePref('cursorSmoothing', e.target.checked)}
-              style={{ width: 20, height: 20, cursor: 'pointer' }}
+              style={{ width: 20, height: 20, cursor: 'pointer', minWidth: 44, minHeight: 44 }}
             />
           </div>
         )}
@@ -376,7 +376,7 @@ export const SettingsDialog = memo(function SettingsDialog({
             type="checkbox"
             checked={pointToolVisible}
             onChange={(e) => onPointToolVisibleChange(e.target.checked)}
-            style={{ width: 20, height: 20, cursor: 'pointer' }}
+            style={{ width: 20, height: 20, cursor: 'pointer', minWidth: 44, minHeight: 44 }}
           />
         </div>
 

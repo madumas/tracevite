@@ -139,8 +139,7 @@ export function useTranslationTool({
   } else if (phase === 'vector_end') {
     statusMessage = 'Translation — Clique pour placer la fin de la flèche';
   } else {
-    statusMessage =
-      'Translation — Clique sur un segment pour translater la figure. Échap pour changer le vecteur.';
+    statusMessage = 'Translation — Clique sur un segment pour translater la figure.';
   }
 
   // Overlay: translation arrow + preview

@@ -898,10 +898,31 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
               );
             })()}
         {shiftConstraintActive && ' — Contrainte 15° active'}
-        {/* Right-side buttons grouped in a single flex container to avoid double marginLeft:auto */}
-        {((!demoMode && state.consigne && consigneDismissed) ||
+        {/* Right-side buttons grouped in a single flex container */}
+        {(!tool.isIdle ||
+          (!demoMode && state.consigne && consigneDismissed) ||
           (state.activeTool === 'reflection' && tool.onToggleStepByStep)) && (
           <div style={{ marginLeft: 'auto', display: 'flex', gap: 4, alignItems: 'center' }}>
+            {!tool.isIdle && !deleteMode && (
+              <button
+                onClick={() => tool.handleEscape()}
+                style={{
+                  padding: '2px 12px',
+                  background: UI_PRIMARY,
+                  color: '#FFF',
+                  border: 'none',
+                  borderRadius: 4,
+                  cursor: 'pointer',
+                  fontSize: 12 * effectiveFontScale,
+                  fontWeight: 600,
+                  whiteSpace: 'nowrap',
+                  minHeight: 28,
+                }}
+                data-testid="status-escape-btn"
+              >
+                {state.activeTool === 'move' ? 'Annuler' : 'Terminer'}
+              </button>
+            )}
             {!demoMode && state.consigne && consigneDismissed && (
               <button
                 onClick={() => setConsigneDismissed(false)}

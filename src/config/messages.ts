@@ -8,14 +8,14 @@
 export const STATUS_SEGMENT_IDLE = 'Segment — Clique pour placer le premier point';
 export const STATUS_SEGMENT_FIRST_PLACED = 'Segment — Clique pour placer le deuxième point';
 export const STATUS_SEGMENT_CHAINING = (label: string) =>
-  `Segment — Continue depuis le sommet ${label}. Clique ailleurs ou appuie Échap pour terminer.`;
+  `Segment — Continue depuis le sommet ${label}.`;
 
 export const STATUS_CIRCLE_IDLE = 'Cercle — Clique pour placer le centre';
 export const STATUS_CIRCLE_CENTER_PLACED = 'Cercle — Clique pour fixer le rayon';
 
 export const STATUS_MOVE_IDLE = 'Déplacer — Clique sur un point pour le ramasser';
 export const STATUS_MOVE_PICKED = (label: string) =>
-  `Déplacer — Clique pour déposer le point ${label}. Appuie Échap pour annuler.`;
+  `Déplacer — Clique pour déposer le point ${label}.`;
 
 export const STATUS_REFLECTION_AXIS =
   "Réflexion — Clique deux points pour tracer l'axe de symétrie";

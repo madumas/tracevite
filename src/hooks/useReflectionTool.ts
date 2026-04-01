@@ -286,7 +286,7 @@ export function useReflectionTool({
     statusMessage = "Réflexion — Clique pour placer le deuxième point de l'axe";
   } else {
     statusMessage = lastReflectionMsg
-      ? `Réflexion — ${lastReflectionMsg} Clique sur un autre élément ou appuie Échap pour terminer.`
+      ? `Réflexion — ${lastReflectionMsg} Clique sur un autre élément.`
       : STATUS_REFLECTION_SELECT;
   }
 

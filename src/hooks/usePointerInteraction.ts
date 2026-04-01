@@ -180,8 +180,9 @@ export function usePointerInteraction({
         return;
       }
 
-      // During pending touch delay or pinch, don't forward cursor move to tool (I3 fix)
-      if (gestureMode.current === 'pending_touch' || gestureMode.current === 'pinch') return;
+      // During pinch, don't forward cursor move to tool (I3 fix)
+      // Note: pending_touch still forwards cursor move so ghost segment appears on touch
+      if (gestureMode.current === 'pinch') return;
 
       // Normal move: forward to tool
       const mmPos = screenToMmPos(e);
