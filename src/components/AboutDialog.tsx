@@ -89,7 +89,7 @@ export function AboutDialog({ onClose }: AboutDialogProps) {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            gap: 6,
+            gap: 2,
           }}
         >
           Contact :{' '}
@@ -142,7 +142,8 @@ function CopyButton() {
         border: 'none',
         cursor: 'pointer',
         fontSize: 14,
-        minWidth: 44,
+        padding: '4px',
+        minWidth: 24,
         minHeight: 44,
         display: 'inline-flex',
         alignItems: 'center',
