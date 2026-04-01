@@ -19,6 +19,10 @@ interface PrintDialogProps {
   readonly slotName: string;
   readonly landscape: boolean;
   readonly onLandscapeChange: (landscape: boolean) => void;
+  readonly includeMeasurements: boolean;
+  readonly onIncludeMeasurementsChange: (v: boolean) => void;
+  readonly includeConsigne: boolean;
+  readonly onIncludeConsigneChange: (v: boolean) => void;
   readonly onClose: () => void;
   readonly onRecenter: () => void;
 }
@@ -28,6 +32,10 @@ export function PrintDialog({
   slotName,
   landscape,
   onLandscapeChange,
+  includeMeasurements,
+  onIncludeMeasurementsChange,
+  includeConsigne,
+  onIncludeConsigneChange,
   onClose,
   onRecenter,
 }: PrintDialogProps) {
@@ -38,8 +46,6 @@ export function PrintDialog({
       return false;
     }
   });
-  const [includeConsigne, setIncludeConsigne] = useState(false);
-  const [includeMeasurements, setIncludeMeasurements] = useState(true);
   const prefs = usePreferences();
   const updatePref = useUpdatePreference();
   const pageFormat = prefs.pageFormat;
@@ -277,7 +283,7 @@ export function PrintDialog({
             <input
               type="checkbox"
               checked={includeConsigne}
-              onChange={() => setIncludeConsigne(!includeConsigne)}
+              onChange={() => onIncludeConsigneChange(!includeConsigne)}
             />
             Inclure la consigne
           </label>
@@ -297,7 +303,7 @@ export function PrintDialog({
           <input
             type="checkbox"
             checked={includeMeasurements}
-            onChange={() => setIncludeMeasurements(!includeMeasurements)}
+            onChange={() => onIncludeMeasurementsChange(!includeMeasurements)}
           />
           {includeMeasurements ? 'Avec mesures' : 'Figure seule'}
         </label>

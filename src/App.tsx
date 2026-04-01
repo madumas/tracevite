@@ -454,6 +454,8 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
   const handleRedo = useCallback(() => dispatch({ type: 'REDO' }), [dispatch]);
   const [showPrintDialog, setShowPrintDialog] = useState(false);
   const [printLandscape, setPrintLandscape] = useState(true);
+  const [printIncludeMeasurements, setPrintIncludeMeasurements] = useState(true);
+  const [printIncludeConsigne, setPrintIncludeConsigne] = useState(false);
   const handlePrint = useCallback(() => setShowPrintDialog(true), []);
   const handleNewConstruction = useCallback(() => setShowNewConfirm(true), []);
   const handleConfirmNew = useCallback(() => {
@@ -1368,6 +1370,10 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
           }
           landscape={printLandscape}
           onLandscapeChange={setPrintLandscape}
+          includeMeasurements={printIncludeMeasurements}
+          onIncludeMeasurementsChange={setPrintIncludeMeasurements}
+          includeConsigne={printIncludeConsigne}
+          onIncludeConsigneChange={setPrintIncludeConsigne}
           onClose={() => setShowPrintDialog(false)}
           onRecenter={() => {
             // TODO: RECENTER_CONSTRUCTION action
@@ -1377,7 +1383,13 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
       )}
 
       {/* Hidden print SVG — visible only in @media print */}
-      <PrintSvg state={state} landscape={printLandscape} pageFormat={preferences.pageFormat} />
+      <PrintSvg
+        state={state}
+        landscape={printLandscape}
+        pageFormat={preferences.pageFormat}
+        includeMeasurements={printIncludeMeasurements}
+        includeConsigne={printIncludeConsigne}
+      />
 
       {/* Slot manager modal */}
       {showSlotManager && (
