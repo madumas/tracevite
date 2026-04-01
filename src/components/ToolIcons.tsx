@@ -429,58 +429,68 @@ export function FolderIcon() {
   );
 }
 
-/** Magnet small: horseshoe magnet with pole bands for ActionBar */
+/** Magnet small: red horseshoe with colored poles for ActionBar */
 export function SnapIconSmall() {
   return (
     <svg {...SA}>
-      {/* Horseshoe body */}
-      <path d="M6 6v6a4 4 0 0 0 8 0V6" stroke={stroke} strokeWidth="1.5" fill="none" />
-      {/* Left pole band */}
-      <rect x="4" y="2" width="4" height="4" rx="1" stroke={stroke} strokeWidth="1" fill="none" />
-      {/* Right pole band */}
-      <rect x="12" y="2" width="4" height="4" rx="1" stroke={stroke} strokeWidth="1" fill="none" />
-      {/* Pole lines (N/S indicator) */}
-      <line x1="6" y1="4" x2="8" y2="4" stroke={stroke} strokeWidth="1" />
-      <line x1="14" y1="3.5" x2="14" y2="4.5" stroke={stroke} strokeWidth="1" />
-      <line x1="13.5" y1="4" x2="14.5" y2="4" stroke={stroke} strokeWidth="1" />
+      {/* Horseshoe body — red */}
+      <path d="M4 7v5a6 6 0 0 0 12 0V7" stroke="#C82828" strokeWidth="2.5" fill="none" />
+      {/* Left pole — silver/gray */}
+      <rect
+        x="2"
+        y="2"
+        width="4.5"
+        height="5"
+        rx="1"
+        fill="#9CA3AF"
+        stroke="#6B7280"
+        strokeWidth="0.8"
+      />
+      {/* Right pole — darker */}
+      <rect
+        x="13.5"
+        y="2"
+        width="4.5"
+        height="5"
+        rx="1"
+        fill="#6B7280"
+        stroke="#4A5568"
+        strokeWidth="0.8"
+      />
     </svg>
   );
 }
 
 // ── Toolbar icons (28×28 rendered) ──────────────────────────
 
-/** Magnet: horseshoe magnet with pole bands for toolbar */
+/** Magnet: red horseshoe with colored poles for toolbar */
 export function SnapIcon() {
   return (
     <svg {...S}>
-      {/* Horseshoe body */}
-      <path d="M6 6v6a4 4 0 0 0 8 0V6" stroke={stroke} strokeWidth="2" fill="none" />
-      {/* Left pole band */}
+      {/* Horseshoe body — red */}
+      <path d="M4 7v5a6 6 0 0 0 12 0V7" stroke="#C82828" strokeWidth="3" fill="none" />
+      {/* Left pole — silver/gray */}
       <rect
-        x="3.5"
+        x="1.5"
         y="2"
         width="5"
-        height="4"
+        height="5"
         rx="1"
-        stroke={stroke}
-        strokeWidth="1.5"
-        fill="none"
+        fill="#9CA3AF"
+        stroke="#6B7280"
+        strokeWidth="1"
       />
-      {/* Right pole band */}
+      {/* Right pole — darker */}
       <rect
-        x="11.5"
+        x="13.5"
         y="2"
         width="5"
-        height="4"
+        height="5"
         rx="1"
-        stroke={stroke}
-        strokeWidth="1.5"
-        fill="none"
+        fill="#6B7280"
+        stroke="#4A5568"
+        strokeWidth="1"
       />
-      {/* Pole lines (— and +) */}
-      <line x1="5" y1="4" x2="7" y2="4" stroke={stroke} strokeWidth="1.2" />
-      <line x1="13" y1="3.3" x2="13" y2="4.7" stroke={stroke} strokeWidth="1.2" />
-      <line x1="12.3" y1="4" x2="13.7" y2="4" stroke={stroke} strokeWidth="1.2" />
     </svg>
   );
 }
