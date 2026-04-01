@@ -12,7 +12,7 @@ import { useState, useCallback, useMemo, createElement } from 'react';
 import type { ConstructionState, ViewportState, SnapResult } from '@/model/types';
 import type { ConstructionAction } from '@/model/reducer';
 import type { ToolHookResult } from './types';
-import { hitTestSegment } from '@/engine/hit-test';
+import { hitTestSegment, hitTestCircle } from '@/engine/hit-test';
 import { findSnap, DEFAULT_TOLERANCES, scaleTolerances } from '@/engine/snap';
 import { TOLERANCE_PROFILES, MIN_POINT_DISTANCE_MM } from '@/config/accessibility';
 import { findConnectedElements } from '@/engine/reproduce';
@@ -71,29 +71,54 @@ export function useTranslationTool({
         setPhase('select_figure');
       } else if (phase === 'select_figure' && vectorStart && vectorEnd) {
         const segId = hitTestSegment(mmPos, state.segments, state.points);
-        if (!segId) return;
-
-        // Find figure or connected subgraph
-        const faces = detectAllFaces(state);
-        const figures = classifyFigures(faces, state, state.displayMode);
-        const figure = figures
-          .filter((f) => f.segmentIds.includes(segId))
-          .sort((a, b) => a.pointIds.length - b.pointIds.length)[0];
+        const circleHitId = !segId ? hitTestCircle(mmPos, state.circles, state.points) : null;
+        if (!segId && !circleHitId) return;
 
         let pointIds: string[];
         let segmentIds: string[];
-        if (figure) {
-          pointIds = [...figure.pointIds];
-          segmentIds = [...figure.segmentIds];
-        } else {
-          const connected = findConnectedElements(segId, state);
-          pointIds = connected.pointIds;
-          segmentIds = connected.segmentIds;
-        }
+        let circleIds: string[];
 
-        const circleIds = state.circles
-          .filter((c) => pointIds.includes(c.centerPointId))
-          .map((c) => c.id);
+        if (circleHitId && !segId) {
+          const circle = state.circles.find((c) => c.id === circleHitId);
+          if (!circle) return;
+          pointIds = [circle.centerPointId];
+          segmentIds = state.segments
+            .filter(
+              (s) =>
+                s.startPointId === circle.centerPointId || s.endPointId === circle.centerPointId,
+            )
+            .map((s) => s.id);
+          for (const sId of segmentIds) {
+            const seg = state.segments.find((s) => s.id === sId);
+            if (seg) {
+              if (!pointIds.includes(seg.startPointId)) pointIds.push(seg.startPointId);
+              if (!pointIds.includes(seg.endPointId)) pointIds.push(seg.endPointId);
+            }
+          }
+          circleIds = [circleHitId];
+          for (const c of state.circles) {
+            if (c.id !== circleHitId && pointIds.includes(c.centerPointId)) circleIds.push(c.id);
+          }
+        } else {
+          const faces = detectAllFaces(state);
+          const figures = classifyFigures(faces, state, state.displayMode);
+          const figure = figures
+            .filter((f) => f.segmentIds.includes(segId!))
+            .sort((a, b) => a.pointIds.length - b.pointIds.length)[0];
+
+          if (figure) {
+            pointIds = [...figure.pointIds];
+            segmentIds = [...figure.segmentIds];
+          } else {
+            const connected = findConnectedElements(segId!, state);
+            pointIds = connected.pointIds;
+            segmentIds = connected.segmentIds;
+          }
+
+          circleIds = state.circles
+            .filter((c) => pointIds.includes(c.centerPointId))
+            .map((c) => c.id);
+        }
 
         const offsetX = vectorEnd.x - vectorStart.x;
         const offsetY = vectorEnd.y - vectorStart.y;
