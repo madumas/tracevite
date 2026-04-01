@@ -66,7 +66,7 @@ export const CircleLayer = memo(function CircleLayer({
             {!estimationMode && (
               <text
                 x={cx}
-                y={cy + 16 * fontScale}
+                y={cy + 30 * fontScale}
                 fill={colors.measurement}
                 fontSize={Math.max(MIN_CANVAS_FONT_PX, 13) * fontScale}
                 fontFamily="system-ui, sans-serif"
