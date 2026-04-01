@@ -186,7 +186,16 @@ export function generatePDF(state: ConstructionState, options: PdfOptions): jsPD
       const alongY = dy / len;
       const markLen = 2; // mm half-length of each tick
 
-      // Parallel chevrons (>, >>, >>>) at midpoint
+      // Offset marks when both parallel and congruence present on same segment
+      const hasChevrons = parallelSegChevrons.has(seg.id);
+      const hasTicks = segToTicks.has(seg.id);
+      const spread = hasChevrons && hasTicks ? 3 : 0; // mm
+      const parMidX = midX - alongX * spread;
+      const parMidY = midY - alongY * spread;
+      const congMidX = midX + alongX * spread;
+      const congMidY = midY + alongY * spread;
+
+      // Parallel chevrons (>, >>, >>>)
       const chevrons = parallelSegChevrons.get(seg.id);
       if (chevrons) {
         const chevronSpacing = 2;
@@ -195,8 +204,8 @@ export function generatePDF(state: ConstructionState, options: PdfOptions): jsPD
         const totalW = (chevrons - 1) * chevronSpacing;
         for (let i = 0; i < chevrons; i++) {
           const off = -totalW / 2 + i * chevronSpacing;
-          const cx = midX + alongX * off;
-          const cy = midY + alongY * off;
+          const cx = parMidX + alongX * off;
+          const cy = parMidY + alongY * off;
           doc.line(
             tx(cx - alongX * w + perpX * h),
             ty(cy - alongY * w + perpY * h),
@@ -219,8 +228,8 @@ export function generatePDF(state: ConstructionState, options: PdfOptions): jsPD
         const totalW = (ticks - 1) * spacing;
         for (let i = 0; i < ticks; i++) {
           const off = -totalW / 2 + i * spacing;
-          const cx = midX + alongX * off;
-          const cy = midY + alongY * off;
+          const cx = congMidX + alongX * off;
+          const cy = congMidY + alongY * off;
           doc.line(
             tx(cx - perpX * markLen),
             ty(cy - perpY * markLen),

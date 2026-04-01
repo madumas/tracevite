@@ -184,6 +184,15 @@ export const PrintSvg = memo(function PrintSvg({
 
             const marks: React.ReactElement[] = [];
 
+            // Offset marks when both parallel and congruence present
+            const hasChevrons = parallelSegChevrons.has(seg.id);
+            const hasTicks = segToTicks.has(seg.id);
+            const spread = hasChevrons && hasTicks ? 3 : 0;
+            const parMidX = midX - alongX * spread;
+            const parMidY = midY - alongY * spread;
+            const congMidX = midX + alongX * spread;
+            const congMidY = midY + alongY * spread;
+
             // Parallel chevrons (>, >>, >>>)
             const chevronCount = parallelSegChevrons.get(seg.id);
             if (chevronCount) {
@@ -193,8 +202,8 @@ export const PrintSvg = memo(function PrintSvg({
               const totalCW = (chevronCount - 1) * chevronSpacing;
               for (let i = 0; i < chevronCount; i++) {
                 const off = -totalCW / 2 + i * chevronSpacing;
-                const cx = midX + alongX * off;
-                const cy = midY + alongY * off;
+                const cx = parMidX + alongX * off;
+                const cy = parMidY + alongY * off;
                 marks.push(
                   <polyline
                     key={`par-${seg.id}-${i}`}
@@ -216,8 +225,8 @@ export const PrintSvg = memo(function PrintSvg({
               const totalW = (ticks - 1) * spacing;
               for (let i = 0; i < ticks; i++) {
                 const off = -totalW / 2 + i * spacing;
-                const cx = midX + alongX * off;
-                const cy = midY + alongY * off;
+                const cx = congMidX + alongX * off;
+                const cy = congMidY + alongY * off;
                 marks.push(
                   <line
                     key={`tick-${seg.id}-${i}`}

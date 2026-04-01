@@ -207,76 +207,89 @@ export const SegmentLayer = memo(function SegmentLayer({
                   {lengthText}
                 </text>
               )}
-            {/* Parallel chevrons (>, >>, >>>) at midpoint — standard convention */}
-            {/* Clutter: hidden until segment or a parallel peer is hovered/selected */}
-            {parallelSegColor.has(segment.id) &&
-              len > 0 &&
-              (!cluttered ||
-                isSelected ||
-                segment.id === hoveredElementId ||
-                parallelPeers.get(segment.id)?.includes(hoveredElementId ?? '') ||
-                parallelPeers.get(segment.id)?.includes(selectedElementId ?? '')) && (
-                <g>
-                  {Array.from({ length: parallelChevronCount.get(segment.id) ?? 1 }, (_, i) => {
-                    const dirX = dx / len;
-                    const dirY = dy / len;
-                    const perpX = -dy / len;
-                    const perpY = dx / len;
-                    const chevronSpacing = 6;
-                    const count = parallelChevronCount.get(segment.id) ?? 1;
-                    const totalW = (count - 1) * chevronSpacing;
-                    const offset = -totalW / 2 + i * chevronSpacing;
-                    const cx = midSx + dirX * offset;
-                    const cy = midSy + dirY * offset;
-                    const h = 4.5;
-                    const w = 3;
-                    return (
-                      <polyline
-                        key={i}
-                        points={`${cx - dirX * w + perpX * h},${cy - dirY * w + perpY * h} ${cx},${cy} ${cx - dirX * w - perpX * h},${cy - dirY * w - perpY * h}`}
-                        fill="none"
-                        stroke={parallelSegColor.get(segment.id)!}
-                        strokeWidth={2}
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    );
-                  })}
-                </g>
-              )}
-            {/* Congruence tick marks at midpoint (standard mathematical convention) */}
-            {/* Clutter: hidden until segment or a congruent peer is hovered/selected */}
-            {congruenceTickMap.has(segment.id) &&
-              len > 0 &&
-              (!cluttered ||
-                isSelected ||
-                segment.id === hoveredElementId ||
-                congruencePeers.get(segment.id)?.includes(hoveredElementId ?? '') ||
-                congruencePeers.get(segment.id)?.includes(selectedElementId ?? '')) && (
-                <g>
-                  {Array.from({ length: congruenceTickMap.get(segment.id)! }, (_, i) => {
-                    const tickSpacing = 4;
-                    const totalWidth = (congruenceTickMap.get(segment.id)! - 1) * tickSpacing;
-                    const centerOffset = -totalWidth / 2 + i * tickSpacing;
-                    const perpX = len > 0 ? (-dy / len) * 6 : 0;
-                    const perpY = len > 0 ? (dx / len) * 6 : -6;
-                    // Position at midpoint (standard convention)
-                    const twoThirdSx = midSx;
-                    const twoThirdSy = midSy;
-                    return (
-                      <line
-                        key={i}
-                        x1={twoThirdSx + (dx / len) * centerOffset - perpX}
-                        y1={twoThirdSy + (dy / len) * centerOffset - perpY}
-                        x2={twoThirdSx + (dx / len) * centerOffset + perpX}
-                        y2={twoThirdSy + (dy / len) * centerOffset + perpY}
-                        stroke={colors.guide}
-                        strokeWidth={2.5}
-                      />
-                    );
-                  })}
-                </g>
-              )}
+            {/* When both parallel and congruence marks present, offset each ±8px from midpoint */}
+            {(() => {
+              const hasParallel = parallelSegColor.has(segment.id);
+              const hasCong = congruenceTickMap.has(segment.id);
+              const hasBoth = hasParallel && hasCong;
+              const dirX = len > 0 ? dx / len : 0;
+              const dirY = len > 0 ? dy / len : 0;
+              const spread = hasBoth ? 8 : 0;
+              const parCx = midSx - dirX * spread;
+              const parCy = midSy - dirY * spread;
+              const congCx = midSx + dirX * spread;
+              const congCy = midSy + dirY * spread;
+              return (
+                <>
+                  {/* Parallel chevrons (>, >>, >>>) — standard convention */}
+                  {hasParallel &&
+                    len > 0 &&
+                    (!cluttered ||
+                      isSelected ||
+                      segment.id === hoveredElementId ||
+                      parallelPeers.get(segment.id)?.includes(hoveredElementId ?? '') ||
+                      parallelPeers.get(segment.id)?.includes(selectedElementId ?? '')) && (
+                      <g>
+                        {Array.from(
+                          { length: parallelChevronCount.get(segment.id) ?? 1 },
+                          (_, i) => {
+                            const perpX = -dy / len;
+                            const perpY = dx / len;
+                            const chevronSpacing = 6;
+                            const count = parallelChevronCount.get(segment.id) ?? 1;
+                            const totalW = (count - 1) * chevronSpacing;
+                            const offset = -totalW / 2 + i * chevronSpacing;
+                            const cx = parCx + dirX * offset;
+                            const cy = parCy + dirY * offset;
+                            const h = 4.5;
+                            const w = 3;
+                            return (
+                              <polyline
+                                key={i}
+                                points={`${cx - dirX * w + perpX * h},${cy - dirY * w + perpY * h} ${cx},${cy} ${cx - dirX * w - perpX * h},${cy - dirY * w - perpY * h}`}
+                                fill="none"
+                                stroke={parallelSegColor.get(segment.id)!}
+                                strokeWidth={2}
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              />
+                            );
+                          },
+                        )}
+                      </g>
+                    )}
+                  {/* Congruence tick marks — standard convention */}
+                  {hasCong &&
+                    len > 0 &&
+                    (!cluttered ||
+                      isSelected ||
+                      segment.id === hoveredElementId ||
+                      congruencePeers.get(segment.id)?.includes(hoveredElementId ?? '') ||
+                      congruencePeers.get(segment.id)?.includes(selectedElementId ?? '')) && (
+                      <g>
+                        {Array.from({ length: congruenceTickMap.get(segment.id)! }, (_, i) => {
+                          const tickSpacing = 4;
+                          const totalWidth = (congruenceTickMap.get(segment.id)! - 1) * tickSpacing;
+                          const centerOffset = -totalWidth / 2 + i * tickSpacing;
+                          const perpX = len > 0 ? (-dy / len) * 6 : 0;
+                          const perpY = len > 0 ? (dx / len) * 6 : -6;
+                          return (
+                            <line
+                              key={i}
+                              x1={congCx + dirX * centerOffset - perpX}
+                              y1={congCy + dirY * centerOffset - perpY}
+                              x2={congCx + dirX * centerOffset + perpX}
+                              y2={congCy + dirY * centerOffset + perpY}
+                              stroke={colors.guide}
+                              strokeWidth={2.5}
+                            />
+                          );
+                        })}
+                      </g>
+                    )}
+                </>
+              );
+            })()}
           </g>
         );
       })}
