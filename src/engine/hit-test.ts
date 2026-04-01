@@ -75,9 +75,11 @@ export function hitTestCircle(
     if (!center) continue;
 
     const distToCenter = distance(cursor, center);
+    // Accept clicks on circumference OR inside the circle
     const distToCircumference = Math.abs(distToCenter - circle.radiusMm);
-    if (distToCircumference <= toleranceMm && distToCircumference < bestDist) {
-      bestDist = distToCircumference;
+    const isInside = distToCenter <= circle.radiusMm;
+    if ((distToCircumference <= toleranceMm || isInside) && distToCenter < bestDist) {
+      bestDist = distToCenter;
       bestId = circle.id;
     }
   }

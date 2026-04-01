@@ -53,8 +53,12 @@ describe('hitTestCircle', () => {
     expect(hitTestCircle({ x: 82, y: 50 }, circles, points, 5)).toBe('c1');
   });
 
-  it('misses when far from circumference', () => {
-    expect(hitTestCircle({ x: 50, y: 50 }, circles, points, 5)).toBeNull();
+  it('hits when inside circle', () => {
+    expect(hitTestCircle({ x: 50, y: 50 }, circles, points, 5)).toBe('c1');
+  });
+
+  it('misses when far outside circle', () => {
+    expect(hitTestCircle({ x: 200, y: 200 }, circles, points, 5)).toBeNull();
   });
 });
 
