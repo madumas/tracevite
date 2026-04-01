@@ -295,6 +295,7 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
     state,
     dispatch,
     toolIsIdle: tool.isIdle,
+    activeTool: state.activeTool,
   });
 
   // Slot manager
