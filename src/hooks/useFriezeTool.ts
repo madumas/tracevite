@@ -387,6 +387,26 @@ export function useFriezeTool({
               }),
             );
           }
+          for (const circleId of selected.circleIds) {
+            const circle = state.circles.find((c) => c.id === circleId);
+            if (!circle) continue;
+            const center = pointMap.get(circle.centerPointId);
+            if (!center) continue;
+            elements.push(
+              createElement('circle', {
+                key: `ghost-circle-${i}-${j}-${circleId}`,
+                cx: toSx(center.x + ox),
+                cy: toSy(center.y + oy),
+                r: circle.radiusMm * pxPerMm,
+                fill: 'none',
+                stroke: '#85B7EB',
+                strokeWidth: 2,
+                opacity: 0.5,
+                strokeDasharray: '6 3',
+                pointerEvents: 'none',
+              }),
+            );
+          }
         }
       }
     }

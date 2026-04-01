@@ -185,6 +185,30 @@ export function useReproduceTool({
       );
     }
 
+    // Highlight selected circles
+    for (const circleId of selected.circleIds) {
+      const circle = state.circles.find((c) => c.id === circleId);
+      if (!circle) continue;
+      const center = pointMap.get(circle.centerPointId);
+      if (!center) continue;
+      const cx = (center.x - viewport.panX) * pxPerMm;
+      const cy = (center.y - viewport.panY) * pxPerMm;
+      const cr = circle.radiusMm * pxPerMm;
+      elements.push(
+        createElement('circle', {
+          key: `sel-circle-${circleId}`,
+          cx,
+          cy,
+          r: cr,
+          fill: 'none',
+          stroke: CANVAS_SELECTION_BG,
+          strokeWidth: 6,
+          opacity: 0.7,
+          pointerEvents: 'none',
+        }),
+      );
+    }
+
     // Ghost preview at cursor position
     if (phase === 'place_copy' && cursorMm) {
       const snapped = snapResult?.snappedPosition ?? cursorMm;
@@ -213,6 +237,31 @@ export function useReproduceTool({
             stroke: '#85B7EB',
             strokeWidth: 2,
             strokeLinecap: 'round',
+            opacity: 0.6,
+            strokeDasharray: '6 3',
+            pointerEvents: 'none',
+          }),
+        );
+      }
+
+      // Ghost circles
+      for (const circleId of selected.circleIds) {
+        const circle = state.circles.find((c) => c.id === circleId);
+        if (!circle) continue;
+        const center = pointMap.get(circle.centerPointId);
+        if (!center) continue;
+        const cx = (center.x + offsetX - viewport.panX) * pxPerMm;
+        const cy = (center.y + offsetY - viewport.panY) * pxPerMm;
+        const cr = circle.radiusMm * pxPerMm;
+        elements.push(
+          createElement('circle', {
+            key: `ghost-circle-${circleId}`,
+            cx,
+            cy,
+            r: cr,
+            fill: 'none',
+            stroke: '#85B7EB',
+            strokeWidth: 2,
             opacity: 0.6,
             strokeDasharray: '6 3',
             pointerEvents: 'none',
