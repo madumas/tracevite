@@ -1,26 +1,41 @@
 import { memo } from 'react';
 import type { ViewportState, GridSize } from '@/model/types';
+import type { PageFormat } from '@/model/preferences';
 import { useCanvasColors } from '@/config/theme';
-import { BOUNDS_WIDTH_MM, BOUNDS_HEIGHT_MM, CSS_PX_PER_MM } from '@/engine/viewport';
+import { CSS_PX_PER_MM } from '@/engine/viewport';
+import { MARGIN_MM, getPrintableArea } from '@/engine/print-shared';
 
 interface GridLayerProps {
   readonly viewport: ViewportState;
   readonly gridSizeMm: GridSize;
+  readonly pageFormat?: PageFormat;
+  readonly landscape?: boolean;
 }
 
 /**
  * Renders grid lines in SVG.
  * Adaptive density: skip lines if < 10px apart, add sub-grid if > 60px apart.
  */
-export const GridLayer = memo(function GridLayer({ viewport, gridSizeMm }: GridLayerProps) {
+export const GridLayer = memo(function GridLayer({
+  viewport,
+  gridSizeMm,
+  pageFormat = 'letter',
+  landscape = true,
+}: GridLayerProps) {
   const colors = useCanvasColors();
   const pxPerMm = viewport.zoom * CSS_PX_PER_MM;
   const gridPx = gridSizeMm * pxPerMm;
 
+  // Grid covers the printable area (page minus margins)
+  const area = getPrintableArea(pageFormat, landscape);
+  const gridOriginX = MARGIN_MM;
+  const gridOriginY = MARGIN_MM;
+  const gridEndX = gridOriginX + area.width;
+  const gridEndY = gridOriginY + area.height;
+
   // Adaptive density
   let effectiveGridMm = gridSizeMm;
   if (gridPx < 10) {
-    // Too dense — double the spacing
     effectiveGridMm = (gridSizeMm * 2) as GridSize;
   }
 
@@ -28,18 +43,23 @@ export const GridLayer = memo(function GridLayer({ viewport, gridSizeMm }: GridL
 
   const lines: JSX.Element[] = [];
 
-  // Vertical lines
-  const startX = Math.floor(viewport.panX / effectiveGridMm) * effectiveGridMm;
-  const endX = viewport.panX + BOUNDS_WIDTH_MM;
-  for (let x = startX; x <= endX; x += effectiveGridMm) {
+  // Screen coords for grid bounds
+  const gx1 = (gridOriginX - viewport.panX) * pxPerMm;
+  const gy1 = (gridOriginY - viewport.panY) * pxPerMm;
+  const gx2 = (gridEndX - viewport.panX) * pxPerMm;
+  const gy2 = (gridEndY - viewport.panY) * pxPerMm;
+
+  // Vertical lines (within printable area)
+  const startX = Math.ceil(gridOriginX / effectiveGridMm) * effectiveGridMm;
+  for (let x = startX; x <= gridEndX; x += effectiveGridMm) {
     const sx = (x - viewport.panX) * pxPerMm;
     lines.push(
       <line
         key={`v-${x}`}
         x1={sx}
-        y1={0}
+        y1={gy1}
         x2={sx}
-        y2={BOUNDS_HEIGHT_MM * pxPerMm}
+        y2={gy2}
         stroke={colors.grid}
         strokeWidth={1}
         opacity={colors.gridOpacity}
@@ -47,17 +67,16 @@ export const GridLayer = memo(function GridLayer({ viewport, gridSizeMm }: GridL
     );
   }
 
-  // Horizontal lines
-  const startY = Math.floor(viewport.panY / effectiveGridMm) * effectiveGridMm;
-  const endY = viewport.panY + BOUNDS_HEIGHT_MM;
-  for (let y = startY; y <= endY; y += effectiveGridMm) {
+  // Horizontal lines (within printable area)
+  const startY = Math.ceil(gridOriginY / effectiveGridMm) * effectiveGridMm;
+  for (let y = startY; y <= gridEndY; y += effectiveGridMm) {
     const sy = (y - viewport.panY) * pxPerMm;
     lines.push(
       <line
         key={`h-${y}`}
-        x1={0}
+        x1={gx1}
         y1={sy}
-        x2={BOUNDS_WIDTH_MM * pxPerMm}
+        x2={gx2}
         y2={sy}
         stroke={colors.grid}
         strokeWidth={1}
@@ -69,17 +88,17 @@ export const GridLayer = memo(function GridLayer({ viewport, gridSizeMm }: GridL
   // Sub-grid (lighter)
   if (showSubGrid) {
     const subGridMm = effectiveGridMm / 2;
-    const subStartX = Math.floor(viewport.panX / subGridMm) * subGridMm;
-    for (let x = subStartX; x <= endX; x += subGridMm) {
-      if (x % effectiveGridMm === 0) continue; // Skip main grid lines
+    const subStartX = Math.ceil(gridOriginX / subGridMm) * subGridMm;
+    for (let x = subStartX; x <= gridEndX; x += subGridMm) {
+      if (x % effectiveGridMm === 0) continue;
       const sx = (x - viewport.panX) * pxPerMm;
       lines.push(
         <line
           key={`sv-${x}`}
           x1={sx}
-          y1={0}
+          y1={gy1}
           x2={sx}
-          y2={BOUNDS_HEIGHT_MM * pxPerMm}
+          y2={gy2}
           stroke={colors.grid}
           strokeWidth={0.5}
           opacity={colors.gridOpacity * 0.5}
@@ -87,16 +106,16 @@ export const GridLayer = memo(function GridLayer({ viewport, gridSizeMm }: GridL
       );
     }
 
-    const subStartY = Math.floor(viewport.panY / subGridMm) * subGridMm;
-    for (let y = subStartY; y <= endY; y += subGridMm) {
+    const subStartY = Math.ceil(gridOriginY / subGridMm) * subGridMm;
+    for (let y = subStartY; y <= gridEndY; y += subGridMm) {
       if (y % effectiveGridMm === 0) continue;
       const sy = (y - viewport.panY) * pxPerMm;
       lines.push(
         <line
           key={`sh-${y}`}
-          x1={0}
+          x1={gx1}
           y1={sy}
-          x2={BOUNDS_WIDTH_MM * pxPerMm}
+          x2={gx2}
           y2={sy}
           stroke={colors.grid}
           strokeWidth={0.5}

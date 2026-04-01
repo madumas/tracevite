@@ -37,6 +37,7 @@ import { RadiusInput } from '@/components/RadiusInput';
 import { SettingsDialog } from '@/components/SettingsDialog';
 import { PropertiesPanel } from '@/components/PropertiesPanel';
 import { GridLayer } from '@/components/GridLayer';
+import { PrintGuideLayer } from '@/components/PrintGuideLayer';
 import { CartesianLayer } from '@/components/CartesianLayer';
 import { SegmentLayer } from '@/components/SegmentLayer';
 import { PointLayer } from '@/components/PointLayer';
@@ -989,7 +990,17 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
               onPointerCancel={handlePointerCancel}
               data-testid="canvas-svg"
             >
-              <GridLayer viewport={viewport} gridSizeMm={state.gridSizeMm} />
+              <PrintGuideLayer
+                viewport={viewport}
+                pageFormat={preferences.pageFormat}
+                landscape={printLandscape}
+              />
+              <GridLayer
+                viewport={viewport}
+                gridSizeMm={state.gridSizeMm}
+                pageFormat={preferences.pageFormat}
+                landscape={printLandscape}
+              />
               {state.cartesianMode !== 'off' && state.displayMode === 'complet' && (
                 <CartesianLayer
                   viewport={viewport}
