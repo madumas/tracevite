@@ -329,13 +329,15 @@ export function reduce(state: ReducerState, action: ConstructionAction): Reducer
         undoManager: Undo.updateCurrent(undoManager, State.setGridSize(current, action.gridSizeMm)),
       };
 
-    case 'SET_DISPLAY_MODE':
+    case 'SET_DISPLAY_MODE': {
+      const updated = State.setDisplayMode(current, action.displayMode);
       return {
-        undoManager: Undo.updateCurrent(
-          undoManager,
-          State.setDisplayMode(current, action.displayMode),
-        ),
+        undoManager: Undo.updateCurrent(undoManager, {
+          ...updated,
+          hideProperties: action.displayMode === 'simplifie',
+        }),
       };
+    }
 
     case 'SET_DISPLAY_UNIT':
       return {

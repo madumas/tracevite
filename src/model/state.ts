@@ -29,7 +29,7 @@ export function createInitialState(): ConstructionState {
     displayUnit: 'cm',
     selectedElementId: null,
     consigne: null,
-    hideProperties: false,
+    hideProperties: true, // default hidden in simplifié — child identifies properties themselves
     toleranceProfile: 'default',
     chainTimeoutMs: 8000,
     fontScale: 1,

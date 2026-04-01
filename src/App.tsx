@@ -758,12 +758,18 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
     }
     prevSegCountRef.current = state.segments.length;
   }, [state.segments.length]);
+  const [figureClosedHint, setFigureClosedHint] = useState<string | null>(null);
   useEffect(() => {
     if (derived.figures.length > prevFigCountRef.current) {
       soundEngineRef.current?.playFigureClosed();
+      if (state.hideProperties) {
+        setFigureClosedHint('Tu as fermé une figure ! Observe ses propriétés.');
+        const t = setTimeout(() => setFigureClosedHint(null), 4000);
+        return () => clearTimeout(t);
+      }
     }
     prevFigCountRef.current = derived.figures.length;
-  }, [derived.figures.length]);
+  }, [derived.figures.length, state.hideProperties]);
 
   // Persist panel collapsed state
   useEffect(() => {
@@ -939,6 +945,18 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
               );
             })()}
         {shiftConstraintActive && ' — Contrainte 15° active'}
+        {figureClosedHint && (
+          <span
+            style={{
+              marginLeft: 8,
+              fontSize: 12 * effectiveFontScale,
+              color: '#0B7285',
+              fontWeight: 500,
+            }}
+          >
+            {figureClosedHint}
+          </span>
+        )}
         {/* Right-side buttons grouped in a single flex container */}
         {(!tool.isIdle ||
           cluttered ||

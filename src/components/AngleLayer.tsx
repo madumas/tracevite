@@ -43,6 +43,7 @@ export const AngleLayer = memo(function AngleLayer({
   selectedElementId,
   hoveredElementId,
   selectedFigurePointIds,
+  hideProperties = false,
   fontScale = 1,
   estimationMode = false,
   activeGestureHideAll,
@@ -195,7 +196,8 @@ export const AngleLayer = memo(function AngleLayer({
         const endAngle = Math.atan2(dy2, dx2);
 
         // Right angle: square marker offset past the point circle
-        if (angle.classification === 'droit') {
+        // Hidden when hideProperties is active (property detection is the child's task)
+        if (angle.classification === 'droit' && !hideProperties) {
           const cos1 = Math.cos(startAngle);
           const sin1 = Math.sin(startAngle);
           const cos2 = Math.cos(endAngle);

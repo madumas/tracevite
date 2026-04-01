@@ -116,7 +116,9 @@ export function deserializeState(json: string): ConstructionState {
     selectedElementId: null,
     consigne: typeof obj['consigne'] === 'string' ? obj['consigne'] : null,
     hideProperties:
-      typeof settings['hideProperties'] === 'boolean' ? settings['hideProperties'] : false,
+      typeof settings['hideProperties'] === 'boolean'
+        ? settings['hideProperties']
+        : defaults.hideProperties,
     toleranceProfile: defaults.toleranceProfile,
     chainTimeoutMs: defaults.chainTimeoutMs,
     fontScale: defaults.fontScale,

@@ -328,6 +328,27 @@ export const PropertiesPanel = memo(function PropertiesPanel({
           <span style={{ fontSize: 11, color: UI_TEXT_SECONDARY }}>Masquer les propriétés</span>
         </label>
 
+        {hideProperties && (properties.length > 0 || figures.length > 0) && (
+          <button
+            onClick={onToggleHideProperties}
+            style={{
+              width: '100%',
+              padding: '8px 12px',
+              background: UI_PRIMARY,
+              color: '#FFF',
+              border: 'none',
+              borderRadius: 4,
+              cursor: 'pointer',
+              fontSize: 13,
+              fontWeight: 600,
+              marginBottom: 6,
+            }}
+            data-testid="verify-properties-btn"
+          >
+            Vérifier les propriétés
+          </button>
+        )}
+
         {!hideProperties && (
           <>
             {properties.map((prop, i) => (
