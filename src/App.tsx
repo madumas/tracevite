@@ -751,8 +751,10 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
   }, [derived.properties.length, derived.figures.length, panelCollapsed]);
 
   const pxPerMm = viewport.zoom * CSS_PX_PER_MM;
-  const svgWidth = BOUNDS_WIDTH_MM * pxPerMm;
-  const svgHeight = BOUNDS_HEIGHT_MM * pxPerMm;
+  const containerW = containerRef.current?.clientWidth ?? window.innerWidth;
+  const containerH = containerRef.current?.clientHeight ?? window.innerHeight;
+  const svgWidth = Math.max(BOUNDS_WIDTH_MM * pxPerMm, containerW);
+  const svgHeight = Math.max(BOUNDS_HEIGHT_MM * pxPerMm, containerH);
 
   return (
     <div
