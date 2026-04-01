@@ -212,13 +212,29 @@ export function checkSymmetry(
     }
 
     if (!bestMatch || bestDist > toleranceMm) {
-      isSymmetric = false;
+      // Check if this point is on the circumference of a symmetric circle
+      // A point on a circle's circumference is symmetric if the circle's center
+      // reflects to itself (circle centered on/near axis)
+      const onSymmetricCircle = state.circles.some((circle) => {
+        const center = pointMap.get(circle.centerPointId);
+        if (!center) return false;
+        const distToCircumference = Math.abs(distance(point, center) - circle.radiusMm);
+        if (distToCircumference > toleranceMm) return false; // point not on this circle
+        // Check if the circle's center reflects to itself (on the axis)
+        const reflectedCenter = reflectPoint(center, axisP1, axisP2);
+        return distance(reflectedCenter, center) <= toleranceMm;
+      });
+
+      if (!onSymmetricCircle) {
+        isSymmetric = false;
+      }
       correspondences.push({
         originalId: point.id,
         matchedId: bestMatch?.id ?? point.id,
-        deviationMm: bestDist === Infinity ? toleranceMm * 2 : bestDist,
+        deviationMm: onSymmetricCircle ? 0 : bestDist === Infinity ? toleranceMm * 2 : bestDist,
       });
-      if (bestDist !== Infinity && bestDist > maxDeviation) maxDeviation = bestDist;
+      if (!onSymmetricCircle && bestDist !== Infinity && bestDist > maxDeviation)
+        maxDeviation = bestDist;
     } else {
       correspondences.push({
         originalId: point.id,

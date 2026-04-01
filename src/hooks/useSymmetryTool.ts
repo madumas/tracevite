@@ -100,7 +100,39 @@ export function useSymmetryTool({
         setPhase('axis_second_point');
       } else if (phase === 'axis_second_point' && axisP1) {
         const snap = findSnap(mmPos, state, tolerances);
-        runCheck(axisP1, snap.snappedPosition);
+        let p2 = snap.snappedPosition;
+
+        // Collinear snap: if the axis line P1→P2 passes near an existing point,
+        // adjust P2 so the axis goes exactly through that point.
+        // Critical for TDC: child aims axis through circle center but misses slightly.
+        const collinearTolerance = Math.max(tolerances.pointMm, state.gridSizeMm * 1.5);
+        let bestCollinearDist = collinearTolerance;
+        for (const pt of state.points) {
+          // Skip if pt is the axis start point
+          if (Math.abs(pt.x - axisP1.x) < 0.1 && Math.abs(pt.y - axisP1.y) < 0.1) continue;
+          // Distance from pt to the line P1→P2
+          const dx = p2.x - axisP1.x;
+          const dy = p2.y - axisP1.y;
+          const len = Math.sqrt(dx * dx + dy * dy);
+          if (len < 1) continue;
+          const distToLine = Math.abs(dx * (axisP1.y - pt.y) - dy * (axisP1.x - pt.x)) / len;
+          // Check pt is between P1 and P2 (not behind P1)
+          const proj = ((pt.x - axisP1.x) * dx + (pt.y - axisP1.y) * dy) / (len * len);
+          if (proj < 0) continue;
+          if (distToLine < bestCollinearDist) {
+            bestCollinearDist = distToLine;
+            // Adjust P2 so the line P1→P2 passes through pt
+            // Keep the same distance from P1, just rotate to pass through pt
+            const toPt = { x: pt.x - axisP1.x, y: pt.y - axisP1.y };
+            const toPtLen = Math.sqrt(toPt.x * toPt.x + toPt.y * toPt.y);
+            if (toPtLen > 0) {
+              const scale = len / toPtLen;
+              p2 = { x: axisP1.x + toPt.x * scale, y: axisP1.y + toPt.y * scale };
+            }
+          }
+        }
+
+        runCheck(axisP1, p2);
       }
     },
     [isActive, phase, state, axisP1, tolerances, runCheck, reset],
