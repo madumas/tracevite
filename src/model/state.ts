@@ -22,7 +22,7 @@ export function createInitialState(): ConstructionState {
     points: [],
     segments: [],
     circles: [],
-    gridSizeMm: 10, // 1cm default
+    gridSizeMm: 5, // 5mm default — snap compensates motor imprecision, finer grid aids spatial reference
     snapEnabled: true,
     activeTool: 'segment',
     displayMode: 'simplifie',
