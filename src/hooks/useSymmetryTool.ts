@@ -10,14 +10,15 @@ import { useState, useCallback, useMemo, createElement } from 'react';
 import type { ConstructionState, ViewportState, SnapResult } from '@/model/types';
 import type { ConstructionAction } from '@/model/reducer';
 import type { ToolHookResult } from './types';
-import { hitTestSegment } from '@/engine/hit-test';
+import { hitTestSegment, hitTestCircle } from '@/engine/hit-test';
+import { findConnectedElements } from '@/engine/reproduce';
 import { findSnap, DEFAULT_TOLERANCES, scaleTolerances } from '@/engine/snap';
 import { TOLERANCE_PROFILES } from '@/config/accessibility';
 import { checkSymmetry, type SymmetryResult } from '@/engine/reflection';
 import { CSS_PX_PER_MM } from '@/engine/viewport';
 import { CANVAS_GUIDE } from '@/config/theme';
 
-type SymmetryPhase = 'choose_axis' | 'axis_second_point' | 'showing_result';
+type SymmetryPhase = 'choose_axis' | 'axis_second_point' | 'select_figure' | 'showing_result';
 
 interface UseSymmetryToolOptions {
   state: ConstructionState;
@@ -54,10 +55,10 @@ export function useSymmetryTool({
   }, []);
 
   const runCheck = useCallback(
-    (p1: { x: number; y: number }, p2: { x: number; y: number }) => {
-      const allPointIds = state.points.map((p) => p.id);
-      if (allPointIds.length === 0) return;
-      const res = checkSymmetry(allPointIds, state, p1, p2);
+    (p1: { x: number; y: number }, p2: { x: number; y: number }, figurePointIds?: string[]) => {
+      const pointIds = figurePointIds ?? state.points.map((p) => p.id);
+      if (pointIds.length === 0) return;
+      const res = checkSymmetry(pointIds, state, p1, p2);
       setAxisP1(p1);
       setAxisP2(p2);
       setResult(res);
@@ -76,26 +77,64 @@ export function useSymmetryTool({
       }
 
       if (phase === 'choose_axis') {
-        // Try to hit an existing segment → use as axis
-        const segId = hitTestSegment(mmPos, state.segments, state.points);
-        if (segId) {
-          const seg = state.segments.find((s) => s.id === segId);
-          if (seg) {
-            const sp = state.points.find((p) => p.id === seg.startPointId);
-            const ep = state.points.find((p) => p.id === seg.endPointId);
-            if (sp && ep) {
-              runCheck(sp, ep);
-              return;
+        // Check if clicking near an existing point → prefer manual axis (2 clicks)
+        const snap = findSnap(mmPos, state, tolerances);
+        const clickedOnPoint = snap.snapType === 'point';
+
+        if (!clickedOnPoint) {
+          // Try to hit an existing segment → use as axis
+          const segId = hitTestSegment(mmPos, state.segments, state.points);
+          if (segId) {
+            const seg = state.segments.find((s) => s.id === segId);
+            if (seg) {
+              const sp = state.points.find((p) => p.id === seg.startPointId);
+              const ep = state.points.find((p) => p.id === seg.endPointId);
+              if (sp && ep) {
+                setAxisP1(sp);
+                setAxisP2(ep);
+                setPhase('select_figure');
+                return;
+              }
             }
           }
         }
-        // No segment hit → start drawing axis manually
-        const snap = findSnap(mmPos, state, tolerances);
+        // Manual axis: use snapped position as first point
         setAxisP1(snap.snappedPosition);
         setPhase('axis_second_point');
       } else if (phase === 'axis_second_point' && axisP1) {
         const snap = findSnap(mmPos, state, tolerances);
-        runCheck(axisP1, snap.snappedPosition);
+        const p2 = snap.snappedPosition;
+        setAxisP2(p2);
+        setPhase('select_figure');
+      } else if (phase === 'select_figure' && axisP1 && axisP2) {
+        // Click on a segment or circle to select the figure to verify
+        const segId = hitTestSegment(mmPos, state.segments, state.points);
+        const circleHitId = !segId ? hitTestCircle(mmPos, state.circles, state.points) : null;
+
+        if (segId || circleHitId) {
+          // Find connected figure
+          let pointIds: string[];
+          if (segId) {
+            const connected = findConnectedElements(segId, state);
+            pointIds = connected.pointIds;
+          } else {
+            const circle = state.circles.find((c) => c.id === circleHitId);
+            pointIds = circle ? [circle.centerPointId] : [];
+            // Add points connected via segments to the center
+            const centerSegs = state.segments.filter(
+              (s) =>
+                s.startPointId === circle?.centerPointId || s.endPointId === circle?.centerPointId,
+            );
+            for (const seg of centerSegs) {
+              if (!pointIds.includes(seg.startPointId)) pointIds.push(seg.startPointId);
+              if (!pointIds.includes(seg.endPointId)) pointIds.push(seg.endPointId);
+            }
+          }
+          runCheck(axisP1, axisP2, pointIds);
+        } else {
+          // Clicked on empty space → check ALL points (legacy behavior)
+          runCheck(axisP1, axisP2);
+        }
       }
     },
     [isActive, phase, state, axisP1, tolerances, runCheck, reset],
@@ -118,6 +157,10 @@ export function useSymmetryTool({
   const handleEscape = useCallback(() => {
     if (phase === 'showing_result') {
       reset();
+    } else if (phase === 'select_figure') {
+      setAxisP1(null);
+      setAxisP2(null);
+      setPhase('choose_axis');
     } else if (phase === 'axis_second_point') {
       setAxisP1(null);
       setPhase('choose_axis');
@@ -131,6 +174,8 @@ export function useSymmetryTool({
       'Symétrie — Clique sur un segment (axe) ou clique deux points pour tracer l\u2019axe';
   } else if (phase === 'axis_second_point') {
     statusMessage = 'Symétrie — Clique pour placer le deuxième point de l\u2019axe';
+  } else if (phase === 'select_figure') {
+    statusMessage = 'Symétrie — Clique sur la figure à vérifier';
   } else if (result?.isSymmetric) {
     statusMessage = 'Symétrie — La figure est symétrique par rapport à cet axe!';
   } else {
@@ -164,8 +209,8 @@ export function useSymmetryTool({
       );
     }
 
-    // Defined axis (solid)
-    if (phase === 'showing_result' && axisP1 && axisP2) {
+    // Defined axis (solid) — visible during figure selection AND result
+    if ((phase === 'select_figure' || phase === 'showing_result') && axisP1 && axisP2) {
       elements.push(
         createElement('line', {
           key: 'axis',

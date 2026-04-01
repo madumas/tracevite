@@ -73,6 +73,8 @@ export function findSnap(
   const pointMap = new Map(state.points.map((p) => [p.id, p]));
 
   // Priority 1: Existing points
+  // Tolerance must be at least gridSize * 1.5 so points between grid lines are reachable
+  const effectivePointTolerance = Math.max(tolerances.pointMm, state.gridSizeMm * 1.5);
   let bestPointDist = Infinity;
   let bestPointId: string | undefined;
   let bestPointPos: { x: number; y: number } | undefined;
@@ -80,7 +82,7 @@ export function findSnap(
   for (const point of state.points) {
     if (excludeSet.has(point.id)) continue;
     const dist = distance(cursor, point);
-    if (dist <= tolerances.pointMm && dist < bestPointDist) {
+    if (dist <= effectivePointTolerance && dist < bestPointDist) {
       bestPointDist = dist;
       bestPointId = point.id;
       bestPointPos = { x: point.x, y: point.y };

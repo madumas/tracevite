@@ -9,7 +9,7 @@ import { useState, useCallback, useMemo, createElement } from 'react';
 import type { ConstructionState, ViewportState, SnapResult } from '@/model/types';
 import type { ConstructionAction } from '@/model/reducer';
 import type { ToolHookResult } from './types';
-import { hitTestSegment } from '@/engine/hit-test';
+import { hitTestSegment, hitTestCircle } from '@/engine/hit-test';
 import { findSnap, DEFAULT_TOLERANCES, scaleTolerances } from '@/engine/snap';
 import { TOLERANCE_PROFILES } from '@/config/accessibility';
 import { findConnectedElements } from '@/engine/reproduce';
@@ -61,33 +61,69 @@ export function useReproduceTool({
       if (!isActive) return;
 
       if (phase === 'select_figure') {
-        // Hit-test: find a segment to select its connected figure
+        // Hit-test: find a segment or circle to select its connected figure
         const segId = hitTestSegment(mmPos, state.segments, state.points);
-        if (!segId) return;
-
-        // Try to find a closed figure first
-        const faces = detectAllFaces(state);
-        const figures = classifyFigures(faces, state, state.displayMode);
-        const figure = figures
-          .filter((f) => f.segmentIds.includes(segId))
-          .sort((a, b) => a.pointIds.length - b.pointIds.length)[0];
+        const circleHitId = !segId ? hitTestCircle(mmPos, state.circles, state.points) : null;
+        if (!segId && !circleHitId) return;
 
         let pointIds: string[];
         let segmentIds: string[];
-        if (figure) {
-          pointIds = [...figure.pointIds];
-          segmentIds = [...figure.segmentIds];
-        } else {
-          // No closed figure — flood-fill connected subgraph
-          const connected = findConnectedElements(segId, state);
-          pointIds = connected.pointIds;
-          segmentIds = connected.segmentIds;
-        }
+        let circleIds: string[];
 
-        // Find circles whose center is in the selected points
-        const circleIds = state.circles
-          .filter((c) => pointIds.includes(c.centerPointId))
-          .map((c) => c.id);
+        if (circleHitId && !segId) {
+          // Clicked on a circle — select the circle and its connected elements
+          const circle = state.circles.find((c) => c.id === circleHitId);
+          if (!circle) return;
+          // Select the circle and its center point + connected segments
+          const centerPoint = state.points.find((p) => p.id === circle.centerPointId);
+          if (!centerPoint) return;
+          pointIds = [circle.centerPointId];
+          // Find segments connected to this center point
+          segmentIds = state.segments
+            .filter(
+              (s) =>
+                s.startPointId === circle.centerPointId || s.endPointId === circle.centerPointId,
+            )
+            .map((s) => s.id);
+          // Add endpoint points of connected segments
+          for (const sId of segmentIds) {
+            const seg = state.segments.find((s) => s.id === sId);
+            if (seg) {
+              if (!pointIds.includes(seg.startPointId)) pointIds.push(seg.startPointId);
+              if (!pointIds.includes(seg.endPointId)) pointIds.push(seg.endPointId);
+            }
+          }
+          circleIds = [circleHitId];
+          // Also include other circles whose center is in pointIds
+          for (const c of state.circles) {
+            if (c.id !== circleHitId && pointIds.includes(c.centerPointId)) {
+              circleIds.push(c.id);
+            }
+          }
+        } else {
+          // Clicked on a segment — existing logic
+          // Try to find a closed figure first
+          const faces = detectAllFaces(state);
+          const figures = classifyFigures(faces, state, state.displayMode);
+          const figure = figures
+            .filter((f) => f.segmentIds.includes(segId!))
+            .sort((a, b) => a.pointIds.length - b.pointIds.length)[0];
+
+          if (figure) {
+            pointIds = [...figure.pointIds];
+            segmentIds = [...figure.segmentIds];
+          } else {
+            // No closed figure — flood-fill connected subgraph
+            const connected = findConnectedElements(segId!, state);
+            pointIds = connected.pointIds;
+            segmentIds = connected.segmentIds;
+          }
+
+          // Find circles whose center is in the selected points
+          circleIds = state.circles
+            .filter((c) => pointIds.includes(c.centerPointId))
+            .map((c) => c.id);
+        }
 
         // Compute centroid as anchor
         const pointMap = new Map(state.points.map((p) => [p.id, p]));
@@ -185,6 +221,30 @@ export function useReproduceTool({
       );
     }
 
+    // Highlight selected circles
+    for (const circleId of selected.circleIds) {
+      const circle = state.circles.find((c) => c.id === circleId);
+      if (!circle) continue;
+      const center = pointMap.get(circle.centerPointId);
+      if (!center) continue;
+      const cx = (center.x - viewport.panX) * pxPerMm;
+      const cy = (center.y - viewport.panY) * pxPerMm;
+      const cr = circle.radiusMm * pxPerMm;
+      elements.push(
+        createElement('circle', {
+          key: `sel-circle-${circleId}`,
+          cx,
+          cy,
+          r: cr,
+          fill: 'none',
+          stroke: CANVAS_SELECTION_BG,
+          strokeWidth: 6,
+          opacity: 0.7,
+          pointerEvents: 'none',
+        }),
+      );
+    }
+
     // Ghost preview at cursor position
     if (phase === 'place_copy' && cursorMm) {
       const snapped = snapResult?.snappedPosition ?? cursorMm;
@@ -213,6 +273,31 @@ export function useReproduceTool({
             stroke: '#85B7EB',
             strokeWidth: 2,
             strokeLinecap: 'round',
+            opacity: 0.6,
+            strokeDasharray: '6 3',
+            pointerEvents: 'none',
+          }),
+        );
+      }
+
+      // Ghost circles
+      for (const circleId of selected.circleIds) {
+        const circle = state.circles.find((c) => c.id === circleId);
+        if (!circle) continue;
+        const center = pointMap.get(circle.centerPointId);
+        if (!center) continue;
+        const cx = (center.x + offsetX - viewport.panX) * pxPerMm;
+        const cy = (center.y + offsetY - viewport.panY) * pxPerMm;
+        const cr = circle.radiusMm * pxPerMm;
+        elements.push(
+          createElement('circle', {
+            key: `ghost-circle-${circleId}`,
+            cx,
+            cy,
+            r: cr,
+            fill: 'none',
+            stroke: '#85B7EB',
+            strokeWidth: 2,
             opacity: 0.6,
             strokeDasharray: '6 3',
             pointerEvents: 'none',

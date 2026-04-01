@@ -62,6 +62,25 @@ export const CircleLayer = memo(function CircleLayer({
               data-testid={`circle-${circle.id}`}
               data-element-id={circle.id}
             />
+            {/* Center crosshair — helps TDC children find the center for snap */}
+            <line
+              x1={cx - 5}
+              y1={cy}
+              x2={cx + 5}
+              y2={cy}
+              stroke={colors.guide}
+              strokeWidth={1}
+              opacity={0.5}
+            />
+            <line
+              x1={cx}
+              y1={cy - 5}
+              x2={cx}
+              y2={cy + 5}
+              stroke={colors.guide}
+              strokeWidth={1}
+              opacity={0.5}
+            />
             {/* Radius label — placed inside circle, below center */}
             {!estimationMode && (
               <text

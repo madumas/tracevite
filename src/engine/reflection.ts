@@ -212,13 +212,29 @@ export function checkSymmetry(
     }
 
     if (!bestMatch || bestDist > toleranceMm) {
-      isSymmetric = false;
+      // Check if this point is on the circumference of a symmetric circle
+      // A point on a circle's circumference is symmetric if the circle's center
+      // reflects to itself (circle centered on/near axis)
+      const onSymmetricCircle = state.circles.some((circle) => {
+        const center = pointMap.get(circle.centerPointId);
+        if (!center) return false;
+        const distToCircumference = Math.abs(distance(point, center) - circle.radiusMm);
+        if (distToCircumference > toleranceMm) return false; // point not on this circle
+        // Check if the circle's center reflects to itself (on the axis)
+        const reflectedCenter = reflectPoint(center, axisP1, axisP2);
+        return distance(reflectedCenter, center) <= toleranceMm;
+      });
+
+      if (!onSymmetricCircle) {
+        isSymmetric = false;
+      }
       correspondences.push({
         originalId: point.id,
         matchedId: bestMatch?.id ?? point.id,
-        deviationMm: bestDist === Infinity ? toleranceMm * 2 : bestDist,
+        deviationMm: onSymmetricCircle ? 0 : bestDist === Infinity ? toleranceMm * 2 : bestDist,
       });
-      if (bestDist !== Infinity && bestDist > maxDeviation) maxDeviation = bestDist;
+      if (!onSymmetricCircle && bestDist !== Infinity && bestDist > maxDeviation)
+        maxDeviation = bestDist;
     } else {
       correspondences.push({
         originalId: point.id,
@@ -238,6 +254,33 @@ export function checkSymmetry(
         break;
       }
       matchedIds.add(corr.matchedId);
+    }
+  }
+
+  // Verify circles: only check circles whose center is in the checked pointIds
+  const pointIdSet = new Set(pointIds);
+  const relevantCircles = state.circles.filter((c) => pointIdSet.has(c.centerPointId));
+  if (isSymmetric && relevantCircles.length > 0) {
+    for (const circle of relevantCircles) {
+      const center = pointMap.get(circle.centerPointId);
+      if (!center) continue;
+      const reflectedCenter = reflectPoint(center, axisP1, axisP2);
+      // Find a circle whose center is near the reflected position with same radius
+      const match = relevantCircles.find((c) => {
+        if (c.id === circle.id) {
+          // Self-match: circle is on the axis (center reflects to itself)
+          const d = distance(reflectedCenter, center);
+          return d <= toleranceMm && Math.abs(c.radiusMm - circle.radiusMm) <= toleranceMm;
+        }
+        const otherCenter = pointMap.get(c.centerPointId);
+        if (!otherCenter) return false;
+        const d = distance(reflectedCenter, otherCenter);
+        return d <= toleranceMm && Math.abs(c.radiusMm - circle.radiusMm) <= toleranceMm;
+      });
+      if (!match) {
+        isSymmetric = false;
+        break;
+      }
     }
   }
 
