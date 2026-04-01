@@ -231,7 +231,7 @@ export const SegmentLayer = memo(function SegmentLayer({
                       parallelPeers.get(segment.id)?.includes(selectedElementId ?? '')) && (
                       <g>
                         {Array.from(
-                          { length: parallelChevronCount.get(segment.id) ?? 1 },
+                          { length: cluttered ? 1 : (parallelChevronCount.get(segment.id) ?? 1) },
                           (_, i) => {
                             const perpX = -dy / len;
                             const perpY = dx / len;
@@ -267,24 +267,28 @@ export const SegmentLayer = memo(function SegmentLayer({
                       congruencePeers.get(segment.id)?.includes(hoveredElementId ?? '') ||
                       congruencePeers.get(segment.id)?.includes(selectedElementId ?? '')) && (
                       <g>
-                        {Array.from({ length: congruenceTickMap.get(segment.id)! }, (_, i) => {
-                          const tickSpacing = 4;
-                          const totalWidth = (congruenceTickMap.get(segment.id)! - 1) * tickSpacing;
-                          const centerOffset = -totalWidth / 2 + i * tickSpacing;
-                          const perpX = len > 0 ? (-dy / len) * 6 : 0;
-                          const perpY = len > 0 ? (dx / len) * 6 : -6;
-                          return (
-                            <line
-                              key={i}
-                              x1={congCx + dirX * centerOffset - perpX}
-                              y1={congCy + dirY * centerOffset - perpY}
-                              x2={congCx + dirX * centerOffset + perpX}
-                              y2={congCy + dirY * centerOffset + perpY}
-                              stroke={colors.guide}
-                              strokeWidth={2.5}
-                            />
-                          );
-                        })}
+                        {Array.from(
+                          { length: cluttered ? 1 : congruenceTickMap.get(segment.id)! },
+                          (_, i) => {
+                            const tickCount = cluttered ? 1 : congruenceTickMap.get(segment.id)!;
+                            const tickSpacing = 4;
+                            const totalWidth = (tickCount - 1) * tickSpacing;
+                            const centerOffset = -totalWidth / 2 + i * tickSpacing;
+                            const perpX = len > 0 ? (-dy / len) * 6 : 0;
+                            const perpY = len > 0 ? (dx / len) * 6 : -6;
+                            return (
+                              <line
+                                key={i}
+                                x1={congCx + dirX * centerOffset - perpX}
+                                y1={congCy + dirY * centerOffset - perpY}
+                                x2={congCx + dirX * centerOffset + perpX}
+                                y2={congCy + dirY * centerOffset + perpY}
+                                stroke={colors.guide}
+                                strokeWidth={2.5}
+                              />
+                            );
+                          },
+                        )}
                       </g>
                     )}
                 </>
