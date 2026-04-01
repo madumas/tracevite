@@ -63,7 +63,7 @@ export const AngleLayer = memo(function AngleLayer({
     const vertexGroups = new Map<string, number[]>();
     angles.forEach((angle, idx) => {
       if (angle.classification === 'reflex') return;
-      if (displayMode === 'simplifie' && angle.classification === 'plat') return;
+      if (angle.classification === 'plat') return; // plat labels add no value in push-out context
       if (angle.classification === 'droit') return; // right angles use square, no text
       const group = vertexGroups.get(angle.vertexPointId) ?? [];
       group.push(idx);
