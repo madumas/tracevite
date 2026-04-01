@@ -117,28 +117,34 @@ export const PropertiesPanel = memo(function PropertiesPanel({
         overflowY: 'auto',
         flexShrink: 0,
         fontSize: 12 * fontScale,
-        position: 'relative',
       }}
       data-testid="properties-panel"
     >
-      {/* Collapse button */}
-      <button
-        onClick={onToggleCollapsed}
+      {/* Panel header with collapse button */}
+      <div
         style={{
-          position: 'absolute',
-          right: 4,
-          top: 4,
-          width: 28,
-          height: 28,
-          background: 'transparent',
-          border: 'none',
-          cursor: 'pointer',
-          fontSize: 12,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          padding: '6px 10px 2px',
         }}
-        aria-label="Fermer le panneau"
       >
-        ▶
-      </button>
+        <span style={{ fontSize: 11, fontWeight: 600, color: UI_TEXT_SECONDARY }}>Propriétés</span>
+        <button
+          onClick={onToggleCollapsed}
+          style={{
+            width: 28,
+            height: 28,
+            background: 'transparent',
+            border: 'none',
+            cursor: 'pointer',
+            fontSize: 12,
+          }}
+          aria-label="Fermer le panneau"
+        >
+          ▶
+        </button>
+      </div>
 
       {/* Segments / Côtés — titre adapté au contexte (spec §9.0) */}
       <AccordionSection
