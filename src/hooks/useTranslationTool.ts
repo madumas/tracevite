@@ -18,6 +18,7 @@ import { TOLERANCE_PROFILES, MIN_POINT_DISTANCE_MM } from '@/config/accessibilit
 import { findConnectedElements } from '@/engine/reproduce';
 import { detectAllFaces, classifyFigures } from '@/engine/figures';
 import { distance } from '@/engine/geometry';
+import { formatLength } from '@/engine/format';
 import { CSS_PX_PER_MM } from '@/engine/viewport';
 import { CANVAS_GUIDE } from '@/config/theme';
 
@@ -180,6 +181,7 @@ export function useTranslationTool({
       const sx2 = (endPos.x - viewport.panX) * pxPerMm;
       const sy2 = (endPos.y - viewport.panY) * pxPerMm;
 
+      const vecLen = distance(vectorStart, endPos);
       elements.push(
         createElement('line', {
           key: 'arrow-preview',
@@ -195,6 +197,26 @@ export function useTranslationTool({
           pointerEvents: 'none',
         }),
       );
+      if (vecLen > 2) {
+        elements.push(
+          createElement(
+            'text',
+            {
+              key: 'arrow-preview-label',
+              x: (sx1 + sx2) / 2,
+              y: (sy1 + sy2) / 2 - 8,
+              fill: CANVAS_GUIDE,
+              fontSize: 12,
+              textAnchor: 'middle',
+              paintOrder: 'stroke',
+              stroke: 'white',
+              strokeWidth: 3,
+              pointerEvents: 'none',
+            },
+            formatLength(vecLen, state.displayUnit),
+          ),
+        );
+      }
     }
 
     // Defined arrow
@@ -204,6 +226,7 @@ export function useTranslationTool({
       const sx2 = (vectorEnd.x - viewport.panX) * pxPerMm;
       const sy2 = (vectorEnd.y - viewport.panY) * pxPerMm;
 
+      const defLen = distance(vectorStart, vectorEnd);
       elements.push(
         createElement('line', {
           key: 'arrow-defined',
@@ -217,6 +240,26 @@ export function useTranslationTool({
           pointerEvents: 'none',
         }),
       );
+      if (defLen > 2) {
+        elements.push(
+          createElement(
+            'text',
+            {
+              key: 'arrow-defined-label',
+              x: (sx1 + sx2) / 2,
+              y: (sy1 + sy2) / 2 - 8,
+              fill: CANVAS_GUIDE,
+              fontSize: 12,
+              textAnchor: 'middle',
+              paintOrder: 'stroke',
+              stroke: 'white',
+              strokeWidth: 3,
+              pointerEvents: 'none',
+            },
+            formatLength(defLen, state.displayUnit),
+          ),
+        );
+      }
     }
 
     return elements.length > 0 ? elements : null;
