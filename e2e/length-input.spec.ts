@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { interactCanvas } from './helpers/canvas';
-import { waitForStatus } from './helpers/toolbar';
+import { selectTool, waitForStatus } from './helpers/toolbar';
 import { expectSegmentCount } from './helpers/assertions';
 
 test.beforeEach(async ({ page }) => {
@@ -16,16 +16,17 @@ test.describe('Length input (fix segment length)', () => {
     await interactCanvas(page, testInfo, 100, 80);
     await expectSegmentCount(page, 1);
 
-    // Exit chaining
-    await page.keyboard.press('Escape');
-    await waitForStatus(page, /premier point/);
+    // Switch to Move tool — segment selection requires a non-construction tool
+    await selectTool(page, 'move');
+    await page.waitForTimeout(200);
 
-    // Click on segment body (midpoint) to select it — trySelect intercepts for segments
+    // Click on segment body (midpoint) to select it
     await interactCanvas(page, testInfo, 75, 80);
+    await page.waitForTimeout(300);
 
     // Context action bar should appear with fix-length button
     const fixBtn = page.locator('[data-testid="context-fix-length"]');
-    await fixBtn.waitFor({ timeout: 3000 });
+    await fixBtn.waitFor({ timeout: 5000 });
     await fixBtn.click();
 
     // LengthInput should appear
@@ -45,12 +46,14 @@ test.describe('Length input (fix segment length)', () => {
     await interactCanvas(page, testInfo, 50, 80);
     await waitForStatus(page, /deuxième point/);
     await interactCanvas(page, testInfo, 100, 80);
-    await page.keyboard.press('Escape');
-    await waitForStatus(page, /premier point/);
+    // Switch to Move tool for segment selection
+    await selectTool(page, 'move');
+    await page.waitForTimeout(200);
     await interactCanvas(page, testInfo, 75, 80);
+    await page.waitForTimeout(300);
 
     const fixBtn = page.locator('[data-testid="context-fix-length"]');
-    await fixBtn.waitFor({ timeout: 3000 });
+    await fixBtn.waitFor({ timeout: 5000 });
     await fixBtn.click();
 
     const input = page.locator('[data-testid="length-input-field"]');

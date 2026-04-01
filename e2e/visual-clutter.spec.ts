@@ -12,31 +12,34 @@ test.describe('Visual clutter and overlapping labels', () => {
   test('angle labels hidden after clutter threshold (>5 segments in simplifie)', async ({
     page,
   }, testInfo) => {
-    // Create 6 segments to exceed the 5-segment clutter threshold
-    const positions = [
+    // Create 6 independent segments to exceed the 5-segment clutter threshold.
+    // Use well-separated coordinates to avoid snap interference between segments.
+    // Each segment is a separate "create + escape" cycle.
+    const segments: Array<[number, number, number, number]> = [
       [30, 50, 80, 50],
-      [30, 70, 80, 70],
-      [30, 90, 80, 90],
+      [30, 80, 80, 80],
       [30, 110, 80, 110],
-      [30, 130, 80, 130],
-      [30, 150, 80, 150],
+      [130, 50, 180, 50],
+      [130, 80, 180, 80],
+      [130, 110, 180, 110],
     ];
 
-    for (const [x1, y1, x2, y2] of positions) {
-      await interactCanvas(page, testInfo, x1!, y1!);
-      await waitForStatus(page, /deuxième point/);
-      await interactCanvas(page, testInfo, x2!, y2!);
+    for (let i = 0; i < segments.length; i++) {
+      const [x1, y1, x2, y2] = segments[i]!;
+      await interactCanvas(page, testInfo, x1, y1);
+      await page.waitForTimeout(400);
+      await interactCanvas(page, testInfo, x2, y2);
+      await page.waitForTimeout(400);
       await page.keyboard.press('Escape');
+      await page.waitForTimeout(400);
+      await expectSegmentCount(page, i + 1);
     }
 
-    await expectSegmentCount(page, 6);
-
     // In simplifie mode (default), angle labels should be hidden after 5 segments
-    // The angle-layer should exist but angle degree labels should not be visible
-    const angleLabels = page.locator('[data-testid="angle-layer"] text');
-    const count = await angleLabels.count();
     // With 6 isolated segments (no shared vertices), there are no angles anyway
     // But the clutter flag should be set
+    const angleLabels = page.locator('[data-testid="angle-layer"] text');
+    const count = await angleLabels.count();
     expect(count).toBe(0);
   });
 

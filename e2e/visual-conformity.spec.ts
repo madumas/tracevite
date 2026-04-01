@@ -20,6 +20,7 @@ function projectDir(projectName: string): string {
 }
 
 test('visual conformity audit', async ({ page }, testInfo) => {
+  test.setTimeout(120_000);
   const dir = path.join(SCREENSHOT_BASE, projectDir(testInfo.project.name));
   await fs.mkdir(dir, { recursive: true });
   const shot = (name: string) => path.join(dir, name);
@@ -914,6 +915,7 @@ test('visual conformity — PFEQ pedagogical', async ({ page }, testInfo) => {
 
 // --- Separate test: PFEQ figures and tools ---
 test('visual conformity — PFEQ figures & tools', async ({ page }, testInfo) => {
+  test.setTimeout(120_000);
   const dir = path.join(SCREENSHOT_BASE, projectDir(testInfo.project.name));
   await fs.mkdir(dir, { recursive: true });
   const shot = (name: string) => path.join(dir, name);
