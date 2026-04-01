@@ -157,7 +157,7 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
     ? canvasColors.segment
     : preferences.segmentColor;
   // Responsive breakpoints
-  const isNarrow = useMediaQuery('(max-width: 768px)');
+  const isNarrow = useMediaQuery('(max-width: 900px)');
 
   const containerRef = useRef<HTMLDivElement>(null);
   const containerSize = useContainerSize(containerRef);
@@ -885,6 +885,23 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
                     {toolName}
                   </span>
                   {instruction}
+                  {state.estimationMode && !estimationRevealed && (
+                    <span
+                      style={{
+                        background: '#FEF3C7',
+                        color: '#B45309',
+                        padding: '1px 8px',
+                        borderRadius: 4,
+                        fontSize: 11 * effectiveFontScale,
+                        fontWeight: 600,
+                        marginLeft: 8,
+                        whiteSpace: 'nowrap',
+                      }}
+                      data-testid="estimation-badge"
+                    >
+                      Estimation
+                    </span>
+                  )}
                 </>
               );
             })()}
@@ -1208,6 +1225,7 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
             collapsed={panelCollapsed}
             onToggleCollapsed={() => setPanelCollapsed(!panelCollapsed)}
             hasNewProperties={hasNewProperties}
+            panelPosition={preferences.panelPosition}
             fontScale={effectiveFontScale}
             estimationActive={state.estimationMode && !estimationRevealed}
           />

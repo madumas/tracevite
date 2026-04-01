@@ -12,6 +12,7 @@ import {
   UI_PRIMARY,
 } from '@/config/theme';
 import { formatLength } from '@/engine/format';
+import type { PanelPosition } from '@/model/preferences';
 
 interface PropertiesPanelProps {
   readonly state: ConstructionState;
@@ -25,6 +26,7 @@ interface PropertiesPanelProps {
   readonly collapsed: boolean;
   readonly onToggleCollapsed: () => void;
   readonly hasNewProperties?: boolean;
+  readonly panelPosition?: PanelPosition;
   readonly fontScale?: number;
   readonly estimationActive?: boolean;
 }
@@ -41,22 +43,25 @@ export const PropertiesPanel = memo(function PropertiesPanel({
   collapsed,
   onToggleCollapsed,
   hasNewProperties,
+  panelPosition = 'right',
   fontScale = 1,
   estimationActive = false,
 }: PropertiesPanelProps) {
+  const isLeft = panelPosition === 'left';
+
   if (collapsed) {
     return (
       <button
         onClick={onToggleCollapsed}
         style={{
           position: 'absolute',
-          right: 0,
+          ...(isLeft ? { left: 0 } : { right: 0 }),
           top: 0,
           width: 44,
           height: 44,
           background: UI_SURFACE,
           border: `1px solid ${UI_BORDER}`,
-          borderRadius: '0 0 0 8px',
+          borderRadius: isLeft ? '0 0 8px 0' : '0 0 0 8px',
           cursor: 'pointer',
           fontSize: 16,
           zIndex: 20,
@@ -64,13 +69,13 @@ export const PropertiesPanel = memo(function PropertiesPanel({
         aria-label="Ouvrir le panneau"
         data-testid="panel-toggle"
       >
-        ◀
+        {isLeft ? '▶' : '◀'}
         {hasNewProperties && (
           <span
             style={{
               position: 'absolute',
               top: 4,
-              right: 4,
+              ...(isLeft ? { left: 4 } : { right: 4 }),
               width: 8,
               height: 8,
               borderRadius: '50%',
@@ -129,21 +134,39 @@ export const PropertiesPanel = memo(function PropertiesPanel({
           padding: '6px 10px 2px',
         }}
       >
+        {isLeft && (
+          <button
+            onClick={onToggleCollapsed}
+            style={{
+              width: 28,
+              height: 28,
+              background: 'transparent',
+              border: 'none',
+              cursor: 'pointer',
+              fontSize: 12,
+            }}
+            aria-label="Fermer le panneau"
+          >
+            ◀
+          </button>
+        )}
         <span style={{ fontSize: 11, fontWeight: 600, color: UI_TEXT_SECONDARY }}>Propriétés</span>
-        <button
-          onClick={onToggleCollapsed}
-          style={{
-            width: 28,
-            height: 28,
-            background: 'transparent',
-            border: 'none',
-            cursor: 'pointer',
-            fontSize: 12,
-          }}
-          aria-label="Fermer le panneau"
-        >
-          ▶
-        </button>
+        {!isLeft && (
+          <button
+            onClick={onToggleCollapsed}
+            style={{
+              width: 28,
+              height: 28,
+              background: 'transparent',
+              border: 'none',
+              cursor: 'pointer',
+              fontSize: 12,
+            }}
+            aria-label="Fermer le panneau"
+          >
+            ▶
+          </button>
+        )}
       </div>
 
       {/* Segments / Côtés — titre adapté au contexte (spec §9.0) */}
