@@ -264,7 +264,7 @@ test('visual conformity audit', async ({ page }, testInfo) => {
 
   // --- 26: Consigne banner (teacher exercise instruction) ---
   // Navigate with consigne URL param
-  await page.goto('/?consigne=Construis%20un%20triangle%20rectangle%20dont%20l%27hypot%C3%A9nuse%20mesure%207%20cm.');
+  await page.goto('/?consigne=Construis%20un%20triangle%20rectangle%20dont%20le%20plus%20long%20c%C3%B4t%C3%A9%20mesure%207%20cm.');
   await page.waitForSelector('[data-testid="canvas-svg"]');
   await page.waitForTimeout(500);
   await page.screenshot({ path: shot('26-consigne-banner.png'), fullPage: true });
@@ -920,14 +920,37 @@ test('visual conformity — PFEQ figures & tools', async ({ page }, testInfo) =>
   const interact = (xMm: number, yMm: number) => interactCanvas(page, testInfo, xMm, yMm);
   const isDesktop = testInfo.project.name === 'Desktop Chrome';
 
-  // ── Helper: fresh page in complet mode with panel open ──
+  // ── Helper: fresh page in complet mode, no auto-intersection ──
   async function freshComplet() {
     await page.goto('/');
     await page.waitForSelector('[data-testid="canvas-svg"]');
     await page.waitForTimeout(300);
+    // Clear canvas if it has elements from previous test
+    const newBtn = page.locator('[data-testid="action-new"]');
+    if (await newBtn.isVisible()) {
+      await newBtn.click();
+      const confirmBtn = page.locator('[data-testid="confirm-dialog-confirm"]');
+      if (await confirmBtn.isVisible({ timeout: 1000 }).catch(() => false)) {
+        await confirmBtn.click();
+        await page.waitForTimeout(300);
+      }
+    }
     await page.locator('[data-testid="mode-selector"]').click();
     await page.locator('[data-testid="mode-option-complet"]').click();
     await page.waitForTimeout(300);
+    // Disable auto-intersection for clean figure tests
+    const settingsBtn = page.locator('[data-testid="settings-button"]');
+    if (await settingsBtn.isVisible()) {
+      await settingsBtn.click();
+      await page.waitForTimeout(200);
+      const aiCheckbox = page.locator('text=Intersections automatiques').locator('..').locator('input[type="checkbox"]');
+      if (await aiCheckbox.isVisible({ timeout: 1000 }).catch(() => false)) {
+        const checked = await aiCheckbox.isChecked();
+        if (checked) await aiCheckbox.click({ force: true });
+      }
+      await page.keyboard.press('Escape');
+      await page.waitForTimeout(200);
+    }
   }
   async function openPanel() {
     const p = page.locator('[data-testid="properties-panel"]');
@@ -1032,6 +1055,78 @@ test('visual conformity — PFEQ figures & tools', async ({ page }, testInfo) =>
   const panel74 = await openPanel();
   await page.screenshot({ path: shot('74-pfeq-angle-plat.png'), fullPage: true });
   await panel74.screenshot({ path: shot('74b-pfeq-angle-plat-panel.png') });
+
+  // ── 80: Rectangle propre (clean, isolated) ──
+  await freshComplet();
+  await interact(40, 50);
+  await page.waitForTimeout(250);
+  await interact(110, 50);
+  await page.waitForTimeout(250);
+  await interact(110, 85);
+  await page.waitForTimeout(250);
+  await interact(40, 85);
+  await page.waitForTimeout(250);
+  await interact(40, 50); // close
+  await page.waitForTimeout(300);
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(200);
+  const panel80 = await openPanel();
+  await page.screenshot({ path: shot('80-pfeq-rectangle.png'), fullPage: true });
+  await panel80.screenshot({ path: shot('80b-pfeq-rectangle-panel.png') });
+
+  // ── 81: Losange (4 equal sides, non-right angles) ──
+  await freshComplet();
+  await interact(80, 40);
+  await page.waitForTimeout(250);
+  await interact(115, 70);
+  await page.waitForTimeout(250);
+  await interact(80, 100);
+  await page.waitForTimeout(250);
+  await interact(45, 70);
+  await page.waitForTimeout(250);
+  await interact(80, 40); // close
+  await page.waitForTimeout(300);
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(200);
+  const panel81 = await openPanel();
+  await page.screenshot({ path: shot('81-pfeq-losange.png'), fullPage: true });
+  await panel81.screenshot({ path: shot('81b-pfeq-losange-panel.png') });
+
+  // ── 82: Triangle équilatéral (3 equal sides) ──
+  await freshComplet();
+  // 50mm sides: A(50,87), B(100,87), C(75,44) — height = 50*sin(60°) ≈ 43
+  await interact(50, 87);
+  await page.waitForTimeout(250);
+  await interact(100, 87);
+  await page.waitForTimeout(250);
+  await interact(75, 44);
+  await page.waitForTimeout(250);
+  await interact(50, 87); // close
+  await page.waitForTimeout(300);
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(200);
+  const panel82 = await openPanel();
+  await page.screenshot({ path: shot('82-pfeq-triangle-equilateral.png'), fullPage: true });
+  await panel82.screenshot({ path: shot('82b-pfeq-triangle-equilateral-panel.png') });
+
+  // ── 83: Trapèze (1 pair of parallel sides) ──
+  await freshComplet();
+  // A(50,50), B(110,50) top side, C(120,90), D(40,90) bottom side — AB//DC but different lengths
+  await interact(50, 50);
+  await page.waitForTimeout(250);
+  await interact(110, 50);
+  await page.waitForTimeout(250);
+  await interact(130, 90);
+  await page.waitForTimeout(250);
+  await interact(30, 90);
+  await page.waitForTimeout(250);
+  await interact(50, 50); // close
+  await page.waitForTimeout(300);
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(200);
+  const panel83 = await openPanel();
+  await page.screenshot({ path: shot('83-pfeq-trapeze.png'), fullPage: true });
+  await panel83.screenshot({ path: shot('83b-pfeq-trapeze-panel.png') });
 
   // ── 75: Reflection tool (cleaner version) ──
   await freshComplet();
