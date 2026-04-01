@@ -33,6 +33,14 @@ npm run lint         # Run linter
 npm run test         # Run tests
 ```
 
+## Release & Versioning
+
+- **Branches:** `dev` for development, `main` for production. Cloudflare auto-deploys on push to `main`.
+- **Conventional commits:** `fix:` → patch, `feat:` → minor, `BREAKING CHANGE` → major.
+- **Release script:** `npm run release` (or `./scripts/release.sh`). Auto-detects bump from commits since last tag, merges `dev` → `main`, runs `npm version`, creates git tag, pushes, syncs `dev`.
+- **Build hash:** `__BUILD_HASH__` (git short hash) injected at build time via `vite.config.ts`, displayed in the About dialog next to the version.
+- **Tags:** Semver with `v` prefix (`v0.1.0`, `v0.2.0`). Created by the release script, never manually.
+
 ## Architecture
 
 ### Core Layers
