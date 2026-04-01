@@ -336,7 +336,7 @@ export const PropertiesPanel = memo(function PropertiesPanel({
                 <span style={{ fontWeight: 500 }}>Centre {center.label}</span>
                 {!estimationActive && (
                   <span style={{ color: UI_TEXT_SECONDARY, marginLeft: 6 }}>
-                    r = {formatLength(circle.radiusMm, state.displayUnit)}, d ={' '}
+                    Rayon : {formatLength(circle.radiusMm, state.displayUnit)}, Diamètre :{' '}
                     {formatLength(circle.radiusMm * 2, state.displayUnit)}
                   </span>
                 )}
