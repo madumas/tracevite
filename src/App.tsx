@@ -704,9 +704,12 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
   const prevSnapTypeRef = useRef<string>('none');
   useEffect(() => {
     const snapType = tool.snapResult?.snapType ?? 'none';
-    const isSignificantSnap = snapType === 'point' || snapType === 'midpoint';
+    const isSignificantSnap =
+      snapType === 'point' || snapType === 'midpoint' || snapType === 'segment';
     const wasSignificant =
-      prevSnapTypeRef.current === 'point' || prevSnapTypeRef.current === 'midpoint';
+      prevSnapTypeRef.current === 'point' ||
+      prevSnapTypeRef.current === 'midpoint' ||
+      prevSnapTypeRef.current === 'segment';
     if (isSignificantSnap && !wasSignificant) {
       soundEngineRef.current?.playSnap();
     }

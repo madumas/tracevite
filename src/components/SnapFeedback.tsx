@@ -80,6 +80,22 @@ export const SnapFeedback = memo(function SnapFeedback({
     );
   }
 
+  if (snapResult.snapType === 'segment') {
+    // Halo on segment body (projection point)
+    return (
+      <circle
+        cx={sx}
+        cy={sy}
+        r={8}
+        fill="none"
+        stroke={colors.guide}
+        strokeWidth={2}
+        opacity={0.5}
+        data-testid="snap-segment-halo"
+      />
+    );
+  }
+
   if (snapResult.snapType === 'grid') {
     // Small dot at grid intersection
     return (
