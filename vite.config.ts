@@ -15,10 +15,19 @@ const gitHash = (() => {
   }
 })();
 
+const gitBranch = (() => {
+  try {
+    return execSync('git rev-parse --abbrev-ref HEAD').toString().trim();
+  } catch {
+    return 'unknown';
+  }
+})();
+
 export default defineConfig({
   define: {
     __APP_VERSION__: JSON.stringify(pkg.version),
     __BUILD_HASH__: JSON.stringify(gitHash),
+    __GIT_BRANCH__: JSON.stringify(gitBranch),
   },
   plugins: [
     react(),
