@@ -393,6 +393,7 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
       onCursorMove: handleCursorMove,
       cursorSmoothing: preferences.cursorSmoothing && state.toleranceProfile === 'very_large',
       onPinchZoom: pinchZoomPan,
+      onTouchEnd: selection.clearHover,
     });
 
   const hasElements = state.points.length > 0;

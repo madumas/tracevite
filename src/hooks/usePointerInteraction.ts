@@ -16,6 +16,8 @@ interface UsePointerInteractionOptions {
   cursorSmoothing?: boolean;
   /** Called during pinch-to-zoom/pan gesture with delta zoom and pan in mm. */
   onPinchZoom?: (deltaZoom: number, panDeltaMm: { x: number; y: number }) => void;
+  /** Called on touch pointerup to clear hover state (no pointerleave equivalent on touch). */
+  onTouchEnd?: () => void;
 }
 
 /**
@@ -41,6 +43,7 @@ export function usePointerInteraction({
   onCursorMove,
   cursorSmoothing = false,
   onPinchZoom,
+  onTouchEnd,
 }: UsePointerInteractionOptions) {
   const pointerDownPos = useRef<{ x: number; y: number } | null>(null);
   const lastClickTime = useRef(0);
@@ -205,6 +208,11 @@ export function usePointerInteraction({
     (e: React.PointerEvent<SVGSVGElement>) => {
       activePointers.current.delete(e.pointerId);
 
+      // Touch: clear hover when finger lifts (no pointerleave equivalent)
+      if (e.pointerType === 'touch' && onTouchEnd) {
+        onTouchEnd();
+      }
+
       // If ending pinch, reset gesture mode when < 2 fingers remain (I1 fix)
       if (gestureMode.current === 'pinch') {
         if (activePointers.current.size < 2) {
@@ -238,7 +246,7 @@ export function usePointerInteraction({
 
       onCanvasClick(upPos);
     },
-    [screenToMmPos, onCanvasClick, clearTouchTimer],
+    [screenToMmPos, onCanvasClick, clearTouchTimer, onTouchEnd],
   );
 
   // pointercancel: iOS fires this instead of pointerup when system gesture takes over (C1 fix)

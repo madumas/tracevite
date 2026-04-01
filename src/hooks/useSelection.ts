@@ -24,6 +24,8 @@ interface SelectionResult {
   trySelect: (mmPos: { x: number; y: number }) => boolean;
   /** Update hover state from cursor position. */
   updateHover: (mmPos: { x: number; y: number }) => void;
+  /** Clear hover state (e.g. on touch pointerup). */
+  clearHover: () => void;
   /** Clear selection. */
   clearSelection: () => void;
 }
@@ -79,9 +81,13 @@ export function useSelection({
     [state, dispatch, toolIsIdle],
   );
 
+  const clearHover = useCallback(() => {
+    setHoveredElement(null);
+  }, []);
+
   const clearSelection = useCallback(() => {
     dispatch({ type: 'SET_SELECTED_ELEMENT', elementId: null });
   }, [dispatch]);
 
-  return { hoveredElement, trySelect, updateHover, clearSelection };
+  return { hoveredElement, trySelect, updateHover, clearHover, clearSelection };
 }
