@@ -54,16 +54,32 @@ export const PrintSvg = memo(function PrintSvg({
     [state, includeMeasurements],
   );
 
-  // Parallel segment IDs
-  const parallelSegIds = useMemo(() => {
-    if (!derived || state.hideProperties) return new Set<string>();
-    const ids = new Set<string>();
+  // Parallel chevron count per segment
+  const parallelSegChevrons = useMemo(() => {
+    if (!derived || state.hideProperties) return new Map<string, number>();
+    const map = new Map<string, number>();
+    const groups: string[][] = [];
+    const segToGroup = new Map<string, number>();
     for (const prop of derived.properties) {
       if (prop.type === 'parallel') {
-        for (const id of prop.involvedIds) ids.add(id);
+        const ids = [...prop.involvedIds];
+        const existing = ids.map((id) => segToGroup.get(id)).find((g) => g !== undefined);
+        if (existing !== undefined) {
+          for (const id of ids) {
+            segToGroup.set(id, existing);
+            if (!groups[existing]!.includes(id)) groups[existing]!.push(id);
+          }
+        } else {
+          const idx = groups.length;
+          groups.push(ids);
+          for (const id of ids) segToGroup.set(id, idx);
+        }
       }
     }
-    return ids;
+    for (let i = 0; i < groups.length; i++) {
+      for (const id of groups[i]!) map.set(id, i + 1);
+    }
+    return map;
   }, [derived, state.hideProperties]);
 
   // Congruence ticks map
@@ -168,20 +184,26 @@ export const PrintSvg = memo(function PrintSvg({
 
             const marks: React.ReactElement[] = [];
 
-            // Parallel marks
-            if (parallelSegIds.has(seg.id)) {
-              for (const offset of [-1, 1]) {
-                const cx = midX + alongX * offset;
-                const cy = midY + alongY * offset;
+            // Parallel chevrons (>, >>, >>>)
+            const chevronCount = parallelSegChevrons.get(seg.id);
+            if (chevronCount) {
+              const chevronSpacing = 2;
+              const h = 1.5;
+              const w = 1;
+              const totalCW = (chevronCount - 1) * chevronSpacing;
+              for (let i = 0; i < chevronCount; i++) {
+                const off = -totalCW / 2 + i * chevronSpacing;
+                const cx = midX + alongX * off;
+                const cy = midY + alongY * off;
                 marks.push(
-                  <line
-                    key={`par-${seg.id}-${offset}`}
-                    x1={cx - perpX * markLen}
-                    y1={cy - perpY * markLen}
-                    x2={cx + perpX * markLen}
-                    y2={cy + perpY * markLen}
+                  <polyline
+                    key={`par-${seg.id}-${i}`}
+                    points={`${cx - alongX * w + perpX * h},${cy - alongY * w + perpY * h} ${cx},${cy} ${cx - alongX * w - perpX * h},${cy - alongY * w - perpY * h}`}
+                    fill="none"
                     stroke="#000"
                     strokeWidth={0.3}
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
                   />,
                 );
               }

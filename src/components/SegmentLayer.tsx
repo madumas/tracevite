@@ -43,6 +43,7 @@ export const SegmentLayer = memo(function SegmentLayer({
   // Build parallel pair colors: each pair of parallel segments gets a distinct color
   const PARALLEL_COLORS = ['#0B7285', '#C24B22', '#7C3AED', '#2E7D32'];
   const parallelSegColor = new Map<string, string>();
+  const parallelChevronCount = new Map<string, number>();
   const parallelGroups: string[][] = [];
   if (!hideProperties) {
     // Group parallel segments into connected pairs
@@ -65,11 +66,12 @@ export const SegmentLayer = memo(function SegmentLayer({
         }
       }
     }
-    // Assign color per group
+    // Assign color and chevron count per group
     for (let i = 0; i < parallelGroups.length; i++) {
       const color = PARALLEL_COLORS[i % PARALLEL_COLORS.length]!;
       for (const id of parallelGroups[i]!) {
         parallelSegColor.set(id, color);
+        parallelChevronCount.set(id, i + 1);
       }
     }
   }
@@ -205,7 +207,7 @@ export const SegmentLayer = memo(function SegmentLayer({
                   {lengthText}
                 </text>
               )}
-            {/* Parallel marks: // (two diagonal slashes) colored by pair, at 1/3 of segment */}
+            {/* Parallel chevrons (>, >>, >>>) at midpoint — standard convention */}
             {/* Clutter: hidden until segment or a parallel peer is hovered/selected */}
             {parallelSegColor.has(segment.id) &&
               len > 0 &&
@@ -215,34 +217,34 @@ export const SegmentLayer = memo(function SegmentLayer({
                 parallelPeers.get(segment.id)?.includes(hoveredElementId ?? '') ||
                 parallelPeers.get(segment.id)?.includes(selectedElementId ?? '')) && (
                 <g>
-                  {[-3, 3].map((along) => {
+                  {Array.from({ length: parallelChevronCount.get(segment.id) ?? 1 }, (_, i) => {
                     const dirX = dx / len;
                     const dirY = dy / len;
-                    // 45° diagonal relative to segment
-                    const diagX = (dirX - dirY) * 0.7;
-                    const diagY = (dirY + dirX) * 0.7;
-                    // Position at 1/4 of segment (clearly away from midpoint)
-                    const thirdSx = sx1 + dx * 0.25;
-                    const thirdSy = sy1 + dy * 0.25;
-                    const cx = thirdSx + dirX * along;
-                    const cy = thirdSy + dirY * along;
-                    const halfLen = 5;
+                    const perpX = -dy / len;
+                    const perpY = dx / len;
+                    const chevronSpacing = 6;
+                    const count = parallelChevronCount.get(segment.id) ?? 1;
+                    const totalW = (count - 1) * chevronSpacing;
+                    const offset = -totalW / 2 + i * chevronSpacing;
+                    const cx = midSx + dirX * offset;
+                    const cy = midSy + dirY * offset;
+                    const h = 4.5;
+                    const w = 3;
                     return (
-                      <line
-                        key={along}
-                        x1={cx - diagX * halfLen}
-                        y1={cy - diagY * halfLen}
-                        x2={cx + diagX * halfLen}
-                        y2={cy + diagY * halfLen}
+                      <polyline
+                        key={i}
+                        points={`${cx - dirX * w + perpX * h},${cy - dirY * w + perpY * h} ${cx},${cy} ${cx - dirX * w - perpX * h},${cy - dirY * w - perpY * h}`}
+                        fill="none"
                         stroke={parallelSegColor.get(segment.id)!}
                         strokeWidth={2}
                         strokeLinecap="round"
+                        strokeLinejoin="round"
                       />
                     );
                   })}
                 </g>
               )}
-            {/* Congruence tick marks at 2/3 of segment (avoids overlap with // at 1/3) */}
+            {/* Congruence tick marks at midpoint (standard mathematical convention) */}
             {/* Clutter: hidden until segment or a congruent peer is hovered/selected */}
             {congruenceTickMap.has(segment.id) &&
               len > 0 &&
@@ -258,9 +260,9 @@ export const SegmentLayer = memo(function SegmentLayer({
                     const centerOffset = -totalWidth / 2 + i * tickSpacing;
                     const perpX = len > 0 ? (-dy / len) * 6 : 0;
                     const perpY = len > 0 ? (dx / len) * 6 : -6;
-                    // Position at 3/4 of segment (clearly away from midpoint)
-                    const twoThirdSx = sx1 + dx * 0.75;
-                    const twoThirdSy = sy1 + dy * 0.75;
+                    // Position at midpoint (standard convention)
+                    const twoThirdSx = midSx;
+                    const twoThirdSy = midSy;
                     return (
                       <line
                         key={i}

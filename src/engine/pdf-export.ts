@@ -121,11 +121,29 @@ export function generatePDF(state: ConstructionState, options: PdfOptions): jsPD
     doc.setLineWidth(0.3);
     doc.setDrawColor(0);
 
-    // Parallel marks: double bars on parallel segments
-    const parallelSegIds = new Set<string>();
-    for (const prop of derived.properties) {
-      if (prop.type === 'parallel') {
-        for (const id of prop.involvedIds) parallelSegIds.add(id);
+    // Parallel chevrons: group segments and assign chevron count (>, >>, >>>)
+    const parallelSegChevrons = new Map<string, number>();
+    {
+      const groups: string[][] = [];
+      const segToGroup = new Map<string, number>();
+      for (const prop of derived.properties) {
+        if (prop.type === 'parallel') {
+          const ids = [...prop.involvedIds];
+          const existing = ids.map((id) => segToGroup.get(id)).find((g) => g !== undefined);
+          if (existing !== undefined) {
+            for (const id of ids) {
+              segToGroup.set(id, existing);
+              if (!groups[existing]!.includes(id)) groups[existing]!.push(id);
+            }
+          } else {
+            const idx = groups.length;
+            groups.push(ids);
+            for (const id of ids) segToGroup.set(id, idx);
+          }
+        }
+      }
+      for (let i = 0; i < groups.length; i++) {
+        for (const id of groups[i]!) parallelSegChevrons.set(id, i + 1);
       }
     }
 
@@ -168,16 +186,28 @@ export function generatePDF(state: ConstructionState, options: PdfOptions): jsPD
       const alongY = dy / len;
       const markLen = 2; // mm half-length of each tick
 
-      // Parallel marks: 2 bars perpendicular to segment at midpoint
-      if (parallelSegIds.has(seg.id)) {
-        for (const offset of [-1, 1]) {
-          const cx = midX + alongX * offset;
-          const cy = midY + alongY * offset;
+      // Parallel chevrons (>, >>, >>>) at midpoint
+      const chevrons = parallelSegChevrons.get(seg.id);
+      if (chevrons) {
+        const chevronSpacing = 2;
+        const h = 1.5;
+        const w = 1;
+        const totalW = (chevrons - 1) * chevronSpacing;
+        for (let i = 0; i < chevrons; i++) {
+          const off = -totalW / 2 + i * chevronSpacing;
+          const cx = midX + alongX * off;
+          const cy = midY + alongY * off;
           doc.line(
-            tx(cx - perpX * markLen),
-            ty(cy - perpY * markLen),
-            tx(cx + perpX * markLen),
-            ty(cy + perpY * markLen),
+            tx(cx - alongX * w + perpX * h),
+            ty(cy - alongY * w + perpY * h),
+            tx(cx),
+            ty(cy),
+          );
+          doc.line(
+            tx(cx - alongX * w - perpX * h),
+            ty(cy - alongY * w - perpY * h),
+            tx(cx),
+            ty(cy),
           );
         }
       }
