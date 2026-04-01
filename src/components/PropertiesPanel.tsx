@@ -5,7 +5,6 @@ import { AccordionSection } from './AccordionSection';
 import {
   PANEL_WIDTH,
   UI_BG,
-  UI_SURFACE,
   UI_BORDER,
   UI_TEXT_PRIMARY,
   UI_TEXT_SECONDARY,
@@ -52,41 +51,51 @@ export const PropertiesPanel = memo(function PropertiesPanel({
 
   if (collapsed) {
     return (
-      <button
-        onClick={onToggleCollapsed}
+      <div
         style={{
-          position: 'absolute',
-          ...(isLeft ? { left: 0 } : { right: 0 }),
-          top: 8,
-          width: 44,
-          height: 44,
-          background: UI_SURFACE,
-          border: `1px solid ${UI_BORDER}`,
-          borderRadius: isLeft ? '0 8px 8px 0' : '8px 0 0 8px',
-          cursor: 'pointer',
-          fontSize: 16,
-          zIndex: 20,
+          width: 32,
+          flexShrink: 0,
+          display: 'flex',
+          alignItems: 'flex-start',
+          paddingTop: 8,
+          background: UI_BG,
+          borderLeft: isLeft ? 'none' : `1px solid ${UI_BORDER}`,
+          borderRight: isLeft ? `1px solid ${UI_BORDER}` : 'none',
         }}
-        aria-label="Ouvrir le panneau"
-        data-testid="panel-toggle"
       >
-        {isLeft ? '▶' : '◀'}
-        {hasNewProperties && (
-          <span
-            style={{
-              position: 'absolute',
-              top: 4,
-              ...(isLeft ? { left: 4 } : { right: 4 }),
-              width: 8,
-              height: 8,
-              borderRadius: '50%',
-              background: '#185FA5',
-              animation: 'glow-pulse 0.6s ease-in-out 3',
-            }}
-            data-testid="panel-badge"
-          />
-        )}
-      </button>
+        <button
+          onClick={onToggleCollapsed}
+          style={{
+            width: 32,
+            height: 44,
+            background: 'transparent',
+            border: 'none',
+            cursor: 'pointer',
+            fontSize: 14,
+            color: UI_TEXT_SECONDARY,
+            position: 'relative',
+          }}
+          aria-label="Ouvrir le panneau"
+          data-testid="panel-toggle"
+        >
+          {isLeft ? '▶' : '◀'}
+          {hasNewProperties && (
+            <span
+              style={{
+                position: 'absolute',
+                top: 4,
+                ...(isLeft ? { left: 4 } : { right: 4 }),
+                width: 8,
+                height: 8,
+                borderRadius: '50%',
+                background: '#185FA5',
+                animation: 'glow-pulse 0.6s ease-in-out 3',
+              }}
+              data-testid="panel-badge"
+            />
+          )}
+        </button>
+      </div>
     );
   }
 
