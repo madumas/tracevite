@@ -200,9 +200,6 @@ export function SlotManager({
             <div
               key={slot.id}
               style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 8,
                 padding: '8px 10px',
                 borderRadius: 6,
                 border:
@@ -211,139 +208,142 @@ export function SlotManager({
               }}
               data-testid={`slot-${slot.id}`}
             >
-              {/* Thumbnail — use live thumbnail for active slot */}
-              {(() => {
-                const thumb = slot.id === activeSlotId ? activeThumbnail : slot.thumbnail;
-                return thumb ? (
-                  <img
-                    src={thumb}
-                    width={60}
-                    height={40}
-                    alt=""
-                    style={{
-                      objectFit: 'contain',
-                      borderRadius: 3,
-                      border: `1px solid ${UI_BORDER}`,
-                      flexShrink: 0,
-                    }}
-                  />
-                ) : (
-                  <div
-                    style={{
-                      width: 60,
-                      height: 40,
-                      borderRadius: 3,
-                      border: `1px solid ${UI_BORDER}`,
-                      background: '#F0F0F0',
-                      flexShrink: 0,
-                    }}
-                  />
-                );
-              })()}
+              {/* Row 1: Thumbnail + name + date */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                {/* Thumbnail — use live thumbnail for active slot */}
+                {(() => {
+                  const thumb = slot.id === activeSlotId ? activeThumbnail : slot.thumbnail;
+                  return thumb ? (
+                    <img
+                      src={thumb}
+                      width={60}
+                      height={40}
+                      alt=""
+                      style={{
+                        objectFit: 'contain',
+                        borderRadius: 3,
+                        border: `1px solid ${UI_BORDER}`,
+                        flexShrink: 0,
+                      }}
+                    />
+                  ) : (
+                    <div
+                      style={{
+                        width: 60,
+                        height: 40,
+                        borderRadius: 3,
+                        border: `1px solid ${UI_BORDER}`,
+                        background: '#F0F0F0',
+                        flexShrink: 0,
+                      }}
+                    />
+                  );
+                })()}
 
-              <div style={{ flex: 1, minWidth: 0 }}>
-                {editingId === slot.id ? (
-                  <input
-                    value={editName}
-                    onChange={(e) => setEditName(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') handleRename(slot);
-                      if (e.key === 'Escape') setEditingId(null);
-                    }}
-                    onBlur={() => handleRename(slot)}
-                    autoFocus
-                    style={{
-                      width: '100%',
-                      padding: '2px 4px',
-                      border: `1px solid ${UI_PRIMARY}`,
-                      borderRadius: 3,
-                      fontSize: 13,
-                    }}
-                  />
-                ) : (
-                  <>
-                    <div
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  {editingId === slot.id ? (
+                    <input
+                      value={editName}
+                      onChange={(e) => setEditName(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') handleRename(slot);
+                        if (e.key === 'Escape') setEditingId(null);
+                      }}
+                      onBlur={() => handleRename(slot)}
+                      autoFocus
                       style={{
+                        width: '100%',
+                        padding: '2px 4px',
+                        border: `1px solid ${UI_PRIMARY}`,
+                        borderRadius: 3,
                         fontSize: 13,
-                        fontWeight: 500,
-                        color: UI_TEXT_PRIMARY,
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        whiteSpace: 'nowrap',
                       }}
-                    >
-                      {slot.name}
-                    </div>
-                    <div
-                      style={{
-                        fontSize: 11,
-                        color: UI_TEXT_SECONDARY,
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 6,
-                      }}
-                    >
-                      {new Date(slot.updatedAt).toLocaleDateString('fr-CA')}
-                      {slot.id === activeSlotId && (
-                        <span
-                          style={{
-                            fontSize: 10,
-                            fontWeight: 600,
-                            color: UI_PRIMARY,
-                            background: '#D4E4F7',
-                            padding: '1px 6px',
-                            borderRadius: 3,
-                          }}
-                        >
-                          En cours
-                        </span>
-                      )}
-                    </div>
-                  </>
-                )}
+                    />
+                  ) : (
+                    <>
+                      <div
+                        style={{
+                          fontSize: 13,
+                          fontWeight: 500,
+                          color: UI_TEXT_PRIMARY,
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap',
+                        }}
+                      >
+                        {slot.name}
+                      </div>
+                      <div
+                        style={{
+                          fontSize: 11,
+                          color: UI_TEXT_SECONDARY,
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 6,
+                        }}
+                      >
+                        {new Date(slot.updatedAt).toLocaleDateString('fr-CA')}
+                        {slot.id === activeSlotId && (
+                          <span
+                            style={{
+                              fontSize: 10,
+                              fontWeight: 600,
+                              color: UI_PRIMARY,
+                              background: '#D4E4F7',
+                              padding: '1px 6px',
+                              borderRadius: 3,
+                            }}
+                          >
+                            En cours
+                          </span>
+                        )}
+                      </div>
+                    </>
+                  )}
+                </div>
               </div>
 
-              {/* Actions per slot */}
-              {slot.id !== activeSlotId && (
-                <button onClick={() => onSwitch(slot.id)} style={smallBtn}>
-                  Ouvrir
+              {/* Row 2: Actions */}
+              <div style={{ display: 'flex', gap: 4, marginTop: 6, justifyContent: 'flex-end' }}>
+                {slot.id !== activeSlotId && (
+                  <button onClick={() => onSwitch(slot.id)} style={smallBtn}>
+                    Ouvrir
+                  </button>
+                )}
+                <button onClick={() => handleRename(slot)} style={smallBtn}>
+                  {editingId === slot.id ? '✓' : 'Renommer'}
                 </button>
-              )}
-              <button onClick={() => handleRename(slot)} style={smallBtn}>
-                {editingId === slot.id ? '✓' : 'Renommer'}
-              </button>
-              <button onClick={() => handleExport(slot)} style={smallBtn}>
-                Exporter
-              </button>
-              {confirmDeleteId === slot.id ? (
-                <button
-                  onClick={() => {
-                    onDelete(slot.id);
-                    setConfirmDeleteId(null);
-                  }}
-                  style={{
-                    ...smallBtn,
-                    marginLeft: 8,
-                    background: UI_DESTRUCTIVE,
-                    color: '#FFF',
-                    border: 'none',
-                  }}
-                >
-                  Confirmer
+                <button onClick={() => handleExport(slot)} style={smallBtn}>
+                  Exporter
                 </button>
-              ) : (
-                <button
-                  onClick={() => setConfirmDeleteId(slot.id)}
-                  style={{
-                    ...smallBtn,
-                    marginLeft: 8,
-                    color: UI_DESTRUCTIVE,
-                    border: `1px solid ${UI_DESTRUCTIVE}`,
-                  }}
-                >
-                  ×
-                </button>
-              )}
+                {confirmDeleteId === slot.id ? (
+                  <button
+                    onClick={() => {
+                      onDelete(slot.id);
+                      setConfirmDeleteId(null);
+                    }}
+                    style={{
+                      ...smallBtn,
+                      background: UI_DESTRUCTIVE,
+                      color: '#FFF',
+                      border: 'none',
+                    }}
+                  >
+                    Confirmer
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => setConfirmDeleteId(slot.id)}
+                    style={{
+                      ...smallBtn,
+                      color: UI_DESTRUCTIVE,
+                      border: `1px solid ${UI_DESTRUCTIVE}`,
+                    }}
+                  >
+                    ×
+                  </button>
+                )}
+              </div>
             </div>
           ))}
 
