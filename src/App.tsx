@@ -31,7 +31,6 @@ import { isAngleCluttered } from '@/engine/angles';
 import { computeDerived } from '@/engine/derived';
 import { getAngleLabelPosition, getSegmentLabelPosition } from '@/engine/label-positions';
 import { createSoundEngine } from '@/engine/sound';
-import { UpdatePrompt } from '@/components/UpdatePrompt';
 import { detectLaunchStatus } from '@/model/persistence';
 import { LengthInput } from '@/components/LengthInput';
 import { RadiusInput } from '@/components/RadiusInput';
@@ -158,7 +157,7 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
     ? canvasColors.segment
     : preferences.segmentColor;
   // Responsive breakpoints
-  const isNarrow = useMediaQuery('(max-width: 768px)');
+  const isNarrow = useMediaQuery('(max-width: 900px)');
 
   const containerRef = useRef<HTMLDivElement>(null);
   const containerSize = useContainerSize(containerRef);
@@ -243,17 +242,6 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
     detectLaunchStatus().then((status) => {
       if (status === 'deep_freeze') setDeepFreezeDetected(true);
     });
-  }, []);
-
-  // PWA update detection
-  const [updateAvailable, setUpdateAvailable] = useState(false);
-  useEffect(() => {
-    // Listen for SW update message from vite-plugin-pwa
-    const handler = (event: MessageEvent) => {
-      if (event.data?.type === 'SW_UPDATE_AVAILABLE') setUpdateAvailable(true);
-    };
-    navigator.serviceWorker?.addEventListener('message', handler);
-    return () => navigator.serviceWorker?.removeEventListener('message', handler);
   }, []);
 
   // Apply URL params once at mount (moved after slotManager — see below)
@@ -716,9 +704,12 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
   const prevSnapTypeRef = useRef<string>('none');
   useEffect(() => {
     const snapType = tool.snapResult?.snapType ?? 'none';
-    const isSignificantSnap = snapType === 'point' || snapType === 'midpoint';
+    const isSignificantSnap =
+      snapType === 'point' || snapType === 'midpoint' || snapType === 'segment';
     const wasSignificant =
-      prevSnapTypeRef.current === 'point' || prevSnapTypeRef.current === 'midpoint';
+      prevSnapTypeRef.current === 'point' ||
+      prevSnapTypeRef.current === 'midpoint' ||
+      prevSnapTypeRef.current === 'segment';
     if (isSignificantSnap && !wasSignificant) {
       soundEngineRef.current?.playSnap();
     }
@@ -894,6 +885,23 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
                     {toolName}
                   </span>
                   {instruction}
+                  {state.estimationMode && !estimationRevealed && (
+                    <span
+                      style={{
+                        background: '#FEF3C7',
+                        color: '#B45309',
+                        padding: '1px 8px',
+                        borderRadius: 4,
+                        fontSize: 11 * effectiveFontScale,
+                        fontWeight: 600,
+                        marginLeft: 8,
+                        whiteSpace: 'nowrap',
+                      }}
+                      data-testid="estimation-badge"
+                    >
+                      Estimation
+                    </span>
+                  )}
                 </>
               );
             })()}
@@ -916,7 +924,8 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
                   fontSize: 12 * effectiveFontScale,
                   fontWeight: 600,
                   whiteSpace: 'nowrap',
-                  minHeight: 28,
+                  minHeight: 44,
+                  minWidth: 44,
                 }}
                 data-testid="status-escape-btn"
               >
@@ -1216,6 +1225,7 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
             collapsed={panelCollapsed}
             onToggleCollapsed={() => setPanelCollapsed(!panelCollapsed)}
             hasNewProperties={hasNewProperties}
+            panelPosition={preferences.panelPosition}
             fontScale={effectiveFontScale}
             estimationActive={state.estimationMode && !estimationRevealed}
           />
@@ -1321,16 +1331,6 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
       )}
 
       {/* PWA update prompt (spec §4.1.2) */}
-      {updateAvailable && (
-        <UpdatePrompt
-          onUpdate={() => {
-            // Auto-save then reload
-            window.location.reload();
-          }}
-          onDismiss={() => setUpdateAvailable(false)}
-        />
-      )}
-
       {/* Action Bar */}
       <ActionBar
         canUndo={canUndo}

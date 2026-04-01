@@ -5,13 +5,14 @@ import { AccordionSection } from './AccordionSection';
 import {
   PANEL_WIDTH,
   UI_BG,
-  UI_SURFACE,
   UI_BORDER,
   UI_TEXT_PRIMARY,
   UI_TEXT_SECONDARY,
   UI_PRIMARY,
 } from '@/config/theme';
 import { formatLength } from '@/engine/format';
+import { BOUNDS_WIDTH_MM, BOUNDS_HEIGHT_MM } from '@/engine/viewport';
+import type { PanelPosition } from '@/model/preferences';
 
 interface PropertiesPanelProps {
   readonly state: ConstructionState;
@@ -25,6 +26,7 @@ interface PropertiesPanelProps {
   readonly collapsed: boolean;
   readonly onToggleCollapsed: () => void;
   readonly hasNewProperties?: boolean;
+  readonly panelPosition?: PanelPosition;
   readonly fontScale?: number;
   readonly estimationActive?: boolean;
 }
@@ -41,45 +43,59 @@ export const PropertiesPanel = memo(function PropertiesPanel({
   collapsed,
   onToggleCollapsed,
   hasNewProperties,
+  panelPosition = 'right',
   fontScale = 1,
   estimationActive = false,
 }: PropertiesPanelProps) {
+  const isLeft = panelPosition === 'left';
+
   if (collapsed) {
     return (
-      <button
-        onClick={onToggleCollapsed}
+      <div
         style={{
-          position: 'absolute',
-          right: 0,
-          top: 0,
-          width: 44,
-          height: 44,
-          background: UI_SURFACE,
-          border: `1px solid ${UI_BORDER}`,
-          borderRadius: '0 0 0 8px',
-          cursor: 'pointer',
-          fontSize: 16,
-          zIndex: 20,
+          width: 32,
+          flexShrink: 0,
+          display: 'flex',
+          alignItems: 'flex-start',
+          paddingTop: 8,
+          background: UI_BG,
+          borderLeft: isLeft ? 'none' : `1px solid ${UI_BORDER}`,
+          borderRight: isLeft ? `1px solid ${UI_BORDER}` : 'none',
         }}
-        aria-label="Ouvrir le panneau"
-        data-testid="panel-toggle"
       >
-        ◀
-        {hasNewProperties && (
-          <span
-            style={{
-              position: 'absolute',
-              top: 4,
-              right: 4,
-              width: 8,
-              height: 8,
-              borderRadius: '50%',
-              background: '#185FA5',
-            }}
-            data-testid="panel-badge"
-          />
-        )}
-      </button>
+        <button
+          onClick={onToggleCollapsed}
+          style={{
+            width: 32,
+            height: 44,
+            background: 'transparent',
+            border: 'none',
+            cursor: 'pointer',
+            fontSize: 14,
+            color: UI_TEXT_SECONDARY,
+            position: 'relative',
+          }}
+          aria-label="Ouvrir le panneau"
+          data-testid="panel-toggle"
+        >
+          {isLeft ? '▶' : '◀'}
+          {hasNewProperties && (
+            <span
+              style={{
+                position: 'absolute',
+                top: 4,
+                ...(isLeft ? { left: 4 } : { right: 4 }),
+                width: 8,
+                height: 8,
+                borderRadius: '50%',
+                background: '#185FA5',
+                animation: 'glow-pulse 0.6s ease-in-out 3',
+              }}
+              data-testid="panel-badge"
+            />
+          )}
+        </button>
+      </div>
     );
   }
 
@@ -117,28 +133,52 @@ export const PropertiesPanel = memo(function PropertiesPanel({
         overflowY: 'auto',
         flexShrink: 0,
         fontSize: 12 * fontScale,
-        position: 'relative',
       }}
       data-testid="properties-panel"
     >
-      {/* Collapse button */}
-      <button
-        onClick={onToggleCollapsed}
+      {/* Panel header with collapse button */}
+      <div
         style={{
-          position: 'absolute',
-          right: 4,
-          top: 4,
-          width: 28,
-          height: 28,
-          background: 'transparent',
-          border: 'none',
-          cursor: 'pointer',
-          fontSize: 12,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          padding: '6px 10px 2px',
         }}
-        aria-label="Fermer le panneau"
       >
-        ▶
-      </button>
+        {isLeft && (
+          <button
+            onClick={onToggleCollapsed}
+            style={{
+              width: 28,
+              height: 28,
+              background: 'transparent',
+              border: 'none',
+              cursor: 'pointer',
+              fontSize: 12,
+            }}
+            aria-label="Fermer le panneau"
+          >
+            ◀
+          </button>
+        )}
+        <span style={{ fontSize: 11, fontWeight: 600, color: UI_TEXT_SECONDARY }}>Propriétés</span>
+        {!isLeft && (
+          <button
+            onClick={onToggleCollapsed}
+            style={{
+              width: 28,
+              height: 28,
+              background: 'transparent',
+              border: 'none',
+              cursor: 'pointer',
+              fontSize: 12,
+            }}
+            aria-label="Fermer le panneau"
+          >
+            ▶
+          </button>
+        )}
+      </div>
 
       {/* Segments / Côtés — titre adapté au contexte (spec §9.0) */}
       <AccordionSection
@@ -329,6 +369,19 @@ export const PropertiesPanel = memo(function PropertiesPanel({
                 {prefix} {point.label}
               </span>
               {point.locked && <span style={{ color: UI_TEXT_SECONDARY, marginLeft: 4 }}>🔒</span>}
+              {state.cartesianMode !== 'off' &&
+                (() => {
+                  const originX = state.cartesianMode === '1quadrant' ? 0 : BOUNDS_WIDTH_MM / 2;
+                  const originY =
+                    state.cartesianMode === '1quadrant' ? BOUNDS_HEIGHT_MM : BOUNDS_HEIGHT_MM / 2;
+                  const cx = point.x - originX;
+                  const cy = originY - point.y;
+                  return (
+                    <span style={{ color: UI_TEXT_SECONDARY, marginLeft: 6, fontSize: '0.9em' }}>
+                      ({formatLength(cx, state.displayUnit)}, {formatLength(cy, state.displayUnit)})
+                    </span>
+                  );
+                })()}
             </div>
           );
         })}

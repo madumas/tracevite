@@ -125,6 +125,7 @@ export interface SnapResult {
     | 'point'
     | 'midpoint'
     | 'circumference'
+    | 'segment'
     | 'grid'
     | 'angle'
     | 'alignment'

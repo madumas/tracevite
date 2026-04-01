@@ -125,7 +125,7 @@ export function reduce(state: ReducerState, action: ConstructionAction): Reducer
           if (!sp || !ep) continue;
           const { distance: dist } = pointOnSegmentProjection(pt, sp, ep);
           if (dist < MIN_POINT_DISTANCE_MM) {
-            const splitResult = State.splitSegmentAtPoint(newState, seg.id, pt.x, pt.y);
+            const splitResult = State.splitSegmentAtPoint(newState, seg.id, pt.x, pt.y, newPtId);
             if (splitResult) newState = splitResult.state;
             break; // one split per point max
           }

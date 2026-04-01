@@ -1,5 +1,11 @@
 import type { ConstructionState, SnapResult } from '@/model/types';
-import { distance, nearestGridPoint, midpoint, segmentAngle } from './geometry';
+import {
+  distance,
+  nearestGridPoint,
+  midpoint,
+  segmentAngle,
+  pointOnSegmentProjection,
+} from './geometry';
 import {
   SNAP_TOLERANCE_POINT_MM,
   SNAP_TOLERANCE_MIDPOINT_MM,
@@ -129,6 +135,32 @@ export function findSnap(
 
   if (bestCirclePos) {
     return { snappedPosition: bestCirclePos, snapType: 'circumference' };
+  }
+
+  // Priority 2c: Segment body projection (nearest point on segment)
+  // Ensures T-junction points are placed exactly on the segment, no kink.
+  let bestSegDist = Infinity;
+  let bestSegPos: { x: number; y: number } | undefined;
+
+  for (const seg of state.segments) {
+    const start = pointMap.get(seg.startPointId);
+    const end = pointMap.get(seg.endPointId);
+    if (!start || !end) continue;
+
+    const { projection, distance: dist } = pointOnSegmentProjection(cursor, start, end);
+    // Skip if projection is at an endpoint (already covered by point snap)
+    if (dist <= tolerances.midpointMm && dist < bestSegDist) {
+      const distToStart = distance(projection, start);
+      const distToEnd = distance(projection, end);
+      if (distToStart > tolerances.pointMm && distToEnd > tolerances.pointMm) {
+        bestSegDist = dist;
+        bestSegPos = projection;
+      }
+    }
+  }
+
+  if (bestSegPos) {
+    return { snappedPosition: bestSegPos, snapType: 'segment' };
   }
 
   // Priority 3: Grid

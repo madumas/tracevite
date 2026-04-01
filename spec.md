@@ -46,7 +46,7 @@ L'outil couvre les champs Géométrie et Mesure de la Progression des apprentiss
 ### 3.3 Transformations
 - Réflexion par rapport à un axe (2e cycle) — **priorité 1 (MVP)** car enseigné dès le 2e cycle
 - Translation par flèche de translation (3e cycle) — priorité 2
-- Production de frises et dallages — priorité 2
+- ~~Production de frises et dallages~~ — **implémenté** (outil Frise avec compteur de répétitions et dallage 2D)
 
 ### 3.4 Plan cartésien (priorité 2)
 - Mode 1er quadrant (5e année)
@@ -503,7 +503,7 @@ Un sélecteur dans l'en-tête permet de choisir le mode d'affichage : **Simplifi
 |--------|-----------|---------|
 | Angles | Classification seulement (aigu/droit/obtus) + carré pour angle droit | Classification + mesure en degrés |
 | Cercle | Non disponible | Disponible |
-| Plan cartésien | Non disponible | Disponible (v2) |
+| Plan cartésien | Non disponible | Disponible |
 | Réflexion | Disponible (axe vertical/horizontal/diagonal 45°) | Disponible (axe quelconque) |
 | Classification triangles | Une seule (la plus spécifique) | Cumulative (ex. « rectangle isocèle ») |
 | Seuil surcharge visuelle | 5 segments | 6 segments |
@@ -1181,26 +1181,26 @@ Un enfant TDC qui « ne sait plus où il en est » peut marteler Escape pour rev
 - Pas de tutoriel intégré au-delà du tutoriel interactif du premier lancement (voir §19 MVP item 23)
 - Pas de contenu audio (narration, musique). Seuls trois micro-sons optionnels de feedback sont disponibles : snap, création de segment, fermeture de figure (voir §7.2)
 - Pas de développement de solides en 3D (version 1)
-- Pas de translation (version 1 — à ajouter en v2). La réflexion est dans le MVP.
-- Pas de plan cartésien (version 1 — à ajouter en v2)
+- ~~Pas de translation~~ — **implémenté** (mode Complet uniquement, compétence PFEQ 3e cycle).
+- ~~Pas de plan cartésien~~ — **implémenté** (1er quadrant et 4 quadrants, dans les Paramètres).
 
 ---
 
-## 19. Priorités de développement (MVP → v2)
+## 19. Priorités de développement (MVP ✓ → v2 ✓ → v3)
 
 ### Jalons internes du MVP
 
-Le MVP est développé en 3 jalons itératifs :
+Le MVP a été développé en 3 jalons itératifs — **tous complétés** :
 
-**Jalon A — Canevas fonctionnel** (le « terrain de jeu » de base) :
+**Jalon A — Canevas fonctionnel** ✓
 - Items MVP : 1 (grille), 2 (segment + snap grille/points + chaînage + saisie longueur), 6 (longueurs temps réel), 8 (sélecteur niveau), 15 (undo/redo snapshots)
 - Ajouts techniques : IndexedDB auto-save (créneau unique), seuil de drag 1,5mm, barre de statut contextuelle, zoom/pan + boutons navigation
 
-**Jalon B — Construction complète** (l'outil de géométrie) :
+**Jalon B — Construction complète** ✓
 - Items MVP : 3 (déplacer), 4 (cercle), 5 (réflexion), 7 (angles), 9-10 (détection/snap propriétés), 11 (mesurer/fixer), 12 (panneau latéral), 13 (sélection + barre contextuelle), 16 (figures fermées), 18 (surcharge visuelle)
 - Snap complet (tous niveaux), toggle « Masquer les propriétés »
 
-**Jalon C — Production et distribution** (prêt pour la classe) :
+**Jalon C — Production et distribution** ✓
 - Items MVP : 14 (PDF 1:1), 17 (IndexedDB créneaux multiples), 19 (.tracevite), 20 (PWA/SW), 21 (panneau escamotable), 22 (impression CSS), 23 (tutoriel), 24-25 (consigne + URL)
 - Ajouts : export/import .tracevite-config, sons optionnels (Web Audio)
 
@@ -1249,7 +1249,7 @@ Le MVP est développé en 3 jalons itératifs :
 - ~~Outils Perpendiculaire et Parallèle dédiés~~ — **implémentés** (mode Complet uniquement).
 - ~~Translation par flèche de translation~~ — **implémenté** (mode Complet uniquement, compétence PFEQ 3e cycle).
 - ~~Mode Plan cartésien~~ — **implémenté** (1er quadrant et 4 quadrants, dans les Paramètres).
-- Production de frises et dallages
+- ~~Production de frises et dallages~~ — **implémenté** : outil Frise avec 6 phases, compteur de répétitions, support dallage 2D.
 
 **Personnalisation :**
 - ~~Couleur personnalisable des segments~~ — **implémenté** : 4 options (bleu #185FA5 par défaut, vert #0F6E56, violet #6D28D9, orange foncé #C24B22 — tous WCAG AA sur fond blanc). Sauvegardé dans les préférences localStorage. Donne un sentiment de propriété psychologique : « c'est MON outil, avec MA couleur ».
@@ -1258,12 +1258,12 @@ Le MVP est développé en 3 jalons itératifs :
 - ~~Mode "estimation"~~ — **implémenté** : mesures masquées, bouton pour révéler (activable dans les Paramètres).
 - ~~Affichage de la formule d'aire et de la hauteur~~ — **implémenté** : formule (« Aire = base × hauteur ÷ 2 » pour triangles, « Aire = base × hauteur » pour parallélogrammes) + hauteur calculée avec pied de la perpendiculaire. Affiché en mode Complet uniquement.
 - ~~Export PDF avec/sans mesures~~ — **implémenté** : toggle « Inclure les mesures » dans le dialogue d'impression.
-- Comparaison de figures isométriques (superposition par translation)
+- ~~Comparaison de figures isométriques~~ — **implémenté** : outil Comparer avec superposition et feedback visuel (vert/rouge).
 - ~~Choix de format de page A4 / Lettre US~~ — **implémenté** dans le dialogue d'impression.
 
 **Enseignement et projection :**
 - ~~Mode « démonstration » pour TBI/projecteur~~ — **implémenté** : bouton plein écran dans la barre d'actions, masque le header, police ×2.0 minimum, synchronisé avec l'API Fullscreen.
-- Association du fichier `.tracevite` via le Web App Manifest (`file_handlers`) : sur les Chromebooks et Windows récents, cliquer sur un fichier `.tracevite` ouvre automatiquement TraceVite (si installé comme PWA).
+- ~~Association du fichier `.tracevite` via le Web App Manifest (`file_handlers`)~~ — **implémenté** : `file_handlers` dans manifest.json + `launchQueue` dans main.tsx.
 
 **Accommodements TDC avancés :**
 - ~~Support tablette tactile optimisé avec stylet~~ — **implémenté** : discrimination `pointerType` (pen/touch/mouse), rejection de paume (3+ doigts ignorés), délai tactile 80ms pour détection pinch.
@@ -1272,9 +1272,9 @@ Le MVP est développé en 3 jalons itératifs :
 - ~~Filtre de lissage du curseur~~ — **implémenté** : moyennage mobile sur 5 positions, activé automatiquement en profil « Tolérance très large ». Désactivable.
 - ~~Mode « pas à pas » pour la réflexion~~ — **implémenté** : animation point par point avec pied de perpendiculaire (500ms par étape).
 
-### Version 2bis (post-v2, avant v3)
+### ~~Version 2bis~~ (post-v2, avant v3) — **implémenté**
 
-**Dialogue « À propos »** : accessible via le numéro de version dans le footer (clic ou tap). Dialogue modal (même style que PrintDialog — fond semi-transparent, fermeture par × ou Escape). Contenu :
+**Dialogue « À propos »** — **implémenté** (AboutDialog.tsx) : accessible via le numéro de version dans le footer (clic ou tap). Dialogue modal (même style que PrintDialog — fond semi-transparent, fermeture par × ou Escape). Contenu :
 
 - **Logo** TraceVite (logo.svg) + nom de l'application
 - **Version** : numéro de version (ex : « v1.2.3 »)
@@ -1588,18 +1588,20 @@ Les questions suivantes ont été posées, débattues et tranchées définitivem
 - **Pipe `|` dans URL consigne** : alias pour retour à la ligne, facilite la saisie enseignant.
 - **Navigation clavier UI** : Tab/Entrée dans toolbar, panneau, dialogues au MVP (via éléments HTML sémantiques). Navigation clavier canevas SVG reste v2.
 
-### Hors scope MVP (ne pas implémenter, ne pas architecturer pour)
-- Calibrage DPI par l'utilisateur (v2)
-- Profils utilisateur nommés dans l'app (v2)
-- Seuil de drag par type de pointeur (v2 si nécessaire)
-- ~~Pinch-to-zoom~~ — **implémenté** (2 doigts, rejection de paume à 3+ doigts)
-- Navigation clavier dans le canevas SVG (v2)
+### Hors scope MVP — items restants à implémenter
+- Calibrage DPI par l'utilisateur
+- Profils utilisateur nommés dans l'app
+- Seuil de drag par type de pointeur (si nécessaire)
+- Navigation clavier dans le canevas SVG
 - PDF multi-pages (v3)
+- Hot-reload des constantes d'accessibilité
+- Partage de figure de départ via URL (utiliser fichier .tracevite en attendant)
+
+**Anciennement hors scope, maintenant implémentés :**
+- ~~Pinch-to-zoom~~ — **implémenté** (2 doigts, rejection de paume à 3+ doigts)
 - ~~Détection automatique d'intersections segment-segment~~ — **implémenté** (activé par défaut, désactivable dans les Paramètres)
 - ~~Mode démonstration TBI~~ — **implémenté** (bouton plein écran dans la barre d'actions, police ×2.0)
 - ~~Filtre de lissage du curseur~~ — **implémenté** (activé automatiquement en profil de tolérance « très large »)
-- Hot-reload des constantes d'accessibilité
-- Partage de figure de départ via URL (v2 — utiliser fichier .tracevite en attendant)
 - ~~Rappel actif de pause/fatigue~~ — **implémenté** (FatigueReminder avec intervalle configurable)
 
 ### Choix d'interface pour l'accessibilité TDC
