@@ -299,17 +299,6 @@ export function generatePDF(state: ConstructionState, options: PdfOptions): jsPD
           );
         }
 
-        // Obtus marker: small perpendicular bar at arc midpoint (matching canvas)
-        if (angle.classification === 'obtus') {
-          const midT = startAngle + sweep / 2;
-          const barLen = 1.5; // mm
-          const barMx = vertex.x + Math.cos(midT) * r;
-          const barMy = vertex.y + Math.sin(midT) * r;
-          const perpX = -Math.sin(midT) * barLen;
-          const perpY = Math.cos(midT) * barLen;
-          doc.line(tx(barMx - perpX), ty(barMy - perpY), tx(barMx + perpX), ty(barMy + perpY));
-        }
-
         // Degree label (complet mode only, hidden when cluttered)
         if (state.displayMode === 'complet' && !cluttered) {
           const midT = startAngle + sweep / 2;

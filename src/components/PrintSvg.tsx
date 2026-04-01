@@ -313,27 +313,6 @@ export const PrintSvg = memo(function PrintSvg({
               );
             }
 
-            // Obtus marker
-            if (angle.classification === 'obtus') {
-              const midT = startAngle + sweep / 2;
-              const barLen = 1.5;
-              const barMx = vertex.x + Math.cos(midT) * r;
-              const barMy = vertex.y + Math.sin(midT) * r;
-              const bpx = -Math.sin(midT) * barLen;
-              const bpy = Math.cos(midT) * barLen;
-              arcLines.push(
-                <line
-                  key={`obtus-${idx}`}
-                  x1={barMx - bpx}
-                  y1={barMy - bpy}
-                  x2={barMx + bpx}
-                  y2={barMy + bpy}
-                  stroke="#333"
-                  strokeWidth={0.3}
-                />,
-              );
-            }
-
             // Degree label (complet mode, not cluttered)
             if (state.displayMode === 'complet' && !cluttered) {
               const midT = startAngle + sweep / 2;

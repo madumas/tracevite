@@ -299,25 +299,6 @@ export const AngleLayer = memo(function AngleLayer({
               strokeWidth={1.5}
               data-testid={`angle-arc-${index}`}
             />
-            {/* Obtus marker: bar perpendicular to arc at midpoint (spec §13.4) */}
-            {angle.classification === 'obtus' &&
-              (() => {
-                const barHalf = r * 0.45; // bar extends ~45% of arc radius each side
-                const barMx = sx + Math.cos(midAngle) * r;
-                const barMy = sy + Math.sin(midAngle) * r;
-                const perpX = -Math.sin(midAngle) * barHalf;
-                const perpY = Math.cos(midAngle) * barHalf;
-                return (
-                  <line
-                    x1={barMx - perpX}
-                    y1={barMy - perpY}
-                    x2={barMx + perpX}
-                    y2={barMy + perpY}
-                    stroke={colors.angle}
-                    strokeWidth={2}
-                  />
-                );
-              })()}
             {/* Congruence arcs: additional concentric arcs for equal angles */}
             {congruenceArcCount.has(index) &&
               Array.from({ length: congruenceArcCount.get(index)! - 1 }, (_, i) => {
