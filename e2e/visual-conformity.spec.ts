@@ -912,6 +912,278 @@ test('visual conformity — PFEQ pedagogical', async ({ page }, testInfo) => {
   await page.waitForTimeout(200);
 });
 
+// --- Separate test: PFEQ figures and tools ---
+test('visual conformity — PFEQ figures & tools', async ({ page }, testInfo) => {
+  const dir = path.join(SCREENSHOT_BASE, projectDir(testInfo.project.name));
+  await fs.mkdir(dir, { recursive: true });
+  const shot = (name: string) => path.join(dir, name);
+  const interact = (xMm: number, yMm: number) => interactCanvas(page, testInfo, xMm, yMm);
+  const isDesktop = testInfo.project.name === 'Desktop Chrome';
+
+  // ── Helper: fresh page in complet mode with panel open ──
+  async function freshComplet() {
+    await page.goto('/');
+    await page.waitForSelector('[data-testid="canvas-svg"]');
+    await page.waitForTimeout(300);
+    await page.locator('[data-testid="mode-selector"]').click();
+    await page.locator('[data-testid="mode-option-complet"]').click();
+    await page.waitForTimeout(300);
+  }
+  async function openPanel() {
+    const p = page.locator('[data-testid="properties-panel"]');
+    if (!(await p.isVisible())) {
+      const t = page.locator('[data-testid="panel-toggle"], [data-testid="panel-toggle-mobile"]');
+      await t.click();
+      await p.waitFor();
+      await page.waitForTimeout(200);
+    }
+    // Expand all accordion sections
+    for (const name of ['Angles', 'Propriétés', 'Sommets']) {
+      const acc = page.locator(`[data-testid="accordion-${name}"]`);
+      if (await acc.isVisible()) { await acc.click(); await page.waitForTimeout(100); }
+    }
+    return p;
+  }
+
+  // ── 70: Square (Carré) ──
+  await freshComplet();
+  await interact(50, 50);
+  await page.waitForTimeout(250);
+  await interact(90, 50);
+  await page.waitForTimeout(250);
+  await interact(90, 90);
+  await page.waitForTimeout(250);
+  await interact(50, 90);
+  await page.waitForTimeout(250);
+  await interact(50, 50); // close
+  await page.waitForTimeout(300);
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(200);
+  const panel70 = await openPanel();
+  await page.screenshot({ path: shot('70-pfeq-carre.png'), fullPage: true });
+  await panel70.screenshot({ path: shot('70b-pfeq-carre-panel.png') });
+
+  // ── 71: Parallelogram (Parallélogramme) ──
+  await freshComplet();
+  await interact(40, 60);
+  await page.waitForTimeout(250);
+  await interact(100, 60);
+  await page.waitForTimeout(250);
+  await interact(120, 90);
+  await page.waitForTimeout(250);
+  await interact(60, 90);
+  await page.waitForTimeout(250);
+  await interact(40, 60); // close
+  await page.waitForTimeout(300);
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(200);
+  const panel71 = await openPanel();
+  await page.screenshot({ path: shot('71-pfeq-parallelogramme.png'), fullPage: true });
+  await panel71.screenshot({ path: shot('71b-pfeq-parallelogramme-panel.png') });
+
+  // ── 72: Isosceles triangle (Triangle isocèle) ──
+  await freshComplet();
+  await interact(50, 90);
+  await page.waitForTimeout(250);
+  await interact(100, 90);
+  await page.waitForTimeout(250);
+  await interact(75, 50);
+  await page.waitForTimeout(250);
+  await interact(50, 90); // close
+  await page.waitForTimeout(300);
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(200);
+  const panel72 = await openPanel();
+  await page.screenshot({ path: shot('72-pfeq-triangle-isocele.png'), fullPage: true });
+  await panel72.screenshot({ path: shot('72b-pfeq-triangle-isocele-panel.png') });
+
+  // ── 73: Circle with radius/diameter ──
+  await freshComplet();
+  await selectTool(page, 'circle');
+  await page.waitForTimeout(200);
+  await interact(80, 70);
+  await page.waitForTimeout(300);
+  await interact(110, 70); // radius 30mm
+  await page.waitForTimeout(500);
+  // RadiusInput may appear
+  const radiusInput = page.locator('[data-testid="radius-input"]');
+  if (await radiusInput.isVisible({ timeout: 2000 }).catch(() => false)) {
+    await page.screenshot({ path: shot('73-pfeq-cercle-rayon.png'), fullPage: true });
+    await page.keyboard.press('Escape');
+    await page.waitForTimeout(200);
+  } else {
+    await page.screenshot({ path: shot('73-pfeq-cercle-rayon.png'), fullPage: true });
+  }
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(200);
+  const panel73 = await openPanel();
+  await panel73.screenshot({ path: shot('73b-pfeq-cercle-panel.png') });
+
+  // ── 74: Flat angle (Angle plat — 3 points colinéaires) ──
+  await freshComplet();
+  await interact(40, 80);
+  await page.waitForTimeout(250);
+  await interact(80, 80);
+  await page.waitForTimeout(250);
+  await interact(120, 80);
+  await page.waitForTimeout(300);
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(200);
+  const panel74 = await openPanel();
+  await page.screenshot({ path: shot('74-pfeq-angle-plat.png'), fullPage: true });
+  await panel74.screenshot({ path: shot('74b-pfeq-angle-plat-panel.png') });
+
+  // ── 75: Reflection tool (cleaner version) ──
+  await freshComplet();
+  // Create a triangle to reflect
+  await interact(40, 50);
+  await page.waitForTimeout(250);
+  await interact(70, 50);
+  await page.waitForTimeout(250);
+  await interact(55, 80);
+  await page.waitForTimeout(250);
+  await interact(40, 50); // close
+  await page.waitForTimeout(300);
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(200);
+  // Select reflection tool
+  await selectTool(page, 'reflection');
+  await page.waitForTimeout(300);
+  // Define vertical axis at x=100
+  await interact(100, 30);
+  await page.waitForTimeout(300);
+  await interact(100, 120);
+  await page.waitForTimeout(300);
+  // Reflect each segment of the triangle
+  await interact(55, 50); // click segment AB
+  await page.waitForTimeout(500);
+  await interact(63, 65); // click segment BC
+  await page.waitForTimeout(500);
+  await interact(48, 65); // click segment CA
+  await page.waitForTimeout(500);
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(200);
+  await page.screenshot({ path: shot('75-pfeq-reflexion.png'), fullPage: true });
+
+  // ── 76: Reproduce tool ──
+  await freshComplet();
+  // Create a segment
+  await interact(40, 60);
+  await page.waitForTimeout(250);
+  await interact(90, 60);
+  await page.waitForTimeout(300);
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(200);
+  // Select reproduce tool
+  await selectTool(page, 'reproduce');
+  await page.waitForTimeout(300);
+  // Click on the segment to reproduce
+  await interact(65, 60);
+  await page.waitForTimeout(300);
+  // Click to place the copy
+  await interact(65, 100);
+  await page.waitForTimeout(500);
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(200);
+  await page.screenshot({ path: shot('76-pfeq-reproduire.png'), fullPage: true });
+
+  // ── 77: Compare tool ──
+  await freshComplet();
+  // Create 2 segments of same length
+  await interact(40, 50);
+  await page.waitForTimeout(250);
+  await interact(90, 50);
+  await page.waitForTimeout(300);
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(200);
+  await interact(40, 100);
+  await page.waitForTimeout(250);
+  await interact(90, 100);
+  await page.waitForTimeout(300);
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(200);
+  // Select compare tool
+  await selectTool(page, 'compare');
+  await page.waitForTimeout(300);
+  // Click first segment
+  await interact(65, 50);
+  await page.waitForTimeout(300);
+  // Click second segment
+  await interact(65, 100);
+  await page.waitForTimeout(500);
+  await page.screenshot({ path: shot('77-pfeq-comparer.png'), fullPage: true });
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(200);
+
+  // ── 78: Frieze tool ──
+  await freshComplet();
+  // Create a segment to repeat
+  await interact(40, 70);
+  await page.waitForTimeout(250);
+  await interact(70, 70);
+  await page.waitForTimeout(300);
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(200);
+  // Select frieze tool
+  await selectTool(page, 'frieze');
+  await page.waitForTimeout(300);
+  // Click on segment
+  await interact(55, 70);
+  await page.waitForTimeout(300);
+  // Define translation vector
+  await interact(30, 50);
+  await page.waitForTimeout(300);
+  await interact(70, 50);
+  await page.waitForTimeout(300);
+  // Frieze panel should appear
+  const friezePanel = page.locator('[data-testid="frieze-panel"]');
+  if (await friezePanel.isVisible({ timeout: 3000 }).catch(() => false)) {
+    await page.screenshot({ path: shot('78-pfeq-frise.png'), fullPage: true });
+    // Validate
+    const validateBtn = page.locator('[data-testid="frieze-validate"]');
+    if (await validateBtn.isVisible()) {
+      await validateBtn.click();
+      await page.waitForTimeout(500);
+      await page.screenshot({ path: shot('78b-pfeq-frise-result.png'), fullPage: true });
+    }
+  }
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(200);
+
+  // ── 79: Symmetry tool ──
+  await freshComplet();
+  // Create a vertical axis
+  await interact(80, 30);
+  await page.waitForTimeout(250);
+  await interact(80, 120);
+  await page.waitForTimeout(300);
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(200);
+  // Create a segment on the left
+  await interact(40, 60);
+  await page.waitForTimeout(250);
+  await interact(60, 90);
+  await page.waitForTimeout(300);
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(200);
+  // Create its mirror on the right
+  await interact(100, 60);
+  await page.waitForTimeout(250);
+  await interact(120, 90);
+  await page.waitForTimeout(300);
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(200);
+  // Select symmetry tool
+  await selectTool(page, 'symmetry');
+  await page.waitForTimeout(300);
+  // Click the axis
+  await interact(80, 75);
+  await page.waitForTimeout(500);
+  await page.screenshot({ path: shot('79-pfeq-symetrie.png'), fullPage: true });
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(200);
+});
+
 // --- Separate test: iPad landscape layout ---
 test('visual conformity — iPad landscape', async ({ page, browserName }, testInfo) => {
   // Only run on Mobile iPad project
