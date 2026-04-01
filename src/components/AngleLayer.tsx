@@ -152,17 +152,16 @@ export const AngleLayer = memo(function AngleLayer({
     }
   }
 
-  // Pre-compute number of arcs per angle at same vertex:
-  // 1st angle at vertex = 1 arc, 2nd = 2 arcs, 3rd = 3 arcs (like congruence ticks on segments)
-  const ARC_SPACING_PX = 3;
-  const angleArcCount = new Map<number, number>();
+  // Stagger arc radius per angle at same vertex: each angle gets 1 arc at a different radius
+  const ARC_STAGGER_PX = 6;
+  const angleArcRadius = new Map<number, number>();
   {
     const vertexCounter = new Map<string, number>();
     angles.forEach((angle, idx) => {
       if (angle.classification === 'reflex') return;
-      const n = (vertexCounter.get(angle.vertexPointId) ?? 0) + 1;
-      angleArcCount.set(idx, n);
-      vertexCounter.set(angle.vertexPointId, n);
+      const n = vertexCounter.get(angle.vertexPointId) ?? 0;
+      angleArcRadius.set(idx, ARC_RADIUS_PX + n * ARC_STAGGER_PX);
+      vertexCounter.set(angle.vertexPointId, n + 1);
     });
   }
 
@@ -285,30 +284,26 @@ export const AngleLayer = memo(function AngleLayer({
         const labelX = sx + Math.cos(labelAngle) * labelR;
         const labelY = sy + Math.sin(labelAngle) * labelR;
 
-        // Number of arcs for this angle (1st at vertex = 1, 2nd = 2, etc.)
-        const arcCount = angleArcCount.get(index) ?? 1;
+        // Single arc per angle, staggered radius to avoid overlap at same vertex
+        const arcR = angleArcRadius.get(index) ?? r;
 
         return (
           <g key={index}>
-            {/* Draw arcCount concentric arcs to distinguish angles at same vertex */}
-            {Array.from({ length: arcCount }, (_, i) => {
-              const arcR = r + i * ARC_SPACING_PX;
+            {(() => {
               const ax1 = sx + Math.cos(arcStart) * arcR;
               const ay1 = sy + Math.sin(arcStart) * arcR;
               const ax2 = sx + Math.cos(arcEnd) * arcR;
               const ay2 = sy + Math.sin(arcEnd) * arcR;
               return (
                 <path
-                  key={i}
                   d={`M ${ax1} ${ay1} A ${arcR} ${arcR} 0 ${largeArc} ${sweepFlag} ${ax2} ${ay2}`}
                   fill="none"
                   stroke={colors.angle}
-                  strokeWidth={i === 0 ? 1.5 : 1}
-                  opacity={i === 0 ? 1 : 0.7}
-                  data-testid={i === 0 ? `angle-arc-${index}` : undefined}
+                  strokeWidth={1.5}
+                  data-testid={`angle-arc-${index}`}
                 />
               );
-            })}
+            })()}
             {/* 3e cycle: show degrees — hidden in estimation mode */}
             {displayMode === 'complet' && !estimationMode && (
               <text
