@@ -34,7 +34,7 @@ textarea,
   user-select: text;
 }
 
-/* ── Tablet (≤1024px): toolbar scroll + icon-only ───────── */
+/* ── Tablet (≤1024px): toolbar horizontal scroll ────────── */
 @media (max-width: 1024px) {
   [data-testid='toolbar'] {
     overflow-x: auto;
@@ -44,6 +44,10 @@ textarea,
   [data-testid='toolbar']::-webkit-scrollbar {
     display: none; /* Chrome/Safari */
   }
+}
+
+/* ── Small tablet / phone (≤900px): toolbar icon-only ──── */
+@media (max-width: 900px) {
   .tool-label {
     display: none;
   }
@@ -65,6 +69,11 @@ textarea,
   [data-testid='action-bar'] {
     gap: 4px;
   }
+}
+
+/* ── Action bar: hide labels at large font scale ────────── */
+[data-hide-labels='true'] .action-label {
+  display: none;
 }
 
 /* ── Property badge pulse animation ────────────────────────── */

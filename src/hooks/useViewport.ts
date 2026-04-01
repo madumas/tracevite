@@ -58,6 +58,10 @@ export function useViewport(
     setViewport((v) => clampViewport({ ...v, panX: v.panX + PAN_STEP_MM }));
   }, []);
 
+  const resetZoom = useCallback(() => {
+    setViewport((v) => clampViewport({ ...v, zoom: 1.0 }));
+  }, []);
+
   // Pinch-to-zoom + two-finger pan (touch gestures)
   const pinchZoomPan = useCallback((deltaZoom: number, panDeltaMm: { x: number; y: number }) => {
     setViewport((v) =>
@@ -101,6 +105,7 @@ export function useViewport(
     panDown,
     panLeft,
     panRight,
+    resetZoom,
     pinchZoomPan,
   };
 }

@@ -336,6 +336,7 @@ export function SlotManager({
                     onClick={() => setConfirmDeleteId(slot.id)}
                     style={{
                       ...smallBtn,
+                      minWidth: 44,
                       color: UI_DESTRUCTIVE,
                       border: `1px solid ${UI_DESTRUCTIVE}`,
                     }}

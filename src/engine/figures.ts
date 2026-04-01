@@ -25,6 +25,8 @@ export interface Figure {
   readonly name: string;
   readonly selfIntersecting: boolean;
   readonly height?: FigureHeight;
+  /** True for generic polygons (>= 5 sides) with no pedagogical value at primary level. */
+  readonly minor?: boolean;
 }
 
 // ── Adjacency graph ──────────────────────────────────────
@@ -231,6 +233,7 @@ export function classifyFigures(
       name,
       selfIntersecting,
       height,
+      minor: face.length >= 5 && !selfIntersecting,
     };
   });
 }

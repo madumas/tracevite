@@ -8,6 +8,10 @@ interface NavigationControlsProps {
   readonly onPanRight: () => void;
   readonly onZoomIn: () => void;
   readonly onZoomOut: () => void;
+  /** Current zoom level (1.0 = 100%). */
+  readonly zoomLevel?: number;
+  /** Reset zoom to 100%. */
+  readonly onZoomReset?: () => void;
   /** When true, hide pan arrows (pinch-to-zoom replaces them on touch). */
   readonly hidePanButtons?: boolean;
 }
@@ -36,8 +40,11 @@ export const NavigationControls = memo(function NavigationControls({
   onPanRight,
   onZoomIn,
   onZoomOut,
+  zoomLevel = 1.0,
+  onZoomReset,
   hidePanButtons = false,
 }: NavigationControlsProps) {
+  const zoomPct = Math.round(zoomLevel * 100);
   return (
     <>
       {/* Pan buttons — hidden on mobile (two-finger pan replaces them) */}
@@ -106,6 +113,23 @@ export const NavigationControls = memo(function NavigationControls({
         >
           −
         </button>
+        {zoomPct !== 100 && onZoomReset && (
+          <button
+            onClick={onZoomReset}
+            style={{
+              ...navBtnStyle,
+              position: 'relative',
+              fontSize: 11,
+              minWidth: MIN_BUTTON_SIZE_PX,
+              padding: '0 2px',
+              whiteSpace: 'nowrap',
+            }}
+            aria-label={`Zoom ${zoomPct}%, cliquer pour réinitialiser`}
+            data-testid="zoom-level"
+          >
+            {zoomPct}%
+          </button>
+        )}
       </div>
     </>
   );

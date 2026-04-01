@@ -143,14 +143,80 @@ export function detectEqualLengths(
   return properties;
 }
 
+/**
+ * Group parallel properties transitively: if A//B and B//C, produce one group A//B//C.
+ * Uses union-find to merge connected segment IDs.
+ */
+export function groupParallelProperties(
+  props: DetectedProperty[],
+  segments: readonly Segment[],
+  points: readonly Point[],
+): DetectedProperty[] {
+  const parallel = props.filter((p) => p.type === 'parallel');
+  const other = props.filter((p) => p.type !== 'parallel');
+  if (parallel.length <= 1) return props;
+
+  // Union-find
+  const parent = new Map<string, string>();
+  const find = (x: string): string => {
+    if (!parent.has(x)) parent.set(x, x);
+    if (parent.get(x) !== x) parent.set(x, find(parent.get(x)!));
+    return parent.get(x)!;
+  };
+  const union = (a: string, b: string) => {
+    parent.set(find(a), find(b));
+  };
+
+  for (const p of parallel) {
+    const ids = p.involvedIds;
+    for (let i = 1; i < ids.length; i++) {
+      union(ids[0]!, ids[i]!);
+    }
+  }
+
+  // Collect groups
+  const groups = new Map<string, Set<string>>();
+  for (const p of parallel) {
+    for (const id of p.involvedIds) {
+      const root = find(id);
+      if (!groups.has(root)) groups.set(root, new Set());
+      groups.get(root)!.add(id);
+    }
+  }
+
+  // Build grouped properties
+  const pointMap = new Map(points.map((pt) => [pt.id, pt]));
+  const segMap = new Map(segments.map((s) => [s.id, s]));
+  const grouped: DetectedProperty[] = [];
+
+  for (const memberIds of groups.values()) {
+    const ids = [...memberIds];
+    const labels = ids.map((id) => {
+      const seg = segMap.get(id);
+      if (!seg) return '??';
+      const s = pointMap.get(seg.startPointId);
+      const e = pointMap.get(seg.endPointId);
+      return s && e ? `${s.label}${e.label}` : '??';
+    });
+    grouped.push({
+      type: 'parallel',
+      involvedIds: ids,
+      label: labels.join(' // '),
+    });
+  }
+
+  return [...grouped, ...other];
+}
+
 /** Detect all properties in the construction. */
 export function detectAllProperties(
   segments: readonly Segment[],
   points: readonly Point[],
 ): DetectedProperty[] {
-  return [
+  const raw = [
     ...detectParallelSegments(segments, points),
     ...detectPerpendicularSegments(segments, points),
     ...detectEqualLengths(segments, points),
   ];
+  return groupParallelProperties(raw, segments, points);
 }

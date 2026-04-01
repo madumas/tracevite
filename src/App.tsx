@@ -161,7 +161,7 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
 
   const containerRef = useRef<HTMLDivElement>(null);
   const containerSize = useContainerSize(containerRef);
-  const { viewport, zoomIn, zoomOut, panUp, panDown, panLeft, panRight, pinchZoomPan } =
+  const { viewport, zoomIn, zoomOut, resetZoom, panUp, panDown, panLeft, panRight, pinchZoomPan } =
     useViewport(containerRef, containerSize);
   const [showNewConfirm, setShowNewConfirm] = useState(false);
   const [consigneDismissed, setConsigneDismissed] = useState(false);
@@ -1251,6 +1251,8 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
             onPanRight={panRight}
             onZoomIn={zoomIn}
             onZoomOut={zoomOut}
+            zoomLevel={viewport.zoom}
+            onZoomReset={resetZoom}
             hidePanButtons={isNarrow}
           />
 
@@ -1285,6 +1287,7 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
             fontScale={effectiveFontScale}
             estimationActive={state.estimationMode && !estimationRevealed}
             onHoverElement={setHoveredPanelElementId}
+            hoveredElementId={hoveredPanelElementId}
           />
         )}
         {isNarrow && (
@@ -1383,6 +1386,7 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
               fontScale={effectiveFontScale}
               estimationActive={state.estimationMode && !estimationRevealed}
               onHoverElement={setHoveredPanelElementId}
+              hoveredElementId={hoveredPanelElementId}
             />
           </div>
         </div>

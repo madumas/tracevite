@@ -48,17 +48,19 @@ export const GhostSegment = memo(function GhostSegment({
         strokeDasharray="6 4"
         opacity={opacity}
       />
-      {/* Length label near cursor (end point) */}
-      <text
-        x={sx2 + 10}
-        y={sy2 - 10}
-        fill={colors.measurement}
-        fontSize={Math.max(MIN_CANVAS_FONT_PX, 13)}
-        fontFamily="system-ui, sans-serif"
-        opacity={0.8}
-      >
-        {lengthText}
-      </text>
+      {/* Length label near cursor (end point) — hidden when too short */}
+      {lengthMm >= 1 && (
+        <text
+          x={sx2 + 10}
+          y={sy2 - 10}
+          fill={colors.measurement}
+          fontSize={Math.max(MIN_CANVAS_FONT_PX, 13)}
+          fontFamily="system-ui, sans-serif"
+          opacity={0.8}
+        >
+          {lengthText}
+        </text>
+      )}
       {/* Guide line + label for parallel/perpendicular snap */}
       {guideType && (
         <>

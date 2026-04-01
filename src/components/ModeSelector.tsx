@@ -98,6 +98,19 @@ export function ModeSelector({ mode, onChange }: ModeSelectorProps) {
         data-testid="mode-selector"
       >
         {currentMode.label}
+        <span
+          data-testid="mode-chevron"
+          style={{
+            marginLeft: 6,
+            fontSize: 10,
+            display: 'inline-block',
+            transition: 'transform 0.2s',
+            transform: open ? 'rotate(180deg)' : 'rotate(0deg)',
+          }}
+          aria-hidden="true"
+        >
+          ▾
+        </span>
       </button>
 
       {open && (

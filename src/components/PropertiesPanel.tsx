@@ -30,6 +30,7 @@ interface PropertiesPanelProps {
   readonly fontScale?: number;
   readonly estimationActive?: boolean;
   readonly onHoverElement?: (elementId: string | null) => void;
+  readonly hoveredElementId?: string | null;
 }
 
 export const PropertiesPanel = memo(function PropertiesPanel({
@@ -48,6 +49,7 @@ export const PropertiesPanel = memo(function PropertiesPanel({
   fontScale = 1,
   estimationActive = false,
   onHoverElement,
+  hoveredElementId,
 }: PropertiesPanelProps) {
   const isLeft = panelPosition === 'left';
 
@@ -191,12 +193,16 @@ export const PropertiesPanel = memo(function PropertiesPanel({
         }
         defaultOpen
       >
-        {state.segments.map((seg) => {
+        {state.segments.map((seg, index) => {
           const start = state.points.find((p) => p.id === seg.startPointId);
           const end = state.points.find((p) => p.id === seg.endPointId);
           if (!start || !end) return null;
           const label = `${start.label}${end.label}`;
           const prefix = figureSegmentIds.has(seg.id) ? 'Côté' : 'Segment';
+          const isSelected = seg.id === state.selectedElementId;
+          const isHovered = seg.id === hoveredElementId;
+          const zebra = index % 2 !== 0 ? '#F8FAFC' : 'transparent';
+          const bg = isSelected ? '#E8F0FA' : isHovered ? '#F0F4F8' : zebra;
 
           return (
             <div
@@ -204,7 +210,13 @@ export const PropertiesPanel = memo(function PropertiesPanel({
               onClick={() => onSelectElement(seg.id)}
               onPointerEnter={() => onHoverElement?.(seg.id)}
               onPointerLeave={() => onHoverElement?.(null)}
-              style={{ padding: '2px 0', cursor: 'pointer', color: UI_TEXT_PRIMARY }}
+              style={{
+                padding: '2px 4px',
+                cursor: 'pointer',
+                color: UI_TEXT_PRIMARY,
+                background: bg,
+                borderRadius: 2,
+              }}
             >
               <span style={{ fontWeight: 500 }}>
                 {prefix} {label}
@@ -229,36 +241,68 @@ export const PropertiesPanel = memo(function PropertiesPanel({
 
       {/* Angles */}
       <AccordionSection title="Angles">
-        {angles.map((angle, i) => {
-          const vertex = state.points.find((p) => p.id === angle.vertexPointId);
-          if (!vertex) return null;
+        {(() => {
+          // Pre-compute vertex angle counts for conditional 3-letter notation
+          const vertexAngleCounts = new Map<string, number>();
+          for (const a of angles) {
+            vertexAngleCounts.set(
+              a.vertexPointId,
+              (vertexAngleCounts.get(a.vertexPointId) ?? 0) + 1,
+            );
+          }
 
-          return (
-            <div
-              key={i}
-              onClick={() => onSelectElement(angle.vertexPointId)}
-              style={{ padding: '2px 0', cursor: 'pointer', color: UI_TEXT_PRIMARY }}
-            >
-              <span>∠{vertex.label}</span>
-              <span style={{ color: UI_TEXT_SECONDARY, marginLeft: 6 }}>
-                {displayMode === 'complet' && !estimationActive
-                  ? `${Math.round(angle.degrees)}°`
-                  : ''}{' '}
-                {angle.classification === 'droit'
-                  ? '(droit)'
-                  : angle.classification === 'aigu'
-                    ? '(aigu)'
-                    : angle.classification === 'obtus'
-                      ? '(obtus)'
-                      : angle.classification === 'plat'
-                        ? displayMode === 'simplifie'
-                          ? '(points alignés)'
-                          : '(plat)'
-                        : ''}
-              </span>
-            </div>
-          );
-        })}
+          return angles.map((angle, i) => {
+            const vertex = state.points.find((p) => p.id === angle.vertexPointId);
+            if (!vertex) return null;
+            const ray1 = state.points.find((p) => p.id === angle.ray1PointId);
+            const ray2 = state.points.find((p) => p.id === angle.ray2PointId);
+            if (!ray1 || !ray2) return null;
+
+            // Use 3-letter notation when vertex has multiple angles (disambiguation)
+            const needsDisambiguation = (vertexAngleCounts.get(angle.vertexPointId) ?? 0) > 1;
+            const angleLabel = needsDisambiguation
+              ? `∠${ray1.label}${vertex.label}${ray2.label}`
+              : `∠${vertex.label}`;
+
+            const isHovered = angle.vertexPointId === hoveredElementId;
+            const zebra = i % 2 !== 0 ? '#F8FAFC' : 'transparent';
+            const bg = isHovered ? '#F0F4F8' : zebra;
+
+            return (
+              <div
+                key={i}
+                onClick={() => onSelectElement(angle.vertexPointId)}
+                onPointerEnter={() => onHoverElement?.(angle.vertexPointId)}
+                onPointerLeave={() => onHoverElement?.(null)}
+                style={{
+                  padding: '2px 4px',
+                  cursor: 'pointer',
+                  color: UI_TEXT_PRIMARY,
+                  background: bg,
+                  borderRadius: 2,
+                }}
+              >
+                <span>{angleLabel}</span>
+                <span style={{ color: UI_TEXT_SECONDARY, marginLeft: 6 }}>
+                  {displayMode === 'complet' && !estimationActive
+                    ? `${Math.round(angle.degrees)}°`
+                    : ''}{' '}
+                  {angle.classification === 'droit'
+                    ? '(droit)'
+                    : angle.classification === 'aigu'
+                      ? '(aigu)'
+                      : angle.classification === 'obtus'
+                        ? '(obtus)'
+                        : angle.classification === 'plat'
+                          ? displayMode === 'simplifie'
+                            ? '(points alignés)'
+                            : '(plat)'
+                          : ''}
+                </span>
+              </div>
+            );
+          });
+        })()}
         {angles.length === 0 && (
           <div style={{ color: UI_TEXT_SECONDARY, fontStyle: 'italic' }}>Aucun angle</div>
         )}
@@ -301,11 +345,30 @@ export const PropertiesPanel = memo(function PropertiesPanel({
                 </span>
               </div>
             ))}
-            {figures.map((fig) => (
-              <div key={fig.id} style={{ padding: '2px 0' }}>
-                <div style={{ color: UI_PRIMARY, fontWeight: 600 }}>{fig.name}</div>
-              </div>
-            ))}
+            {figures
+              .filter((f) => !f.minor)
+              .map((fig) => (
+                <div key={fig.id} style={{ padding: '2px 0' }}>
+                  <div style={{ color: UI_PRIMARY, fontWeight: 600 }}>{fig.name}</div>
+                </div>
+              ))}
+            {(() => {
+              const minorFigures = figures.filter((f) => f.minor);
+              return minorFigures.length > 0 ? (
+                <details style={{ marginTop: 4 }}>
+                  <summary
+                    style={{ cursor: 'pointer', color: UI_TEXT_SECONDARY, fontSize: '0.9em' }}
+                  >
+                    Autres polygones ({minorFigures.length})
+                  </summary>
+                  {minorFigures.map((fig) => (
+                    <div key={fig.id} style={{ padding: '2px 0' }}>
+                      <div style={{ color: UI_TEXT_SECONDARY }}>{fig.name}</div>
+                    </div>
+                  ))}
+                </details>
+              ) : null;
+            })()}
             {properties.length === 0 && figures.length === 0 && (
               <div style={{ color: UI_TEXT_SECONDARY, fontStyle: 'italic' }}>Aucune propriété</div>
             )}
@@ -354,15 +417,25 @@ export const PropertiesPanel = memo(function PropertiesPanel({
             : 'Points'
         }
       >
-        {state.points.map((point) => {
+        {state.points.map((point, index) => {
           const prefix = figurePointIds.has(point.id) ? 'Sommet' : 'Point';
+          const isSelected = point.id === state.selectedElementId;
+          const isHovered = point.id === hoveredElementId;
+          const zebra = index % 2 !== 0 ? '#F8FAFC' : 'transparent';
+          const bg = isSelected ? '#E8F0FA' : isHovered ? '#F0F4F8' : zebra;
           return (
             <div
               key={point.id}
               onClick={() => onSelectElement(point.id)}
               onPointerEnter={() => onHoverElement?.(point.id)}
               onPointerLeave={() => onHoverElement?.(null)}
-              style={{ padding: '2px 0', cursor: 'pointer', color: UI_TEXT_PRIMARY }}
+              style={{
+                padding: '2px 4px',
+                cursor: 'pointer',
+                color: UI_TEXT_PRIMARY,
+                background: bg,
+                borderRadius: 2,
+              }}
             >
               <span>
                 {prefix} {point.label}

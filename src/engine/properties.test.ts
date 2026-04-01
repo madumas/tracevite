@@ -3,8 +3,9 @@ import {
   detectPerpendicularSegments,
   detectEqualLengths,
   detectAllProperties,
+  groupParallelProperties,
 } from './properties';
-import type { Point, Segment } from '@/model/types';
+import type { DetectedProperty, Point, Segment } from '@/model/types';
 
 function makePoints(...coords: Array<[number, number]>): Point[] {
   return coords.map(([x, y], i) => ({
@@ -136,5 +137,91 @@ describe('detectAllProperties', () => {
 
     expect(parallel.length).toBeGreaterThanOrEqual(1); // AB // CD
     expect(equal.length).toBeGreaterThanOrEqual(1); // AB = CD or BC = DA
+  });
+});
+
+describe('groupParallelProperties', () => {
+  // Shared test fixtures: 8 points (A-H) and 4 segments
+  const gPoints: Point[] = [
+    { id: 'p1', label: 'A', x: 0, y: 0 },
+    { id: 'p2', label: 'B', x: 100, y: 0 },
+    { id: 'p3', label: 'C', x: 0, y: 50 },
+    { id: 'p4', label: 'D', x: 100, y: 50 },
+    { id: 'p5', label: 'E', x: 0, y: 100 },
+    { id: 'p6', label: 'F', x: 100, y: 100 },
+    { id: 'p7', label: 'G', x: 0, y: 150 },
+    { id: 'p8', label: 'H', x: 100, y: 150 },
+  ];
+  const gSegments: Segment[] = [
+    { id: 's1', startPointId: 'p1', endPointId: 'p2', lengthMm: 100 }, // AB
+    { id: 's2', startPointId: 'p3', endPointId: 'p4', lengthMm: 100 }, // CD
+    { id: 's3', startPointId: 'p5', endPointId: 'p6', lengthMm: 100 }, // EF
+    { id: 's4', startPointId: 'p7', endPointId: 'p8', lengthMm: 100 }, // GH
+  ];
+
+  function par(ids: string[], label: string): DetectedProperty {
+    return { type: 'parallel', involvedIds: ids, label };
+  }
+
+  it('returns input unchanged when no parallel properties exist', () => {
+    const props: DetectedProperty[] = [
+      { type: 'perpendicular', involvedIds: ['s1', 's2'], label: 'AB ⊥ CD' },
+      { type: 'equal_length', involvedIds: ['s1', 's3'], label: 'AB = EF' },
+    ];
+    const result = groupParallelProperties(props, gSegments, gPoints);
+    expect(result).toEqual(props);
+  });
+
+  it('returns input unchanged when only one parallel property exists', () => {
+    const props: DetectedProperty[] = [par(['s1', 's2'], 'AB // CD')];
+    const result = groupParallelProperties(props, gSegments, gPoints);
+    expect(result).toEqual(props);
+  });
+
+  it('groups two parallel pairs sharing a segment into one group (A//B + B//C)', () => {
+    const props: DetectedProperty[] = [
+      par(['s1', 's2'], 'AB // CD'),
+      par(['s2', 's3'], 'CD // EF'),
+    ];
+    const result = groupParallelProperties(props, gSegments, gPoints);
+    const parallel = result.filter((p) => p.type === 'parallel');
+    expect(parallel).toHaveLength(1);
+    expect([...parallel[0]!.involvedIds].sort()).toEqual(['s1', 's2', 's3']);
+    expect(parallel[0]!.label).toBe('AB // CD // EF');
+  });
+
+  it('keeps separate groups for unrelated parallel pairs', () => {
+    const props: DetectedProperty[] = [
+      par(['s1', 's2'], 'AB // CD'),
+      par(['s3', 's4'], 'EF // GH'),
+    ];
+    const result = groupParallelProperties(props, gSegments, gPoints);
+    const parallel = result.filter((p) => p.type === 'parallel');
+    expect(parallel).toHaveLength(2);
+    const allIds = parallel.map((p) => [...p.involvedIds].sort());
+    expect(allIds).toContainEqual(['s1', 's2']);
+    expect(allIds).toContainEqual(['s3', 's4']);
+  });
+
+  it('passes non-parallel properties through unchanged', () => {
+    const perp: DetectedProperty = {
+      type: 'perpendicular',
+      involvedIds: ['s1', 's3'],
+      label: 'AB ⊥ EF',
+    };
+    const eqLen: DetectedProperty = {
+      type: 'equal_length',
+      involvedIds: ['s1', 's2'],
+      label: 'AB = CD',
+    };
+    const props: DetectedProperty[] = [
+      par(['s1', 's2'], 'AB // CD'),
+      par(['s2', 's3'], 'CD // EF'),
+      perp,
+      eqLen,
+    ];
+    const result = groupParallelProperties(props, gSegments, gPoints);
+    const nonParallel = result.filter((p) => p.type !== 'parallel');
+    expect(nonParallel).toEqual([perp, eqLen]);
   });
 });

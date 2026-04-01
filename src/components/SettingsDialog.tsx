@@ -5,7 +5,13 @@
 
 import { memo, useEffect } from 'react';
 import type { ToleranceProfile, ChainTimeout, FontScale, SoundMode } from '@/model/types';
-import { UI_PRIMARY, UI_SURFACE, UI_BORDER, UI_TEXT_PRIMARY } from '@/config/theme';
+import {
+  UI_PRIMARY,
+  UI_SURFACE,
+  UI_BORDER,
+  UI_TEXT_PRIMARY,
+  UI_TEXT_SECONDARY,
+} from '@/config/theme';
 import { MIN_BUTTON_SIZE_PX } from '@/config/accessibility';
 import { usePreferences, useUpdatePreference, type SegmentColor } from '@/model/preferences';
 
@@ -143,6 +149,20 @@ export const SettingsDialog = memo(function SettingsDialog({
           </button>
         </div>
 
+        {/* ── Section: Interaction ──────────────────────── */}
+        <div
+          style={{
+            padding: '12px 0 4px',
+            fontSize: 11,
+            fontWeight: 700,
+            color: UI_TEXT_SECONDARY,
+            textTransform: 'uppercase',
+            letterSpacing: '0.5px',
+          }}
+        >
+          Interaction
+        </div>
+
         {/* Tolerance profile */}
         <div style={rowStyle}>
           <span>Tolérance de l'aimant</span>
@@ -170,6 +190,20 @@ export const SettingsDialog = memo(function SettingsDialog({
             <option value={15000}>15 secondes</option>
             <option value={0}>Désactivé</option>
           </select>
+        </div>
+
+        {/* ── Section: Affichage ──────────────────────── */}
+        <div
+          style={{
+            padding: '12px 0 4px',
+            fontSize: 11,
+            fontWeight: 700,
+            color: UI_TEXT_SECONDARY,
+            textTransform: 'uppercase',
+            letterSpacing: '0.5px',
+          }}
+        >
+          Affichage
         </div>
 
         {/* Font scale */}
@@ -266,6 +300,20 @@ export const SettingsDialog = memo(function SettingsDialog({
               />
             ))}
           </div>
+        </div>
+
+        {/* ── Section: Accessibilité ──────────────────── */}
+        <div
+          style={{
+            padding: '12px 0 4px',
+            fontSize: 11,
+            fontWeight: 700,
+            color: UI_TEXT_SECONDARY,
+            textTransform: 'uppercase',
+            letterSpacing: '0.5px',
+          }}
+        >
+          Accessibilité
         </div>
 
         {/* Fatigue reminder */}

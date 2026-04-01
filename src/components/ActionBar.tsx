@@ -99,6 +99,7 @@ export const ActionBar = memo(function ActionBar({
         gap: MIN_BUTTON_GAP_PX,
       }}
       data-testid="action-bar"
+      data-hide-labels={fontScale >= 1.25 ? 'true' : undefined}
     >
       {/* Undo */}
       <button
@@ -180,9 +181,9 @@ export const ActionBar = memo(function ActionBar({
           minWidth: MIN_BUTTON_SIZE_PX,
           height: MIN_BUTTON_SIZE_PX,
           padding: '0 10px',
-          border: `1px solid ${UI_BORDER}`,
+          border: `1px solid ${snapEnabled ? '#22C55E' : '#FCA5A5'}`,
           borderRadius: 4,
-          background: UI_SURFACE,
+          background: snapEnabled ? UI_SURFACE : '#FFF5F5',
           color: snapEnabled ? UI_PRIMARY : UI_DISABLED_TEXT,
           cursor: 'pointer',
           fontSize: 'inherit',
@@ -197,9 +198,10 @@ export const ActionBar = memo(function ActionBar({
       >
         <SnapIconSmall /> <span className="action-label">{TOOL_SNAP}</span>
         <span
+          data-testid="snap-indicator"
           style={{
-            width: 6,
-            height: 6,
+            width: 8,
+            height: 8,
             borderRadius: '50%',
             background: snapEnabled ? '#22C55E' : '#D1D8E0',
             display: 'inline-block',
@@ -214,7 +216,7 @@ export const ActionBar = memo(function ActionBar({
       >
         Grille
       </span>
-      <div style={{ display: 'flex', gap: 2 }}>
+      <div style={{ display: 'flex', gap: MIN_BUTTON_GAP_PX }}>
         {([5, 10, 20] as GridSize[]).map((size) => (
           <button
             key={size}
