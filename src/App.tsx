@@ -452,7 +452,7 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
   const handleUndo = useCallback(() => dispatch({ type: 'UNDO' }), [dispatch]);
   const handleRedo = useCallback(() => dispatch({ type: 'REDO' }), [dispatch]);
   const [showPrintDialog, setShowPrintDialog] = useState(false);
-  const [printLandscape, setPrintLandscape] = useState(false);
+  const [printLandscape, setPrintLandscape] = useState(true);
   const handlePrint = useCallback(() => setShowPrintDialog(true), []);
   const handleNewConstruction = useCallback(() => setShowNewConfirm(true), []);
   const handleConfirmNew = useCallback(() => {
