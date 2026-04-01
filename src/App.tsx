@@ -606,13 +606,13 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
     () => isAngleCluttered(state, state.displayMode),
     [state.segments.length, state.displayMode],
   );
-  // Show a one-time hint when clutter threshold is crossed
-  const [clutterHintMessage, setClutterHintMessage] = useState<string | null>(null);
+  // Track first appearance of clutter for button pulse animation
+  const [clutterBtnPulse, setClutterBtnPulse] = useState(false);
   useEffect(() => {
     if (cluttered && !clutterHintShown) {
       setClutterHintShown(true);
-      setClutterHintMessage('Les mesures sont dans le panneau.');
-      const t = setTimeout(() => setClutterHintMessage(null), 5000);
+      setClutterBtnPulse(true);
+      const t = setTimeout(() => setClutterBtnPulse(false), 2000);
       return () => clearTimeout(t);
     }
   }, [cluttered, clutterHintShown]);
@@ -939,18 +939,6 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
               );
             })()}
         {shiftConstraintActive && ' — Contrainte 15° active'}
-        {clutterHintMessage && (
-          <span
-            style={{
-              marginLeft: 8,
-              fontSize: 11 * effectiveFontScale,
-              color: '#6B7280',
-              fontStyle: 'italic',
-            }}
-          >
-            {clutterHintMessage}
-          </span>
-        )}
         {/* Right-side buttons grouped in a single flex container */}
         {(!tool.isIdle ||
           cluttered ||
@@ -971,6 +959,7 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
                   color: forceShowLabels ? UI_PRIMARY : '#4A5568',
                   whiteSpace: 'nowrap',
                   minHeight: 28,
+                  animation: clutterBtnPulse ? 'glow-pulse 0.6s ease-in-out 3' : undefined,
                 }}
                 data-testid="show-labels-btn"
                 title="Afficher les mesures sur le canevas"
