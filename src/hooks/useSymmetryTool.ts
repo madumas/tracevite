@@ -117,6 +117,14 @@ export function useSymmetryTool({
           if (segId) {
             const connected = findConnectedElements(segId, state);
             pointIds = connected.pointIds;
+            console.log('[Symmetry] figure pointIds:', pointIds, 'axis:', axisP1, axisP2);
+            pointIds.forEach((id) => {
+              const p = state.points.find((pt) => pt.id === id);
+              if (p)
+                console.log(
+                  `[Symmetry] point ${p.label} at (${p.x.toFixed(1)}, ${p.y.toFixed(1)})`,
+                );
+            });
           } else {
             const circle = state.circles.find((c) => c.id === circleHitId);
             pointIds = circle ? [circle.centerPointId] : [];
@@ -209,8 +217,8 @@ export function useSymmetryTool({
       );
     }
 
-    // Defined axis (solid)
-    if (phase === 'showing_result' && axisP1 && axisP2) {
+    // Defined axis (solid) — visible during figure selection AND result
+    if ((phase === 'select_figure' || phase === 'showing_result') && axisP1 && axisP2) {
       elements.push(
         createElement('line', {
           key: 'axis',
