@@ -60,7 +60,7 @@ export function AboutDialog({ onClose }: AboutDialogProps) {
         <img src="/logo.svg" alt="TraceVite" width={48} height={48} style={{ marginBottom: 8 }} />
         <h2 style={{ margin: '0 0 4px', fontSize: 20 }}>TraceVite</h2>
         <div style={{ fontSize: 12, color: UI_TEXT_SECONDARY, marginBottom: 16 }}>
-          v{__APP_VERSION__}
+          v{__APP_VERSION__} ({__BUILD_HASH__})
         </div>
 
         <p style={{ fontSize: 13, lineHeight: 1.5, color: UI_TEXT_PRIMARY, margin: '0 0 16px' }}>
@@ -158,3 +158,4 @@ function CopyButton() {
 }
 
 declare const __APP_VERSION__: string;
+declare const __BUILD_HASH__: string;
