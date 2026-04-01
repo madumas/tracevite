@@ -345,6 +345,38 @@ describe('splitSegmentAtPoint', () => {
     // Original segment is gone
     expect(result!.state.segments.find((s) => s.id === seg!.segmentId)).toBeUndefined();
   });
+
+  it('reuses existing point when existingPointId is provided', () => {
+    let state = createInitialState();
+    const p1 = addPoint(state, 0, 0);
+    state = p1.state;
+    const p2 = addPoint(state, 100, 0);
+    state = p2.state;
+    const junction = addPoint(state, 50, 0);
+    state = junction.state;
+    const seg = addSegment(state, p1.pointId, p2.pointId);
+    state = seg!.state;
+
+    const result = splitSegmentAtPoint(state, seg!.segmentId, 50, 0, junction.pointId);
+    expect(result).not.toBeNull();
+    expect(result!.pointId).toBe(junction.pointId);
+    // No new point created — still 3 points
+    expect(result!.state.points).toHaveLength(3);
+    expect(result!.state.segments).toHaveLength(2);
+  });
+
+  it('returns null when existingPointId is invalid', () => {
+    let state = createInitialState();
+    const p1 = addPoint(state, 0, 0);
+    state = p1.state;
+    const p2 = addPoint(state, 100, 0);
+    state = p2.state;
+    const seg = addSegment(state, p1.pointId, p2.pointId);
+    state = seg!.state;
+
+    const result = splitSegmentAtPoint(state, seg!.segmentId, 50, 0, 'nonexistent-id');
+    expect(result).toBeNull();
+  });
 });
 
 describe('parameter changes (no undo push)', () => {

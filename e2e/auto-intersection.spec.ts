@@ -27,22 +27,11 @@ test.describe('Auto-intersection', () => {
     await waitForStatus(page, /deuxième point/);
     await interactCanvas(page, testInfo, 90, 120);
 
-    // Auto-intersection should create an intersection point at ~(90, 80)
-    // This splits the first segment into 2, so:
-    // Points: 2 (horizontal endpoints) + 2 (vertical endpoints) + 1 (intersection) = 5
-    // Segments: 2 (horizontal split) + 1 (vertical) = 3
-    // OR if vertical is also split: 2 + 2 = 4 segments, 5 points
-    const pointCount = await page
-      .locator('[data-testid="point-layer"] [data-testid^="point-"]')
-      .count();
-    const segCount = await page
-      .locator('[data-testid="segment-layer"] [data-testid^="segment-"]')
-      .count();
-
-    // At minimum: more than 4 points (intersection point was created)
-    expect(pointCount).toBeGreaterThanOrEqual(5);
-    // At minimum: more than 2 segments (split occurred)
-    expect(segCount).toBeGreaterThanOrEqual(3);
+    // Auto-intersection creates ONE shared junction point at ~(90, 80)
+    // 2 (horizontal endpoints) + 2 (vertical endpoints) + 1 (shared intersection) = 5 points
+    // 2 (horizontal split) + 2 (vertical split) = 4 segments
+    await expectPointCount(page, 5);
+    await expectSegmentCount(page, 4);
   });
 
   test('no intersection when auto-intersection is disabled', async ({ page }, testInfo) => {

@@ -416,12 +416,23 @@ export function splitSegmentAtPoint(
   segmentId: string,
   x: number,
   y: number,
+  existingPointId?: string,
 ): { state: ConstructionState; pointId: string } | null {
   const segment = state.segments.find((s) => s.id === segmentId);
   if (!segment) return null;
 
-  // Create the junction point
-  const { state: stateWithPoint, pointId } = addPoint(state, x, y);
+  // Reuse existing point if provided (auto-intersection sharing)
+  let stateWithPoint: ConstructionState;
+  let pointId: string;
+  if (existingPointId) {
+    if (!state.points.some((p) => p.id === existingPointId)) return null;
+    stateWithPoint = state;
+    pointId = existingPointId;
+  } else {
+    const result = addPoint(state, x, y);
+    stateWithPoint = result.state;
+    pointId = result.pointId;
+  }
 
   // Remove original segment
   const stateWithoutSeg = {

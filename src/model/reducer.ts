@@ -133,8 +133,9 @@ export function reduce(state: ReducerState, action: ConstructionAction): Reducer
       }
 
       // Auto-intersection detection (opt-in, spec §19 v2)
+      // TODO: multi-intersection (segment crossing 3+ existing segments) only handles
+      // the first crossing — after the first split, result.segmentId no longer exists.
       if (current.autoIntersection) {
-        // Collect all intersection points first, then split in a second pass
         const pm = new Map(newState.points.map((p) => [p.id, p]));
         const createdSeg = newState.segments.find((s) => s.id === result.segmentId);
         if (createdSeg) {
@@ -180,7 +181,13 @@ export function reduce(state: ReducerState, action: ConstructionAction): Reducer
                   if (!sp || !ep || !jp) continue;
                   const { distance: dist } = pointOnSegmentProjection(jp, sp, ep);
                   if (dist < MIN_POINT_DISTANCE_MM) {
-                    const split2 = State.splitSegmentAtPoint(newState, seg.id, jp.x, jp.y);
+                    const split2 = State.splitSegmentAtPoint(
+                      newState,
+                      seg.id,
+                      jp.x,
+                      jp.y,
+                      junctionPointId,
+                    );
                     if (split2) newState = split2.state;
                     break;
                   }
