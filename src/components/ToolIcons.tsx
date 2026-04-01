@@ -429,32 +429,48 @@ export function FolderIcon() {
   );
 }
 
-/** Magnet small: red horseshoe with round colored poles for ActionBar */
+/** Magnet small: red horseshoe with rectangular colored poles for ActionBar */
 export function SnapIconSmall() {
   return (
     <svg {...SA}>
       {/* Horseshoe body — red */}
       <path d="M4 7v5a6 6 0 0 0 12 0V7" stroke="#C82828" strokeWidth="2.5" fill="none" />
-      {/* Left pole — silver/gray (round) */}
-      <circle cx="4" cy="4.5" r="3" fill="#9CA3AF" stroke="#6B7280" strokeWidth="0.8" />
-      {/* Right pole — darker (round) */}
-      <circle cx="16" cy="4.5" r="3" fill="#6B7280" stroke="#4A5568" strokeWidth="0.8" />
+      {/* Left pole — silver/gray (rectangular) */}
+      <rect
+        x="1.5"
+        y="1.5"
+        width="5"
+        height="6"
+        fill="#9CA3AF"
+        stroke="#6B7280"
+        strokeWidth="0.8"
+      />
+      {/* Right pole — darker (rectangular) */}
+      <rect
+        x="13.5"
+        y="1.5"
+        width="5"
+        height="6"
+        fill="#6B7280"
+        stroke="#4A5568"
+        strokeWidth="0.8"
+      />
     </svg>
   );
 }
 
 // ── Toolbar icons (28×28 rendered) ──────────────────────────
 
-/** Magnet: red horseshoe with round colored poles for toolbar */
+/** Magnet: red horseshoe with rectangular colored poles for toolbar */
 export function SnapIcon() {
   return (
     <svg {...S}>
       {/* Horseshoe body — red */}
       <path d="M4 7v5a6 6 0 0 0 12 0V7" stroke="#C82828" strokeWidth="3" fill="none" />
-      {/* Left pole — silver/gray (round) */}
-      <circle cx="4" cy="4.5" r="3.5" fill="#9CA3AF" stroke="#6B7280" strokeWidth="1" />
-      {/* Right pole — darker (round) */}
-      <circle cx="16" cy="4.5" r="3.5" fill="#6B7280" stroke="#4A5568" strokeWidth="1" />
+      {/* Left pole — silver/gray (rectangular) */}
+      <rect x="1" y="1" width="6" height="6.5" fill="#9CA3AF" stroke="#6B7280" strokeWidth="1" />
+      {/* Right pole — darker (rectangular) */}
+      <rect x="13" y="1" width="6" height="6.5" fill="#6B7280" stroke="#4A5568" strokeWidth="1" />
     </svg>
   );
 }
