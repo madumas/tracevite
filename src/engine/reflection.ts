@@ -211,10 +211,6 @@ export function checkSymmetry(
       }
     }
 
-    console.log(
-      `[checkSymmetry] ${point.label}(${point.x.toFixed(1)},${point.y.toFixed(1)}) → reflected(${reflected.x.toFixed(1)},${reflected.y.toFixed(1)}) → closest=${bestMatch?.label} dist=${bestDist.toFixed(2)} tol=${toleranceMm}`,
-    );
-
     if (!bestMatch || bestDist > toleranceMm) {
       // Check if this point is on the circumference of a symmetric circle
       // A point on a circle's circumference is symmetric if the circle's center
@@ -261,14 +257,16 @@ export function checkSymmetry(
     }
   }
 
-  // Verify circles: each circle's reflected center must match another circle with same radius
-  if (isSymmetric && state.circles.length > 0) {
-    for (const circle of state.circles) {
+  // Verify circles: only check circles whose center is in the checked pointIds
+  const pointIdSet = new Set(pointIds);
+  const relevantCircles = state.circles.filter((c) => pointIdSet.has(c.centerPointId));
+  if (isSymmetric && relevantCircles.length > 0) {
+    for (const circle of relevantCircles) {
       const center = pointMap.get(circle.centerPointId);
       if (!center) continue;
       const reflectedCenter = reflectPoint(center, axisP1, axisP2);
       // Find a circle whose center is near the reflected position with same radius
-      const match = state.circles.find((c) => {
+      const match = relevantCircles.find((c) => {
         if (c.id === circle.id) {
           // Self-match: circle is on the axis (center reflects to itself)
           const d = distance(reflectedCenter, center);
