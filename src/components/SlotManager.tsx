@@ -268,12 +268,20 @@ export function SlotManager({
                         overflow: 'hidden',
                         textOverflow: 'ellipsis',
                         whiteSpace: 'nowrap',
+                      }}
+                    >
+                      {slot.name}
+                    </div>
+                    <div
+                      style={{
+                        fontSize: 11,
+                        color: UI_TEXT_SECONDARY,
                         display: 'flex',
                         alignItems: 'center',
                         gap: 6,
                       }}
                     >
-                      {slot.name}
+                      {new Date(slot.updatedAt).toLocaleDateString('fr-CA')}
                       {slot.id === activeSlotId && (
                         <span
                           style={{
@@ -283,15 +291,11 @@ export function SlotManager({
                             background: '#D4E4F7',
                             padding: '1px 6px',
                             borderRadius: 3,
-                            flexShrink: 0,
                           }}
                         >
                           En cours
                         </span>
                       )}
-                    </div>
-                    <div style={{ fontSize: 11, color: UI_TEXT_SECONDARY }}>
-                      {new Date(slot.updatedAt).toLocaleDateString('fr-CA')}
                     </div>
                   </>
                 )}
