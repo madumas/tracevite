@@ -11,6 +11,8 @@ interface RadiusInputProps {
   readonly displayUnit: DisplayUnit;
   readonly onSubmit: (radiusMm: number) => void;
   readonly onDismiss: () => void;
+  /** Screen position of the circle center (px) for proximity placement. */
+  readonly anchorScreenPos?: { x: number; y: number };
 }
 
 /**
@@ -24,6 +26,7 @@ export function RadiusInput({
   displayUnit,
   onSubmit,
   onDismiss,
+  anchorScreenPos,
 }: RadiusInputProps) {
   const [value, setValue] = useState('');
   const [mode, setMode] = useState<'rayon' | 'diametre'>('rayon');
@@ -93,9 +96,15 @@ export function RadiusInput({
       ref={containerRef}
       style={{
         position: 'absolute',
-        ...(keyboardVisible ? { top: 80 } : { bottom: 60 }),
-        left: '50%',
-        transform: 'translateX(-50%)',
+        ...(keyboardVisible
+          ? { top: 80, left: '50%', transform: 'translateX(-50%)' }
+          : anchorScreenPos
+            ? {
+                top: anchorScreenPos.y + 20,
+                left: Math.max(8, Math.min(anchorScreenPos.x, window.innerWidth - 220)),
+                transform: 'none',
+              }
+            : { bottom: 60, left: '50%', transform: 'translateX(-50%)' }),
         background: UI_SURFACE,
         border: `1px solid ${UI_BORDER}`,
         borderRadius: 8,

@@ -1137,6 +1137,9 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
                 points={state.points}
                 viewport={viewport}
                 selectedElementId={state.selectedElementId}
+                displayUnit={state.displayUnit}
+                fontScale={effectiveFontScale}
+                estimationMode={state.estimationMode}
               />
               <PointLayer
                 points={state.points}
@@ -1248,11 +1251,18 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
               const circle = state.circles.find((c) => c.id === fixingCircleId);
               if (!circle) return null;
               const center = state.points.find((p) => p.id === circle.centerPointId);
+              const anchorScreenPos = center
+                ? {
+                    x: (center.x - viewport.panX) * viewport.zoom * CSS_PX_PER_MM,
+                    y: (center.y - viewport.panY) * viewport.zoom * CSS_PX_PER_MM,
+                  }
+                : undefined;
               return (
                 <RadiusInput
                   circleLabel={center?.label ?? ''}
                   currentRadiusMm={circle.radiusMm}
                   displayUnit={state.displayUnit}
+                  anchorScreenPos={anchorScreenPos}
                   onSubmit={(radiusMm) => {
                     dispatch({ type: 'SET_CIRCLE_RADIUS', circleId: circle.id, radiusMm });
                     setFixingCircleId(null);

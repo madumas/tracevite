@@ -1,13 +1,18 @@
 import { memo } from 'react';
-import type { Circle, Point, ViewportState } from '@/model/types';
+import type { Circle, Point, ViewportState, DisplayUnit } from '@/model/types';
 import { useCanvasColors } from '@/config/theme';
+import { MIN_CANVAS_FONT_PX } from '@/config/accessibility';
 import { CSS_PX_PER_MM } from '@/engine/viewport';
+import { formatLength } from '@/engine/format';
 
 interface CircleLayerProps {
   readonly circles: readonly Circle[];
   readonly points: readonly Point[];
   readonly viewport: ViewportState;
   readonly selectedElementId: string | null;
+  readonly displayUnit: DisplayUnit;
+  readonly fontScale: number;
+  readonly estimationMode?: boolean;
 }
 
 export const CircleLayer = memo(function CircleLayer({
@@ -15,6 +20,9 @@ export const CircleLayer = memo(function CircleLayer({
   points,
   viewport,
   selectedElementId,
+  displayUnit,
+  fontScale,
+  estimationMode = false,
 }: CircleLayerProps) {
   const colors = useCanvasColors();
   const pxPerMm = viewport.zoom * CSS_PX_PER_MM;
@@ -54,6 +62,23 @@ export const CircleLayer = memo(function CircleLayer({
               data-testid={`circle-${circle.id}`}
               data-element-id={circle.id}
             />
+            {/* Radius label — placed inside circle, below center */}
+            {!estimationMode && (
+              <text
+                x={cx}
+                y={cy + 16 * fontScale}
+                fill={colors.measurement}
+                fontSize={Math.max(MIN_CANVAS_FONT_PX, 13) * fontScale}
+                fontFamily="system-ui, sans-serif"
+                textAnchor="middle"
+                dominantBaseline="central"
+                paintOrder="stroke"
+                stroke="white"
+                strokeWidth={3}
+              >
+                rayon {formatLength(circle.radiusMm, displayUnit)}
+              </text>
+            )}
           </g>
         );
       })}
