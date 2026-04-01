@@ -31,7 +31,6 @@ import { isAngleCluttered } from '@/engine/angles';
 import { computeDerived } from '@/engine/derived';
 import { getAngleLabelPosition, getSegmentLabelPosition } from '@/engine/label-positions';
 import { createSoundEngine } from '@/engine/sound';
-import { UpdatePrompt } from '@/components/UpdatePrompt';
 import { detectLaunchStatus } from '@/model/persistence';
 import { LengthInput } from '@/components/LengthInput';
 import { RadiusInput } from '@/components/RadiusInput';
@@ -243,17 +242,6 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
     detectLaunchStatus().then((status) => {
       if (status === 'deep_freeze') setDeepFreezeDetected(true);
     });
-  }, []);
-
-  // PWA update detection
-  const [updateAvailable, setUpdateAvailable] = useState(false);
-  useEffect(() => {
-    // Listen for SW update message from vite-plugin-pwa
-    const handler = (event: MessageEvent) => {
-      if (event.data?.type === 'SW_UPDATE_AVAILABLE') setUpdateAvailable(true);
-    };
-    navigator.serviceWorker?.addEventListener('message', handler);
-    return () => navigator.serviceWorker?.removeEventListener('message', handler);
   }, []);
 
   // Apply URL params once at mount (moved after slotManager — see below)
@@ -1321,16 +1309,6 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
       )}
 
       {/* PWA update prompt (spec §4.1.2) */}
-      {updateAvailable && (
-        <UpdatePrompt
-          onUpdate={() => {
-            // Auto-save then reload
-            window.location.reload();
-          }}
-          onDismiss={() => setUpdateAvailable(false)}
-        />
-      )}
-
       {/* Action Bar */}
       <ActionBar
         canUndo={canUndo}

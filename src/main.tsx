@@ -3,6 +3,12 @@ import { createRoot } from 'react-dom/client';
 import { App } from './App';
 import './styles/global.css';
 import './styles/print.css';
+
+// Disable Service Worker on dev subdomain — no stale cache during testing
+if (window.location.hostname === 'dev.tracevite.ca') {
+  navigator.serviceWorker?.getRegistrations().then((regs) => regs.forEach((r) => r.unregister()));
+  caches.keys().then((keys) => keys.forEach((k) => caches.delete(k)));
+}
 import { migrateIfNeeded, loadSlotData } from '@/model/slot-persistence';
 import type { SlotRegistry } from '@/model/slots';
 import type { ConstructionState } from '@/model/types';
