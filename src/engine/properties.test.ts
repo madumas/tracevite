@@ -143,14 +143,14 @@ describe('detectAllProperties', () => {
 describe('groupParallelProperties', () => {
   // Shared test fixtures: 8 points (A-H) and 4 segments
   const gPoints: Point[] = [
-    { id: 'p1', label: 'A', x: 0, y: 0 },
-    { id: 'p2', label: 'B', x: 100, y: 0 },
-    { id: 'p3', label: 'C', x: 0, y: 50 },
-    { id: 'p4', label: 'D', x: 100, y: 50 },
-    { id: 'p5', label: 'E', x: 0, y: 100 },
-    { id: 'p6', label: 'F', x: 100, y: 100 },
-    { id: 'p7', label: 'G', x: 0, y: 150 },
-    { id: 'p8', label: 'H', x: 100, y: 150 },
+    { id: 'p1', label: 'A', x: 0, y: 0, locked: false },
+    { id: 'p2', label: 'B', x: 100, y: 0, locked: false },
+    { id: 'p3', label: 'C', x: 0, y: 50, locked: false },
+    { id: 'p4', label: 'D', x: 100, y: 50, locked: false },
+    { id: 'p5', label: 'E', x: 0, y: 100, locked: false },
+    { id: 'p6', label: 'F', x: 100, y: 100, locked: false },
+    { id: 'p7', label: 'G', x: 0, y: 150, locked: false },
+    { id: 'p8', label: 'H', x: 100, y: 150, locked: false },
   ];
   const gSegments: Segment[] = [
     { id: 's1', startPointId: 'p1', endPointId: 'p2', lengthMm: 100 }, // AB
