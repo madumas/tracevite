@@ -241,5 +241,30 @@ export function checkSymmetry(
     }
   }
 
+  // Verify circles: each circle's reflected center must match another circle with same radius
+  if (isSymmetric && state.circles.length > 0) {
+    for (const circle of state.circles) {
+      const center = pointMap.get(circle.centerPointId);
+      if (!center) continue;
+      const reflectedCenter = reflectPoint(center, axisP1, axisP2);
+      // Find a circle whose center is near the reflected position with same radius
+      const match = state.circles.find((c) => {
+        if (c.id === circle.id) {
+          // Self-match: circle is on the axis (center reflects to itself)
+          const d = distance(reflectedCenter, center);
+          return d <= toleranceMm && Math.abs(c.radiusMm - circle.radiusMm) <= toleranceMm;
+        }
+        const otherCenter = pointMap.get(c.centerPointId);
+        if (!otherCenter) return false;
+        const d = distance(reflectedCenter, otherCenter);
+        return d <= toleranceMm && Math.abs(c.radiusMm - circle.radiusMm) <= toleranceMm;
+      });
+      if (!match) {
+        isSymmetric = false;
+        break;
+      }
+    }
+  }
+
   return { isSymmetric, maxDeviationMm: maxDeviation, correspondences };
 }
