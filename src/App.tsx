@@ -157,7 +157,7 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
     ? canvasColors.segment
     : preferences.segmentColor;
   // Responsive breakpoints
-  const isNarrow = useMediaQuery('(max-width: 900px)');
+  const isNarrow = useMediaQuery('(max-width: 768px)');
 
   const containerRef = useRef<HTMLDivElement>(null);
   const containerSize = useContainerSize(containerRef);
@@ -468,7 +468,7 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
   const [panelCollapsed, setPanelCollapsed] = useState(() => {
     const saved = localStorage.getItem('tracevite_panel_collapsed');
     if (saved !== null) return saved === 'true';
-    return typeof window !== 'undefined' && window.innerHeight < 800;
+    return typeof window !== 'undefined' && (window.innerHeight < 800 || window.innerWidth < 900);
   });
 
   // Global keyboard handler

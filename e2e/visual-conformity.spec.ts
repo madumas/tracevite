@@ -589,4 +589,233 @@ test('visual conformity audit', async ({ page }, testInfo) => {
   }
   await page.keyboard.press('Escape');
   await page.waitForTimeout(200);
+
+  // --- 47: Snap feedback — point snap halo (desktop only) ---
+  if (isDesktop) {
+    // Switch to segment tool and move cursor near an existing point to trigger snap halo
+    await page.locator('[data-testid="tool-segment"]').click({ force: true });
+    await page.waitForTimeout(200);
+    // Move near point A (60,60) to trigger snap-to-point feedback (r=12px halo)
+    await moveOnCanvas(page, 61, 61);
+    await page.waitForTimeout(150);
+    await page.screenshot({ path: shot('47-snap-feedback-point.png'), fullPage: true });
+
+    // --- 48: Snap feedback — midpoint snap diamond ---
+    // Move near midpoint of segment AB (85,60) to trigger midpoint snap
+    await moveOnCanvas(page, 85, 60);
+    await page.waitForTimeout(150);
+    await page.screenshot({ path: shot('48-snap-feedback-midpoint.png'), fullPage: true });
+
+    await page.keyboard.press('Escape');
+    await page.waitForTimeout(200);
+  }
+
+  // =====================================================================
+  // Pedagogical details + visual clutter stress tests
+  // =====================================================================
+
+  // --- 49: Fixed segment length (context action + visual state) ---
+  // Navigate fresh to avoid state from previous screenshots
+  await page.goto('/');
+  await page.waitForSelector('[data-testid="canvas-svg"]');
+  await page.waitForTimeout(300);
+  // Create a segment
+  await interact(50, 60);
+  await page.waitForTimeout(300);
+  await interact(100, 60);
+  await page.waitForTimeout(300);
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(200);
+  // Click on segment to select it and show context action bar
+  await interact(75, 60);
+  await page.waitForTimeout(300);
+  const fixLenBtn = page.locator('[data-testid="context-fix-length"]');
+  if (await fixLenBtn.isVisible({ timeout: 2000 }).catch(() => false)) {
+    await page.screenshot({ path: shot('49-fix-length-context.png'), fullPage: true });
+    // Click to fix the length
+    await fixLenBtn.click();
+    await page.waitForTimeout(300);
+    const lenInput = page.locator('[data-testid="length-input"]');
+    if (await lenInput.isVisible({ timeout: 2000 }).catch(() => false)) {
+      await page.screenshot({ path: shot('49b-length-input-dialog.png'), fullPage: true });
+      await page.keyboard.press('Enter'); // confirm current length
+      await page.waitForTimeout(300);
+    }
+  }
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(200);
+
+  // --- 50: Triangle rectangle isocèle (classification in Complet) ---
+  // Switch to complet mode
+  await page.locator('[data-testid="mode-selector"]').click();
+  await page.locator('[data-testid="mode-option-complet"]').click();
+  await page.waitForTimeout(300);
+  await page.locator('[data-testid="tool-segment"]').click({ force: true });
+  await page.waitForTimeout(200);
+  // Create right isosceles triangle: A(50,40), B(100,40), C(100,90) — right angle at B
+  await interact(50, 40);
+  await page.waitForTimeout(300);
+  await interact(100, 40);
+  await page.waitForTimeout(300);
+  await interact(100, 90);
+  await page.waitForTimeout(300);
+  await interact(50, 40); // close the triangle
+  await page.waitForTimeout(300);
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(300);
+  // Open properties panel to show classification
+  const panelToggle50 = page.locator('[data-testid="panel-toggle"], [data-testid="panel-toggle-mobile"]');
+  const panel50 = page.locator('[data-testid="properties-panel"]');
+  if (!(await panel50.isVisible())) {
+    await panelToggle50.click();
+    await panel50.waitFor();
+    await page.waitForTimeout(300);
+  }
+  // Expand Propriétés accordion
+  const propsAcc50 = page.locator('[data-testid="accordion-Propriétés"]');
+  if (await propsAcc50.isVisible()) {
+    await propsAcc50.click();
+    await page.waitForTimeout(200);
+  }
+  await page.screenshot({ path: shot('50-triangle-classification.png'), fullPage: true });
+  await panel50.screenshot({ path: shot('50b-classification-detail.png') });
+
+  // --- 51: Snap guide (parallel/perpendicular during segment creation) ---
+  if (isDesktop) {
+    await page.locator('[data-testid="tool-segment"]').click({ force: true });
+    await page.waitForTimeout(200);
+    // Start a new segment from a point not on the triangle
+    await interact(50, 120);
+    await page.waitForTimeout(300);
+    // Move cursor to align parallel with segment AB (horizontal at y=40)
+    // Moving to (100, 120) would be parallel to AB
+    await moveOnCanvas(page, 100, 120);
+    await page.waitForTimeout(200);
+    await page.screenshot({ path: shot('51-snap-guide-parallel.png'), fullPage: true });
+    await page.keyboard.press('Escape');
+    await page.waitForTimeout(200);
+  }
+
+  // --- 52-55: Visual clutter stress tests (progressive density) ---
+  // Navigate fresh for clean canvas
+  await page.goto('/');
+  await page.waitForSelector('[data-testid="canvas-svg"]');
+  await page.waitForTimeout(300);
+
+  // Create segments progressively and screenshot at key thresholds
+  const segCoords: Array<[number, number, number, number]> = [
+    [30, 50, 80, 50],   // 1: horizontal
+    [30, 70, 80, 70],   // 2: horizontal
+    [30, 90, 80, 90],   // 3: horizontal
+    [30, 50, 30, 90],   // 4: connects left side (creates angles)
+    [80, 50, 80, 90],   // 5: connects right side (5th = threshold simplifié)
+  ];
+
+  for (const [x1, y1, x2, y2] of segCoords) {
+    await interact(x1, y1);
+    await page.waitForTimeout(300);
+    await interact(x2, y2);
+    await page.waitForTimeout(300);
+    await page.keyboard.press('Escape');
+    await page.waitForTimeout(200);
+  }
+  // --- 52: At threshold (5 segments in simplifié) — labels should still be visible
+  await page.screenshot({ path: shot('52-clutter-at-threshold.png'), fullPage: true });
+
+  // Add 3 more segments to exceed threshold
+  const moreSegs: Array<[number, number, number, number]> = [
+    [30, 110, 80, 110], // 6: exceeds threshold
+    [50, 50, 50, 110],  // 7: vertical center
+    [30, 130, 80, 130], // 8: another horizontal
+  ];
+  for (const [x1, y1, x2, y2] of moreSegs) {
+    await interact(x1, y1);
+    await page.waitForTimeout(300);
+    await interact(x2, y2);
+    await page.waitForTimeout(300);
+    await page.keyboard.press('Escape');
+    await page.waitForTimeout(200);
+  }
+  // --- 53: Over threshold (8 segments) — labels should be hidden on canvas
+  await page.screenshot({ path: shot('53-clutter-over-threshold.png'), fullPage: true });
+
+  // Add more for dense construction (12+ segments)
+  const denseSegs: Array<[number, number, number, number]> = [
+    [30, 150, 80, 150], // 9
+    [30, 170, 80, 170], // 10
+    [60, 50, 60, 170],  // 11
+    [40, 50, 40, 170],  // 12
+  ];
+  for (const [x1, y1, x2, y2] of denseSegs) {
+    await interact(x1, y1);
+    await page.waitForTimeout(300);
+    await interact(x2, y2);
+    await page.waitForTimeout(300);
+    await page.keyboard.press('Escape');
+    await page.waitForTimeout(200);
+  }
+  // --- 54: Dense construction (12 segments) — stress test canvas readability
+  await page.screenshot({ path: shot('54-clutter-dense-12seg.png'), fullPage: true });
+
+  // --- 55: Dense construction with panel showing all data
+  const panelDense = page.locator('[data-testid="properties-panel"]');
+  if (!(await panelDense.isVisible())) {
+    const toggle = page.locator('[data-testid="panel-toggle"], [data-testid="panel-toggle-mobile"]');
+    await toggle.click();
+    await panelDense.waitFor();
+    await page.waitForTimeout(300);
+  }
+  await page.screenshot({ path: shot('55-clutter-dense-with-panel.png'), fullPage: true });
+
+  // --- 56-57: Hover reveals hidden labels in clutter mode (desktop only) ---
+  if (isDesktop) {
+    // Hover over a segment to reveal its hidden length label + congruence marks
+    await moveOnCanvas(page, 55, 50);
+    await page.waitForTimeout(200);
+    await page.screenshot({ path: shot('56-clutter-hover-segment.png'), fullPage: true });
+
+    // Hover over an intersection point to reveal angle labels
+    await moveOnCanvas(page, 30, 50);
+    await page.waitForTimeout(200);
+    await page.screenshot({ path: shot('57-clutter-hover-angles.png'), fullPage: true });
+  }
+});
+
+// --- Separate test: iPad landscape layout ---
+test('visual conformity — iPad landscape', async ({ page, browserName }, testInfo) => {
+  // Only run on Mobile iPad project
+  if (testInfo.project.name !== 'Mobile iPad') return;
+
+  // Set landscape viewport
+  await page.setViewportSize({ width: 1194, height: 834 });
+
+  const dir = path.join(SCREENSHOT_BASE, 'mobile-ipad-landscape');
+  await fs.mkdir(dir, { recursive: true });
+  const shot = (name: string) => path.join(dir, name);
+
+  await page.goto('/');
+  await page.waitForSelector('[data-testid="canvas-svg"]');
+  await page.waitForTimeout(300);
+
+  // --- 58: iPad landscape initial state ---
+  await page.screenshot({ path: shot('58-ipad-landscape-initial.png'), fullPage: true });
+
+  // Create a triangle for context
+  const interact = (xMm: number, yMm: number) => interactCanvas(page, testInfo, xMm, yMm);
+  await interact(60, 40);
+  await page.waitForTimeout(300);
+  await interact(120, 40);
+  await page.waitForTimeout(300);
+  await interact(90, 80);
+  await page.waitForTimeout(300);
+  await interact(60, 40);
+  await page.waitForTimeout(300);
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(300);
+
+  // --- 59: iPad landscape with construction ---
+  await page.screenshot({ path: shot('59-ipad-landscape-construction.png'), fullPage: true });
+
+  // --- 60: iPad landscape action bar ---
+  await page.locator('[data-testid="action-bar"]').screenshot({ path: shot('60-ipad-landscape-action-bar.png') });
 });
