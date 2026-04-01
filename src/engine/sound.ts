@@ -29,6 +29,7 @@ export function createSoundEngine(): SoundEngine {
 
   function ensureContext() {
     if (!ctx) {
+      if (typeof AudioContext === 'undefined') return;
       ctx = new AudioContext();
       gainNode = ctx.createGain();
       gainNode.gain.value = 0.5;

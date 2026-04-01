@@ -49,7 +49,7 @@ export function serializeState(state: ConstructionState): string {
       chainTimeoutMs: state.chainTimeoutMs !== 8000 ? state.chainTimeoutMs : undefined,
       fontScale: state.fontScale !== 1 ? state.fontScale : undefined,
       keyboardShortcutsEnabled: state.keyboardShortcutsEnabled || undefined,
-      soundMode: state.soundMode !== 'off' ? state.soundMode : undefined,
+      soundMode: state.soundMode !== 'reduced' ? state.soundMode : undefined,
       soundGain: state.soundGain !== 0.5 ? state.soundGain : undefined,
       pointToolVisible: state.pointToolVisible || undefined,
       estimationMode: state.estimationMode || undefined,

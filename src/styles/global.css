@@ -49,13 +49,20 @@ textarea,
 }
 
 /* ── Action bar: icon-only on narrow screens ───────────── */
-@media (max-width: 768px) {
+@media (max-width: 900px) {
   .action-label {
     display: none;
   }
   [data-testid='action-bar'] {
     gap: 4px;
   }
+}
+
+/* ── "Nouvelle construction" button: filled red on hover ───── */
+.action-new-btn:hover,
+.action-new-btn:focus-visible {
+  background: #c82828 !important;
+  color: #ffffff !important;
 }
 
 /* ── Safe area: action bar padding for iPhone home indicator ── */

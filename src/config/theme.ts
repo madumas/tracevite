@@ -37,7 +37,7 @@ export const TOOLBAR_HEIGHT = 64;
 export const STATUS_BAR_HEIGHT = 32;
 export const STATUS_BAR_BG = '#E3EBF5';
 export const CONSIGNE_HEIGHT = 40;
-export const ACTION_BAR_HEIGHT = 48;
+export const ACTION_BAR_HEIGHT = 56;
 export const PANEL_WIDTH = 220;
 
 // ── PDF colors (black & white only) ────────────────────────

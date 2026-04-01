@@ -76,8 +76,3 @@ export const GRID_2CM = '2 cm';
 // ── Edge case messages (spec §17) ─────────────────────────
 
 export const HINT_SEGMENT_TOO_SHORT = 'Clique un peu plus loin pour tracer un segment';
-
-// ── Save indicator ────────────────────────────────────────
-
-export const SAVE_SAVED = 'Sauvegardé';
-export const SAVE_SAVING = 'Sauvegarde…';

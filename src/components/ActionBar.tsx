@@ -105,7 +105,7 @@ export const ActionBar = memo(function ActionBar({
         disabled={!canUndo}
         style={{
           minWidth: MIN_BUTTON_SIZE_PX,
-          height: MIN_BUTTON_SIZE_PX - 8,
+          height: MIN_BUTTON_SIZE_PX,
           padding: '0 10px',
           border: `1px solid ${UI_BORDER}`,
           borderRadius: 4,
@@ -115,6 +115,7 @@ export const ActionBar = memo(function ActionBar({
           fontSize: 'inherit',
         }}
         aria-label={ACTION_UNDO}
+        title={ACTION_UNDO}
         data-testid="action-undo"
       >
         <UndoIcon /> <span className="action-label">{ACTION_UNDO}</span>
@@ -126,7 +127,7 @@ export const ActionBar = memo(function ActionBar({
         disabled={!canRedo}
         style={{
           minWidth: MIN_BUTTON_SIZE_PX,
-          height: MIN_BUTTON_SIZE_PX - 8,
+          height: MIN_BUTTON_SIZE_PX,
           padding: '0 10px',
           border: `1px solid ${UI_BORDER}`,
           borderRadius: 4,
@@ -136,17 +137,21 @@ export const ActionBar = memo(function ActionBar({
           fontSize: 'inherit',
         }}
         aria-label={ACTION_REDO}
+        title={ACTION_REDO}
         data-testid="action-redo"
       >
         <RedoIcon /> <span className="action-label">{ACTION_REDO}</span>
       </button>
+
+      {/* ─ sep ─ */}
+      <div style={{ width: 1, height: 24, background: UI_BORDER, margin: '0 4px' }} />
 
       {/* Delete mode toggle */}
       <button
         onClick={onToggleDeleteMode}
         style={{
           minWidth: MIN_BUTTON_SIZE_PX,
-          height: MIN_BUTTON_SIZE_PX - 8,
+          height: MIN_BUTTON_SIZE_PX,
           padding: '0 10px',
           border: `1px solid ${deleteMode ? UI_DESTRUCTIVE : UI_BORDER}`,
           borderRadius: 4,
@@ -157,6 +162,7 @@ export const ActionBar = memo(function ActionBar({
           fontWeight: deleteMode ? 600 : 400,
         }}
         aria-label={ACTION_DELETE}
+        title={ACTION_DELETE}
         aria-pressed={deleteMode}
         data-testid="action-delete"
       >
@@ -171,7 +177,7 @@ export const ActionBar = memo(function ActionBar({
         onClick={onSnapToggle}
         style={{
           minWidth: MIN_BUTTON_SIZE_PX,
-          height: MIN_BUTTON_SIZE_PX - 8,
+          height: MIN_BUTTON_SIZE_PX,
           padding: '0 10px',
           border: `1px solid ${UI_BORDER}`,
           borderRadius: 4,
@@ -213,8 +219,8 @@ export const ActionBar = memo(function ActionBar({
             key={size}
             onClick={() => onGridChange(size)}
             style={{
-              minWidth: 36,
-              height: MIN_BUTTON_SIZE_PX - 8,
+              minWidth: MIN_BUTTON_SIZE_PX,
+              height: MIN_BUTTON_SIZE_PX,
               padding: '0 6px',
               border: gridSizeMm === size ? `1px solid ${UI_PRIMARY}` : `1px solid ${UI_BORDER}`,
               borderRadius: 4,
@@ -224,6 +230,8 @@ export const ActionBar = memo(function ActionBar({
               fontSize: 'inherit',
             }}
             aria-pressed={gridSizeMm === size}
+            aria-label={`Grille ${size === 5 ? GRID_5MM : size === 10 ? GRID_1CM : GRID_2CM}`}
+            title={`Grille ${size === 5 ? GRID_5MM : size === 10 ? GRID_1CM : GRID_2CM}`}
             data-testid={`grid-${size}`}
           >
             {size === 5 ? GRID_5MM : size === 10 ? GRID_1CM : GRID_2CM}
@@ -238,8 +246,8 @@ export const ActionBar = memo(function ActionBar({
       <button
         onClick={() => onUnitChange(displayUnit === 'cm' ? 'mm' : 'cm')}
         style={{
-          minWidth: 36,
-          height: MIN_BUTTON_SIZE_PX - 8,
+          minWidth: MIN_BUTTON_SIZE_PX,
+          height: MIN_BUTTON_SIZE_PX,
           padding: '0 8px',
           border: `1px solid ${UI_BORDER}`,
           borderRadius: 4,
@@ -250,6 +258,7 @@ export const ActionBar = memo(function ActionBar({
           whiteSpace: 'nowrap',
         }}
         data-testid="unit-toggle"
+        aria-label={`Unité : ${displayUnit}`}
         title="Changer l'unité d'affichage des mesures"
       >
         Unité : {displayUnit}
@@ -259,9 +268,11 @@ export const ActionBar = memo(function ActionBar({
       {estimationMode && onToggleEstimation && (
         <button
           onClick={onToggleEstimation}
+          aria-label="Vérifier les mesures"
+          title="Vérifier les mesures"
           style={{
             minWidth: MIN_BUTTON_SIZE_PX,
-            height: MIN_BUTTON_SIZE_PX - 8,
+            height: MIN_BUTTON_SIZE_PX,
             padding: '0 10px',
             border: `1px solid ${UI_PRIMARY}`,
             borderRadius: 4,
@@ -306,7 +317,7 @@ export const ActionBar = memo(function ActionBar({
           onClick={onShowSlotManager}
           style={{
             minWidth: MIN_BUTTON_SIZE_PX,
-            height: MIN_BUTTON_SIZE_PX - 8,
+            height: MIN_BUTTON_SIZE_PX,
             padding: '0 10px',
             border: `1px solid ${UI_BORDER}`,
             borderRadius: 4,
@@ -316,6 +327,7 @@ export const ActionBar = memo(function ActionBar({
             fontSize: 'inherit',
           }}
           aria-label="Mes constructions"
+          title="Mes constructions"
           data-testid="slot-manager-btn"
         >
           <FolderIcon /> <span className="action-label">Mes constructions</span>
@@ -328,7 +340,7 @@ export const ActionBar = memo(function ActionBar({
           onClick={onShowSettings}
           style={{
             minWidth: MIN_BUTTON_SIZE_PX,
-            height: MIN_BUTTON_SIZE_PX - 8,
+            height: MIN_BUTTON_SIZE_PX,
             padding: 0,
             border: 'none',
             borderRadius: 4,
@@ -341,6 +353,7 @@ export const ActionBar = memo(function ActionBar({
             justifyContent: 'center',
           }}
           aria-label="Paramètres"
+          title="Paramètres"
           data-testid="settings-button"
         >
           <SettingsIcon />
@@ -353,7 +366,7 @@ export const ActionBar = memo(function ActionBar({
           onClick={onToggleDemoMode}
           style={{
             minWidth: MIN_BUTTON_SIZE_PX,
-            height: MIN_BUTTON_SIZE_PX - 8,
+            height: MIN_BUTTON_SIZE_PX,
             padding: 0,
             border: 'none',
             borderRadius: 4,
@@ -382,7 +395,7 @@ export const ActionBar = memo(function ActionBar({
         disabled={!canPrint}
         style={{
           minWidth: MIN_BUTTON_SIZE_PX,
-          height: MIN_BUTTON_SIZE_PX - 8,
+          height: MIN_BUTTON_SIZE_PX,
           padding: '0 14px',
           border: 'none',
           borderRadius: 4,
@@ -393,6 +406,7 @@ export const ActionBar = memo(function ActionBar({
           fontWeight: 500,
         }}
         aria-label={ACTION_PRINT}
+        title={ACTION_PRINT}
         data-testid="action-print"
       >
         <PrintIcon /> <span className="action-label">{ACTION_PRINT}</span>
@@ -401,23 +415,26 @@ export const ActionBar = memo(function ActionBar({
       {/* Separator */}
       <div style={{ width: 1, height: 24, background: UI_BORDER, margin: '0 4px' }} />
 
-      {/* New construction — red, far right, isolated */}
+      {/* New construction — outlined red, far right, isolated */}
       <button
         onClick={onNewConstruction}
+        className="action-new-btn"
         style={{
           minWidth: MIN_BUTTON_SIZE_PX,
-          height: MIN_BUTTON_SIZE_PX - 8,
+          height: MIN_BUTTON_SIZE_PX,
           padding: '0 14px',
-          border: 'none',
+          border: `2px solid ${UI_DESTRUCTIVE}`,
           borderRadius: 4,
-          background: UI_DESTRUCTIVE,
-          color: '#FFFFFF',
+          background: 'transparent',
+          color: UI_DESTRUCTIVE,
           cursor: 'pointer',
           fontSize: 'inherit',
           fontWeight: 500,
           whiteSpace: 'nowrap',
         }}
         data-testid="action-new"
+        aria-label={ACTION_NEW}
+        title={ACTION_NEW}
       >
         <NewIcon /> <span className="action-label">{ACTION_NEW}</span>
       </button>

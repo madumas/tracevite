@@ -742,7 +742,7 @@ Quand les propriétés sont visibles, la section affiche :
 
 ## 10. Barre d'outils supérieure (Toolbar)
 
-Barre horizontale en haut du canevas (pas de header séparé — le logo, l'indicateur de sauvegarde et le sélecteur de mode sont intégrés directement dans la toolbar pour maximiser l'espace canevas). Icônes + texte pour chaque outil.
+Barre horizontale en haut du canevas (pas de header séparé — le logo et le sélecteur de mode sont intégrés directement dans la toolbar pour maximiser l'espace canevas). Icônes + texte pour chaque outil.
 
 **Structure en deux zones :** La toolbar est divisée en une zone scrollable (logo, sauvegarde, outils, grille, unité, aimant) et une zone fixe droite (sélecteur de mode, bouton aide). Cela empêche le dropdown du sélecteur de mode d'être clippé par le scroll horizontal sur petit écran.
 
@@ -1117,7 +1117,6 @@ Un enfant TDC qui « ne sait plus où il en est » peut marteler Escape pour rev
 ### 17.1 Persistance locale (IndexedDB)
 - La construction en cours est sauvegardée automatiquement en IndexedDB après chaque action (debounce de 2 secondes). Le debounce garantit que la sauvegarde capture un état **complet** (pas un état intermédiaire comme un déplacement en cours). L'historique undo/redo est sérialisé avec la construction (limité aux **100 dernières étapes**, cohérent avec la profondeur de 100 niveaux en mémoire — §15).
 - **Sauvegarde aussi déclenchée sur l'événement `beforeunload`** — un enfant qui ferme accidentellement le navigateur ou l'onglet ne doit rien perdre. **Dialogue de confirmation avant fermeture** : activer `onbeforeunload` pour afficher le dialogue natif du navigateur (« Voulez-vous quitter cette page? »). Même si la sauvegarde automatique protège les données, l'enfant ne le sait pas — un onglet fermé accidentellement (Ctrl+W au lieu de Ctrl+Z, erreur de coordination motrice fréquente chez les TDC) est source de frustration. Le dialogue est une barrière de sécurité. Le dialogue n'est activé que si la construction contient au moins un élément (pas sur un canevas vide).
-- **Indicateur visuel de sauvegarde** : une **icône de coche persistante** (✓) est affichée à côté du nom de la construction dans le header. L'icône est toujours visible quand la sauvegarde est à jour (couleur gris moyen, 14px). Pendant la sauvegarde (debounce en cours ou écriture IndexedDB), l'icône est remplacée par une animation de rotation discrète (spinner 14px, gris). Ce pattern (similaire à Google Docs « Toutes les modifications sont enregistrées ») offre une **réassurance continue** sans action requise. Les enfants TDC qui ont vécu des pertes de travail (fréquent avec Deep Freeze ou fermeture accidentelle) ont besoin de cette réassurance permanente — un indicateur transitoire de 2 secondes passe inaperçu chez les enfants avec difficultés d'attention. L'indicateur est non-interactif.
 - Au chargement de l'application, la dernière construction active est restaurée automatiquement (avec son historique undo/redo)
 - **Créneaux de sauvegarde multiples** : l'utilisateur peut nommer et sauvegarder plusieurs constructions (liste « Mes constructions »). Permet le partage de poste — fréquent en milieu scolaire où deux enfants utilisent le même laptop.
 
@@ -1579,7 +1578,6 @@ Les questions suivantes ont été posées, débattues et tranchées définitivem
 
 ### Interaction et feedback (ajouts revue multidisciplinaire)
 - **Debounce clics canevas** : 150ms entre deux pointerdown consécutifs dans le même état machine. Ne s'applique pas aux boutons UI.
-- **Indicateur de sauvegarde** : icône coche **persistante** dans le header (pattern Google Docs), pas un indicateur transitoire de 2 secondes.
 - **Dialogue `beforeunload`** : activé dès qu'il y a au moins un élément sur le canevas. Protection contre la fermeture accidentelle (perte de travail).
 - **Nom du fichier PDF** : `{nom-du-créneau}.pdf`, espaces→tirets. Pas de date.
 - **`inputmode="decimal"`** : sur tous les champs de saisie numérique (longueur, rayon). Repositionnement en haut du canevas si clavier virtuel détecté.

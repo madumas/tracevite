@@ -22,7 +22,7 @@ export function createInitialState(): ConstructionState {
     points: [],
     segments: [],
     circles: [],
-    gridSizeMm: 5, // 5mm default — snap compensates motor imprecision, finer grid aids spatial reference
+    gridSizeMm: typeof window !== 'undefined' && window.innerWidth < 900 ? 10 : 5,
     snapEnabled: true,
     activeTool: 'segment',
     displayMode: 'simplifie',
@@ -34,7 +34,7 @@ export function createInitialState(): ConstructionState {
     chainTimeoutMs: 8000,
     fontScale: 1,
     keyboardShortcutsEnabled: false,
-    soundMode: 'off',
+    soundMode: 'reduced',
     soundGain: 0.5,
     pointToolVisible: false,
     estimationMode: false,

@@ -85,7 +85,7 @@ export function ModeSelector({ mode, onChange }: ModeSelectorProps) {
         aria-expanded={open}
         aria-haspopup="listbox"
         style={{
-          height: MIN_BUTTON_SIZE_PX - 8,
+          height: MIN_BUTTON_SIZE_PX,
           padding: '4px 10px',
           background: UI_SURFACE,
           border: `1px solid ${UI_BORDER}`,

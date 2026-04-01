@@ -308,7 +308,7 @@ export function PrintIcon() {
   );
 }
 
-/** New: document with plus */
+/** New: blank document with sparkle */
 export function NewIcon() {
   return (
     <svg {...SA}>
@@ -322,24 +322,8 @@ export function NewIcon() {
         strokeWidth="1.5"
         fill="none"
       />
-      <line
-        x1="10"
-        y1="7"
-        x2="10"
-        y2="13"
-        stroke={stroke}
-        strokeWidth="1.5"
-        strokeLinecap="round"
-      />
-      <line
-        x1="7"
-        y1="10"
-        x2="13"
-        y2="10"
-        stroke={stroke}
-        strokeWidth="1.5"
-        strokeLinecap="round"
-      />
+      {/* Sparkle/star — communicates "new" rather than "add" */}
+      <path d="M10 7 L10.8 9.2 L13 10 L10.8 10.8 L10 13 L9.2 10.8 L7 10 L9.2 9.2 Z" fill={stroke} />
     </svg>
   );
 }

@@ -30,8 +30,8 @@ export const PointLayer = memo(function PointLayer({
   // Sort by ID for deterministic placement (accumulator order matters)
   const sortedPoints = [...points].sort((a, b) => a.id.localeCompare(b.id));
 
-  // Accumulate placed labels as obstacles for subsequent points
-  const placedLabels: Obstacle[] = [];
+  // Accumulate placed labels in absolute screen coordinates
+  const placedLabelsAbs: Array<Obstacle> = [];
 
   return (
     <g data-testid="point-layer">
@@ -41,13 +41,19 @@ export const PointLayer = memo(function PointLayer({
         const isSelected = point.id === selectedElementId;
         const labelWidth = point.label.length * fontSize * 0.6;
 
-        // Combine pre-computed obstacles with already-placed point labels
+        // Convert absolute placed labels to relative-to-this-point for chooseLabelOffset
         const pointObstacles = labelObstacles?.get(point.id) ?? [];
-        const allObstacles = [...pointObstacles, ...placedLabels];
+        const relPlaced = placedLabelsAbs.map((o) => ({
+          x: o.x - sx,
+          y: o.y - sy,
+          width: o.width,
+          height: o.height,
+        }));
+        const allObstacles = [...pointObstacles, ...relPlaced];
 
         const offset = chooseLabelOffset(radiusPx, labelWidth, labelHeight, allObstacles);
 
-        // Register this label as obstacle for subsequent points
+        // Register this label in absolute coordinates for subsequent points
         const labelCx =
           offset.textAnchor === 'start'
             ? offset.dx + labelWidth / 2
@@ -55,9 +61,9 @@ export const PointLayer = memo(function PointLayer({
               ? offset.dx - labelWidth / 2
               : offset.dx;
         const labelCy = offset.dy - labelHeight / 2;
-        placedLabels.push({
-          x: sx + labelCx - labelWidth / 2 - sx, // relative to next point
-          y: sy + labelCy - labelHeight / 2 - sy,
+        placedLabelsAbs.push({
+          x: sx + labelCx - labelWidth / 2,
+          y: sy + labelCy - labelHeight / 2,
           width: labelWidth,
           height: labelHeight,
         });

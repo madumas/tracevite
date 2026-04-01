@@ -91,7 +91,7 @@ These principles are non-negotiable — they determine whether the tool is usabl
 - **Visual clutter thresholds.** Angle labels on canvas hidden after 5 segments (Simplifié) / 6 segments (Complet). Panel always shows all data.
 - **Chaining is visually explicit.** Pulsing anchor point + more transparent ghost segment + status bar message. Auto-terminates after configurable inactivity timeout (default 8s; options: 5s/8s/15s/off).
 - **No dual gestures (hold + move).** Shift for angle constraint is a toggle (single press), not hold-while-dragging.
-- **Optional sounds.** Three modes: Off (default), Reduced (segment creation + figure closure only), Full (snap + segment creation + figure closure). 50ms synthesized sounds via Web Audio API. Gain slider (0-1). Haptic feedback (30ms vibrate) on supported devices. Compensates proprioceptive feedback deficit.
+- **Optional sounds.** Three modes: Off, Reduced (default — segment creation + figure closure only), Full (snap + segment creation + figure closure). 50ms synthesized sounds via Web Audio API. Gain slider (0-1). Haptic feedback (30ms vibrate) on supported devices. Compensates proprioceptive feedback deficit.
 - **Drag detection threshold: 1.5mm physical** (~8px CSS on Chromebook 135dpi). Movement < 1.5mm from pointerdown is a click, not a drag. DCD children involuntarily move 0.5-1mm during clicks. Converted to CSS px at runtime via devicePixelRatio.
 - **Point display radius: 3mm physical** on screen (~11-14px). PDF uses 1mm radius. Hit detection covered by 7mm snap zone.
 - **Font minimum 13px** on canvas. Adjustable larger via settings (1x / 1.25x / 1.5x).
@@ -108,7 +108,6 @@ These principles are non-negotiable — they determine whether the tool is usabl
 - **Use PointerEvent (not MouseEvent)** for all canvas interactions — enables stylus/touch support from day one
 - **No double-clicks, no right-clicks, no precision gestures** — snap compensates. Canvas click debounce of 150ms prevents accidental double-tap (DCD finger re-bound).
 - **`inputmode="decimal"`** on all numeric input fields (length, radius). Reposition field to top of canvas when virtual keyboard detected (tablet).
-- **Persistent save indicator** in header (checkmark icon, Google Docs pattern) — not a transient 2s flash. DCD children with anxiety need continuous reassurance.
 - **`beforeunload` confirmation dialog** when canvas has elements — prevents accidental tab closure (Ctrl+W instead of Ctrl+Z).
 - **Keyboard navigation in UI** (Tab/Enter) works at MVP via semantic HTML elements. Canvas SVG keyboard nav is v2.
 - **Color palette:** Canvas background #FAFCFF (slight blue tint — "digital graph paper" feel). Canvas: segments/points/labels #185FA5 (blue), guides/right-angle #0B7285 (teal), angle arcs #C24B22 (burnt orange), measurements #3A6291 (dark blue-grey). UI: primary #185FA5, destructive #C82828, bg #F5F7FA, text #1A2433. Full palette in spec.md §13.2. Never rely on color alone — always pair with shape markers.
