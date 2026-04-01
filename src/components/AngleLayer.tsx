@@ -152,16 +152,17 @@ export const AngleLayer = memo(function AngleLayer({
     }
   }
 
-  // Pre-compute arc radius per angle: stagger arcs at the same vertex
-  const ARC_STAGGER_PX = 7;
-  const angleArcRadius = new Map<number, number>();
+  // Pre-compute number of arcs per angle at same vertex:
+  // 1st angle at vertex = 1 arc, 2nd = 2 arcs, 3rd = 3 arcs (like congruence ticks on segments)
+  const ARC_SPACING_PX = 3;
+  const angleArcCount = new Map<number, number>();
   {
-    const vertexArcCount = new Map<string, number>();
+    const vertexCounter = new Map<string, number>();
     angles.forEach((angle, idx) => {
       if (angle.classification === 'reflex') return;
-      const count = vertexArcCount.get(angle.vertexPointId) ?? 0;
-      angleArcRadius.set(idx, ARC_RADIUS_PX + count * ARC_STAGGER_PX);
-      vertexArcCount.set(angle.vertexPointId, count + 1);
+      const n = (vertexCounter.get(angle.vertexPointId) ?? 0) + 1;
+      angleArcCount.set(idx, n);
+      vertexCounter.set(angle.vertexPointId, n);
     });
   }
 
@@ -257,7 +258,7 @@ export const AngleLayer = memo(function AngleLayer({
         // We want the smaller angle (≤180°) — determine which direction to sweep
         const useSmallArc = ccwSweep <= Math.PI;
 
-        const r = angleArcRadius.get(index) ?? ARC_RADIUS_PX;
+        const r = ARC_RADIUS_PX;
 
         // If using small arc, sweep CCW from start to end (sweepFlag=1)
         // If using large arc complement, sweep CW from start to end (sweepFlag=0)
@@ -272,13 +273,7 @@ export const AngleLayer = memo(function AngleLayer({
           sweepFlag = 0; // CW — takes the short way around
         }
 
-        const x1 = sx + Math.cos(arcStart) * r;
-        const y1 = sy + Math.sin(arcStart) * r;
-        const x2 = sx + Math.cos(arcEnd) * r;
-        const y2 = sy + Math.sin(arcEnd) * r;
         const largeArc = 0; // Always small arc (we chose the sweep direction)
-
-        const arcPath = `M ${x1} ${y1} A ${r} ${r} 0 ${largeArc} ${sweepFlag} ${x2} ${y2}`;
 
         // Degree label position — use dynamic position if computed, else default
         const precomputed = angleLabelPositions.get(index);
@@ -290,34 +285,30 @@ export const AngleLayer = memo(function AngleLayer({
         const labelX = sx + Math.cos(labelAngle) * labelR;
         const labelY = sy + Math.sin(labelAngle) * labelR;
 
+        // Number of arcs for this angle (1st at vertex = 1, 2nd = 2, etc.)
+        const arcCount = angleArcCount.get(index) ?? 1;
+
         return (
           <g key={index}>
-            <path
-              d={arcPath}
-              fill="none"
-              stroke={colors.angle}
-              strokeWidth={1.5}
-              data-testid={`angle-arc-${index}`}
-            />
-            {/* Congruence arcs: additional concentric arcs for equal angles */}
-            {congruenceArcCount.has(index) &&
-              Array.from({ length: congruenceArcCount.get(index)! - 1 }, (_, i) => {
-                const extraR = r + (i + 1) * 3;
-                const ex1 = sx + Math.cos(arcStart) * extraR;
-                const ey1 = sy + Math.sin(arcStart) * extraR;
-                const ex2 = sx + Math.cos(arcEnd) * extraR;
-                const ey2 = sy + Math.sin(arcEnd) * extraR;
-                return (
-                  <path
-                    key={`congruence-${i}`}
-                    d={`M ${ex1} ${ey1} A ${extraR} ${extraR} 0 ${largeArc} ${sweepFlag} ${ex2} ${ey2}`}
-                    fill="none"
-                    stroke={colors.angle}
-                    strokeWidth={1}
-                    opacity={0.7}
-                  />
-                );
-              })}
+            {/* Draw arcCount concentric arcs to distinguish angles at same vertex */}
+            {Array.from({ length: arcCount }, (_, i) => {
+              const arcR = r + i * ARC_SPACING_PX;
+              const ax1 = sx + Math.cos(arcStart) * arcR;
+              const ay1 = sy + Math.sin(arcStart) * arcR;
+              const ax2 = sx + Math.cos(arcEnd) * arcR;
+              const ay2 = sy + Math.sin(arcEnd) * arcR;
+              return (
+                <path
+                  key={i}
+                  d={`M ${ax1} ${ay1} A ${arcR} ${arcR} 0 ${largeArc} ${sweepFlag} ${ax2} ${ay2}`}
+                  fill="none"
+                  stroke={colors.angle}
+                  strokeWidth={i === 0 ? 1.5 : 1}
+                  opacity={i === 0 ? 1 : 0.7}
+                  data-testid={i === 0 ? `angle-arc-${index}` : undefined}
+                />
+              );
+            })}
             {/* 3e cycle: show degrees — hidden in estimation mode */}
             {displayMode === 'complet' && !estimationMode && (
               <text
