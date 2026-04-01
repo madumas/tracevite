@@ -1,7 +1,7 @@
 {
-  "name": "TraceVite",
+  "name": "TraceVite — Construction géométrique adaptée",
   "short_name": "TraceVite",
-  "description": "Outil de construction géométrique pour le primaire",
+  "description": "Outil numérique de construction géométrique pour les élèves du primaire vivant avec un TDC/dyspraxie. Vocabulaire aligné sur le PFEQ.",
   "start_url": "/",
   "display": "standalone",
   "theme_color": "#185FA5",
@@ -11,8 +11,23 @@
     {
       "src": "/logo.svg",
       "sizes": "any",
-      "type": "image/svg+xml",
-      "purpose": "any maskable"
+      "type": "image/svg+xml"
+    },
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     }
   ],
   "file_handlers": [
