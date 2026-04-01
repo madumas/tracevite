@@ -89,7 +89,7 @@ export function ConfirmDialog({
           <button
             onClick={onConfirm}
             style={{
-              height: MIN_BUTTON_SIZE_PX - 8,
+              height: MIN_BUTTON_SIZE_PX,
               padding: '0 12px',
               border: 'none',
               borderRadius: 4,
@@ -108,7 +108,7 @@ export function ConfirmDialog({
             ref={cancelRef}
             onClick={onCancel}
             style={{
-              height: MIN_BUTTON_SIZE_PX - 4,
+              height: MIN_BUTTON_SIZE_PX,
               padding: '0 20px',
               border: 'none',
               borderRadius: 4,

@@ -17,6 +17,7 @@ import {
   ACTION_DELETE,
   ACTION_PRINT,
   ACTION_NEW,
+  ACTION_NEW_FULL,
   ACTION_SCALE_NOTE,
   TOOL_SNAP,
   GRID_5MM,
@@ -433,8 +434,8 @@ export const ActionBar = memo(function ActionBar({
           whiteSpace: 'nowrap',
         }}
         data-testid="action-new"
-        aria-label={ACTION_NEW}
-        title={ACTION_NEW}
+        aria-label={ACTION_NEW_FULL}
+        title={ACTION_NEW_FULL}
       >
         <NewIcon /> <span className="action-label">{ACTION_NEW}</span>
       </button>

@@ -162,7 +162,6 @@ export function LengthInput({
               border: `1px solid ${UI_BORDER}`,
               borderRadius: 4,
               fontSize: 14,
-              outline: 'none',
               boxSizing: 'border-box',
             }}
             data-testid="length-input-field"

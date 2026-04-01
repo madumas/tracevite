@@ -172,6 +172,10 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
   const [showAbout, setShowAbout] = useState(false);
 
   const [estimationRevealed, setEstimationRevealed] = useState(false);
+  const [forceShowLabels, setForceShowLabels] = useState(false);
+  const [clutterHintShown, setClutterHintShown] = useState(false);
+  const forceShowTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [hoveredPanelElementId, setHoveredPanelElementId] = useState<string | null>(null);
   const [demoMode, setDemoMode] = useState(false);
   const [showFatigueReminder, setShowFatigueReminder] = useState(false);
   const fatigueTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -602,6 +606,25 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
     () => isAngleCluttered(state, state.displayMode),
     [state.segments.length, state.displayMode],
   );
+  // Show a one-time hint when clutter threshold is crossed
+  const [clutterHintMessage, setClutterHintMessage] = useState<string | null>(null);
+  useEffect(() => {
+    if (cluttered && !clutterHintShown) {
+      setClutterHintShown(true);
+      setClutterHintMessage('Les mesures sont dans le panneau.');
+      const t = setTimeout(() => setClutterHintMessage(null), 5000);
+      return () => clearTimeout(t);
+    }
+  }, [cluttered, clutterHintShown]);
+
+  const effectiveCluttered = cluttered && !forceShowLabels;
+
+  const handleForceShowLabels = useCallback(() => {
+    setForceShowLabels(true);
+    if (forceShowTimerRef.current) clearTimeout(forceShowTimerRef.current);
+    forceShowTimerRef.current = setTimeout(() => setForceShowLabels(false), 8000);
+  }, []);
+
   const pointMap = useMemo(
     () => new Map(state.points.map((p) => [p.id, { x: p.x, y: p.y }])),
     [state.points],
@@ -907,11 +930,45 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
               );
             })()}
         {shiftConstraintActive && ' — Contrainte 15° active'}
+        {clutterHintMessage && (
+          <span
+            style={{
+              marginLeft: 8,
+              fontSize: 11 * effectiveFontScale,
+              color: '#6B7280',
+              fontStyle: 'italic',
+            }}
+          >
+            {clutterHintMessage}
+          </span>
+        )}
         {/* Right-side buttons grouped in a single flex container */}
         {(!tool.isIdle ||
+          cluttered ||
           (!demoMode && state.consigne && consigneDismissed) ||
           (state.activeTool === 'reflection' && tool.onToggleStepByStep)) && (
           <div style={{ marginLeft: 'auto', display: 'flex', gap: 4, alignItems: 'center' }}>
+            {cluttered && (
+              <button
+                onClick={handleForceShowLabels}
+                style={{
+                  padding: '2px 10px',
+                  background: forceShowLabels ? '#E8F0FA' : 'transparent',
+                  border: `1px solid ${forceShowLabels ? UI_PRIMARY : '#D1D8E0'}`,
+                  borderRadius: 4,
+                  cursor: 'pointer',
+                  fontSize: 12 * effectiveFontScale,
+                  fontWeight: 500,
+                  color: forceShowLabels ? UI_PRIMARY : '#4A5568',
+                  whiteSpace: 'nowrap',
+                  minHeight: 28,
+                }}
+                data-testid="show-labels-btn"
+                title="Afficher les mesures sur le canevas"
+              >
+                {forceShowLabels ? '✓ Mesures' : 'Mesures'}
+              </button>
+            )}
             {!tool.isIdle && !deleteMode && (
               <button
                 onClick={() => tool.handleEscape()}
@@ -1056,8 +1113,8 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
                 fontScale={effectiveFontScale}
                 segmentColor={effectiveSegmentColor}
                 estimationMode={state.estimationMode && !estimationRevealed}
-                cluttered={cluttered}
-                hoveredElementId={selection.hoveredElement?.id ?? null}
+                cluttered={effectiveCluttered}
+                hoveredElementId={hoveredPanelElementId ?? selection.hoveredElement?.id ?? null}
               />
               <CircleLayer
                 circles={state.circles}
@@ -1080,9 +1137,9 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
                 points={pointMap}
                 viewport={viewport}
                 displayMode={state.displayMode}
-                cluttered={cluttered}
+                cluttered={effectiveCluttered}
                 selectedElementId={state.selectedElementId}
-                hoveredElementId={selection.hoveredElement?.id ?? null}
+                hoveredElementId={hoveredPanelElementId ?? selection.hoveredElement?.id ?? null}
                 hideProperties={gestureHideProperties}
                 fontScale={effectiveFontScale}
                 estimationMode={state.estimationMode && !estimationRevealed}
@@ -1229,6 +1286,7 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
             panelPosition={preferences.panelPosition}
             fontScale={effectiveFontScale}
             estimationActive={state.estimationMode && !estimationRevealed}
+            onHoverElement={setHoveredPanelElementId}
           />
         )}
         {isNarrow && (
@@ -1326,6 +1384,7 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
               hasNewProperties={false}
               fontScale={effectiveFontScale}
               estimationActive={state.estimationMode && !estimationRevealed}
+              onHoverElement={setHoveredPanelElementId}
             />
           </div>
         </div>

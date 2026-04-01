@@ -1,5 +1,14 @@
 /* Global styles — iOS/touch fixes + responsive */
 
+/* ── Focus visible indicators (WCAG 2.4.7) ────────────────── */
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+[role='combobox']:focus-visible {
+  outline: 2px solid #185fa5;
+  outline-offset: 2px;
+}
+
 /* Safe area insets for notched devices (iPhone X+) */
 :root {
   --safe-top: env(safe-area-inset-top, 0px);

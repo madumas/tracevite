@@ -35,7 +35,8 @@ export const RADIUS_PLACEHOLDER = 'ex: 3,5';
 export const ACTION_UNDO = 'Annuler';
 export const ACTION_REDO = 'Rétablir';
 export const ACTION_PRINT = 'Imprimer';
-export const ACTION_NEW = 'Nouvelle construction';
+export const ACTION_NEW = 'Nouveau';
+export const ACTION_NEW_FULL = 'Nouvelle construction';
 export const ACTION_DELETE = 'Supprimer';
 export const STATUS_DELETE_MODE = 'Supprimer — Clique sur un élément pour le supprimer';
 export const STATUS_DELETE_CONFIRM = (label: string) =>

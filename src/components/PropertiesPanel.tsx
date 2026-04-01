@@ -29,6 +29,7 @@ interface PropertiesPanelProps {
   readonly panelPosition?: PanelPosition;
   readonly fontScale?: number;
   readonly estimationActive?: boolean;
+  readonly onHoverElement?: (elementId: string | null) => void;
 }
 
 export const PropertiesPanel = memo(function PropertiesPanel({
@@ -46,6 +47,7 @@ export const PropertiesPanel = memo(function PropertiesPanel({
   panelPosition = 'right',
   fontScale = 1,
   estimationActive = false,
+  onHoverElement,
 }: PropertiesPanelProps) {
   const isLeft = panelPosition === 'left';
 
@@ -200,6 +202,8 @@ export const PropertiesPanel = memo(function PropertiesPanel({
             <div
               key={seg.id}
               onClick={() => onSelectElement(seg.id)}
+              onPointerEnter={() => onHoverElement?.(seg.id)}
+              onPointerLeave={() => onHoverElement?.(null)}
               style={{ padding: '2px 0', cursor: 'pointer', color: UI_TEXT_PRIMARY }}
             >
               <span style={{ fontWeight: 500 }}>
@@ -363,6 +367,8 @@ export const PropertiesPanel = memo(function PropertiesPanel({
             <div
               key={point.id}
               onClick={() => onSelectElement(point.id)}
+              onPointerEnter={() => onHoverElement?.(point.id)}
+              onPointerLeave={() => onHoverElement?.(null)}
               style={{ padding: '2px 0', cursor: 'pointer', color: UI_TEXT_PRIMARY }}
             >
               <span>
