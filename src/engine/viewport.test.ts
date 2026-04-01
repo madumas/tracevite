@@ -5,6 +5,8 @@ import {
   clampZoom,
   clampViewport,
   CSS_PX_PER_MM,
+  LETTER_WIDTH_MM,
+  LETTER_HEIGHT_MM,
 } from './viewport';
 import type { ViewportState } from '@/model/types';
 
@@ -44,6 +46,27 @@ describe('computeInitialZoom', () => {
     const zoom = computeInitialZoom(800, 500);
     expect(zoom).toBeGreaterThan(0);
     expect(zoom).toBeLessThanOrEqual(2.0);
+  });
+
+  it('landscape Letter fits in Chromebook height (1366×624)', () => {
+    const zoom = computeInitialZoom(1366, 624);
+    // Page height in landscape = LETTER_WIDTH_MM (215.9mm). Must fit in 624px.
+    const pageHeightPx = LETTER_WIDTH_MM * CSS_PX_PER_MM * zoom;
+    expect(pageHeightPx).toBeLessThanOrEqual(624);
+    expect(pageHeightPx).toBeGreaterThan(624 * 0.85); // fills at least 85% of height
+  });
+
+  it('landscape Letter fits in iPad Pro 11 (1194×690)', () => {
+    const zoom = computeInitialZoom(1194, 690);
+    const pageHeightPx = LETTER_WIDTH_MM * CSS_PX_PER_MM * zoom;
+    expect(pageHeightPx).toBeLessThanOrEqual(690);
+    expect(pageHeightPx).toBeGreaterThan(690 * 0.85);
+  });
+
+  it('landscape default produces larger zoom than portrait on wide screen', () => {
+    const landscape = computeInitialZoom(1366, 624);
+    const portrait = computeInitialZoom(1366, 624, LETTER_WIDTH_MM, LETTER_HEIGHT_MM);
+    expect(landscape).toBeGreaterThan(portrait);
   });
 });
 
