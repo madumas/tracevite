@@ -152,6 +152,19 @@ export const AngleLayer = memo(function AngleLayer({
     }
   }
 
+  // Pre-compute arc radius per angle: stagger arcs at the same vertex
+  const ARC_STAGGER_PX = 7;
+  const angleArcRadius = new Map<number, number>();
+  {
+    const vertexArcCount = new Map<string, number>();
+    angles.forEach((angle, idx) => {
+      if (angle.classification === 'reflex') return;
+      const count = vertexArcCount.get(angle.vertexPointId) ?? 0;
+      angleArcRadius.set(idx, ARC_RADIUS_PX + count * ARC_STAGGER_PX);
+      vertexArcCount.set(angle.vertexPointId, count + 1);
+    });
+  }
+
   return (
     <g data-testid="angle-layer">
       {angles.map((angle, index) => {
@@ -244,7 +257,7 @@ export const AngleLayer = memo(function AngleLayer({
         // We want the smaller angle (≤180°) — determine which direction to sweep
         const useSmallArc = ccwSweep <= Math.PI;
 
-        const r = ARC_RADIUS_PX;
+        const r = angleArcRadius.get(index) ?? ARC_RADIUS_PX;
 
         // If using small arc, sweep CCW from start to end (sweepFlag=1)
         // If using large arc complement, sweep CW from start to end (sweepFlag=0)

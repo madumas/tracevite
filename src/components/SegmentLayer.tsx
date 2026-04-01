@@ -208,10 +208,14 @@ export const SegmentLayer = memo(function SegmentLayer({
                 </text>
               )}
             {/* Parallel chevrons (>, >>, >>>) at midpoint — standard convention */}
-            {/* Clutter: hidden until segment itself is hovered/selected (not peers — too noisy) */}
+            {/* Clutter: hidden until segment or a parallel peer is hovered/selected */}
             {parallelSegColor.has(segment.id) &&
               len > 0 &&
-              (!cluttered || isSelected || segment.id === hoveredElementId) && (
+              (!cluttered ||
+                isSelected ||
+                segment.id === hoveredElementId ||
+                parallelPeers.get(segment.id)?.includes(hoveredElementId ?? '') ||
+                parallelPeers.get(segment.id)?.includes(selectedElementId ?? '')) && (
                 <g>
                   {Array.from({ length: parallelChevronCount.get(segment.id) ?? 1 }, (_, i) => {
                     const dirX = dx / len;
@@ -241,10 +245,14 @@ export const SegmentLayer = memo(function SegmentLayer({
                 </g>
               )}
             {/* Congruence tick marks at midpoint (standard mathematical convention) */}
-            {/* Clutter: hidden until segment itself is hovered/selected (not peers — too noisy) */}
+            {/* Clutter: hidden until segment or a congruent peer is hovered/selected */}
             {congruenceTickMap.has(segment.id) &&
               len > 0 &&
-              (!cluttered || isSelected || segment.id === hoveredElementId) && (
+              (!cluttered ||
+                isSelected ||
+                segment.id === hoveredElementId ||
+                congruencePeers.get(segment.id)?.includes(hoveredElementId ?? '') ||
+                congruencePeers.get(segment.id)?.includes(selectedElementId ?? '')) && (
                 <g>
                   {Array.from({ length: congruenceTickMap.get(segment.id)! }, (_, i) => {
                     const tickSpacing = 4;
