@@ -1,16 +1,16 @@
 # GéoMolo
 
-Outil de construction géométrique numérique pour les élèves du primaire ayant un **Trouble Développemental de la Coordination** (TDC/dyspraxie).
+Règle, compas et rapporteur numériques pour les enfants du primaire qui ont du mal avec les vrais — notamment ceux qui vivent avec un TDC (trouble développemental de la coordination) ou une dyspraxie.
 
-GéoMolo remplace la règle, le compas et le rapporteur — instruments que l'enfant TDC ne peut pas manipuler avec précision — tout en préservant la réflexion géométrique. L'enfant fait le raisonnement, l'outil exécute le geste.
+GéoMolo remplace les instruments physiques que certains enfants ne peuvent pas manipuler avec précision, tout en préservant la réflexion géométrique. L'enfant fait le raisonnement, l'outil exécute le geste.
 
 **[geomolo.ca](https://geomolo.ca)**
 
 ## Pourquoi
 
-Les enfants avec un TDC comprennent la géométrie mais ne peuvent pas la tracer. Le passage du raisonnement au geste moteur est le blocage. GéoMolo est à la règle et au compas ce que la calculatrice est au calcul mental.
+Mon fils comprend la géométrie mais ne peut pas la tracer. La règle glisse, le compas dérape, la page se froisse. GéoMolo est la calculatrice de la géométrie : l'outil fait le geste à la place de la main.
 
-L'outil est aligné sur le Programme de formation de l'école québécoise (PFEQ) et la Progression des apprentissages (PDA) en géométrie et mesure, du 2e au 3e cycle du primaire (8-12 ans).
+L'outil suit le programme du primaire québécois (PFEQ), du 2e au 3e cycle (8-12 ans).
 
 ## Guide pour les enseignants et les parents
 
@@ -30,8 +30,8 @@ Choisir le mode selon le niveau scolaire de l'enfant, pas selon ses capacités m
 Contrôle la zone dans laquelle un clic « accroche » automatiquement un point existant ou la grille :
 
 - **Normal** : tolérance standard (7 mm pour les points, 5 mm pour la grille)
-- **Large** (×1,5) : recommandé pour les 8-9 ans ou les TDC légers
-- **Très large** (×2,0) : recommandé pour les TDC sévères ou en début d'apprentissage
+- **Large** (×1,5) : recommandé pour les plus jeunes (8-9 ans)
+- **Très large** (×2,0) : quand l'enfant est souvent frustré par ses clics qui « manquent la cible »
 
 En cas de doute, commencer par « Large » et ajuster selon les frustrations observées.
 
@@ -43,7 +43,7 @@ Trois modes selon la sensibilité de l'enfant :
 - **Réduit** : son à la création d'un segment et à la fermeture d'une figure seulement
 - **Complet** : son d'accrochage (snap), de création et de fermeture
 
-Le son compense le déficit de rétroaction proprioceptive. Un enfant qui « ne sait pas si son clic a fonctionné » bénéficiera du mode réduit ou complet. Le volume est ajustable.
+Le son aide l'enfant à savoir si son clic a fonctionné — surtout utile quand il ne « sent » pas bien ses gestes. Le volume est ajustable.
 
 ### Délai de chaînage
 
@@ -56,7 +56,7 @@ Quand l'élève trace des segments bout à bout, le chaînage s'arrête automati
 
 ### Raccourcis clavier
 
-**Désactivés par défaut.** Les raccourcis à une touche (S pour segment, C pour cercle, etc.) causent des changements d'outil accidentels chez les enfants TDC dont les frappes manquent de précision. Activer uniquement si l'enfant ou l'enseignant en exprime le besoin.
+**Désactivés par défaut.** Les raccourcis à une touche (S pour segment, C pour cercle, etc.) causent des changements d'outil accidentels quand les frappes manquent de précision. Activer uniquement si l'enfant ou l'enseignant en exprime le besoin.
 
 ### Taille du texte
 
@@ -86,7 +86,7 @@ L'élève ouvre le lien et voit la consigne en bannière. Un nouveau slot vierge
 
 ### Profils de paramètres
 
-L'ergothérapeute ou l'enseignant peut exporter un fichier `.geomolo-config` contenant tous les réglages adaptés à un élève, puis l'importer sur un autre appareil (les fichiers `.tracevite-config` restent acceptés pour compatibilité). Utile pour les Chromebooks partagés.
+L'enseignant ou le parent peut exporter un fichier `.geomolo-config` contenant tous les réglages adaptés à un élève, puis l'importer sur un autre appareil (les fichiers `.tracevite-config` restent acceptés pour compatibilité). Utile pour les Chromebooks partagés.
 
 ## Fonctionnalités
 
@@ -109,17 +109,17 @@ L'ergothérapeute ou l'enseignant peut exporter un fichier `.geomolo-config` con
 - Détection de parallélisme, perpendicularité, côtés et angles congrus
 - Vocabulaire contextuel PFEQ : point/sommet, segment/côté
 
-### Adaptation au TDC
+### Pensé pour les petites mains
 
-- **Mode deux clics par défaut** pour toutes les actions (pas de clic-glissé maintenu)
-- Seuil de détection du glissé à 1,5 mm physique (filtrage des micro-mouvements involontaires)
-- Zones de snap larges avec profils de tolérance ajustables (normal / large / très large)
-- Cibles de clic minimum 44×44 px avec espacement de 8 px
-- Barre de statut avec séquençage des étapes en langage clair
-- Debounce des clics (150 ms) pour éviter les double-taps involontaires
-- Undo/redo sur 100+ niveaux — Escape comme bouton de secours hiérarchique
+- Pas besoin de cliquer-glisser — deux clics simples suffisent pour toutes les actions
+- Filtre les petits mouvements involontaires pendant un clic
+- Zones d'accrochage larges et ajustables pour que les clics « tombent au bon endroit »
+- Gros boutons (44×44 px minimum) bien espacés
+- La barre de statut explique toujours la prochaine étape en langage clair
+- Protection contre les double-clics accidentels
+- Annuler/rétablir sur 100+ niveaux — Escape comme bouton de secours
 - Pas de double-clic, pas de clic droit, pas de gestes de précision
-- Feedback sonore optionnel (synthèse Web Audio, pas de fichiers)
+- Feedback sonore optionnel pour confirmer les actions
 
 ### Pédagogie et projection
 
@@ -178,4 +178,4 @@ info@allomolo.ca
 
 ---
 
-Conçu au Québec pour les enfants TDC et leurs enseignants.
+Créé au Québec par un parent, pour son enfant — et pour tous ceux qui en ont besoin.

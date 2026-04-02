@@ -1,7 +1,7 @@
 {
   "name": "GéoMolo — Construction géométrique adaptée",
   "short_name": "GéoMolo",
-  "description": "Outil numérique de construction géométrique pour les élèves du primaire vivant avec un TDC/dyspraxie. Vocabulaire aligné sur le PFEQ.",
+  "description": "Règle, compas et rapporteur numériques pour les enfants du primaire. Gratuit, sans compte, sans collecte de données.",
   "start_url": "/",
   "display": "standalone",
   "theme_color": "#185FA5",

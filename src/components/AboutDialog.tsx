@@ -65,9 +65,8 @@ export function AboutDialog({ onClose }: AboutDialogProps) {
         </div>
 
         <p style={{ fontSize: 13, lineHeight: 1.5, color: UI_TEXT_PRIMARY, margin: '0 0 16px' }}>
-          Outil de construction géométrique numérique pour les élèves du primaire ayant un Trouble
-          Développemental de la Coordination (TDC). L'enfant fait le raisonnement, l'outil exécute
-          le geste.
+          Règle, compas et rapporteur numériques pour les enfants qui ont du mal avec les vrais.
+          L'enfant fait le raisonnement, l'outil exécute le geste.
         </p>
 
         <div style={{ fontSize: 12, color: UI_TEXT_SECONDARY, marginBottom: 8 }}>
@@ -101,7 +100,7 @@ export function AboutDialog({ onClose }: AboutDialogProps) {
         </div>
 
         <div style={{ fontSize: 11, color: UI_TEXT_SECONDARY, marginBottom: 16 }}>
-          Conçu au Québec pour les enfants TDC et leurs enseignants.
+          Créé par un parent, pour son enfant — et tous ceux qui en ont besoin.
         </div>
 
         <button

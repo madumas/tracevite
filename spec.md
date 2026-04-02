@@ -1,10 +1,10 @@
-# TraceVite — Spécifications complètes
+# GéoMolo — Spécifications complètes
 
 ## 1. Vision produit
 
-TraceVite est un outil de construction géométrique numérique conçu pour les enfants du primaire ayant un Trouble Développemental de la Coordination (TDC/dyspraxie). Il remplace les instruments physiques (règle, compas, rapporteur) que l'enfant TDC ne peut pas manipuler avec précision, tout en préservant la réflexion géométrique.
+GéoMolo est un outil de construction géométrique numérique conçu pour les enfants du primaire qui ont du mal avec la règle, le compas et le rapporteur — notamment ceux qui vivent avec un TDC (dyspraxie). Il remplace les instruments physiques (règle, compas, rapporteur) que certains enfants ne peuvent pas manipuler avec précision, tout en préservant la réflexion géométrique.
 
-**Analogie fondamentale** : TraceVite est à la règle et au compas ce que la calculatrice est au calcul mental. L'enfant fait le raisonnement, l'outil exécute le geste.
+**Analogie fondamentale** : GéoMolo est à la règle et au compas ce que la calculatrice est au calcul mental. L'enfant fait le raisonnement, l'outil exécute le geste.
 
 **Analogie d'interaction** : L'enfant construit comme avec des bâtons sur une table. Il place des segments librement, les ajuste, les connecte. L'outil l'assiste silencieusement (mesures, accrochage, détection de propriétés) mais ne prend jamais de décision à sa place.
 
@@ -13,8 +13,8 @@ TraceVite est un outil de construction géométrique numérique conçu pour les 
 ## 2. Profil utilisateur
 
 - Enfant de 8 à 12 ans (2e et 3e cycle du primaire québécois)
-- Diagnostic de TDC (dyspraxie)
-- Accès à un ordinateur en classe (mesure d'adaptation scolaire existante)
+- Difficulté avec les instruments de géométrie (souvent un TDC/dyspraxie)
+- Accès à un ordinateur en classe
 - Comprend les concepts géométriques, réussit à construire des figures avec des bâtons physiques
 - Blocage spécifique : le passage du 3D manipulable (bâtons) au 2D tracé (papier) est très difficile
 - Utilise l'outil comme une "calculatrice géométrique" : construction à l'écran → impression → remise sur papier
@@ -74,7 +74,7 @@ L'outil couvre les champs Géométrie et Mesure de la Progression des apprentiss
 ### 4.1.1 Hébergement et accès
 - Hébergement statique sur **Cloudflare Pages** — zéro maintenance serveur, scaling automatique, coût quasi nul. CDN mondial avec points de présence au Canada
 - HTTPS obligatoire via Cloudflare (certificat TLS automatique, requis pour le Service Worker et pour les filtres de contenu des réseaux scolaires)
-- Domaine : **`tracevite.ca`** — DNS et protection DDoS gérés par Cloudflare
+- Domaine : **`geomolo.ca`** — DNS et protection DDoS gérés par Cloudflare
 - Aucun tracking, aucun analytics, aucune collecte de données — conformité avec la Loi 25 du Québec sur la protection des renseignements personnels. Mentionner cette garantie dans une page « Confidentialité » accessible depuis le footer
 
 ### 4.1.2 PWA et mode hors-ligne (MVP)
@@ -315,7 +315,7 @@ Conversion affichage :
 - **Snap à la circonférence** : un nouveau type de snap (**priorité 2b** — après le snap au milieu de segment qui est 2a, tolérance 5mm écran physique) est actif quand l'outil Segment est utilisé. Le milieu d'un segment est un point discret (géométriquement plus précis) et prime sur la circonférence (continuum de points). À priorité égale, le plus proche en distance gagne. Un point placé près de la circonférence est snappé exactement sur celle-ci. Feedback visuel : le trait du cercle s'épaissit localement + étiquette « sur le cercle ». Ce snap permet de tracer des rayons et des cordes avec précision.
 - **Intersections segment-segment** : quand un nouveau segment croise un segment existant, un point d'intersection est automatiquement créé et les deux segments sont scindés en sous-segments (auto-intersection, activée par défaut, désactivable dans les Paramètres). Cela compense le geste de précision TDC — l'enfant fait le raisonnement (« je trace une droite à travers cette figure »), l'outil crée les sommets d'intersection. Les intersections segment-cercle et cercle-cercle ne sont **pas** automatiquement créées ; l'enfant place un point manuellement et le snap à la circonférence l'aide à le positionner.
 - **Réflexion** : un cercle peut être réfléchi. Le centre est réfléchi par rapport à l'axe; le rayon est conservé.
-- **Panneau latéral** : un cercle sélectionné affiche dans le panneau : centre (ex. « Centre A »), rayon, diamètre. **Note :** la formule de la circonférence (C = 2πr) relève du secondaire 1. Au primaire, le mot « circonférence » est introduit au 3e cycle mais sans la formule π. TraceVite n'affiche donc **pas** la valeur calculée de la circonférence.
+- **Panneau latéral** : un cercle sélectionné affiche dans le panneau : centre (ex. « Centre A »), rayon, diamètre. **Note :** la formule de la circonférence (C = 2πr) relève du secondaire 1. Au primaire, le mot « circonférence » est introduit au 3e cycle mais sans la formule π. GéoMolo n'affiche donc **pas** la valeur calculée de la circonférence.
 - **Visibilité par niveau** : en mode 2e cycle, le bouton Cercle est **masqué** dans la toolbar (pas présent du tout, pas désactivé grisé). Tout cercle existant dans une construction reste visible si le niveau est changé après coup. **Les actions contextuelles (sélectionner, supprimer, fixer rayon) restent disponibles** sur les cercles existants en mode 2e cycle — seule la création de nouveaux cercles est interdite. Principe : ne jamais rendre une construction inutilisable par un changement de paramètre.
 
 ### 6.4 Outil Perpendiculaire
@@ -540,7 +540,7 @@ Exemple visuel du dropdown ouvert :
 - Optionnel, type `string`, maximum 1000 caractères (les consignes multi-étapes en contexte scolaire dépassent facilement 500 caractères)
 - Lecture seule pour l'enfant (non modifiable dans l'interface)
 - Défini par l'enseignant via :
-  1. Le champ `consigne` dans un fichier `.tracevite` (voir §17.2)
+  1. Le champ `consigne` dans un fichier `.geomolo` (voir §17.2)
   2. Le paramètre URL `?consigne=` (voir §8.0.2)
 - Sauvegardé dans IndexedDB avec la construction (si l'enfant ferme et revient, la consigne est toujours visible)
 - Non inclus dans l'historique undo/redo (ce n'est pas une action de l'enfant)
@@ -563,15 +563,15 @@ Exemple visuel du dropdown ouvert :
 
 ### 8.0.2 Lien d'exercice par URL
 
-L'enseignant peut partager un lien TraceVite avec une consigne pré-remplie et un mode d'affichage via des paramètres URL. Cela permet le partage via Google Classroom, Microsoft Teams, ou tout autre plateforme sans nécessiter de téléchargement de fichier.
+L'enseignant peut partager un lien GéoMolo avec une consigne pré-remplie et un mode d'affichage via des paramètres URL. Cela permet le partage via Google Classroom, Microsoft Teams, ou tout autre plateforme sans nécessiter de téléchargement de fichier.
 
 **Paramètres URL supportés :**
-- `consigne` : texte de la consigne, encodé URL (ex : `?consigne=Construis+un+carr%C3%A9+de+4+cm`). Maximum 1000 caractères après décodage. Au-delà, tronqué silencieusement. **Retours à la ligne** : supportés via `%0A` (encodage URL standard de `\n`) **et** via le caractère `|` (pipe) comme alias. Le pipe est converti en retour à la ligne après décodage URL. Cela permet à l'enseignant de taper facilement des consignes multi-étapes : `?consigne=Étape+1|Étape+2|Étape+3` au lieu de `?consigne=Étape+1%0AÉtape+2%0AÉtape+3`. Le `\n` dans les fichiers `.tracevite` JSON reste le séparateur standard (pas de conversion pipe).
+- `consigne` : texte de la consigne, encodé URL (ex : `?consigne=Construis+un+carr%C3%A9+de+4+cm`). Maximum 1000 caractères après décodage. Au-delà, tronqué silencieusement. **Retours à la ligne** : supportés via `%0A` (encodage URL standard de `\n`) **et** via le caractère `|` (pipe) comme alias. Le pipe est converti en retour à la ligne après décodage URL. Cela permet à l'enseignant de taper facilement des consignes multi-étapes : `?consigne=Étape+1|Étape+2|Étape+3` au lieu de `?consigne=Étape+1%0AÉtape+2%0AÉtape+3`. Le `\n` dans les fichiers `.geomolo` JSON reste le séparateur standard (pas de conversion pipe).
 - `mode` : `simplifie` ou `complet`. Si présent, définit le mode d'affichage initial (remplace le mode par défaut mais ne verrouille pas — l'enfant peut changer).
 - `level` : `2e_cycle` ou `3e_cycle`. **Rétrocompatibilité** : accepté comme alias — `2e_cycle` est converti en `simplifie`, `3e_cycle` en `complet`. Si `mode` et `level` sont présents, `mode` a priorité.
 
 **Exemple de lien complet :**
-`https://tracevite.ca/?consigne=Construis+un+rectangle+de+4+cm+%C3%97+6+cm&mode=simplifie`
+`https://geomolo.ca/?consigne=Construis+un+rectangle+de+4+cm+%C3%97+6+cm&mode=simplifie`
 
 **Comportement au chargement :**
 1. L'application détecte les paramètres URL au démarrage
@@ -586,7 +586,7 @@ L'enseignant peut partager un lien TraceVite avec une consigne pré-remplie et u
 - Longueur totale de l'URL limitée par le navigateur (~2000 caractères). La consigne de 500 caractères + le domaine + les autres paramètres tiennent largement
 
 **Limites (pas dans le scope) :**
-- Pas de pré-chargement d'une figure via URL (pour partager un exercice avec une figure de départ, utiliser un fichier `.tracevite`)
+- Pas de pré-chargement d'une figure via URL (pour partager un exercice avec une figure de départ, utiliser un fichier `.geomolo`)
 - Pas de « lien de retour » pour que l'enfant soumette sa construction à l'enseignant (nécessiterait un backend, voir §18)
 
 ### 8.1 Longueurs
@@ -668,7 +668,7 @@ Note : les intervalles sont maintenant disjoints. Un angle de 89,7° est classé
     - Scalène : aucune paire de côtés égaux
     - **Mode Complet** : combiner les propriétés applicables (ex : « Triangle rectangle isocèle »)
     - **Mode Simplifié** : afficher **une seule classification**, la plus spécifique par priorité : **équilatéral > rectangle > isocèle > scalène**. L'angle droit prime sur l'isocèle car c'est la propriété la plus visuellement saillante (marqueur carré sur le canevas) et la plus enseignée au 2e cycle. Exemple : un triangle rectangle isocèle est affiché « Triangle rectangle » en mode Simplifié, « Triangle rectangle isocèle » en mode Complet.
-- 4 côtés : Quadrilatère → sous-classifier en utilisant le nom **le plus spécifique** applicable : carré (4 côtés égaux + 4 angles droits), rectangle (4 angles droits), losange (4 côtés égaux), parallélogramme (2 paires de côtés parallèles), trapèze (1 paire de côtés parallèles), quadrilatère quelconque. **Hiérarchie inclusive :** un carré est aussi un rectangle, un losange, un parallélogramme et un trapèze. Afficher le nom le plus spécifique par défaut (ex. : « Carré »). Un toggle « Voir la hiérarchie » dans le panneau latéral permet d'afficher la classification complète (ex. : « Carré — aussi : rectangle, losange, parallélogramme »). Ce toggle est **masqué par défaut**, y compris en mode Complet — l'inclusion des quadrilatères est introduite progressivement en 5e année et le toggle peut être prématuré sans accompagnement. L'enseignant peut l'activer dans les paramètres (`.tracevite-config`) quand la notion a été enseignée. En mode Simplifié, seul le nom le plus spécifique est affiché, sans toggle possible.
+- 4 côtés : Quadrilatère → sous-classifier en utilisant le nom **le plus spécifique** applicable : carré (4 côtés égaux + 4 angles droits), rectangle (4 angles droits), losange (4 côtés égaux), parallélogramme (2 paires de côtés parallèles), trapèze (1 paire de côtés parallèles), quadrilatère quelconque. **Hiérarchie inclusive :** un carré est aussi un rectangle, un losange, un parallélogramme et un trapèze. Afficher le nom le plus spécifique par défaut (ex. : « Carré »). Un toggle « Voir la hiérarchie » dans le panneau latéral permet d'afficher la classification complète (ex. : « Carré — aussi : rectangle, losange, parallélogramme »). Ce toggle est **masqué par défaut**, y compris en mode Complet — l'inclusion des quadrilatères est introduite progressivement en 5e année et le toggle peut être prématuré sans accompagnement. L'enseignant peut l'activer dans les paramètres (`.geomolo-config`) quand la notion a été enseignée. En mode Simplifié, seul le nom le plus spécifique est affiché, sans toggle possible.
 - 5+ côtés : Polygone à N côtés
 - Tolérance pour "égal" entre longueurs : ±1mm. Tolérance pour "angle droit" : ±0,5°.
 
@@ -721,7 +721,7 @@ L'enseignant peut l'activer en contexte d'évaluation pour que l'élève identif
 
 **Feedback rassurant :** quand le toggle passe en mode « masqué », la barre de statut affiche pendant 3 secondes : « Mode évaluation — les propriétés sont masquées. Tes segments et mesures sont toujours là. » Évite que l'enfant TDC pense avoir « cassé » quelque chose.
 
-**Note PI :** pour être utilisé lors de l'évaluation ministérielle de mathématiques (6e année), TraceVite doit être documenté dans le Plan d'intervention (PI) de l'élève comme mesure d'adaptation. Voir Annexe B pour les instructions destinées à l'enseignant.
+**Note PI :** pour être utilisé lors de l'évaluation ministérielle de mathématiques (6e année), GéoMolo doit être documenté dans le Plan d'intervention (PI) de l'élève comme mesure d'adaptation. Voir Annexe B pour les instructions destinées à l'enseignant.
 
 Quand les propriétés sont visibles, la section affiche :
 - Parallélismes (ex : badge vert "AB // CD")
@@ -851,7 +851,7 @@ C'est le point le plus critique de tout le projet. Si un segment de 5 cm à l'é
   - Les marques de congruence (hachures) sur les segments isométriques
 - PAS de grille sur le PDF (la figure doit être propre, comme tracée à la main avec instruments)
 - PAS de couleur sur le PDF (impression N&B en milieu scolaire)
-- En bas à gauche du PDF, petite note : "TraceVite — Échelle 1:1"
+- En bas à gauche du PDF, petite note : "GéoMolo — Échelle 1:1"
 
 ### 12.3 Option : grille sur le PDF
 - Un toggle dans l'interface permet d'inclure la grille dans le PDF (utile pour certains exercices sur papier quadrillé)
@@ -874,7 +874,7 @@ Les deux chemins (PDF et impression directe) produisent un résultat identique :
 - Noir et blanc uniquement (toutes couleurs converties en noir)
 - Grille masquée sauf si le toggle « Grille sur l'impression » est activé (dans ce cas, gris 10%)
 - Segment-témoin de 5 cm en bas à droite
-- Mention « TraceVite — Échelle 1:1 » en bas à gauche
+- Mention « GéoMolo — Échelle 1:1 » en bas à gauche
 - Étiquettes, mesures et marques conventionnelles conservées
 - L'orientation (portrait/paysage) s'applique aux deux chemins
 
@@ -889,7 +889,7 @@ Les deux chemins (PDF et impression directe) produisent un résultat identique :
 
 ```
 ┌──────────────────────────────────────────────────────────────┐
-│ [Logo] TraceVite  [Simplifié ▾] [Mes constr.]               │  ← Header
+│ [Logo] GéoMolo  [Simplifié ▾] [Mes constr.]               │  ← Header
 ├──────────────────────────────────────────────────────────────┤
 │ [▣Segment] [Cercle] | [Réflexion] | [Déplacer] [📏] │ [5mm/1cm/2cm] [cm/mm] [Accrochage ON] │  ← Toolbar
 ├──────────────────────────────────────────────────────────────┤
@@ -915,7 +915,7 @@ Les deux chemins (PDF et impression directe) produisent un résultat identique :
 └──────────────────────────────────────────────────────────────┘
 ```
 
-Le bandeau de consigne n'apparaît que si une consigne est définie (via fichier `.tracevite` ou paramètre URL, voir §8.0.1). En l'absence de consigne, le canevas commence directement sous la barre de statut.
+Le bandeau de consigne n'apparaît que si une consigne est définie (via fichier `.geomolo` ou paramètre URL, voir §8.0.1). En l'absence de consigne, le canevas commence directement sous la barre de statut.
 
 ### 13.2 Palette de couleurs
 
@@ -976,7 +976,7 @@ Utiliser un thème clair par défaut (cohérent avec le milieu scolaire). Princi
 - **Pas de double-clic** : toutes les actions sont en clic simple. **Debounce des clics canevas** : un délai de **150ms** est appliqué entre deux `pointerdown` consécutifs sur le canevas dans le même état machine. Les enfants TDC produisent fréquemment un re-bound involontaire du doigt qui génère un double-clic rapide. Sans debounce, cela créerait deux actions successives non intentionnelles (ex. : deux points superposés, ou un point + un segment fantôme). Ce debounce ne s'applique qu'aux clics sur le canevas, pas aux boutons de l'interface (les boutons ont déjà une protection par leur propre gestion d'état).
 - **Pas de clic droit** : toutes les actions sont accessibles par clic simple + barre contextuelle
 - **Pas de geste dual (maintien + mouvement)** : le mode pick-up/put-down est le défaut pour toutes les actions de déplacement. La contrainte d'angle (Shift) fonctionne en toggle (appui unique), pas en maintien.
-- **Seuil de détection du glissé (drag)** : un mouvement de souris n'est interprété comme un clic-glissé qu'après **1,5mm physiques de déplacement** depuis le point initial (pointerdown). En deçà, c'est un clic simple. Ce seuil est en mm physiques (comme les tolérances de snap) et converti en pixels CSS au runtime via `devicePixelRatio` et densité écran (~8px CSS sur Chromebook 135dpi, ~11px CSS sur Retina 2x). Les enfants TDC bougent involontairement de 0,5-1mm pendant un clic — un seuil trop bas provoque des micro-drags parasites et des placements erratiques. Ce seuil s'applique à toutes les interactions (canevas, boutons, barre d'actions). **Configurable** dans `.tracevite-config` (plage 1,0-3,0mm) pour ajustement par l'ergo après observation. Non multiplié par le profil de tolérance (c'est un seuil de détection d'intention, pas de précision motrice).
+- **Seuil de détection du glissé (drag)** : un mouvement de souris n'est interprété comme un clic-glissé qu'après **1,5mm physiques de déplacement** depuis le point initial (pointerdown). En deçà, c'est un clic simple. Ce seuil est en mm physiques (comme les tolérances de snap) et converti en pixels CSS au runtime via `devicePixelRatio` et densité écran (~8px CSS sur Chromebook 135dpi, ~11px CSS sur Retina 2x). Les enfants TDC bougent involontairement de 0,5-1mm pendant un clic — un seuil trop bas provoque des micro-drags parasites et des placements erratiques. Ce seuil s'applique à toutes les interactions (canevas, boutons, barre d'actions). **Configurable** dans `.geomolo-config` (plage 1,0-3,0mm) pour ajustement par l'ergo après observation. Non multiplié par le profil de tolérance (c'est un seuil de détection d'intention, pas de précision motrice).
 - **Note sur les constantes d'accessibilité** : toutes les valeurs issues d'estimations de conception (seuil de drag, tolérances de snap, timeout de chaînage, seuil de surcharge visuelle, durée micro-confirmation) sont des **estimations à ajuster après observation**. Les stocker comme constantes nommées dans un fichier dédié (`src/config/accessibility-constants.ts`) pour faciliter les ajustements.
 - **Taille d'affichage des points à l'écran** : les points sont affichés avec un rayon de **3mm physiques** à l'écran (~11px sur un écran 96dpi, ~14px sur un Chromebook 135dpi). Réduit de 4mm à 3mm pour diminuer la dominance visuelle des points sur les constructions complexes — la géométrie (segments, angles) doit rester l'élément principal. La zone de hit-detection est couverte par le snap aux points existants (7mm, §7.1). Le rayon de 1mm spécifié au §12.2 ne s'applique qu'au **PDF imprimé** (trait fin sur papier, cohérent avec un tracé à la règle).
 - **Pas de geste de précision** : le snap compense le manque de précision motrice
@@ -1112,7 +1112,7 @@ Un enfant TDC qui « ne sait plus où il en est » peut marteler Escape pour rev
 - **Figure excentrée** : si le bounding box de la construction est décalé de plus de 60% par rapport au centre de la zone imprimable, afficher dans le dialogue d'impression : « Ta figure est près du bord de la page. » avec un bouton « Recentrer sur la page ». Le recentrage translate toute la construction pour centrer le bounding box dans la zone imprimable. C'est une opération dans l'historique undo (annulable).
 - **Navigateur non supporté** : afficher un message invitant à utiliser Chrome, Edge ou Firefox récent
 - **Pas d'internet** : une fois chargée, l'app fonctionne hors ligne grâce au Service Worker (voir §4.1.2)
-- **IndexedDB indisponible** : si IndexedDB n'est pas disponible (mode privé sur certains navigateurs anciens), fallback silencieux vers localStorage. Afficher un avertissement discret si les deux sont indisponibles. Ne jamais bloquer l'utilisation de l'outil. **Cas fréquent — Chromebook en session éphémère** : ~80% des CSS québécois utilisent la gestion centralisée Google Admin sur les Chromebooks. Certaines politiques configurent les Chromebooks en **session invité ou session éphémère**, où IndexedDB est disponible pendant la session mais effacé à la déconnexion. Dans ce cas, IndexedDB fonctionne normalement mais les données ne persistent pas entre les sessions. La détection Deep Freeze (§17.1) couvre partiellement ce scénario. **Si IndexedDB et localStorage sont tous deux indisponibles** (rare mais possible en mode invité strict), l'outil fonctionne sans persistance — afficher un avertissement permanent dans le header : « Sauvegarde non disponible sur cet ordinateur. Exporte ta figure (.tracevite) avant de fermer. » avec un bouton d'export direct. Le bouton d'export `.tracevite` reste toujours fonctionnel (il génère un fichier téléchargeable sans dépendre d'IndexedDB).
+- **IndexedDB indisponible** : si IndexedDB n'est pas disponible (mode privé sur certains navigateurs anciens), fallback silencieux vers localStorage. Afficher un avertissement discret si les deux sont indisponibles. Ne jamais bloquer l'utilisation de l'outil. **Cas fréquent — Chromebook en session éphémère** : ~80% des CSS québécois utilisent la gestion centralisée Google Admin sur les Chromebooks. Certaines politiques configurent les Chromebooks en **session invité ou session éphémère**, où IndexedDB est disponible pendant la session mais effacé à la déconnexion. Dans ce cas, IndexedDB fonctionne normalement mais les données ne persistent pas entre les sessions. La détection Deep Freeze (§17.1) couvre partiellement ce scénario. **Si IndexedDB et localStorage sont tous deux indisponibles** (rare mais possible en mode invité strict), l'outil fonctionne sans persistance — afficher un avertissement permanent dans le header : « Sauvegarde non disponible sur cet ordinateur. Exporte ta figure (.geomolo) avant de fermer. » avec un bouton d'export direct. Le bouton d'export `.geomolo` reste toujours fonctionnel (il génère un fichier téléchargeable sans dépendre d'IndexedDB).
 
 ### 17.1 Persistance locale (IndexedDB)
 - La construction en cours est sauvegardée automatiquement en IndexedDB après chaque action (debounce de 2 secondes). Le debounce garantit que la sauvegarde capture un état **complet** (pas un état intermédiaire comme un déplacement en cours). L'historique undo/redo est sérialisé avec la construction (limité aux **100 dernières étapes**, cohérent avec la profondeur de 100 niveaux en mémoire — §15).
@@ -1130,21 +1130,23 @@ Un enfant TDC qui « ne sait plus où il en est » peut marteler Escape pour rev
 
 - **Flux « Mes constructions »** : un bouton « Mes constructions » dans le header ouvre un panneau/dialogue listant toutes les constructions sauvegardées avec :
   - Nom (éditable par clic), date de dernière modification, miniature de la figure
-  - Boutons : Ouvrir, Renommer, Exporter (.tracevite), Supprimer (avec confirmation)
+  - Boutons : Ouvrir, Renommer, Exporter (.geomolo), Supprimer (avec confirmation)
   - Bouton « Nouvelle construction » en haut de la liste
   - La construction en cours est marquée visuellement (bordure bleue)
   - Maximum 50 créneaux (suffisant pour une année scolaire complète). Si la limite est atteinte, message « Exporte ou supprime une construction pour en créer une nouvelle ». Rappel d'export à 45 créneaux.
-  - Importer un fichier `.tracevite` crée un nouveau créneau (si < 20). Le nom du créneau est celui du fichier.
+  - Importer un fichier `.geomolo` crée un nouveau créneau (si < 20). Le nom du créneau est celui du fichier.
 - La sauvegarde inclut : tous les points, segments, cercles, figures réfléchies, paramètres (niveau, unité, grille, taille police, sons, propriétés visibles), et l'historique undo/redo
-- **Détection d'effacement IndexedDB** : stocker le flag « déjà lancé » dans IndexedDB **ET** localStorage (redondance — Deep Freeze n'efface pas toujours les deux). Au démarrage : si IndexedDB est vide ET localStorage a le flag → effacement Deep Freeze → afficher : « Tes constructions ont été effacées par l'ordinateur. Si tu as exporté tes fichiers .tracevite, clique "Ouvrir" pour les retrouver. » Si les deux sont vides → premier lancement (tutoriel). Si IndexedDB a des données → restauration normale. Ce scénario est fréquent dans les CSS québécois qui utilisent Deep Freeze.
-- **Rappel d'export** : les services IT scolaires nettoient régulièrement le stockage local des navigateurs (politiques GPO, Deep Freeze). Afficher un rappel discret tous les 7 jours calendaires depuis le dernier export `.tracevite` (bandeau fin, non bloquant) : « Pense à sauvegarder ta figure dans ton dossier! » avec bouton direct d'export `.tracevite`. Le rappel n'apparaît que s'il y a des constructions non exportées. Option « Ne plus rappeler » disponible. Si l'API File System Access est disponible, proposer l'auto-export vers le dossier Téléchargements.
+- **Détection d'effacement IndexedDB** : stocker le flag « déjà lancé » dans IndexedDB **ET** localStorage (redondance — Deep Freeze n'efface pas toujours les deux). Au démarrage : si IndexedDB est vide ET localStorage a le flag → effacement Deep Freeze → afficher : « Tes constructions ont été effacées par l'ordinateur. Si tu as exporté tes fichiers .geomolo, clique "Ouvrir" pour les retrouver. » Si les deux sont vides → premier lancement (tutoriel). Si IndexedDB a des données → restauration normale. Ce scénario est fréquent dans les CSS québécois qui utilisent Deep Freeze.
+- **Rappel d'export** : les services IT scolaires nettoient régulièrement le stockage local des navigateurs (politiques GPO, Deep Freeze). Afficher un rappel discret tous les 7 jours calendaires depuis le dernier export `.geomolo` (bandeau fin, non bloquant) : « Pense à sauvegarder ta figure dans ton dossier! » avec bouton direct d'export `.geomolo`. Le rappel n'apparaît que s'il y a des constructions non exportées. Option « Ne plus rappeler » disponible. Si l'API File System Access est disponible, proposer l'auto-export vers le dossier Téléchargements.
 
 ### 17.2 Export / import de fichier
-- Bouton « Enregistrer sous... » permettant d'exporter la construction en fichier JSON (extension `.tracevite`). **Libellé dans l'interface : « Enregistrer un fichier »** (pas « Exporter .tracevite » — l'extension technique est invisible pour l'enfant)
-- Bouton « Ouvrir un fichier » permettant d'importer un fichier `.tracevite`. **Ne pas afficher l'extension `.tracevite` dans le libellé** — le filtre du dialogue natif du navigateur restreint aux bons fichiers.
+- Bouton « Enregistrer sous... » permettant d'exporter la construction en fichier JSON (extension `.geomolo`). **Libellé dans l'interface : « Enregistrer un fichier »** (pas « Exporter .geomolo » — l'extension technique est invisible pour l'enfant)
+- Bouton « Ouvrir un fichier » permettant d'importer un fichier `.geomolo`. **Ne pas afficher l'extension `.geomolo` dans le libellé** — le filtre du dialogue natif du navigateur restreint aux bons fichiers.
 - **Pourquoi** : c'est la solution la plus robuste pour la portabilité. L'enfant peut sauvegarder sur sa clé USB, son dossier OneDrive/Google Drive scolaire, ou transférer entre deux postes. Élimine les risques liés au nettoyage automatique du navigateur par l'IT scolaire.
 
-**Format du fichier `.tracevite` :**
+**Rétrocompatibilité :** l'import accepte aussi les fichiers `.tracevite` (ancien nom). L'export utilise exclusivement `.geomolo`.
+
+**Format du fichier `.geomolo` :**
 - JSON avec un champ `version` (entier) à la racine. La version courante est **2**. La version 1 utilisait `schoolLevel` (valeur `'2e_cycle'` | `'3e_cycle'`) ; la version 2 utilise `displayMode` (valeur `'simplifie'` | `'complet'`). La migration v1→v2 est automatique et silencieuse à l'import.
 - Champs requis : `version`, `points`, `segments`, `circles`, `settings` (displayMode, unité, grille).
 - Champ optionnel : `consigne` (string, max 1000 caractères). Texte de l'instruction d'exercice défini par l'enseignant (voir §8.0.1). Si présent, affiché dans le bandeau de consigne à l'ouverture du fichier. Si absent ou chaîne vide, aucun bandeau.
@@ -1152,11 +1154,11 @@ Un enfant TDC qui « ne sait plus où il en est » peut marteler Escape pour rev
 - Limite : maximum 500 éléments (points + segments + cercles) **à l'import uniquement** (garde-fou contre les fichiers anormalement gros). Pas de limite en temps réel pendant la construction — la performance se dégrade naturellement au-delà de ~100-200 éléments (§20).
 
 **Validation à l'import :**
-- JSON malformé → message en français : « Ce fichier ne peut pas être ouvert. Vérifie que c'est bien un fichier .tracevite. »
+- JSON malformé → message en français : « Ce fichier ne peut pas être ouvert. Vérifie que c'est bien un fichier .geomolo. »
 - Champs requis manquants → même message.
 - Champs inconnus (version future) → ignorés silencieusement (forward-compatible).
 - **Version inférieure** à celle de l'application → **migration automatique silencieuse**. Les champs manquants sont remplis avec des valeurs par défaut. Le fichier est sauvegardé en version courante dans IndexedDB. Les migrations sont séquentielles (v1→v2→v3). Le code de migration est une fonction pure `migrate(data, fromVersion, toVersion)` dans `persistence.ts`.
-- Version supérieure à celle de l'application → message : « Ce fichier a été créé avec une version plus récente de TraceVite. Mets à jour l'application pour l'ouvrir. »
+- Version supérieure à celle de l'application → message : « Ce fichier a été créé avec une version plus récente de GéoMolo. Mets à jour l'application pour l'ouvrir. »
 - Coordonnées hors zone visible → acceptées, le canevas est automatiquement pané/zoomé pour inclure tous les éléments.
 - L'import crée un nouveau créneau dans « Mes constructions » (si la limite de 50 n'est pas atteinte).
 
@@ -1165,7 +1167,7 @@ Un enfant TDC qui « ne sait plus où il en est » peut marteler Escape pour rev
 **Pourquoi :** en classe, l'enseignant ou le professionnel accompagnateur configure les paramètres de l'outil pour chaque élève TDC (mode d'affichage, tolérance large/très large, sons activés, taille de police, timeout de chaînage, etc.). Sans export de profil, cette configuration doit être refaite manuellement sur chaque poste ou après chaque effacement Deep Freeze.
 
 - Bouton « Exporter les paramètres » / « Importer les paramètres » dans le panneau Paramètres
-- Fichier JSON, extension `.tracevite-config`
+- Fichier JSON, extension `.geomolo-config` (l'import accepte aussi `.tracevite-config` pour rétrocompatibilité)
 - Contient : mode d'affichage (Simplifié/Complet), profil de tolérance, sons off/réduits/complets, taille de police, timeout de chaînage, raccourcis clavier on/off, unité d'affichage, taille de grille par défaut
 - Ne contient **pas** de constructions ni d'historique
 - L'import remplace les paramètres actuels (avec confirmation)
@@ -1201,8 +1203,8 @@ Le MVP a été développé en 3 jalons itératifs — **tous complétés** :
 - Snap complet (tous niveaux), toggle « Masquer les propriétés »
 
 **Jalon C — Production et distribution** ✓
-- Items MVP : 14 (PDF 1:1), 17 (IndexedDB créneaux multiples), 19 (.tracevite), 20 (PWA/SW), 21 (panneau escamotable), 22 (impression CSS), 23 (tutoriel), 24-25 (consigne + URL)
-- Ajouts : export/import .tracevite-config, sons optionnels (Web Audio)
+- Items MVP : 14 (PDF 1:1), 17 (IndexedDB créneaux multiples), 19 (.geomolo), 20 (PWA/SW), 21 (panneau escamotable), 22 (impression CSS), 23 (tutoriel), 24-25 (consigne + URL)
+- Ajouts : export/import .geomolo-config, sons optionnels (Web Audio)
 
 ### MVP (version 1) — Le minimum pour être utile en classe à travers tout le primaire
 1. Canevas avec grille (5 mm, 1 cm ou 2 cm)
@@ -1223,7 +1225,7 @@ Le MVP a été développé en 3 jalons itératifs — **tous complétés** :
 16. Détection et nommage des figures fermées
 17. Sauvegarde locale automatique (IndexedDB) avec créneaux multiples pour ne pas perdre le travail
 18. Gestion de la surcharge visuelle (mesures d'angle au survol quand >5/6 segments selon le cycle)
-19. Export/import de fichier `.tracevite` (JSON) pour la portabilité entre postes
+19. Export/import de fichier `.geomolo` (JSON) pour la portabilité entre postes
 20. PWA avec Service Worker pour le fonctionnement hors-ligne
 21. Panneau latéral escamotable pour les petits écrans
 22. Impression directe via CSS (`window.print()`) en plus de l'export PDF
@@ -1235,7 +1237,7 @@ Le MVP a été développé en 3 jalons itératifs — **tous complétés** :
     - **Après le tutoriel** : si aucune consigne n'est présente, afficher un **message central semi-transparent** sur le canevas vide : « Clique n'importe où pour commencer! » (police 18px, couleur gris moyen, `pointer-events: none`). Le message disparaît au premier clic sur le canevas. **Note de conception :** pour un enfant TDC avec des difficultés d'initiation de tâche (très fréquent), un canevas vide est paralysant. La barre de statut guide déjà l'enfant, mais c'est du texte périphérique — le message central agit comme un pont entre le tutoriel et l'autonomie.
     **Implémentation de l'overlay** : le fond semi-transparent est `pointer-events: none`. Le texte d'instruction est dans un bandeau en bas du canevas avec `pointer-events: auto`. Le bouton « Passer » est dans un conteneur séparé en haut à droite avec `pointer-events: auto`. Seuls ces deux éléments interactifs capturent les clics; le reste de l'overlay laisse passer.
     Un bouton « Passer » est disponible à chaque étape pour les enfants déjà familiers. **Si un paramètre URL `?consigne=` est présent au premier lancement**, le tutoriel s'affiche d'abord (4 étapes, ~20s), puis la consigne apparaît dans son bandeau après complétion ou « Passer ». La détection « premier lancement » est un flag booléen dans IndexedDB. Le panneau latéral est **fermé par défaut au premier lancement** et reste fermé jusqu'à ce que l'enfant l'ouvre. **Note de conception :** un tutoriel par l'action est plus efficace qu'un tutoriel par la lecture pour les profils TDC+TDAH (~50% de comorbidité). L'enfant vit l'instruction plutôt que de la lire. L'introduction progressive réduit la surcharge de choix.
-24. Bandeau de consigne d'exercice : affichage d'une instruction textuelle optionnelle définie par l'enseignant (via fichier `.tracevite` ou paramètre URL). Voir §8.0.1
+24. Bandeau de consigne d'exercice : affichage d'une instruction textuelle optionnelle définie par l'enseignant (via fichier `.geomolo` ou paramètre URL). Voir §8.0.1
 25. Paramètres URL (`?consigne=`, `?level=`) pour le partage de liens d'exercice via plateformes scolaires (Google Classroom, Teams). Voir §8.0.2
 
 ### Version 2
@@ -1263,7 +1265,7 @@ Le MVP a été développé en 3 jalons itératifs — **tous complétés** :
 
 **Enseignement et projection :**
 - ~~Mode « démonstration » pour TBI/projecteur~~ — **implémenté** : bouton plein écran dans la barre d'actions, masque le header, police ×2.0 minimum, synchronisé avec l'API Fullscreen.
-- ~~Association du fichier `.tracevite` via le Web App Manifest (`file_handlers`)~~ — **implémenté** : `file_handlers` dans manifest.json + `launchQueue` dans main.tsx.
+- ~~Association du fichier `.geomolo` via le Web App Manifest (`file_handlers`)~~ — **implémenté** : `file_handlers` dans manifest.json + `launchQueue` dans main.tsx.
 
 **Accommodements TDC avancés :**
 - ~~Support tablette tactile optimisé avec stylet~~ — **implémenté** : discrimination `pointerType` (pen/touch/mouse), rejection de paume (3+ doigts ignorés), délai tactile 80ms pour détection pinch.
@@ -1276,12 +1278,12 @@ Le MVP a été développé en 3 jalons itératifs — **tous complétés** :
 
 **Dialogue « À propos »** — **implémenté** (AboutDialog.tsx) : accessible via le numéro de version dans le footer (clic ou tap). Dialogue modal (même style que PrintDialog — fond semi-transparent, fermeture par × ou Escape). Contenu :
 
-- **Logo** TraceVite (logo.svg) + nom de l'application
+- **Logo** GéoMolo (logo.svg) + nom de l'application
 - **Version** : numéro de version (ex : « v1.2.3 »)
-- **Vision** : « TraceVite est un outil de construction géométrique numérique pour les élèves du primaire ayant un Trouble Développemental de la Coordination (TDC). L'enfant fait le raisonnement, l'outil exécute le geste. »
+- **Vision** : « GéoMolo est un outil de construction géométrique numérique pour les élèves du primaire ayant un Trouble Développemental de la Coordination (TDC). L'enfant fait le raisonnement, l'outil exécute le geste. »
 - **Licence** : « Logiciel libre — licence open source avec attribution » + lien vers le texte complet de la licence dans le dépôt
 - **Code source** : lien vers le dépôt GitHub (icône GitHub + URL)
-- **Contact** : ma@tracevite.ca
+- **Contact** : info@allomolo.ca
 - **Crédits** : « Conçu au Québec pour les enfants TDC et leurs enseignants. »
 
 Le dialogue ne contient aucun lien externe de tracking, aucun analytics, aucun formulaire — cohérent avec le principe « pas de données sortantes ». Les liens (GitHub, licence) sont des `<a>` standards avec `target="_blank" rel="noopener"`.
@@ -1405,7 +1407,7 @@ La stratégie recommandée :
 1. Générer le PDF **programmatiquement** avec jsPDF : tracer les lignes, cercles, arcs et texte directement via l'API jsPDF en utilisant les coordonnées internes (mm → unités PDF, facteur 2.835). Pas de conversion SVG→PDF intermédiaire.
 2. Page Lettre US, marges 15mm. **La position de la figure relative à la page virtuelle est préservée** (pas de re-centrage). Le zoom par défaut montre une page Lettre → la zone visible correspond directement à la zone imprimable du PDF. Si la figure est en haut-gauche du canevas au zoom par défaut, elle apparaît en haut-gauche du PDF. Un re-centrage serait déroutant (« ma figure a bougé »). Les constructions qui dépassent la page sont coupées aux marges (pas de multi-pages dans le MVP).
 3. Ajouter le segment-témoin de 5 cm en bas à droite
-4. Ajouter la mention "TraceVite — Échelle 1:1" en bas à gauche en police 7pt grise
+4. Ajouter la mention "GéoMolo — Échelle 1:1" en bas à gauche en police 7pt grise
 5. Configurer le viewer preference `/PrintScaling /None`
 6. Déclencher le téléchargement du PDF. **Nom du fichier** : `{nom-du-créneau}.pdf` où les espaces sont remplacés par des tirets et les caractères spéciaux supprimés (ex. : créneau « Construction 1 » → `Construction-1.pdf`). Pas de date dans le nom — l'enfant ne sait pas quelle date chercher dans son dossier Téléchargements.
 
@@ -1415,7 +1417,7 @@ La stratégie recommandée :
 - Convertir tous les traits en noir (pas de couleur)
 - Masquer la grille (sauf si le toggle « grille sur le PDF » est activé — dans ce cas, grille en gris 10%)
 - Conserver les étiquettes, mesures et marques conventionnelles (angles droits, parallélisme, congruence)
-- Utiliser `@page { size: letter; margin: 15mm; }` (ou `@page { size: letter landscape; margin: 15mm; }` si paysage sélectionné) — **généré dynamiquement** au moment du `window.print()` selon le toggle orientation du dialogue TraceVite. Ne pas se fier au dialogue d'impression du navigateur pour l'orientation.
+- Utiliser `@page { size: letter; margin: 15mm; }` (ou `@page { size: letter landscape; margin: 15mm; }` si paysage sélectionné) — **généré dynamiquement** au moment du `window.print()` selon le toggle orientation du dialogue GéoMolo. Ne pas se fier au dialogue d'impression du navigateur pour l'orientation.
 - Ajouter `break-inside: avoid` sur le conteneur SVG
 **Le PDF est le chemin principal et garanti pour le 1:1.** L'impression directe CSS est « best effort » — le support de `@page { size: letter }` varie entre navigateurs (Chrome : ok, Firefox : partiel, Safari : variable). Le dialogue d'impression reflète cette hiérarchie (PDF = bouton proéminent bleu, impression directe = secondaire). Une note dans le dialogue (masquable) : « L'impression directe peut varier selon le navigateur. Pour une échelle garantie, utilise le PDF. » **Sur Firefox** (détecté via `navigator.userAgent`), remplacer par un message plus direct : « Firefox ne supporte pas bien l'impression à l'échelle. Utilise "Télécharger le PDF". »
 
@@ -1437,7 +1439,7 @@ La stratégie recommandée :
 ### 21.7 Versioning et maintenance
 
 - **Numéro de version visible** : affiché discrètement dans le footer (ex : « v1.2.3 »). Quand un enseignant signale un bug, on sait quelle version il utilise.
-- **Licence** : MIT. Contact : ma@tracevite.ca
+- **Licence** : MIT. Contact : info@allomolo.ca
 
 ---
 
@@ -1476,31 +1478,31 @@ L'outil doit utiliser exactement le vocabulaire prescrit par le programme :
 
 ## Annexe B — Résumé exécutif pour l'enseignant
 
-> TraceVite est un outil de construction géométrique numérique qui remplace la règle, le compas et le rapporteur pour les élèves ayant un TDC. L'élève construit ses figures à l'écran exactement comme il le ferait avec des instruments physiques, mais sans la barrière motrice. L'outil affiche automatiquement les mesures (longueurs, angles) et détecte les propriétés géométriques (parallélisme, perpendicularité, type d'angle). La figure construite est imprimée à l'échelle 1:1 : un segment de 5 cm à l'écran mesure 5 cm sur le papier. L'élève fait tout le raisonnement géométrique ; l'outil ne fait qu'exécuter le geste de traçage.
+> GéoMolo est un outil de construction géométrique numérique qui remplace la règle, le compas et le rapporteur pour les élèves ayant un TDC. L'élève construit ses figures à l'écran exactement comme il le ferait avec des instruments physiques, mais sans la barrière motrice. L'outil affiche automatiquement les mesures (longueurs, angles) et détecte les propriétés géométriques (parallélisme, perpendicularité, type d'angle). La figure construite est imprimée à l'échelle 1:1 : un segment de 5 cm à l'écran mesure 5 cm sur le papier. L'élève fait tout le raisonnement géométrique ; l'outil ne fait qu'exécuter le geste de traçage.
 
 ### Intégration au Plan d'intervention (PI)
 
-TraceVite peut constituer une **mesure d'adaptation** au sens de la Politique de l'adaptation scolaire du Québec. Il compense une limitation motrice sans modifier les compétences évaluées : l'élève est évalué sur les mêmes apprentissages géométriques que ses pairs.
+GéoMolo peut constituer une **mesure d'adaptation** au sens de la Politique de l'adaptation scolaire du Québec. Il compense une limitation motrice sans modifier les compétences évaluées : l'élève est évalué sur les mêmes apprentissages géométriques que ses pairs.
 
 **L'intégration au PI relève des professionnels de l'équipe-école** (enseignant(e), direction, et le cas échéant les professionnels impliqués dans le plan d'intervention). L'exemple ci-dessous est fourni à titre indicatif — il doit être adapté au contexte de chaque élève par les intervenants autorisés.
 
 **Exemple de documentation dans le PI :**
 1. **Besoin identifié** : difficulté de manipulation des instruments de géométrie (règle, compas, rapporteur) liée au TDC.
-2. **Mesure d'adaptation** : utilisation de l'outil numérique TraceVite pour les activités de construction géométrique et les évaluations en géométrie et mesure.
+2. **Mesure d'adaptation** : utilisation de l'outil numérique GéoMolo pour les activités de construction géométrique et les évaluations en géométrie et mesure.
 3. **Modalités** : l'élève construit à l'écran et imprime sa figure à l'échelle 1:1. Le toggle « Masquer les propriétés » peut être activé lors des évaluations pour que l'élève identifie lui-même les propriétés géométriques.
 4. **Responsable** : selon les pratiques de l'école.
 
-**Pour l'évaluation ministérielle de mathématiques (6e année)** : l'utilisation de TraceVite comme mesure d'adaptation doit être documentée dans le PI et approuvée par la direction, conformément aux directives du ministère.
+**Pour l'évaluation ministérielle de mathématiques (6e année)** : l'utilisation de GéoMolo comme mesure d'adaptation doit être documentée dans le PI et approuvée par la direction, conformément aux directives du ministère.
 
 **Référence** : Loi sur l'instruction publique (LIP), articles 96.14 et 235; Politique de l'adaptation scolaire « Une école adaptée à tous ses élèves ».
 
 ### Préparer un exercice avec figure de départ
 
 Pour distribuer un exercice qui inclut une figure pré-tracée (ex. : « Voici un triangle. Trace la perpendiculaire passant par le sommet A. »), l'enseignant doit :
-1. Ouvrir TraceVite et construire la figure de départ
-2. Exporter la construction en fichier `.tracevite` (bouton « Enregistrer sous... »). Le champ `consigne` du fichier peut contenir l'instruction d'exercice.
-3. Déposer le fichier `.tracevite` sur la plateforme de partage de l'école (Google Drive, OneDrive, Teams, Google Classroom — en pièce jointe ou lien de téléchargement)
-4. L'élève télécharge le fichier et l'ouvre dans TraceVite (bouton « Ouvrir... »). La figure et la consigne sont restaurées.
+1. Ouvrir GéoMolo et construire la figure de départ
+2. Exporter la construction en fichier `.geomolo` (bouton « Enregistrer sous... »). Le champ `consigne` du fichier peut contenir l'instruction d'exercice.
+3. Déposer le fichier `.geomolo` sur la plateforme de partage de l'école (Google Drive, OneDrive, Teams, Google Classroom — en pièce jointe ou lien de téléchargement)
+4. L'élève télécharge le fichier et l'ouvre dans GéoMolo (bouton « Ouvrir... »). La figure et la consigne sont restaurées.
 
 **Note :** le partage d'une figure de départ via un lien URL (sans fichier) n'est pas supporté dans la version actuelle. Pour les exercices sans figure de départ (consigne textuelle seulement), utiliser le lien URL avec le paramètre `?consigne=` (§8.0.2).
 
@@ -1516,13 +1518,13 @@ Pour distribuer un exercice qui inclut une figure pré-tracée (ex. : « Voici u
 
 ### Pour le technicien de votre école
 
-TraceVite est une application web statique hébergée sur un CDN. Voici les informations techniques pour autoriser l'accès :
+GéoMolo est une application web statique hébergée sur un CDN. Voici les informations techniques pour autoriser l'accès :
 
-- **Domaine à autoriser** dans le filtre de contenu (GoGuardian, Securly, ContentKeeper, etc.) : `tracevite.ca` (et ses sous-domaines éventuels)
+- **Domaine à autoriser** dans le filtre de contenu (GoGuardian, Securly, ContentKeeper, etc.) : `geomolo.ca` (et ses sous-domaines éventuels)
 - **Port** : HTTPS uniquement (443)
-- **Données sortantes** : **aucune**. TraceVite ne collecte aucune donnée, n'envoie aucune requête après le chargement initial, ne contient aucun analytics ni tracking. Toutes les données restent dans le navigateur de l'élève (IndexedDB). Conforme à la Loi 25 du Québec.
+- **Données sortantes** : **aucune**. GéoMolo ne collecte aucune donnée, n'envoie aucune requête après le chargement initial, ne contient aucun analytics ni tracking. Toutes les données restent dans le navigateur de l'élève (IndexedDB). Conforme à la Loi 25 du Québec.
 - **Service Worker** : l'application utilise un Service Worker pour le fonctionnement hors-ligne. Si votre filtre de contenu bloque les Service Workers (certaines configurations de GoGuardian/Securly), l'application fonctionne normalement en mode « online only » — aucune fonctionnalité n'est perdue sauf le cache hors-ligne.
-- **Stockage local** : l'application utilise IndexedDB (et localStorage comme fallback) pour sauvegarder les constructions de l'élève. Sur les postes avec Deep Freeze ou sessions éphémères, l'élève doit exporter ses fichiers `.tracevite` avant la fin de la session.
+- **Stockage local** : l'application utilise IndexedDB (et localStorage comme fallback) pour sauvegarder les constructions de l'élève. Sur les postes avec Deep Freeze ou sessions éphémères, l'élève doit exporter ses fichiers `.geomolo` avant la fin de la session.
 - **Taille de téléchargement** : ~300 Ko (gzippé, cible de design). Chargement rapide même sur WiFi scolaire partagé.
 
 ---
@@ -1532,7 +1534,7 @@ TraceVite est une application web statique hébergée sur un CDN. Voici les info
 Les questions suivantes ont été posées, débattues et tranchées définitivement. Elles ne doivent pas être re-soulevées.
 
 ### Constantes d'accessibilité
-- Toutes les valeurs d'accessibilité (seuil de drag 1,5mm, tolérances de snap 7/5/2mm, timeout chaînage 8s, seuil surcharge 5/6 segments, micro-confirmation 3s) sont des **estimations** stockées dans `accessibility-constants.ts`, configurables via `.tracevite-config`. On livre avec les estimations et on ajuste en production. Pas de protocole de validation formel dans le scope du projet.
+- Toutes les valeurs d'accessibilité (seuil de drag 1,5mm, tolérances de snap 7/5/2mm, timeout chaînage 8s, seuil surcharge 5/6 segments, micro-confirmation 3s) sont des **estimations** stockées dans `accessibility-constants.ts`, configurables via `.geomolo-config`. On livre avec les estimations et on ajuste en production. Pas de protocole de validation formel dans le scope du projet.
 - Le seuil de drag (1,5mm) est **unique** pour souris/tactile/stylet, non multiplié par le profil de tolérance, configurable 1,0-3,0mm.
 - Le profil de tolérance ×1.0 est le défaut (adapté TDC légers-modérés, ~70% des cas).
 
@@ -1567,7 +1569,7 @@ Les questions suivantes ont été posées, débattues et tranchées définitivem
 ### Persistance
 - **50 créneaux** max. Rappel export à 45.
 - Undo : **snapshots complets** (état géométrique seulement, propriétés recalculées au restore).
-- Export .tracevite : **sans historique undo** (migration triviale, fichier ~20Ko).
+- Export .geomolo : **sans historique undo** (migration triviale, fichier ~20Ko).
 - Deep Freeze : flag dans IndexedDB + localStorage. Heuristique, pas garanti 100%.
 - Undo de « Nouvelle construction » : **mémoire volatile** (perdu à la fermeture du navigateur).
 - URL ?consigne= : **crée un nouveau créneau**. Si plein : message.
@@ -1583,7 +1585,7 @@ Les questions suivantes ont été posées, débattues et tranchées définitivem
 - **`inputmode="decimal"`** : sur tous les champs de saisie numérique (longueur, rayon). Repositionnement en haut du canevas si clavier virtuel détecté.
 - **Message post-tutoriel** : « Clique n'importe où pour commencer! » centré sur le canevas vide, disparaît au premier clic. Pont entre tutoriel et autonomie.
 - **Indicateur Shift sur le curseur** : curseur CSS personnalisé quand la contrainte 15° est active. En plus de la barre de statut.
-- **Toggle « Voir la hiérarchie »** : masqué par défaut même en 3e cycle. Activable par l'enseignant dans `.tracevite-config`.
+- **Toggle « Voir la hiérarchie »** : masqué par défaut même en 3e cycle. Activable par l'enseignant dans `.geomolo-config`.
 - **Annotation « côtés de l'angle droit »** : dans le panneau latéral pour les triangles rectangles. Pas d'« hypoténuse ».
 - **Pipe `|` dans URL consigne** : alias pour retour à la ligne, facilite la saisie enseignant.
 - **Navigation clavier UI** : Tab/Entrée dans toolbar, panneau, dialogues au MVP (via éléments HTML sémantiques). Navigation clavier canevas SVG reste v2.
@@ -1595,7 +1597,7 @@ Les questions suivantes ont été posées, débattues et tranchées définitivem
 - Navigation clavier dans le canevas SVG
 - PDF multi-pages (v3)
 - Hot-reload des constantes d'accessibilité
-- Partage de figure de départ via URL (utiliser fichier .tracevite en attendant)
+- Partage de figure de départ via URL (utiliser fichier .geomolo en attendant)
 
 **Anciennement hors scope, maintenant implémentés :**
 - ~~Pinch-to-zoom~~ — **implémenté** (2 doigts, rejection de paume à 3+ doigts)
@@ -1608,7 +1610,7 @@ Les questions suivantes ont été posées, débattues et tranchées définitivem
 
 Les décisions de conception suivantes visent à améliorer l'utilisabilité pour les enfants TDC :
 - **« Nouvelle construction »** : texte complet obligatoire, jamais tronqué (§11)
-- **« Ouvrir un fichier »** : pas d'extension `.tracevite` dans le libellé (§17.2)
+- **« Ouvrir un fichier »** : pas d'extension `.geomolo` dans le libellé (§17.2)
 - **« Clique ailleurs ou appuie Échap »** : remplace « Échappe pour terminer » dans toute la barre de statut
 - **« Clique sur la grille »** : remplace « canevas » dans le tutoriel (§19)
 - **« 🧲 Aimant »** : remplace « Accrochage » dans la toolbar (§10)
