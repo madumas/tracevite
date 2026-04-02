@@ -92,7 +92,7 @@ export const PropertiesPanel = memo(function PropertiesPanel({
                 width: 8,
                 height: 8,
                 borderRadius: '50%',
-                background: '#185FA5',
+                background: '#0a7e7a',
                 animation: 'glow-pulse 0.6s ease-in-out 3',
               }}
               data-testid="panel-badge"

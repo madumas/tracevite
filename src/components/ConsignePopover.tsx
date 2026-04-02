@@ -65,7 +65,7 @@ export function ConsignePopover({ consigne, onClose }: ConsignePopoverProps) {
           style={{
             marginTop: 16,
             padding: '6px 16px',
-            background: '#185FA5',
+            background: '#0a7e7a',
             color: '#FFFFFF',
             border: 'none',
             borderRadius: 4,

@@ -28,7 +28,7 @@ export function ConsigneBanner({ consigne, onDismiss }: ConsigneBannerProps) {
           height: CONSIGNE_HEIGHT,
           background: '#E6F1FB',
           borderBottom: '1px solid #C5D8EC',
-          borderLeft: '3px solid #185FA5',
+          borderLeft: '3px solid #0a7e7a',
           display: 'flex',
           alignItems: 'center',
           padding: '4px 12px',

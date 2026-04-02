@@ -8,7 +8,7 @@ import type { ConstructionState } from '@/model/types';
 const THUMB_WIDTH = 120;
 const THUMB_HEIGHT = 80;
 const PADDING_MM = 5;
-const STROKE_COLOR = '#185FA5';
+const STROKE_COLOR = '#0a7e7a';
 
 export function generateThumbnail(state: ConstructionState): string {
   if (state.points.length === 0) return '';

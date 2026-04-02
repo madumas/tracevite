@@ -17,7 +17,7 @@ import {
 // ── Types ────────────────────────────────────────────────
 
 /** Available segment color choices (spec §19 v2). */
-export type SegmentColor = '#185FA5' | '#0F6E56' | '#6D28D9' | '#C24B22';
+export type SegmentColor = '#0a7e7a' | '#0F6E56' | '#6D28D9' | '#C24B22';
 
 /** Page format for PDF export. */
 export type PageFormat = 'letter' | 'a4';
@@ -38,7 +38,7 @@ export interface UserPreferences {
 
 const DEFAULT_PREFERENCES: UserPreferences = {
   panelPosition: 'right',
-  segmentColor: '#185FA5',
+  segmentColor: '#0a7e7a',
   highContrast: false,
   cursorSmoothing: false,
   fatigueReminderMinutes: null,
@@ -50,7 +50,7 @@ const DEFAULT_PREFERENCES: UserPreferences = {
 const STORAGE_KEY = 'geomolo-user-preferences';
 const LEGACY_STORAGE_KEY = 'tracevite-user-preferences';
 
-const VALID_SEGMENT_COLORS: SegmentColor[] = ['#185FA5', '#0F6E56', '#6D28D9', '#C24B22'];
+const VALID_SEGMENT_COLORS: SegmentColor[] = ['#0a7e7a', '#0F6E56', '#6D28D9', '#C24B22'];
 const VALID_PAGE_FORMATS: PageFormat[] = ['letter', 'a4'];
 const VALID_PANEL_POSITIONS: PanelPosition[] = ['left', 'right'];
 

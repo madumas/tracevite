@@ -4,7 +4,7 @@
   "description": "Règle, compas et rapporteur numériques pour les enfants du primaire. Gratuit, sans compte, sans collecte de données.",
   "start_url": "/",
   "display": "standalone",
-  "theme_color": "#185FA5",
+  "theme_color": "#0a7e7a",
   "background_color": "#F5F7FA",
   "lang": "fr-CA",
   "icons": [

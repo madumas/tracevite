@@ -7,22 +7,22 @@
 export const CANVAS_BG = '#FAFCFF';
 export const CANVAS_GRID = '#E5E5E5';
 export const CANVAS_GRID_OPACITY = 0.5;
-export const CANVAS_SEGMENT = '#185FA5';
-export const CANVAS_POINT = '#185FA5';
-export const CANVAS_LABEL = '#185FA5';
-export const CANVAS_GUIDE = '#0B7285';
+export const CANVAS_SEGMENT = '#0a7e7a';
+export const CANVAS_POINT = '#0a7e7a';
+export const CANVAS_LABEL = '#0a7e7a';
+export const CANVAS_GUIDE = '#7A8B99';
 export const CANVAS_ANGLE = '#C24B22';
 export const CANVAS_MEASUREMENT = '#4A5568';
 export const CANVAS_GRID_LABEL = '#9CA3AF';
-export const CANVAS_GHOST = '#85B7EB';
+export const CANVAS_GHOST = '#8BD4D0';
 export const CANVAS_GHOST_OPACITY = 0.6;
-export const CANVAS_SELECTION_BG = '#D0E2F5';
+export const CANVAS_SELECTION_BG = '#CCE8E6';
 
 // ── UI colors ──────────────────────────────────────────────
 export const UI_BG = '#F5F7FA';
 export const UI_SURFACE = '#FFFFFF';
-export const UI_PRIMARY = '#185FA5';
-export const UI_PRIMARY_HOVER = '#134D87';
+export const UI_PRIMARY = '#0a7e7a';
+export const UI_PRIMARY_HOVER = '#076563';
 export const UI_DESTRUCTIVE = '#C82828';
 export const UI_DESTRUCTIVE_HOVER = '#A02020';
 export const UI_DISABLED_BG = '#E8ECF0';
@@ -30,12 +30,12 @@ export const UI_DISABLED_TEXT = '#9CA3AF';
 export const UI_TEXT_PRIMARY = '#1A2433';
 export const UI_TEXT_SECONDARY = '#4A5568';
 export const UI_BORDER = '#D1D8E0';
-export const UI_FOCUS = '#185FA5';
+export const UI_FOCUS = '#0a7e7a';
 
 // ── Layout dimensions (px) ─────────────────────────────────
 export const TOOLBAR_HEIGHT = 64;
 export const STATUS_BAR_HEIGHT = 44;
-export const STATUS_BAR_BG = '#E3EBF5';
+export const STATUS_BAR_BG = '#D9EDEB';
 export const CONSIGNE_HEIGHT = 40;
 export const ACTION_BAR_HEIGHT = 56;
 export const PANEL_WIDTH = 220;

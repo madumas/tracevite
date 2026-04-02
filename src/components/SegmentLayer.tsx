@@ -41,7 +41,7 @@ export const SegmentLayer = memo(function SegmentLayer({
   const pointMap = new Map(points.map((p) => [p.id, p]));
 
   // Build parallel pair colors: each pair of parallel segments gets a distinct color
-  const PARALLEL_COLORS = ['#0B7285', '#C24B22', '#7C3AED', '#2E7D32'];
+  const PARALLEL_COLORS = ['#7A8B99', '#C24B22', '#7C3AED', '#2E7D32'];
   const parallelSegColor = new Map<string, string>();
   const parallelChevronCount = new Map<string, number>();
   const parallelGroups: string[][] = [];

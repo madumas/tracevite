@@ -279,7 +279,7 @@ export const SettingsDialog = memo(function SettingsDialog({
           <span>Couleur des traits</span>
           <div style={{ display: 'flex', gap: 6 }}>
             {[
-              { color: '#185FA5' as SegmentColor, name: 'Bleu' },
+              { color: '#0a7e7a' as SegmentColor, name: 'Turquoise' },
               { color: '#0F6E56' as SegmentColor, name: 'Vert' },
               { color: '#6D28D9' as SegmentColor, name: 'Violet' },
               { color: '#C24B22' as SegmentColor, name: 'Orange' },

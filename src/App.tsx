@@ -952,7 +952,7 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
             style={{
               marginLeft: 8,
               fontSize: 12 * effectiveFontScale,
-              color: '#0B7285',
+              color: '#7A8B99',
               fontWeight: 500,
             }}
           >
@@ -1018,7 +1018,7 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
                   borderRadius: 4,
                   cursor: 'pointer',
                   fontSize: 11,
-                  color: '#185FA5',
+                  color: '#0a7e7a',
                   whiteSpace: 'nowrap',
                 }}
                 data-testid="consigne-show"
@@ -1031,7 +1031,7 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
                 onClick={tool.onToggleStepByStep}
                 style={{
                   padding: '2px 10px',
-                  background: tool.stepByStep ? '#185FA5' : 'transparent',
+                  background: tool.stepByStep ? '#0a7e7a' : 'transparent',
                   color: tool.stepByStep ? '#FFF' : '#4A5568',
                   border: '1px solid #D1D8E0',
                   borderRadius: 4,

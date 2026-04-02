@@ -10,7 +10,7 @@ The complete specification is in `spec.md`.
 
 ## Logo
 
-`logo.svg` — A geometric logo formed by two perpendicular segments with endpoint dots in primary blue (#185FA5) and a right-angle square marker in teal (#0B7285). Used as favicon, PWA icon (192/512px), and app header. Works in black & white for PDF. The right-angle marker is the signature visual element.
+`logo.svg` — A geometric "G" with a right-angle square marker accent in turquoise (#0a7e7a primary, #0ea5a0 accent). Used as favicon, PWA icon (192/512px). The header uses the CSS typographic logo (GeoMoloLogo component). Works in black & white for PDF. The right-angle marker is the signature visual element.
 
 ## Tech Stack
 
@@ -110,7 +110,7 @@ These principles are non-negotiable — they determine whether the tool is usabl
 - **`inputmode="decimal"`** on all numeric input fields (length, radius). Reposition field to top of canvas when virtual keyboard detected (tablet).
 - **`beforeunload` confirmation dialog** when canvas has elements — prevents accidental tab closure (Ctrl+W instead of Ctrl+Z).
 - **Keyboard navigation in UI** (Tab/Enter) works at MVP via semantic HTML elements. Canvas SVG keyboard nav is v2.
-- **Color palette:** Canvas background #FAFCFF (slight blue tint — "digital graph paper" feel). Canvas: segments/points/labels #185FA5 (blue), guides/right-angle #0B7285 (teal), angle arcs #C24B22 (burnt orange), measurements #3A6291 (dark blue-grey). UI: primary #185FA5, destructive #C82828, bg #F5F7FA, text #1A2433. Full palette in spec.md §13.2. Never rely on color alone — always pair with shape markers.
+- **Color palette:** Canvas background #FAFCFF (slight blue tint — "digital graph paper" feel). Canvas: segments/points/labels #0a7e7a (turquoise), guides #7A8B99 (slate), angle arcs #C24B22 (burnt orange), measurements #4A5568 (dark grey). UI: primary #0a7e7a, destructive #C82828, bg #F5F7FA, text #1A2433. Full palette in src/config/theme.ts. Never rely on color alone — always pair with shape markers.
 - **PDF is black & white only** (school printers). PDF filename: `{slot-name}.pdf` (spaces→dashes).
 - **Bundle size target ~300 Ko gzipped** (design goal, not hard limit — keep an eye on it)
 
