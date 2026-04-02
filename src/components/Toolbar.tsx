@@ -137,10 +137,7 @@ export const Toolbar = memo(function Toolbar({
             }}
             aria-label="À propos de GéoMolo"
           >
-            <img src="/logo.svg" alt="" width={44} height={44} />
-            <span className="tool-label">
-              <GeoMoloLogo height={24} />
-            </span>
+            <GeoMoloLogo height={32} />
           </button>
         )}
 
