@@ -57,7 +57,7 @@ export default defineConfig({
             urlPattern: /^https:\/\/.*$/,
             handler: 'CacheFirst',
             options: {
-              cacheName: 'tracevite-cache',
+              cacheName: 'geomolo-cache',
               expiration: { maxEntries: 50, maxAgeSeconds: 30 * 24 * 60 * 60 },
             },
           },

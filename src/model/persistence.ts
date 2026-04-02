@@ -10,10 +10,16 @@ import { serializeState, deserializeState } from './serialize';
 
 // ── Keys ──────────────────────────────────────────────────
 
-const CONSTRUCTION_KEY = 'tracevite_construction';
-const UNDO_KEY = 'tracevite_undo';
-const LAUNCHED_FLAG_IDB = 'tracevite_launched';
-const LAUNCHED_FLAG_LS = 'tracevite_launched';
+const CONSTRUCTION_KEY = 'geomolo_construction';
+const UNDO_KEY = 'geomolo_undo';
+const LAUNCHED_FLAG_IDB = 'geomolo_launched';
+const LAUNCHED_FLAG_LS = 'geomolo_launched';
+
+// Legacy keys for migration from TraceVite
+const LEGACY_CONSTRUCTION_KEY = 'tracevite_construction';
+const LEGACY_UNDO_KEY = 'tracevite_undo';
+const LEGACY_LAUNCHED_FLAG_IDB = 'tracevite_launched';
+const LEGACY_LAUNCHED_FLAG_LS = 'tracevite_launched';
 
 // ── Save / Load ───────────────────────────────────────────
 
@@ -47,13 +53,21 @@ export async function loadConstruction(): Promise<{
   future: ConstructionState[];
 } | null> {
   try {
-    const serialized = await get<string>(CONSTRUCTION_KEY);
+    let serialized = await get<string>(CONSTRUCTION_KEY);
+    let undoKey = UNDO_KEY;
+
+    // Fallback to legacy TraceVite keys
+    if (!serialized) {
+      serialized = await get<string>(LEGACY_CONSTRUCTION_KEY);
+      undoKey = LEGACY_UNDO_KEY;
+    }
+
     if (!serialized) return null;
 
     const state = deserializeState(serialized);
 
     // Load undo history
-    const undoData = await get<string>(UNDO_KEY);
+    const undoData = await get<string>(undoKey);
     let past: ConstructionState[] = [];
     let future: ConstructionState[] = [];
 
@@ -79,7 +93,8 @@ export type LaunchStatus = 'first_launch' | 'normal' | 'deep_freeze';
 
 export async function detectLaunchStatus(): Promise<LaunchStatus> {
   try {
-    const idbFlag = await get<boolean>(LAUNCHED_FLAG_IDB);
+    const idbFlag =
+      (await get<boolean>(LAUNCHED_FLAG_IDB)) || (await get<boolean>(LEGACY_LAUNCHED_FLAG_IDB));
     const lsFlag = hasLocalStorageFlag();
 
     if (idbFlag) return 'normal'; // IndexedDB has data
@@ -92,7 +107,10 @@ export async function detectLaunchStatus(): Promise<LaunchStatus> {
 
 function hasLocalStorageFlag(): boolean {
   try {
-    return localStorage.getItem(LAUNCHED_FLAG_LS) !== null;
+    return (
+      localStorage.getItem(LAUNCHED_FLAG_LS) !== null ||
+      localStorage.getItem(LEGACY_LAUNCHED_FLAG_LS) !== null
+    );
   } catch {
     return false;
   }

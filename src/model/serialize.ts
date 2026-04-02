@@ -1,5 +1,5 @@
 /**
- * Serialization/deserialization for .tracevite files and IndexedDB.
+ * Serialization/deserialization for .geomolo files and IndexedDB.
  * Includes version field for future migration.
  */
 

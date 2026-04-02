@@ -1,6 +1,6 @@
 /**
  * User preferences — settings that are NOT tied to a specific construction.
- * Persisted in localStorage (not in .tracevite files, not in undo stack).
+ * Persisted in localStorage (not in .geomolo files, not in undo stack).
  * These are per-user settings that persist across constructions.
  */
 
@@ -47,7 +47,8 @@ const DEFAULT_PREFERENCES: UserPreferences = {
 
 // ── localStorage persistence ─────────────────────────────
 
-const STORAGE_KEY = 'tracevite-user-preferences';
+const STORAGE_KEY = 'geomolo-user-preferences';
+const LEGACY_STORAGE_KEY = 'tracevite-user-preferences';
 
 const VALID_SEGMENT_COLORS: SegmentColor[] = ['#185FA5', '#0F6E56', '#6D28D9', '#C24B22'];
 const VALID_PAGE_FORMATS: PageFormat[] = ['letter', 'a4'];
@@ -55,7 +56,7 @@ const VALID_PANEL_POSITIONS: PanelPosition[] = ['left', 'right'];
 
 export function loadPreferences(): UserPreferences {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    const raw = localStorage.getItem(STORAGE_KEY) ?? localStorage.getItem(LEGACY_STORAGE_KEY);
     if (!raw) return DEFAULT_PREFERENCES;
 
     const data = JSON.parse(raw) as Record<string, unknown>;

@@ -1,5 +1,5 @@
 /**
- * .tracevite-config settings profile export/import.
+ * .geomolo-config settings profile export/import.
  */
 
 import type {
@@ -15,7 +15,7 @@ import type {
 } from './types';
 
 export interface SettingsProfile {
-  readonly type: 'tracevite-settings';
+  readonly type: 'geomolo-settings' | 'tracevite-settings';
   readonly version: 1;
   readonly displayMode: DisplayMode;
   readonly displayUnit: DisplayUnit;
@@ -37,7 +37,7 @@ export interface SettingsProfile {
 /** Export current settings to JSON string. */
 export function exportSettings(state: ConstructionState): string {
   const profile: SettingsProfile = {
-    type: 'tracevite-settings',
+    type: 'geomolo-settings',
     version: 1,
     displayMode: state.displayMode,
     displayUnit: state.displayUnit,
@@ -92,7 +92,8 @@ export function importSettings(json: string): MutableSettings {
   if (!data || typeof data !== 'object') throw new Error('INVALID_FORMAT');
   const obj = data as Record<string, unknown>;
 
-  if (obj['type'] !== 'tracevite-settings') throw new Error('WRONG_FILE_TYPE');
+  if (obj['type'] !== 'geomolo-settings' && obj['type'] !== 'tracevite-settings')
+    throw new Error('WRONG_FILE_TYPE');
 
   const result: MutableSettings = {};
 

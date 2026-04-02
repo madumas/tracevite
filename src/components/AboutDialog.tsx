@@ -1,6 +1,6 @@
 /**
  * About dialog — spec §19 v2bis.
- * Accessible via click on "TraceVite" in header.
+ * Accessible via click on "GéoMolo" in header.
  */
 
 import { useEffect, useState } from 'react';
@@ -11,6 +11,7 @@ import {
   UI_TEXT_SECONDARY,
   UI_PRIMARY,
 } from '@/config/theme';
+import { GeoMoloLogo } from './GeoMoloLogo';
 
 interface AboutDialogProps {
   readonly onClose: () => void;
@@ -57,8 +58,8 @@ export function AboutDialog({ onClose }: AboutDialogProps) {
         role="dialog"
         aria-modal="true"
       >
-        <img src="/logo.svg" alt="TraceVite" width={48} height={48} style={{ marginBottom: 8 }} />
-        <h2 style={{ margin: '0 0 4px', fontSize: 20 }}>TraceVite</h2>
+        <GeoMoloLogo height={40} />
+        <div style={{ height: 8 }} />
         <div style={{ fontSize: 12, color: UI_TEXT_SECONDARY, marginBottom: 16 }}>
           {__GIT_BRANCH__ === 'main' ? `v${__APP_VERSION__}` : `dev (${__BUILD_HASH__})`}
         </div>
@@ -72,7 +73,7 @@ export function AboutDialog({ onClose }: AboutDialogProps) {
         <div style={{ fontSize: 12, color: UI_TEXT_SECONDARY, marginBottom: 8 }}>
           Logiciel libre —{' '}
           <a
-            href="https://github.com/madumas/tracevite"
+            href="https://github.com/madumas/geomolo"
             target="_blank"
             rel="noopener"
             style={{ color: UI_PRIMARY }}
@@ -93,8 +94,8 @@ export function AboutDialog({ onClose }: AboutDialogProps) {
           }}
         >
           Contact :{' '}
-          <a href="mailto:ma@tracevite.ca" style={{ color: UI_PRIMARY }}>
-            ma@tracevite.ca
+          <a href="mailto:info@allomolo.ca" style={{ color: UI_PRIMARY }}>
+            info@allomolo.ca
           </a>
           <CopyButton />
         </div>
@@ -130,7 +131,7 @@ function CopyButton() {
     <button
       onClick={async () => {
         try {
-          await navigator.clipboard?.writeText('ma@tracevite.ca');
+          await navigator.clipboard?.writeText('info@allomolo.ca');
           setCopied(true);
           setTimeout(() => setCopied(false), 1500);
         } catch {

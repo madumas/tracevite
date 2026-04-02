@@ -1,20 +1,20 @@
-# TraceVite
+# GéoMolo
 
 Outil de construction géométrique numérique pour les élèves du primaire ayant un **Trouble Développemental de la Coordination** (TDC/dyspraxie).
 
-TraceVite remplace la règle, le compas et le rapporteur — instruments que l'enfant TDC ne peut pas manipuler avec précision — tout en préservant la réflexion géométrique. L'enfant fait le raisonnement, l'outil exécute le geste.
+GéoMolo remplace la règle, le compas et le rapporteur — instruments que l'enfant TDC ne peut pas manipuler avec précision — tout en préservant la réflexion géométrique. L'enfant fait le raisonnement, l'outil exécute le geste.
 
-**[tracevite.ca](https://tracevite.ca)**
+**[geomolo.ca](https://geomolo.ca)**
 
 ## Pourquoi
 
-Les enfants avec un TDC comprennent la géométrie mais ne peuvent pas la tracer. Le passage du raisonnement au geste moteur est le blocage. TraceVite est à la règle et au compas ce que la calculatrice est au calcul mental.
+Les enfants avec un TDC comprennent la géométrie mais ne peuvent pas la tracer. Le passage du raisonnement au geste moteur est le blocage. GéoMolo est à la règle et au compas ce que la calculatrice est au calcul mental.
 
 L'outil est aligné sur le Programme de formation de l'école québécoise (PFEQ) et la Progression des apprentissages (PDA) en géométrie et mesure, du 2e au 3e cycle du primaire (8-12 ans).
 
 ## Guide pour les enseignants et les parents
 
-TraceVite s'adapte aux besoins de chaque enfant grâce à des réglages accessibles via le bouton engrenage (paramètres). Voici les options à considérer selon le profil de l'élève.
+GéoMolo s'adapte aux besoins de chaque enfant grâce à des réglages accessibles via le bouton engrenage (paramètres). Voici les options à considérer selon le profil de l'élève.
 
 ### Mode d'affichage (Simplifié / Complet)
 
@@ -79,14 +79,14 @@ Trois niveaux : 1× (par défaut), 1,25× et 1,5×. Augmenter si l'enfant doit s
 L'enseignant peut transmettre une consigne directement dans l'URL :
 
 ```
-https://tracevite.ca/?consigne=Trace un triangle rectangle isocèle&mode=complet
+https://geomolo.ca/?consigne=Trace un triangle rectangle isocèle&mode=complet
 ```
 
 L'élève ouvre le lien et voit la consigne en bannière. Un nouveau slot vierge est créé automatiquement — le travail précédent est préservé.
 
 ### Profils de paramètres
 
-L'ergothérapeute ou l'enseignant peut exporter un fichier `.tracevite-config` contenant tous les réglages adaptés à un élève, puis l'importer sur un autre appareil. Utile pour les Chromebooks partagés.
+L'ergothérapeute ou l'enseignant peut exporter un fichier `.geomolo-config` contenant tous les réglages adaptés à un élève, puis l'importer sur un autre appareil (les fichiers `.tracevite-config` restent acceptés pour compatibilité). Utile pour les Chromebooks partagés.
 
 ## Fonctionnalités
 
@@ -137,13 +137,13 @@ L'ergothérapeute ou l'enseignant peut exporter un fichier `.tracevite-config` c
 - Impression directe CSS en complément du PDF
 - Segment-témoin de 5 cm pour vérification d'échelle
 - Sauvegarde automatique (IndexedDB) avec constructions multiples et miniatures
-- Export/import de fichiers `.tracevite` (JSON) pour la portabilité
+- Export/import de fichiers `.geomolo` (JSON) pour la portabilité (les fichiers `.tracevite` restent acceptés pour compatibilité)
 - Consigne d'exercice via fichier ou paramètre URL (`?consigne=&mode=`)
 - PWA installable avec mode hors-ligne (Service Worker)
 
 ## Confidentialité
 
-TraceVite ne collecte aucune donnée. Pas de comptes, pas de tracking, pas d'analytics. Toutes les constructions restent dans le navigateur de l'élève. Conforme à la Loi 25 du Québec.
+GéoMolo ne collecte aucune donnée. Pas de comptes, pas de tracking, pas d'analytics. Toutes les constructions restent dans le navigateur de l'élève. Conforme à la Loi 25 du Québec.
 
 ## Stack technique
 
@@ -174,7 +174,7 @@ Navigateurs supportés : Chrome/Edge 90+, Firefox 90+, Safari 15+. Optimisé pou
 
 ## Contact
 
-ma@tracevite.ca
+info@allomolo.ca
 
 ---
 

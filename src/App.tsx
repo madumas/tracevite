@@ -471,7 +471,9 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
     [],
   );
   const [panelCollapsed, setPanelCollapsed] = useState(() => {
-    const saved = localStorage.getItem('tracevite_panel_collapsed');
+    const saved =
+      localStorage.getItem('geomolo_panel_collapsed') ??
+      localStorage.getItem('tracevite_panel_collapsed');
     if (saved !== null) return saved === 'true';
     return typeof window !== 'undefined' && (window.innerHeight < 800 || window.innerWidth < 900);
   });
@@ -773,7 +775,7 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
 
   // Persist panel collapsed state
   useEffect(() => {
-    localStorage.setItem('tracevite_panel_collapsed', String(panelCollapsed));
+    localStorage.setItem('geomolo_panel_collapsed', String(panelCollapsed));
     if (!panelCollapsed) setHasNewProperties(false); // Clear badge when panel opens
   }, [panelCollapsed]);
 
@@ -820,7 +822,7 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
         >
           <span style={{ flex: 1 }}>
             Tes constructions ont été effacées par l'ordinateur. Si tu as exporté tes fichiers
-            .tracevite, clique « Ouvrir » pour les retrouver.
+            .geomolo, clique « Ouvrir » pour les retrouver.
           </span>
           <button
             onClick={() => {

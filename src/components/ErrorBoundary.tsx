@@ -33,7 +33,7 @@ export class ErrorBoundary extends Component<Props, State> {
             overflow: 'auto',
           }}
         >
-          <h2 style={{ fontSize: 16 }}>Erreur TraceVite</h2>
+          <h2 style={{ fontSize: 16 }}>Erreur GéoMolo</h2>
           <p style={{ fontWeight: 'bold' }}>{this.state.error.message}</p>
           <pre style={{ whiteSpace: 'pre-wrap', fontSize: 11 }}>{this.state.error.stack}</pre>
           <button

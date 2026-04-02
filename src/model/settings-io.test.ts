@@ -23,13 +23,19 @@ describe('settings-io', () => {
   it('includes type discriminant', () => {
     const json = exportSettings(createInitialState());
     const parsed = JSON.parse(json);
-    expect(parsed.type).toBe('tracevite-settings');
+    expect(parsed.type).toBe('geomolo-settings');
   });
 
   it('imports partial settings gracefully', () => {
-    const json = JSON.stringify({ type: 'tracevite-settings', displayMode: 'complet' });
+    const json = JSON.stringify({ type: 'geomolo-settings', displayMode: 'complet' });
     const result = importSettings(json);
     expect(result.displayMode).toBe('complet');
     expect(result.displayUnit).toBeUndefined(); // Not provided
+  });
+
+  it('accepts legacy tracevite-settings type', () => {
+    const json = JSON.stringify({ type: 'tracevite-settings', displayMode: 'complet' });
+    const result = importSettings(json);
+    expect(result.displayMode).toBe('complet');
   });
 });

@@ -1,5 +1,5 @@
 /**
- * .tracevite file export/import with validation.
+ * .geomolo file export/import with validation.
  * Export: state → JSON string. Import: JSON string → validated state.
  */
 
@@ -9,13 +9,13 @@ import { FILE_VERSION } from './types';
 
 const MAX_IMPORT_ELEMENTS = 500;
 
-/** Export construction to .tracevite JSON string. */
+/** Export construction to .geomolo JSON string. */
 export function exportToTracevite(state: ConstructionState): string {
   return serializeState(state);
 }
 
 /**
- * Import from .tracevite JSON string with full validation.
+ * Import from .geomolo JSON string with full validation.
  * Returns validated ConstructionState or throws with a French error message key.
  */
 export function importFromTracevite(json: string): ConstructionState {
@@ -34,7 +34,7 @@ export function importFromTracevite(json: string): ConstructionState {
   const obj = data as Record<string, unknown>;
 
   // Reject settings files opened as construction
-  if (obj['type'] === 'tracevite-settings') {
+  if (obj['type'] === 'geomolo-settings' || obj['type'] === 'tracevite-settings') {
     throw new ImportError('WRONG_FILE_TYPE');
   }
 
@@ -89,9 +89,9 @@ export function getImportErrorMessage(code: string): string {
     case 'INVALID_JSON':
     case 'INVALID_FORMAT':
     case 'MISSING_VERSION':
-      return "Ce fichier ne peut pas être ouvert. Vérifie que c'est bien un fichier .tracevite.";
+      return "Ce fichier ne peut pas être ouvert. Vérifie que c'est bien un fichier .geomolo.";
     case 'VERSION_TOO_NEW':
-      return "Ce fichier a été créé avec une version plus récente de TraceVite. Mets à jour l'application pour l'ouvrir.";
+      return "Ce fichier a été créé avec une version plus récente de GéoMolo. Mets à jour l'application pour l'ouvrir.";
     case 'TOO_MANY_ELEMENTS':
       return "Ce fichier contient trop d'éléments (maximum 500).";
     case 'INVALID_REFERENCES':

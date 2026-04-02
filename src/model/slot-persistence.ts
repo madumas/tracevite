@@ -13,18 +13,24 @@ import { serializeState, deserializeState } from './serialize';
 
 // ── Keys ──────────────────────────────────────────────────
 
-const REGISTRY_KEY = 'tracevite_registry';
-const SLOT_DATA_PREFIX = 'tracevite_slot_';
-const SLOT_UNDO_PREFIX = 'tracevite_undo_';
+const REGISTRY_KEY = 'geomolo_registry';
+const SLOT_DATA_PREFIX = 'geomolo_slot_';
+const SLOT_UNDO_PREFIX = 'geomolo_undo_';
 
-// Legacy single-key (Jalon A/B)
+// Legacy keys from TraceVite branding
+const LEGACY_REGISTRY_KEY = 'tracevite_registry';
+const LEGACY_SLOT_DATA_PREFIX = 'tracevite_slot_';
+const LEGACY_SLOT_UNDO_PREFIX = 'tracevite_undo_';
+
+// Legacy single-key (Jalon A/B, pre-slot era)
 const LEGACY_CONSTRUCTION_KEY = 'tracevite_construction';
 const LEGACY_UNDO_KEY = 'tracevite_undo';
 
 // ── Registry operations ───────────────────────────────────
 
 export async function loadRegistry(): Promise<SlotRegistry | null> {
-  const result = await get<SlotRegistry>(REGISTRY_KEY);
+  const result =
+    (await get<SlotRegistry>(REGISTRY_KEY)) ?? (await get<SlotRegistry>(LEGACY_REGISTRY_KEY));
   return result ?? null;
 }
 
@@ -57,11 +63,15 @@ export async function loadSlotData(slotId: string): Promise<{
   future: ConstructionState[];
 } | null> {
   try {
-    const serialized = await get<string>(SLOT_DATA_PREFIX + slotId);
+    const serialized =
+      (await get<string>(SLOT_DATA_PREFIX + slotId)) ??
+      (await get<string>(LEGACY_SLOT_DATA_PREFIX + slotId));
     if (!serialized) return null;
 
     const state = deserializeState(serialized);
-    const undoData = await get<string>(SLOT_UNDO_PREFIX + slotId);
+    const undoData =
+      (await get<string>(SLOT_UNDO_PREFIX + slotId)) ??
+      (await get<string>(LEGACY_SLOT_UNDO_PREFIX + slotId));
     let past: ConstructionState[] = [];
     let future: ConstructionState[] = [];
 
@@ -82,7 +92,12 @@ export async function loadSlotData(slotId: string): Promise<{
 }
 
 export async function deleteSlotData(slotId: string): Promise<void> {
-  await Promise.all([del(SLOT_DATA_PREFIX + slotId), del(SLOT_UNDO_PREFIX + slotId)]);
+  await Promise.all([
+    del(SLOT_DATA_PREFIX + slotId),
+    del(SLOT_UNDO_PREFIX + slotId),
+    del(LEGACY_SLOT_DATA_PREFIX + slotId),
+    del(LEGACY_SLOT_UNDO_PREFIX + slotId),
+  ]);
 }
 
 // ── Migration ─────────────────────────────────────────────

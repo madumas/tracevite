@@ -5,7 +5,10 @@ import './styles/global.css';
 import './styles/print.css';
 
 // Disable Service Worker on dev subdomain — no stale cache during testing
-if (window.location.hostname === 'dev.tracevite.ca') {
+if (
+  window.location.hostname === 'dev.geomolo.ca' ||
+  window.location.hostname === 'dev.tracevite.ca'
+) {
   navigator.serviceWorker?.getRegistrations().then((regs) => regs.forEach((r) => r.unregister()));
   caches.keys().then((keys) => keys.forEach((k) => caches.delete(k)));
 }
@@ -66,7 +69,7 @@ async function boot() {
     }
   }
 
-  // Handle file_handlers: open .tracevite files via PWA launchQueue
+  // Handle file_handlers: open .geomolo/.tracevite files via PWA launchQueue
   interface LaunchParams {
     files?: Array<{ getFile(): Promise<File> }>;
   }

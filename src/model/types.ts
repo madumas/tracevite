@@ -1,5 +1,5 @@
 // ============================================================
-// TraceVite — Complete data model (all milestones)
+// GéoMolo — Complete data model (all milestones)
 // Internal unit: millimeters (mm) for all coordinates and lengths
 // ============================================================
 
@@ -144,5 +144,5 @@ export interface ViewportState {
   readonly zoom: number; // 0.5 to 2.0
 }
 
-/** Serialized file version for .tracevite files. */
+/** Serialized file version for .geomolo files. */
 export const FILE_VERSION = 2;

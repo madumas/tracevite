@@ -360,7 +360,7 @@ export function generatePDF(state: ConstructionState, options: PdfOptions): jsPD
   const ft = footerCoords(landscape, pageFormat);
   doc.setFontSize(7);
   doc.setTextColor(150);
-  doc.text('TraceVite — Échelle 1:1', ft.x + MARGIN_MM, ft.y + MARGIN_MM);
+  doc.text('GéoMolo — Échelle 1:1', ft.x + MARGIN_MM, ft.y + MARGIN_MM);
 
   return doc;
 }

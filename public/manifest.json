@@ -1,6 +1,6 @@
 {
-  "name": "TraceVite — Construction géométrique adaptée",
-  "short_name": "TraceVite",
+  "name": "GéoMolo — Construction géométrique adaptée",
+  "short_name": "GéoMolo",
   "description": "Outil numérique de construction géométrique pour les élèves du primaire vivant avec un TDC/dyspraxie. Vocabulaire aligné sur le PFEQ.",
   "start_url": "/",
   "display": "standalone",
@@ -34,7 +34,7 @@
     {
       "action": "/",
       "accept": {
-        "application/json": [".tracevite"]
+        "application/json": [".geomolo", ".tracevite"]
       }
     }
   ]

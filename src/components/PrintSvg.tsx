@@ -386,7 +386,7 @@ export const PrintSvg = memo(function PrintSvg({
 
       {/* Footer */}
       <text x={ft.x} y={ft.y} fontSize={2.5} fill="#999">
-        TraceVite — Échelle 1:1
+        GéoMolo — Échelle 1:1
       </text>
     </svg>
   );

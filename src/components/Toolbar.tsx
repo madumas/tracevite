@@ -1,6 +1,7 @@
 import { memo, useState, useEffect, useRef, useCallback } from 'react';
 import type { ToolType, DisplayMode } from '@/model/types';
 import { UI_PRIMARY, UI_SURFACE, UI_BORDER, UI_TEXT_PRIMARY, TOOLBAR_HEIGHT } from '@/config/theme';
+import { GeoMoloLogo } from './GeoMoloLogo';
 import { MIN_BUTTON_SIZE_PX, MIN_BUTTON_GAP_PX } from '@/config/accessibility';
 import {
   SegmentIcon,
@@ -134,14 +135,11 @@ export const Toolbar = memo(function Toolbar({
               display: 'flex',
               alignItems: 'center',
             }}
-            aria-label="À propos de TraceVite"
+            aria-label="À propos de GéoMolo"
           >
             <img src="/logo.svg" alt="" width={44} height={44} />
-            <span
-              className="tool-label"
-              style={{ fontWeight: 700, fontSize: 16, color: '#185FA5', letterSpacing: '-0.5px' }}
-            >
-              TraceVite
+            <span className="tool-label">
+              <GeoMoloLogo height={24} />
             </span>
           </button>
         )}

@@ -64,7 +64,7 @@ export function SlotManager({
 
   const handleExport = (slot: SlotMetadata) => {
     const json = exportToTracevite(state);
-    downloadFile(json, `${sanitizeFilename(slot.name)}.tracevite`);
+    downloadFile(json, `${sanitizeFilename(slot.name)}.geomolo`);
   };
 
   const handleImportFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -73,7 +73,7 @@ export function SlotManager({
     try {
       const text = await file.text();
       const imported = importFromTracevite(text);
-      const name = file.name.replace(/\.tracevite$/, '') || 'Import';
+      const name = file.name.replace(/\.(geomolo|tracevite)$/, '') || 'Import';
       onImport(imported, name);
       setImportError(null);
     } catch (err) {
@@ -157,7 +157,7 @@ export function SlotManager({
           <input
             ref={fileInputRef}
             type="file"
-            accept=".tracevite"
+            accept=".geomolo,.tracevite"
             onChange={handleImportFile}
             style={{ display: 'none' }}
           />
