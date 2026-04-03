@@ -19,6 +19,8 @@ import { findConnectedElements } from '@/engine/reproduce';
 import { detectAllFaces, classifyFigures } from '@/engine/figures';
 import { CSS_PX_PER_MM } from '@/engine/viewport';
 import { CANVAS_GUIDE } from '@/config/theme';
+import { useTransformAnimation } from './useTransformAnimation';
+import { computeHomothetyAnimData } from '@/engine/transform-animation';
 
 type HomothetyPhase = 'set_center' | 'set_factor' | 'select_figure';
 
@@ -27,6 +29,7 @@ interface UseHomothetyToolOptions {
   dispatch: (action: ConstructionAction) => void;
   viewport: ViewportState;
   isActive?: boolean;
+  animateTransformations?: boolean;
 }
 
 export function useHomothetyTool({
@@ -34,11 +37,19 @@ export function useHomothetyTool({
   dispatch,
   viewport,
   isActive = true,
+  animateTransformations = false,
 }: UseHomothetyToolOptions): ToolHookResult {
   const [phase, setPhase] = useState<HomothetyPhase>('set_center');
   const [center, setCenter] = useState<{ x: number; y: number } | null>(null);
   const [factor, setFactor] = useState<number | null>(null);
   const [snapResult, setSnapResult] = useState<SnapResult | null>(null);
+
+  const anim = useTransformAnimation({
+    viewport,
+    animate: animateTransformations,
+    points: state.points,
+    segments: state.segments,
+  });
 
   const tolerances = useMemo(
     () => scaleTolerances(DEFAULT_TOLERANCES, TOLERANCE_PROFILES[state.toleranceProfile]),
@@ -117,14 +128,21 @@ export function useHomothetyTool({
             .map((c) => c.id);
         }
 
-        dispatch({
-          type: 'SCALE_ELEMENTS',
-          pointIds,
-          segmentIds,
-          circleIds,
-          center,
-          factor,
-        });
+        const doDispatch = () =>
+          dispatch({
+            type: 'SCALE_ELEMENTS',
+            pointIds,
+            segmentIds,
+            circleIds,
+            center,
+            factor,
+          });
+
+        const animStarted = anim.startAnimation(
+          computeHomothetyAnimData(pointIds, segmentIds, state, center, factor),
+          doDispatch,
+        );
+        if (!animStarted) doDispatch();
 
         // Stay in select_figure for scaling more elements with same center + factor
       }
@@ -219,6 +237,21 @@ export function useHomothetyTool({
 
     return elements.length > 0 ? elements : null;
   }, [center, factor, phase, viewport]);
+
+  const mergedOverlay = useMemo(() => {
+    const base = overlayElements
+      ? Array.isArray(overlayElements)
+        ? overlayElements
+        : [overlayElements]
+      : [];
+    const animElems = anim.animationOverlay
+      ? Array.isArray(anim.animationOverlay)
+        ? anim.animationOverlay
+        : [anim.animationOverlay]
+      : [];
+    const all = [...base, ...animElems];
+    return all.length > 0 ? all : null;
+  }, [overlayElements, anim.animationOverlay]);
 
   // Floating factor input panel
   const toolPanel = useMemo(() => {
@@ -343,7 +376,7 @@ export function useHomothetyTool({
     isIdle: phase === 'set_center',
     statusMessage,
     snapResult,
-    overlayElements,
+    overlayElements: mergedOverlay,
     toolPanel,
   };
 }

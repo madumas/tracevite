@@ -25,6 +25,7 @@ interface UseActiveToolOptions {
   dispatch: (action: ConstructionAction) => void;
   viewport: ViewportState;
   shiftConstraintActive?: boolean;
+  animateTransformations?: boolean;
 }
 
 /**
@@ -36,6 +37,7 @@ export function useActiveTool({
   dispatch,
   viewport,
   shiftConstraintActive = false,
+  animateTransformations = false,
 }: UseActiveToolOptions): ToolHookResult {
   const active = state.activeTool;
   const segmentTool = useSegmentTool({
@@ -79,6 +81,7 @@ export function useActiveTool({
     dispatch,
     viewport,
     isActive: active === 'translation',
+    animateTransformations,
   });
   const compareTool = useCompareTool({
     state,
@@ -103,12 +106,14 @@ export function useActiveTool({
     dispatch,
     viewport,
     isActive: active === 'rotation',
+    animateTransformations,
   });
   const homothetyTool = useHomothetyTool({
     state,
     dispatch,
     viewport,
     isActive: active === 'homothety',
+    animateTransformations,
   });
 
   switch (state.activeTool) {

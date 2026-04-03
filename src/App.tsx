@@ -248,7 +248,13 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
   // Apply URL params once at mount (moved after slotManager — see below)
 
   // Tool router — returns unified ToolHookResult
-  const tool = useActiveTool({ state, dispatch, viewport, shiftConstraintActive });
+  const tool = useActiveTool({
+    state,
+    dispatch,
+    viewport,
+    shiftConstraintActive,
+    animateTransformations: preferences.animateTransformations,
+  });
 
   // Accommodation TDC : masquer décorations pendant gestes moteurs actifs (déficit double tâche)
   const gestureHideProperties = state.hideProperties || !!tool.isActiveGesture;

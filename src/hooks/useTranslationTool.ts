@@ -21,6 +21,8 @@ import { distance } from '@/engine/geometry';
 import { formatLength } from '@/engine/format';
 import { CSS_PX_PER_MM } from '@/engine/viewport';
 import { CANVAS_GUIDE } from '@/config/theme';
+import { useTransformAnimation } from './useTransformAnimation';
+import { computeTranslationAnimData } from '@/engine/transform-animation';
 
 type TranslationPhase = 'vector_start' | 'vector_end' | 'select_figure';
 
@@ -29,6 +31,7 @@ interface UseTranslationToolOptions {
   dispatch: (action: ConstructionAction) => void;
   viewport: ViewportState;
   isActive?: boolean;
+  animateTransformations?: boolean;
 }
 
 export function useTranslationTool({
@@ -36,12 +39,20 @@ export function useTranslationTool({
   dispatch,
   viewport,
   isActive = true,
+  animateTransformations = false,
 }: UseTranslationToolOptions): ToolHookResult {
   const [phase, setPhase] = useState<TranslationPhase>('vector_start');
   const [vectorStart, setVectorStart] = useState<{ x: number; y: number } | null>(null);
   const [vectorEnd, setVectorEnd] = useState<{ x: number; y: number } | null>(null);
   const [cursorMm, setCursorMm] = useState<{ x: number; y: number } | null>(null);
   const [snapResult, setSnapResult] = useState<SnapResult | null>(null);
+
+  const anim = useTransformAnimation({
+    viewport,
+    animate: animateTransformations,
+    points: state.points,
+    segments: state.segments,
+  });
 
   const tolerances = useMemo(
     () => scaleTolerances(DEFAULT_TOLERANCES, TOLERANCE_PROFILES[state.toleranceProfile]),
@@ -123,14 +134,21 @@ export function useTranslationTool({
         const offsetX = vectorEnd.x - vectorStart.x;
         const offsetY = vectorEnd.y - vectorStart.y;
 
-        dispatch({
-          type: 'REPRODUCE_ELEMENTS',
-          pointIds,
-          segmentIds,
-          circleIds,
-          offsetX,
-          offsetY,
-        });
+        const doDispatch = () =>
+          dispatch({
+            type: 'REPRODUCE_ELEMENTS',
+            pointIds,
+            segmentIds,
+            circleIds,
+            offsetX,
+            offsetY,
+          });
+
+        const animStarted = anim.startAnimation(
+          computeTranslationAnimData(pointIds, segmentIds, state, offsetX, offsetY),
+          doDispatch,
+        );
+        if (!animStarted) doDispatch();
 
         // Stay in select_figure to allow translating more elements with same vector
       }
@@ -290,6 +308,22 @@ export function useTranslationTool({
     return elements.length > 0 ? elements : null;
   }, [vectorStart, vectorEnd, phase, cursorMm, snapResult, viewport]);
 
+  // Merge animation overlay
+  const mergedOverlay = useMemo(() => {
+    const base = overlayElements
+      ? Array.isArray(overlayElements)
+        ? overlayElements
+        : [overlayElements]
+      : [];
+    const animElems = anim.animationOverlay
+      ? Array.isArray(anim.animationOverlay)
+        ? anim.animationOverlay
+        : [anim.animationOverlay]
+      : [];
+    const all = [...base, ...animElems];
+    return all.length > 0 ? all : null;
+  }, [overlayElements, anim.animationOverlay]);
+
   return {
     handleClick,
     handleCursorMove,
@@ -298,6 +332,6 @@ export function useTranslationTool({
     isIdle: phase === 'vector_start',
     statusMessage,
     snapResult,
-    overlayElements,
+    overlayElements: mergedOverlay,
   };
 }

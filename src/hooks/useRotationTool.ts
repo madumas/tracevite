@@ -19,7 +19,8 @@ import { findConnectedElements } from '@/engine/reproduce';
 import { detectAllFaces, classifyFigures } from '@/engine/figures';
 import { CSS_PX_PER_MM } from '@/engine/viewport';
 import { CANVAS_GUIDE } from '@/config/theme';
-// rotatePoint used for potential future visual preview enhancement
+import { useTransformAnimation } from './useTransformAnimation';
+import { computeRotationAnimData } from '@/engine/transform-animation';
 
 type RotationPhase = 'set_center' | 'set_angle' | 'select_figure';
 
@@ -28,6 +29,7 @@ interface UseRotationToolOptions {
   dispatch: (action: ConstructionAction) => void;
   viewport: ViewportState;
   isActive?: boolean;
+  animateTransformations?: boolean;
 }
 
 export function useRotationTool({
@@ -35,11 +37,19 @@ export function useRotationTool({
   dispatch,
   viewport,
   isActive = true,
+  animateTransformations = false,
 }: UseRotationToolOptions): ToolHookResult {
   const [phase, setPhase] = useState<RotationPhase>('set_center');
   const [center, setCenter] = useState<{ x: number; y: number } | null>(null);
   const [angleDeg, setAngleDeg] = useState<number | null>(null);
   const [snapResult, setSnapResult] = useState<SnapResult | null>(null);
+
+  const anim = useTransformAnimation({
+    viewport,
+    animate: animateTransformations,
+    points: state.points,
+    segments: state.segments,
+  });
 
   const tolerances = useMemo(
     () => scaleTolerances(DEFAULT_TOLERANCES, TOLERANCE_PROFILES[state.toleranceProfile]),
@@ -118,14 +128,21 @@ export function useRotationTool({
             .map((c) => c.id);
         }
 
-        dispatch({
-          type: 'ROTATE_ELEMENTS',
-          pointIds,
-          segmentIds,
-          circleIds,
-          center,
-          angleDeg,
-        });
+        const doDispatch = () =>
+          dispatch({
+            type: 'ROTATE_ELEMENTS',
+            pointIds,
+            segmentIds,
+            circleIds,
+            center,
+            angleDeg,
+          });
+
+        const animStarted = anim.startAnimation(
+          computeRotationAnimData(pointIds, segmentIds, state, center, angleDeg),
+          doDispatch,
+        );
+        if (!animStarted) doDispatch();
 
         // Stay in select_figure for rotating more elements with same center + angle
       }
@@ -270,6 +287,21 @@ export function useRotationTool({
     return elements.length > 0 ? elements : null;
   }, [center, angleDeg, phase, viewport]);
 
+  const mergedOverlay = useMemo(() => {
+    const base = overlayElements
+      ? Array.isArray(overlayElements)
+        ? overlayElements
+        : [overlayElements]
+      : [];
+    const animElems = anim.animationOverlay
+      ? Array.isArray(anim.animationOverlay)
+        ? anim.animationOverlay
+        : [anim.animationOverlay]
+      : [];
+    const all = [...base, ...animElems];
+    return all.length > 0 ? all : null;
+  }, [overlayElements, anim.animationOverlay]);
+
   // Floating angle input panel
   const toolPanel = useMemo(() => {
     if (phase !== 'set_angle' || !isActive) return undefined;
@@ -389,7 +421,7 @@ export function useRotationTool({
     isIdle: phase === 'set_center',
     statusMessage,
     snapResult,
-    overlayElements,
+    overlayElements: mergedOverlay,
     toolPanel,
   };
 }
