@@ -915,7 +915,7 @@ test('visual conformity — PFEQ pedagogical', async ({ page }, testInfo) => {
 
 // --- Separate test: PFEQ figures and tools ---
 test('visual conformity — PFEQ figures & tools', async ({ page }, testInfo) => {
-  test.setTimeout(120_000);
+  test.setTimeout(180_000);
   const dir = path.join(SCREENSHOT_BASE, projectDir(testInfo.project.name));
   await fs.mkdir(dir, { recursive: true });
   const shot = (name: string) => path.join(dir, name);
@@ -1422,6 +1422,129 @@ test('visual conformity — PFEQ figures & tools', async ({ page }, testInfo) =>
     await page.screenshot({ path: shot('89-pfeq-corde-cercle.png'), fullPage: true });
     await panel89.screenshot({ path: shot('89b-pfeq-corde-cercle-panel.png') });
   }
+
+  // ── 90: Focus mode active — dimmed non-adjacent elements ──
+  await freshComplet();
+  // Create 2 disconnected segments
+  await interact(30, 50);
+  await page.waitForTimeout(250);
+  await interact(70, 50);
+  await page.waitForTimeout(300);
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(200);
+  await interact(30, 100);
+  await page.waitForTimeout(250);
+  await interact(70, 100);
+  await page.waitForTimeout(300);
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(200);
+  // Enable focus mode in settings
+  const settingsBtn90 = page.locator('[data-testid="settings-button"]');
+  await settingsBtn90.click();
+  await page.waitForTimeout(300);
+  const focusToggle = page.locator('text=Mode focus').locator('..').locator('input[type="checkbox"]');
+  if (await focusToggle.isVisible({ timeout: 1000 }).catch(() => false)) {
+    await focusToggle.click({ force: true });
+    await page.waitForTimeout(200);
+  }
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(200);
+  // Select first segment (use move tool to select)
+  await page.locator('[data-testid="tool-move"]').click();
+  await interact(50, 50);
+  await page.waitForTimeout(500);
+  await page.screenshot({ path: shot('90-focus-mode-active.png'), fullPage: true });
+  // Disable focus mode
+  await settingsBtn90.click();
+  await page.waitForTimeout(300);
+  if (await focusToggle.isVisible({ timeout: 1000 }).catch(() => false)) {
+    await focusToggle.click({ force: true });
+  }
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(200);
+
+  // ── 91: Reinforced grid — before/after ──
+  await freshComplet();
+  await page.screenshot({ path: shot('91a-grid-normal.png'), fullPage: true });
+  const settingsBtn91 = page.locator('[data-testid="settings-button"]');
+  await settingsBtn91.click();
+  await page.waitForTimeout(300);
+  const gridToggle = page.locator('text=Grille renforcée').locator('..').locator('input[type="checkbox"]');
+  if (await gridToggle.isVisible({ timeout: 1000 }).catch(() => false)) {
+    await gridToggle.click({ force: true });
+    await page.waitForTimeout(200);
+  }
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(300);
+  await page.screenshot({ path: shot('91b-grid-reinforced.png'), fullPage: true });
+  // Disable
+  await settingsBtn91.click();
+  await page.waitForTimeout(300);
+  if (await gridToggle.isVisible({ timeout: 1000 }).catch(() => false)) {
+    await gridToggle.click({ force: true });
+  }
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(200);
+
+  // ── 92: Axes de symétrie as property — square with diagonal ──
+  await freshComplet();
+  // Create a square
+  await interact(50, 50);
+  await page.waitForTimeout(250);
+  await interact(90, 50);
+  await page.waitForTimeout(250);
+  await interact(90, 90);
+  await page.waitForTimeout(250);
+  await interact(50, 90);
+  await page.waitForTimeout(250);
+  await interact(50, 50);
+  await page.waitForTimeout(300);
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(200);
+  // Add diagonal (potential symmetry axis)
+  await interact(50, 50);
+  await page.waitForTimeout(250);
+  await interact(90, 90);
+  await page.waitForTimeout(300);
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(200);
+  const panel92 = page.locator('[data-testid="properties-panel"]');
+  if (await panel92.isVisible({ timeout: 2000 }).catch(() => false)) {
+    await page.screenshot({ path: shot('92-symmetry-axis-property.png'), fullPage: true });
+    await panel92.screenshot({ path: shot('92b-symmetry-axis-panel.png') });
+  }
+
+  // ── 93: Angle droit + hideProperties ──
+  await freshComplet();
+  // Create right angle
+  await interact(50, 50);
+  await page.waitForTimeout(250);
+  await interact(50, 90);
+  await page.waitForTimeout(250);
+  await interact(90, 90);
+  await page.waitForTimeout(300);
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(200);
+  await page.screenshot({ path: shot('93a-right-angle-visible.png'), fullPage: true });
+  // Enable hideProperties
+  const hideToggle = page.locator('[data-testid="hide-properties-toggle"]');
+  if (await hideToggle.isVisible({ timeout: 2000 }).catch(() => false)) {
+    await hideToggle.click({ force: true });
+    await page.waitForTimeout(300);
+    await page.screenshot({ path: shot('93b-right-angle-with-hide-properties.png'), fullPage: true });
+    // Disable hideProperties
+    await hideToggle.click({ force: true });
+    await page.waitForTimeout(200);
+  }
+
+  // ── 94: Settings dialog showing all new toggles ──
+  await freshComplet();
+  const settingsBtn94 = page.locator('[data-testid="settings-button"]');
+  await settingsBtn94.click();
+  await page.waitForTimeout(300);
+  await page.screenshot({ path: shot('94-settings-new-toggles.png'), fullPage: true });
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(200);
 });
 
 // --- Separate test: iPad landscape layout ---

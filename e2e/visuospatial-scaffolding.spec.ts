@@ -85,11 +85,33 @@ test.describe('Clutter threshold presets', () => {
     await page.locator('[data-testid="settings-button"]').click();
     await page.waitForTimeout(300);
 
-    // Find the select element near "surcharge" text
-    const dialog = page.locator('[data-testid="settings-dialog"], [role="dialog"], .settings-dialog').first();
-    const fallback = dialog.isVisible().catch(() => false) ? dialog : page;
-    const select = (await fallback).locator('select').filter({ has: page.locator('option', { hasText: "Peu d'éléments" }) });
-    const hasPresets = await select.isVisible({ timeout: 3000 }).catch(() => false);
-    expect(hasPresets || true).toBeTruthy(); // soft — settings dialog layout may vary
+    // Verify the select element with preset options exists in the page HTML
+    const html = await page.content();
+    expect(html).toContain("Peu d'éléments");
+    expect(html).toContain('Construction complexe');
+
+    await page.keyboard.press('Escape');
+  });
+
+  test('animate transformations toggle default off and can be activated', async ({ page }) => {
+    await page.locator('[data-testid="settings-button"]').click();
+    await page.waitForTimeout(300);
+
+    const toggle = page
+      .locator('text=Animer les transformations')
+      .locator('..')
+      .locator('input[type="checkbox"]');
+    await expect(toggle).toBeVisible({ timeout: 3000 });
+    await expect(toggle).not.toBeChecked();
+
+    // Activate
+    await toggle.click({ force: true });
+    await expect(toggle).toBeChecked();
+
+    // Deactivate
+    await toggle.click({ force: true });
+    await expect(toggle).not.toBeChecked();
+
+    await page.keyboard.press('Escape');
   });
 });
