@@ -100,7 +100,7 @@ export function AboutDialog({ onClose }: AboutDialogProps) {
         </div>
 
         <div style={{ fontSize: 11, color: UI_TEXT_SECONDARY, marginBottom: 16 }}>
-          Créé par un parent, pour son enfant — et tous ceux qui en ont besoin.
+          Créé par un parent, pour son enfant, et tous ceux qui en ont besoin.
         </div>
 
         <button
