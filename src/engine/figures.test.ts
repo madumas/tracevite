@@ -296,7 +296,7 @@ describe('polygon classification', () => {
 
     const faces = detectAllFaces(state);
     const figures = classifyFigures(faces, state, 'complet');
-    const pentagon = figures.find((f) => f.name.includes('5 côtés'));
+    const pentagon = figures.find((f) => f.name.includes('Pentagone régulier'));
     expect(pentagon).toBeDefined();
   });
 });
@@ -366,5 +366,127 @@ describe('triangle height (complet mode)', () => {
     const triangle = figures.find((f) => f.name.includes('Triangle'));
     expect(triangle).toBeDefined();
     expect(triangle!.height).toBeUndefined();
+  });
+});
+
+describe('convexity detection', () => {
+  it('square is convex', () => {
+    let state = createInitialState();
+    const a = addPoint(state, 0, 0);
+    state = a.state;
+    const b = addPoint(state, 50, 0);
+    state = b.state;
+    const c = addPoint(state, 50, 50);
+    state = c.state;
+    const d = addPoint(state, 0, 50);
+    state = d.state;
+    state = addSegment(state, a.pointId, b.pointId)!.state;
+    state = addSegment(state, b.pointId, c.pointId)!.state;
+    state = addSegment(state, c.pointId, d.pointId)!.state;
+    state = addSegment(state, d.pointId, a.pointId)!.state;
+
+    const faces = detectAllFaces(state);
+    const figures = classifyFigures(faces, state, 'complet');
+    const square = figures.find((f) => f.name.includes('Carré'));
+    expect(square).toBeDefined();
+    expect(square!.convex).toBe(true);
+  });
+
+  it('L-shaped quadrilateral is non-convex', () => {
+    let state = createInitialState();
+    // Create a concave quadrilateral (arrow/chevron shape)
+    const a = addPoint(state, 0, 0);
+    state = a.state;
+    const b = addPoint(state, 50, 25);
+    state = b.state;
+    const c = addPoint(state, 0, 50);
+    state = c.state;
+    const d = addPoint(state, 20, 25);
+    state = d.state;
+    state = addSegment(state, a.pointId, b.pointId)!.state;
+    state = addSegment(state, b.pointId, c.pointId)!.state;
+    state = addSegment(state, c.pointId, d.pointId)!.state;
+    state = addSegment(state, d.pointId, a.pointId)!.state;
+
+    const faces = detectAllFaces(state);
+    const figures = classifyFigures(faces, state, 'complet');
+    const quad = figures.find((f) => f.pointIds.length === 4);
+    expect(quad).toBeDefined();
+    expect(quad!.convex).toBe(false);
+  });
+
+  it('triangle is always convex', () => {
+    let state = createInitialState();
+    const a = addPoint(state, 0, 0);
+    state = a.state;
+    const b = addPoint(state, 60, 0);
+    state = b.state;
+    const c = addPoint(state, 30, 40);
+    state = c.state;
+    state = addSegment(state, a.pointId, b.pointId)!.state;
+    state = addSegment(state, b.pointId, c.pointId)!.state;
+    state = addSegment(state, c.pointId, a.pointId)!.state;
+
+    const faces = detectAllFaces(state);
+    const figures = classifyFigures(faces, state, 'complet');
+    const tri = figures.find((f) => f.name.includes('Triangle'));
+    expect(tri).toBeDefined();
+    expect(tri!.convex).toBe(true);
+  });
+});
+
+describe('regular polygon classification', () => {
+  it('irregular pentagon stays as "Polygone à 5 côtés" in complet mode', () => {
+    let state = createInitialState();
+    const coords = [
+      { x: 0, y: 0 },
+      { x: 60, y: 0 },
+      { x: 80, y: 40 },
+      { x: 40, y: 70 },
+      { x: -10, y: 30 },
+    ];
+    const ids: string[] = [];
+    for (const c of coords) {
+      const r = addPoint(state, c.x, c.y);
+      state = r.state;
+      ids.push(r.pointId);
+    }
+    for (let i = 0; i < 5; i++) {
+      state = addSegment(state, ids[i]!, ids[(i + 1) % 5]!)!.state;
+    }
+
+    const faces = detectAllFaces(state);
+    const figures = classifyFigures(faces, state, 'complet');
+    const pentagon = figures.find((f) => f.pointIds.length === 5);
+    expect(pentagon).toBeDefined();
+    expect(pentagon!.name).toContain('5 côtés');
+    expect(pentagon!.name).not.toContain('régulier');
+  });
+
+  it('regular pentagon in simplifie mode is generic', () => {
+    let state = createInitialState();
+    const coords = [
+      { x: 50, y: 0 },
+      { x: 97.6, y: 34.5 },
+      { x: 79.4, y: 90.5 },
+      { x: 20.6, y: 90.5 },
+      { x: 2.4, y: 34.5 },
+    ];
+    const ids: string[] = [];
+    for (const c of coords) {
+      const r = addPoint(state, c.x, c.y);
+      state = r.state;
+      ids.push(r.pointId);
+    }
+    for (let i = 0; i < 5; i++) {
+      state = addSegment(state, ids[i]!, ids[(i + 1) % 5]!)!.state;
+    }
+
+    const faces = detectAllFaces(state);
+    const figures = classifyFigures(faces, state, 'simplifie');
+    const pentagon = figures.find((f) => f.pointIds.length === 5);
+    expect(pentagon).toBeDefined();
+    expect(pentagon!.name).toContain('5 côtés');
+    expect(pentagon!.name).not.toContain('régulier');
   });
 });

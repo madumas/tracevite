@@ -18,7 +18,7 @@ export const STATUS_MOVE_PICKED = (label: string) =>
   `Déplacer — Clique pour déposer le point ${label}.`;
 
 export const STATUS_REFLECTION_AXIS =
-  "Réflexion — Clique deux points pour tracer l'axe de symétrie";
+  "Réflexion — Clique deux points pour tracer l'axe de réflexion";
 export const STATUS_REFLECTION_SELECT = 'Réflexion — Clique sur une figure pour la refléter';
 
 export const STATUS_POINT_IDLE = 'Point — Clique pour placer un point';

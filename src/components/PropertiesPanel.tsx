@@ -351,26 +351,39 @@ export const PropertiesPanel = memo(function PropertiesPanel({
 
         {!hideProperties && (
           <>
-            {properties.map((prop, i) => (
-              <div key={i} style={{ padding: '2px 0', color: UI_TEXT_PRIMARY }}>
-                <span
-                  style={{
-                    display: 'inline-block',
-                    padding: '1px 6px',
-                    borderRadius: 4,
-                    background: '#E8F5E9',
-                    fontSize: 11,
-                  }}
-                >
-                  {prop.label}
-                </span>
-              </div>
-            ))}
+            {properties
+              .filter(
+                (prop) =>
+                  displayMode === 'complet' ||
+                  (prop.type !== 'chord' && prop.type !== 'symmetry_axis'),
+              )
+              .map((prop, i) => (
+                <div key={i} style={{ padding: '2px 0', color: UI_TEXT_PRIMARY }}>
+                  <span
+                    style={{
+                      display: 'inline-block',
+                      padding: '1px 6px',
+                      borderRadius: 4,
+                      background: '#E8F5E9',
+                      fontSize: 11,
+                    }}
+                  >
+                    {prop.label}
+                  </span>
+                </div>
+              ))}
             {figures
               .filter((f) => !f.minor)
               .map((fig) => (
                 <div key={fig.id} style={{ padding: '2px 0' }}>
-                  <div style={{ color: UI_PRIMARY, fontWeight: 600 }}>{fig.name}</div>
+                  <div style={{ color: UI_PRIMARY, fontWeight: 600 }}>
+                    {fig.name}
+                    {!fig.convex && fig.pointIds.length >= 4 && (
+                      <span style={{ fontWeight: 400, color: UI_TEXT_SECONDARY, marginLeft: 6 }}>
+                        (non convexe)
+                      </span>
+                    )}
+                  </div>
                 </div>
               ))}
             {(() => {
@@ -384,7 +397,12 @@ export const PropertiesPanel = memo(function PropertiesPanel({
                   </summary>
                   {minorFigures.map((fig) => (
                     <div key={fig.id} style={{ padding: '2px 0' }}>
-                      <div style={{ color: UI_TEXT_SECONDARY }}>{fig.name}</div>
+                      <div style={{ color: UI_TEXT_SECONDARY }}>
+                        {fig.name}
+                        {!fig.convex && fig.pointIds.length >= 4 && (
+                          <span style={{ marginLeft: 6 }}>(non convexe)</span>
+                        )}
+                      </div>
                     </div>
                   ))}
                 </details>

@@ -144,6 +144,66 @@ export function TranslationIcon() {
   );
 }
 
+/** Homothety: small shape + larger dashed outline */
+export function HomothetyIcon() {
+  return (
+    <svg {...S}>
+      <rect x="7" y="7" width="6" height="6" stroke={stroke} strokeWidth="1.5" fill="none" />
+      <rect
+        x="3"
+        y="3"
+        width="14"
+        height="14"
+        stroke={stroke}
+        strokeWidth="1.2"
+        strokeDasharray="2 2"
+        fill="none"
+        opacity="0.5"
+      />
+      <circle cx="10" cy="10" r="1" fill={stroke} />
+    </svg>
+  );
+}
+
+/** Rotation: circular arrow around center point */
+export function RotationIcon() {
+  return (
+    <svg {...S}>
+      <circle cx="10" cy="10" r="2" fill={stroke} />
+      <path
+        d="M10 3a7 7 0 0 1 6.06 3.5"
+        stroke={stroke}
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        fill="none"
+      />
+      <path
+        d="M14.5 3.5l1.56 3-3 1"
+        stroke={stroke}
+        strokeWidth="1.3"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        fill="none"
+      />
+      <path
+        d="M10 17a7 7 0 0 1-6.06-3.5"
+        stroke={stroke}
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        fill="none"
+      />
+      <path
+        d="M5.5 16.5l-1.56-3 3-1"
+        stroke={stroke}
+        strokeWidth="1.3"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        fill="none"
+      />
+    </svg>
+  );
+}
+
 /** Symmetry: vertical dashed axis with mirrored dots */
 export function SymmetryIcon() {
   return (

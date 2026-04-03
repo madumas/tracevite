@@ -1279,6 +1279,149 @@ test('visual conformity — PFEQ figures & tools', async ({ page }, testInfo) =>
   await page.screenshot({ path: shot('79-pfeq-symetrie.png'), fullPage: true });
   await page.keyboard.press('Escape');
   await page.waitForTimeout(200);
+
+  // ── 84: Rotation tool (center + angle panel + result) ──
+  await freshComplet();
+  // Create a triangle
+  await interact(40, 50);
+  await page.waitForTimeout(250);
+  await interact(80, 50);
+  await page.waitForTimeout(250);
+  await interact(60, 80);
+  await page.waitForTimeout(250);
+  await interact(40, 50);
+  await page.waitForTimeout(300);
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(200);
+  // Activate rotation tool
+  await page.locator('[data-testid="tool-rotation"]').click();
+  await page.waitForTimeout(300);
+  await page.screenshot({ path: shot('84a-pfeq-rotation-idle.png'), fullPage: true });
+  // Place center of rotation
+  await interact(40, 50);
+  await page.waitForTimeout(500);
+  await page.screenshot({ path: shot('84b-pfeq-rotation-angle-panel.png'), fullPage: true });
+  // Click 90° preset button
+  const btn90 = page.locator('button', { hasText: '90°' });
+  if (await btn90.isVisible({ timeout: 2000 }).catch(() => false)) {
+    await btn90.click();
+    await page.waitForTimeout(300);
+    // Click on the triangle to rotate it
+    await interact(60, 65);
+    await page.waitForTimeout(500);
+    await page.screenshot({ path: shot('84c-pfeq-rotation-result.png'), fullPage: true });
+  }
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(200);
+
+  // ── 85: Homothety tool (center + factor panel + result) ──
+  await freshComplet();
+  // Create a triangle
+  await interact(40, 50);
+  await page.waitForTimeout(250);
+  await interact(70, 50);
+  await page.waitForTimeout(250);
+  await interact(55, 75);
+  await page.waitForTimeout(250);
+  await interact(40, 50);
+  await page.waitForTimeout(300);
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(200);
+  // Activate homothety tool
+  await page.locator('[data-testid="tool-homothety"]').click();
+  await page.waitForTimeout(300);
+  await page.screenshot({ path: shot('85a-pfeq-homothetie-idle.png'), fullPage: true });
+  // Place center
+  await interact(40, 50);
+  await page.waitForTimeout(500);
+  await page.screenshot({ path: shot('85b-pfeq-homothetie-factor-panel.png'), fullPage: true });
+  // Click ×2 preset button
+  const btn2 = page.locator('button', { hasText: '×2' });
+  if (await btn2.isVisible({ timeout: 2000 }).catch(() => false)) {
+    await btn2.click();
+    await page.waitForTimeout(300);
+    // Click on the triangle to scale it
+    await interact(55, 62);
+    await page.waitForTimeout(500);
+    await page.screenshot({ path: shot('85c-pfeq-homothetie-result.png'), fullPage: true });
+  }
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(200);
+
+  // ── 86: Toolbar in Complet mode (showing Rotation + Agrandir buttons) ──
+  await freshComplet();
+  await page.locator('[data-testid="toolbar"]').screenshot({ path: shot('86-toolbar-complet-new-tools.png') });
+
+  // ── 87: Non-convex polygon (with label in properties panel) ──
+  await freshComplet();
+  // Create a concave quadrilateral (arrow shape)
+  await interact(40, 50);
+  await page.waitForTimeout(250);
+  await interact(100, 70);
+  await page.waitForTimeout(250);
+  await interact(40, 90);
+  await page.waitForTimeout(250);
+  await interact(70, 70);
+  await page.waitForTimeout(250);
+  await interact(40, 50);
+  await page.waitForTimeout(300);
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(200);
+  // Open properties panel
+  const panel87 = page.locator('[data-testid="properties-panel"]');
+  if (await panel87.isVisible({ timeout: 2000 }).catch(() => false)) {
+    await page.screenshot({ path: shot('87-pfeq-non-convexe.png'), fullPage: true });
+    await panel87.screenshot({ path: shot('87b-pfeq-non-convexe-panel.png') });
+  }
+
+  // ── 88: Regular pentagon (Pentagone régulier in Complet mode) ──
+  await freshComplet();
+  // Approximate regular pentagon
+  await interact(80, 40);
+  await page.waitForTimeout(250);
+  await interact(99, 54);
+  await page.waitForTimeout(250);
+  await interact(92, 76);
+  await page.waitForTimeout(250);
+  await interact(68, 76);
+  await page.waitForTimeout(250);
+  await interact(61, 54);
+  await page.waitForTimeout(250);
+  await interact(80, 40);
+  await page.waitForTimeout(300);
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(200);
+  const panel88 = page.locator('[data-testid="properties-panel"]');
+  if (await panel88.isVisible({ timeout: 2000 }).catch(() => false)) {
+    await page.screenshot({ path: shot('88-pfeq-pentagone-regulier.png'), fullPage: true });
+    await panel88.screenshot({ path: shot('88b-pfeq-pentagone-regulier-panel.png') });
+  }
+
+  // ── 89: Chord detection (segment on circle circumference) ──
+  await freshComplet();
+  await page.locator('[data-testid="tool-circle"]').click();
+  await page.waitForTimeout(200);
+  // Create circle: center at (80, 70), click edge at (110, 70) → radius ~30mm
+  await interact(80, 70);
+  await page.waitForTimeout(300);
+  await interact(110, 70);
+  await page.waitForTimeout(500);
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(200);
+  // Switch to segment tool and draw a chord
+  await page.locator('[data-testid="tool-segment"]').click();
+  await page.waitForTimeout(200);
+  await interact(80, 40);
+  await page.waitForTimeout(250);
+  await interact(80, 100);
+  await page.waitForTimeout(300);
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(200);
+  const panel89 = page.locator('[data-testid="properties-panel"]');
+  if (await panel89.isVisible({ timeout: 2000 }).catch(() => false)) {
+    await page.screenshot({ path: shot('89-pfeq-corde-cercle.png'), fullPage: true });
+    await panel89.screenshot({ path: shot('89b-pfeq-corde-cercle-panel.png') });
+  }
 });
 
 // --- Separate test: iPad landscape layout ---

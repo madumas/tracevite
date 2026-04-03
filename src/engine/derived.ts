@@ -5,7 +5,7 @@
 
 import type { ConstructionState, AngleInfo, DetectedProperty, DisplayMode } from '@/model/types';
 import { detectAllAngles } from './angles';
-import { detectAllProperties } from './properties';
+import { detectAllProperties, detectSymmetryAxes } from './properties';
 import { detectAllFaces, classifyFigures, type Figure } from './figures';
 
 export interface DerivedState {
@@ -20,9 +20,11 @@ export interface DerivedState {
  */
 export function computeDerived(state: ConstructionState, displayMode: DisplayMode): DerivedState {
   const angles = detectAllAngles(state);
-  const properties = detectAllProperties(state.segments, state.points);
+  const properties = detectAllProperties(state.segments, state.points, state.circles);
   const faces = detectAllFaces(state);
   const figures = classifyFigures(faces, state, displayMode);
 
-  return { angles, properties, figures };
+  const symmetryAxes = detectSymmetryAxes(state.segments, state.points, figures, state);
+
+  return { angles, properties: [...properties, ...symmetryAxes], figures };
 }

@@ -3,8 +3,10 @@
  * Pure functions — all tolerances from spec.
  */
 
-import type { Point, Segment, DetectedProperty } from '@/model/types';
-import { segmentAngle } from './geometry';
+import type { Point, Segment, Circle, DetectedProperty, ConstructionState } from '@/model/types';
+import { segmentAngle, distance } from './geometry';
+import { checkSymmetry } from './reflection';
+import type { Figure } from './figures';
 
 const PARALLEL_TOLERANCE_DEG = 0.5;
 const PERPENDICULAR_TOLERANCE_DEG = 0.5; // [89.5, 90.5]
@@ -208,15 +210,90 @@ export function groupParallelProperties(
   return [...grouped, ...other];
 }
 
+/** Detect segments that are chords of a circle (both endpoints on circumference). */
+function detectChords(
+  segments: readonly Segment[],
+  points: readonly Point[],
+  circles: readonly Circle[],
+): DetectedProperty[] {
+  if (circles.length === 0) return [];
+  const pointMap = new Map(points.map((p) => [p.id, p]));
+  const results: DetectedProperty[] = [];
+
+  for (const seg of segments) {
+    const startPt = pointMap.get(seg.startPointId);
+    const endPt = pointMap.get(seg.endPointId);
+    if (!startPt || !endPt) continue;
+
+    for (const circle of circles) {
+      // Skip if either endpoint is the center
+      if (seg.startPointId === circle.centerPointId || seg.endPointId === circle.centerPointId)
+        continue;
+
+      const center = pointMap.get(circle.centerPointId);
+      if (!center) continue;
+
+      const distStart = Math.abs(distance(startPt, center) - circle.radiusMm);
+      const distEnd = Math.abs(distance(endPt, center) - circle.radiusMm);
+
+      if (distStart <= EQUAL_LENGTH_TOLERANCE_MM && distEnd <= EQUAL_LENGTH_TOLERANCE_MM) {
+        results.push({
+          type: 'chord',
+          involvedIds: [seg.id, circle.id],
+          label: `${startPt.label}${endPt.label} : corde du cercle centré en ${center.label}`,
+        });
+      }
+    }
+  }
+  return results;
+}
+
+/** Detect segments that are axes of symmetry of closed figures. */
+export function detectSymmetryAxes(
+  segments: readonly Segment[],
+  points: readonly Point[],
+  figures: readonly Figure[],
+  state: ConstructionState,
+): DetectedProperty[] {
+  // Performance guard: skip if too many combinations
+  const eligibleFigures = figures.filter(
+    (f) => f.pointIds.length >= 3 && f.pointIds.length <= 6 && !f.selfIntersecting,
+  );
+  if (segments.length * eligibleFigures.length > 200) return [];
+
+  const pointMap = new Map(points.map((p) => [p.id, p]));
+  const results: DetectedProperty[] = [];
+
+  for (const fig of eligibleFigures) {
+    for (const seg of segments) {
+      const startPt = pointMap.get(seg.startPointId);
+      const endPt = pointMap.get(seg.endPointId);
+      if (!startPt || !endPt) continue;
+
+      const result = checkSymmetry(fig.pointIds, state, startPt, endPt);
+      if (result.isSymmetric) {
+        results.push({
+          type: 'symmetry_axis',
+          involvedIds: [seg.id, fig.id],
+          label: `Axe de symétrie du ${fig.name.charAt(0).toLowerCase() + fig.name.slice(1)}`,
+        });
+      }
+    }
+  }
+  return results;
+}
+
 /** Detect all properties in the construction. */
 export function detectAllProperties(
   segments: readonly Segment[],
   points: readonly Point[],
+  circles?: readonly Circle[],
 ): DetectedProperty[] {
   const raw = [
     ...detectParallelSegments(segments, points),
     ...detectPerpendicularSegments(segments, points),
     ...detectEqualLengths(segments, points),
+    ...(circles ? detectChords(segments, points, circles) : []),
   ];
   return groupParallelProperties(raw, segments, points);
 }

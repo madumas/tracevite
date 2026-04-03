@@ -10,7 +10,12 @@ export type ToolName =
   | 'perpendicular'
   | 'parallel'
   | 'translation'
-  | 'measure';
+  | 'measure'
+  | 'rotation'
+  | 'homothety'
+  | 'symmetry'
+  | 'compare'
+  | 'frieze';
 
 export type ActionName = 'undo' | 'redo' | 'delete' | 'print' | 'new';
 

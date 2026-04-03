@@ -4,8 +4,11 @@ import {
   detectEqualLengths,
   detectAllProperties,
   groupParallelProperties,
+  detectSymmetryAxes,
 } from './properties';
-import type { DetectedProperty, Point, Segment } from '@/model/types';
+import type { DetectedProperty, Point, Segment, Circle } from '@/model/types';
+import type { Figure } from './figures';
+import { createInitialState, addPoint, addSegment } from '@/model/state';
 
 function makePoints(...coords: Array<[number, number]>): Point[] {
   return coords.map(([x, y], i) => ({
@@ -223,5 +226,115 @@ describe('groupParallelProperties', () => {
     const result = groupParallelProperties(props, gSegments, gPoints);
     const nonParallel = result.filter((p) => p.type !== 'parallel');
     expect(nonParallel).toEqual([perp, eqLen]);
+  });
+});
+
+describe('detectAllProperties with chords', () => {
+  it('detects a chord when segment endpoints lie on circle circumference', () => {
+    // Circle centered at (50, 50) with radius 30
+    const points = makePoints([50, 50], [80, 50], [20, 50]);
+    // Point 0 = center, Point 1 and 2 are on circumference
+    const circles: Circle[] = [{ id: 'c1', centerPointId: 'p0', radiusMm: 30 }];
+    // Segment from point 1 to point 2 (both on circumference, neither is center)
+    const segments = [makeSeg('s1', 1, 2, points)];
+
+    const result = detectAllProperties(segments, points, circles);
+    const chords = result.filter((p) => p.type === 'chord');
+    expect(chords).toHaveLength(1);
+    expect(chords[0]!.label).toContain('corde');
+    expect(chords[0]!.label).toContain('A'); // center label
+  });
+
+  it('does not detect chord when one endpoint is the center', () => {
+    const points = makePoints([50, 50], [80, 50]);
+    const circles: Circle[] = [{ id: 'c1', centerPointId: 'p0', radiusMm: 30 }];
+    // Segment from center to circumference — NOT a chord
+    const segments = [makeSeg('s1', 0, 1, points)];
+
+    const result = detectAllProperties(segments, points, circles);
+    const chords = result.filter((p) => p.type === 'chord');
+    expect(chords).toHaveLength(0);
+  });
+
+  it('does not detect chord when only one endpoint is on circumference', () => {
+    const points = makePoints([50, 50], [80, 50], [90, 50]);
+    const circles: Circle[] = [{ id: 'c1', centerPointId: 'p0', radiusMm: 30 }];
+    // Point 1 is on circumference (dist=30), point 2 is NOT (dist=40)
+    const segments = [makeSeg('s1', 1, 2, points)];
+
+    const result = detectAllProperties(segments, points, circles);
+    const chords = result.filter((p) => p.type === 'chord');
+    expect(chords).toHaveLength(0);
+  });
+});
+
+describe('detectSymmetryAxes', () => {
+  it('detects symmetry axis of a square', () => {
+    // Build a square ABCD and a diagonal segment
+    let state = createInitialState();
+    const pA = addPoint(state, 0, 0);
+    state = pA.state;
+    const pB = addPoint(state, 50, 0);
+    state = pB.state;
+    const pC = addPoint(state, 50, 50);
+    state = pC.state;
+    const pD = addPoint(state, 0, 50);
+    state = pD.state;
+    state = addSegment(state, pA.pointId, pB.pointId)!.state;
+    state = addSegment(state, pB.pointId, pC.pointId)!.state;
+    state = addSegment(state, pC.pointId, pD.pointId)!.state;
+    state = addSegment(state, pD.pointId, pA.pointId)!.state;
+    // Diagonal AC
+    state = addSegment(state, pA.pointId, pC.pointId)!.state;
+
+    const figures: Figure[] = [
+      {
+        id: 'figure-0',
+        pointIds: [pA.pointId, pB.pointId, pC.pointId, pD.pointId],
+        segmentIds: state.segments.slice(0, 4).map((s) => s.id),
+        name: 'Carré ABCD',
+        selfIntersecting: false,
+        convex: true,
+      },
+    ];
+
+    const result = detectSymmetryAxes(state.segments, state.points, figures, state);
+    const axisProps = result.filter((p) => p.type === 'symmetry_axis');
+    // The diagonal AC should be detected as a symmetry axis
+    expect(axisProps.length).toBeGreaterThanOrEqual(1);
+    expect(axisProps.some((p) => p.label.includes('carré ABCD'))).toBe(true);
+  });
+
+  it('does not detect axis for scalene triangle', () => {
+    let state = createInitialState();
+    const pA = addPoint(state, 0, 0);
+    state = pA.state;
+    const pB = addPoint(state, 70, 0);
+    state = pB.state;
+    const pC = addPoint(state, 20, 40);
+    state = pC.state;
+    state = addSegment(state, pA.pointId, pB.pointId)!.state;
+    state = addSegment(state, pB.pointId, pC.pointId)!.state;
+    state = addSegment(state, pC.pointId, pA.pointId)!.state;
+    // Add an arbitrary segment through the triangle
+    const pD = addPoint(state, 35, -10);
+    state = pD.state;
+    const pE = addPoint(state, 35, 50);
+    state = pE.state;
+    state = addSegment(state, pD.pointId, pE.pointId)!.state;
+
+    const figures: Figure[] = [
+      {
+        id: 'figure-0',
+        pointIds: [pA.pointId, pB.pointId, pC.pointId],
+        segmentIds: state.segments.slice(0, 3).map((s) => s.id),
+        name: 'Triangle scalène ABC',
+        selfIntersecting: false,
+        convex: true,
+      },
+    ];
+
+    const result = detectSymmetryAxes(state.segments, state.points, figures, state);
+    expect(result).toHaveLength(0);
   });
 });

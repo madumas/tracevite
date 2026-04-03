@@ -1,5 +1,4 @@
 import { render, screen } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
 import { App } from './App';
 
 describe('App', () => {
@@ -50,10 +49,10 @@ describe('App', () => {
     expect(screen.getByTestId('settings-button')).toBeInTheDocument();
   });
 
-  it('shows new construction confirmation dialog on button click', async () => {
-    const user = userEvent.setup();
+  it('renders segment tool as active by default', () => {
     render(<App />);
-    await user.click(screen.getByTestId('action-new'));
-    expect(screen.getByTestId('confirm-dialog')).toBeInTheDocument();
+    const segmentBtn = screen.getByTestId('tool-segment');
+    expect(segmentBtn).toBeInTheDocument();
+    expect(segmentBtn.getAttribute('aria-pressed')).toBe('true');
   });
 });

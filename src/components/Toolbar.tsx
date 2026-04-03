@@ -13,6 +13,8 @@ import {
   PerpendicularIcon,
   ParallelIcon,
   TranslationIcon,
+  RotationIcon,
+  HomothetyIcon,
   CompareIcon,
   FriezeIcon,
   SymmetryIcon,
@@ -268,6 +270,30 @@ export const Toolbar = memo(function Toolbar({
             data-testid="tool-translation"
           >
             <TranslationIcon /> <span className="tool-label">Translation</span>
+          </button>
+        )}
+        {/* Rotation — complet only (3e cycle) */}
+        {!isSimple && (
+          <button
+            ref={refIfActive('rotation')}
+            onClick={() => onToolChange('rotation')}
+            style={{ ...toolBtnBase, ...(activeTool === 'rotation' ? activeStyle : {}) }}
+            aria-pressed={activeTool === 'rotation'}
+            data-testid="tool-rotation"
+          >
+            <RotationIcon /> <span className="tool-label">Rotation</span>
+          </button>
+        )}
+        {/* Homothety — complet only (3e cycle) */}
+        {!isSimple && (
+          <button
+            ref={refIfActive('homothety')}
+            onClick={() => onToolChange('homothety')}
+            style={{ ...toolBtnBase, ...(activeTool === 'homothety' ? activeStyle : {}) }}
+            aria-pressed={activeTool === 'homothety'}
+            data-testid="tool-homothety"
+          >
+            <HomothetyIcon /> <span className="tool-label">Agrandir</span>
           </button>
         )}
 

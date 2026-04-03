@@ -41,7 +41,14 @@ export interface AngleInfo {
 }
 
 /** Type of detected geometric property. */
-export type PropertyType = 'parallel' | 'perpendicular' | 'equal_length' | 'right_angle' | 'figure';
+export type PropertyType =
+  | 'parallel'
+  | 'perpendicular'
+  | 'equal_length'
+  | 'right_angle'
+  | 'figure'
+  | 'chord'
+  | 'symmetry_axis';
 
 /** Detected geometric property (computed, not serialized). */
 export interface DetectedProperty {
@@ -69,7 +76,9 @@ export type ToolType =
   | 'translation'
   | 'compare'
   | 'frieze'
-  | 'symmetry';
+  | 'symmetry'
+  | 'rotation'
+  | 'homothety';
 
 /** Selectable grid sizes in mm. */
 export type GridSize = 5 | 10 | 20;

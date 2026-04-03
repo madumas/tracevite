@@ -69,6 +69,8 @@ const COMPOUND_TOOLS: readonly ToolType[] = [
   'compare',
   'frieze',
   'symmetry',
+  'rotation',
+  'homothety',
 ];
 
 const TOOL_SHORTCUT_MAP: Record<string, ToolType> = {
@@ -92,6 +94,8 @@ const TOOL_DISPLAY_NAMES: Record<ToolType, string> = {
   compare: 'Comparer',
   frieze: 'Frise',
   symmetry: 'Symétrie',
+  rotation: 'Rotation',
+  homothety: 'Agrandir/Réduire',
 };
 
 import type { SlotRegistry } from '@/model/slots';
@@ -134,6 +138,8 @@ function getCanvasCursor(
     case 'compare':
     case 'frieze':
     case 'symmetry':
+    case 'rotation':
+    case 'homothety':
       return 'crosshair';
     case 'move':
       return isActiveGesture ? 'grabbing' : 'grab';

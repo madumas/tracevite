@@ -65,6 +65,7 @@ export function useCompareTool({
           segmentIds: [],
           name: 'Cercle',
           selfIntersecting: false,
+          convex: true,
         };
       }
 
@@ -89,6 +90,7 @@ export function useCompareTool({
             segmentIds: [segId],
             name: 'Segment',
             selfIntersecting: false,
+            convex: true,
           };
         }
       }

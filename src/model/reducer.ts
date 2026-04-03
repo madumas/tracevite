@@ -19,6 +19,8 @@ import * as Undo from './undo';
 import { reflectConstruction } from '@/engine/reflection';
 import { generateId } from './id';
 import { reproduceElements, reproduceFrieze } from '@/engine/reproduce';
+import { rotateConstruction } from '@/engine/rotation';
+import { scaleConstruction } from '@/engine/homothety';
 import { pointOnSegmentProjection, segmentIntersection } from '@/engine/geometry';
 import { MIN_POINT_DISTANCE_MM } from '@/config/accessibility';
 
@@ -64,6 +66,22 @@ export type ConstructionAction =
       count1: number;
       vector2?: { dx: number; dy: number };
       count2?: number;
+    }
+  | {
+      type: 'ROTATE_ELEMENTS';
+      pointIds: readonly string[];
+      segmentIds: readonly string[];
+      circleIds: readonly string[];
+      center: { x: number; y: number };
+      angleDeg: number;
+    }
+  | {
+      type: 'SCALE_ELEMENTS';
+      pointIds: readonly string[];
+      segmentIds: readonly string[];
+      circleIds: readonly string[];
+      center: { x: number; y: number };
+      factor: number;
     }
   | { type: 'SET_GRID_SIZE'; gridSizeMm: GridSize }
   | { type: 'SET_DISPLAY_MODE'; displayMode: DisplayMode }
@@ -307,6 +325,42 @@ export function reduce(state: ReducerState, action: ConstructionAction): Reducer
         current,
         action.offsetX,
         action.offsetY,
+      );
+      const newState: typeof current = {
+        ...current,
+        points: [...current.points, ...result.points],
+        segments: [...current.segments, ...result.segments],
+        circles: [...current.circles, ...result.circles],
+      };
+      return { undoManager: Undo.pushState(undoManager, newState) };
+    }
+
+    case 'ROTATE_ELEMENTS': {
+      const result = rotateConstruction(
+        action.pointIds,
+        action.segmentIds,
+        action.circleIds,
+        current,
+        action.center,
+        action.angleDeg,
+      );
+      const newState: typeof current = {
+        ...current,
+        points: [...current.points, ...result.points],
+        segments: [...current.segments, ...result.segments],
+        circles: [...current.circles, ...result.circles],
+      };
+      return { undoManager: Undo.pushState(undoManager, newState) };
+    }
+
+    case 'SCALE_ELEMENTS': {
+      const result = scaleConstruction(
+        action.pointIds,
+        action.segmentIds,
+        action.circleIds,
+        current,
+        action.center,
+        action.factor,
       );
       const newState: typeof current = {
         ...current,

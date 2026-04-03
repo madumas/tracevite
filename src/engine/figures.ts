@@ -27,6 +27,8 @@ export interface Figure {
   readonly height?: FigureHeight;
   /** True for generic polygons (>= 5 sides) with no pedagogical value at primary level. */
   readonly minor?: boolean;
+  /** True if all interior angles ≤ 180° (convex polygon). */
+  readonly convex: boolean;
 }
 
 // ── Adjacency graph ──────────────────────────────────────
@@ -210,7 +212,7 @@ export function classifyFigures(
       const facePoints = face.map((id) => pointMap.get(id)!).filter(Boolean);
       name = `${classifyQuadrilateral(sides, angles, facePoints)} ${vertexLabels}`;
     } else {
-      name = `Polygone ${vertexLabels} à ${face.length} côtés`;
+      name = classifyPolygon(sides, angles, face.length, vertexLabels, displayMode);
     }
 
     // Compute height for triangles and parallelograms (complet mode only)
@@ -226,6 +228,8 @@ export function classifyFigures(
       }
     }
 
+    const convex = !selfIntersecting && angles.every((a) => a <= 180.5);
+
     return {
       id: `figure-${idx}`,
       pointIds: face,
@@ -233,9 +237,35 @@ export function classifyFigures(
       name,
       selfIntersecting,
       height,
-      minor: face.length >= 5 && !selfIntersecting,
+      minor: face.length >= 5 && !selfIntersecting && !name.includes('régulier'),
+      convex,
     };
   });
+}
+
+const REGULAR_POLYGON_NAMES: Record<number, string> = {
+  5: 'Pentagone régulier',
+  6: 'Hexagone régulier',
+  8: 'Octogone régulier',
+};
+
+/** Classify a polygon with N >= 5 sides. Detects regularity in complet mode. */
+function classifyPolygon(
+  sides: number[],
+  angles: number[],
+  n: number,
+  vertexLabels: string,
+  displayMode: DisplayMode,
+): string {
+  if (displayMode === 'complet' && sides.length >= 5) {
+    const sideRange = Math.max(...sides) - Math.min(...sides);
+    const angleRange = Math.max(...angles) - Math.min(...angles);
+    if (sideRange <= 1 && angleRange <= 1) {
+      const baseName = REGULAR_POLYGON_NAMES[n] ?? `Polygone régulier à ${n} côtés`;
+      return `${baseName} ${vertexLabels}`;
+    }
+  }
+  return `Polygone ${vertexLabels} à ${n} côtés`;
 }
 
 /** Classify a triangle. 3e cycle: cumulative. 2e cycle: most specific. */

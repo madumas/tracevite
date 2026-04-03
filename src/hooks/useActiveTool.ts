@@ -17,6 +17,8 @@ import { useTranslationTool } from './useTranslationTool';
 import { useCompareTool } from './useCompareTool';
 import { useFriezeTool } from './useFriezeTool';
 import { useSymmetryTool } from './useSymmetryTool';
+import { useRotationTool } from './useRotationTool';
+import { useHomothetyTool } from './useHomothetyTool';
 
 interface UseActiveToolOptions {
   state: ConstructionState;
@@ -96,6 +98,18 @@ export function useActiveTool({
     viewport,
     isActive: active === 'symmetry',
   });
+  const rotationTool = useRotationTool({
+    state,
+    dispatch,
+    viewport,
+    isActive: active === 'rotation',
+  });
+  const homothetyTool = useHomothetyTool({
+    state,
+    dispatch,
+    viewport,
+    isActive: active === 'homothety',
+  });
 
   switch (state.activeTool) {
     case 'segment':
@@ -122,5 +136,9 @@ export function useActiveTool({
       return friezeTool;
     case 'symmetry':
       return symmetryTool;
+    case 'rotation':
+      return rotationTool;
+    case 'homothety':
+      return homothetyTool;
   }
 }
