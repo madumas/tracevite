@@ -183,17 +183,23 @@ export function useReflectionTool({
         }
 
         const circleId = hitTestCircle(mmPos, state.circles, state.points);
-        if (circleId) {
+        if (circleId && !anim.isAnimating) {
           const circle = state.circles.find((c) => c.id === circleId);
           if (circle) {
-            dispatch({
+            const reflectCircleAction: ConstructionAction = {
               type: 'REFLECT_ELEMENTS',
               pointIds: [circle.centerPointId],
               segmentIds: [],
               circleIds: [circleId],
               axisP1,
               axisP2,
-            });
+            };
+            const doDispatchCircle = () => dispatch(reflectCircleAction);
+            const animStartedCircle = anim.startAnimation(
+              computeReflectionAnimData([circle.centerPointId], [], state, axisP1, axisP2),
+              doDispatchCircle,
+            );
+            if (!animStartedCircle) doDispatchCircle();
             setLastReflectionMsg('Cercle réfléchi.');
           }
           return;

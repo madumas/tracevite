@@ -41,10 +41,13 @@ export function useTransformAnimation({
   const frameRef = useRef<number>(0);
   const startTimeRef = useRef(0);
   const onCompleteRef = useRef<(() => void) | null>(null);
+  const clearTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const cancelAnimation = useCallback(() => {
     if (frameRef.current) cancelAnimationFrame(frameRef.current);
     frameRef.current = 0;
+    if (clearTimerRef.current) clearTimeout(clearTimerRef.current);
+    clearTimerRef.current = null;
     setAnimData(null);
     setAnimT(0);
     onCompleteRef.current = null;
@@ -53,6 +56,10 @@ export function useTransformAnimation({
   const startAnimation = useCallback(
     (data: TransformAnimData, onComplete: () => void): boolean => {
       if (!animate || prefersReducedMotion()) return false;
+
+      // Cancel any previous animation (I2: prevents double dispatch)
+      if (frameRef.current) cancelAnimationFrame(frameRef.current);
+      if (clearTimerRef.current) clearTimeout(clearTimerRef.current);
 
       setAnimData(data);
       setAnimT(0);
@@ -71,10 +78,11 @@ export function useTransformAnimation({
         } else {
           frameRef.current = 0;
           onCompleteRef.current?.();
-          // Keep overlay briefly visible, then clear
-          setTimeout(() => {
+          // Keep overlay briefly visible, then clear (I3: timer stored in ref)
+          clearTimerRef.current = setTimeout(() => {
             setAnimData(null);
             setAnimT(0);
+            clearTimerRef.current = null;
           }, 100);
         }
       };
@@ -89,6 +97,7 @@ export function useTransformAnimation({
   useEffect(() => {
     return () => {
       if (frameRef.current) cancelAnimationFrame(frameRef.current);
+      if (clearTimerRef.current) clearTimeout(clearTimerRef.current);
     };
   }, []);
 

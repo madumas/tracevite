@@ -78,7 +78,7 @@ export function useHomothetyTool({
       if (phase === 'set_center') {
         setCenter(snapped);
         setPhase('set_factor');
-      } else if (phase === 'select_figure' && center && factor != null) {
+      } else if (phase === 'select_figure' && center && factor != null && !anim.isAnimating) {
         const segId = hitTestSegment(mmPos, state.segments, state.points);
         const circleHitId = !segId ? hitTestCircle(mmPos, state.circles, state.points) : null;
         if (!segId && !circleHitId) return;
@@ -148,7 +148,7 @@ export function useHomothetyTool({
         // Stay in select_figure for scaling more elements with same center + factor
       }
     },
-    [isActive, phase, state, center, factor, dispatch, tolerances],
+    [isActive, phase, state, center, factor, dispatch, tolerances, anim],
   );
 
   const handleCursorMove = useCallback(

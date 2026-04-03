@@ -78,7 +78,7 @@ export function useRotationTool({
       if (phase === 'set_center') {
         setCenter(snapped);
         setPhase('set_angle');
-      } else if (phase === 'select_figure' && center && angleDeg != null) {
+      } else if (phase === 'select_figure' && center && angleDeg != null && !anim.isAnimating) {
         const segId = hitTestSegment(mmPos, state.segments, state.points);
         const circleHitId = !segId ? hitTestCircle(mmPos, state.circles, state.points) : null;
         if (!segId && !circleHitId) return;
@@ -148,7 +148,7 @@ export function useRotationTool({
         // Stay in select_figure for rotating more elements with same center + angle
       }
     },
-    [isActive, phase, state, center, angleDeg, dispatch, tolerances],
+    [isActive, phase, state, center, angleDeg, dispatch, tolerances, anim],
   );
 
   const handleCursorMove = useCallback(

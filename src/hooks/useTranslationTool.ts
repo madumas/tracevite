@@ -81,7 +81,7 @@ export function useTranslationTool({
         if (vectorStart && distance(vectorStart, snapped) < MIN_POINT_DISTANCE_MM) return;
         setVectorEnd(snapped);
         setPhase('select_figure');
-      } else if (phase === 'select_figure' && vectorStart && vectorEnd) {
+      } else if (phase === 'select_figure' && vectorStart && vectorEnd && !anim.isAnimating) {
         const segId = hitTestSegment(mmPos, state.segments, state.points);
         const circleHitId = !segId ? hitTestCircle(mmPos, state.circles, state.points) : null;
         if (!segId && !circleHitId) return;
@@ -154,7 +154,7 @@ export function useTranslationTool({
         // Stay in select_figure to allow translating more elements with same vector
       }
     },
-    [isActive, phase, state, vectorStart, vectorEnd, dispatch, tolerances],
+    [isActive, phase, state, vectorStart, vectorEnd, dispatch, tolerances, anim],
   );
 
   const handleCursorMove = useCallback(

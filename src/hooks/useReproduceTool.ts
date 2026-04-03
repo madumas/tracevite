@@ -183,7 +183,7 @@ export function useReproduceTool({
         if (!animStarted) doDispatch();
       }
     },
-    [isActive, phase, state, selected, dispatch, reset, tolerances],
+    [isActive, phase, state, selected, dispatch, reset, tolerances, anim],
   );
 
   const handleCursorMove = useCallback(

@@ -252,7 +252,7 @@ export function useFriezeTool({
   }, [phase, isTiling, vector2]);
 
   const handleValidate = useCallback(() => {
-    if (!selected || !vector1) return;
+    if (!selected || !vector1 || anim.isAnimating) return;
 
     const doDispatch = () => {
       dispatch({
@@ -280,7 +280,17 @@ export function useFriezeTool({
       doDispatch,
     );
     if (!animStarted) doDispatch();
-  }, [selected, vector1, vector2, effectiveCount1, effectiveCount2, isTiling, dispatch, reset]);
+  }, [
+    selected,
+    vector1,
+    vector2,
+    effectiveCount1,
+    effectiveCount2,
+    isTiling,
+    dispatch,
+    reset,
+    anim,
+  ]);
 
   const handleStartTiling = useCallback(() => {
     setIsTiling(true);
