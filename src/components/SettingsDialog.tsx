@@ -405,6 +405,17 @@ export const SettingsDialog = memo(function SettingsDialog({
           />
         </div>
 
+        {/* Animate transformations */}
+        <div style={rowStyle}>
+          <span>Animer les transformations</span>
+          <input
+            type="checkbox"
+            checked={prefs.animateTransformations}
+            onChange={(e) => updatePref('animateTransformations', e.target.checked)}
+            style={{ width: 20, height: 20, cursor: 'pointer', minWidth: 44, minHeight: 44 }}
+          />
+        </div>
+
         {/* Focus mode */}
         <div style={rowStyle}>
           <span>Mode focus (atténuer les éléments éloignés)</span>

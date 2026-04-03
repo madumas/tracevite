@@ -80,3 +80,11 @@ export const TOLERANCE_PROFILES: Record<ToleranceProfile, number> = {
   large: 1.5,
   very_large: 2.0,
 };
+
+// ── Transform animation ──────────────────────────────────
+export const TRANSFORM_ANIMATION_MS = 800;
+
+/** Check OS-level reduced motion preference. */
+export function prefersReducedMotion(): boolean {
+  return window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
+}

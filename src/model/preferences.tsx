@@ -34,6 +34,7 @@ export interface UserPreferences {
   readonly pageFormat: PageFormat;
   readonly reinforcedGrid: boolean;
   readonly focusMode: boolean;
+  readonly animateTransformations: boolean;
 }
 
 // ── Defaults ─────────────────────────────────────────────
@@ -47,6 +48,7 @@ const DEFAULT_PREFERENCES: UserPreferences = {
   pageFormat: 'letter',
   reinforcedGrid: false,
   focusMode: false,
+  animateTransformations: false,
 };
 
 // ── localStorage persistence ─────────────────────────────
@@ -93,6 +95,10 @@ export function loadPreferences(): UserPreferences {
           : DEFAULT_PREFERENCES.reinforcedGrid,
       focusMode:
         typeof data.focusMode === 'boolean' ? data.focusMode : DEFAULT_PREFERENCES.focusMode,
+      animateTransformations:
+        typeof data.animateTransformations === 'boolean'
+          ? data.animateTransformations
+          : DEFAULT_PREFERENCES.animateTransformations,
     };
   } catch {
     return DEFAULT_PREFERENCES;
