@@ -64,9 +64,13 @@ export function AboutDialog({ onClose }: AboutDialogProps) {
           {__GIT_BRANCH__ === 'main' ? `v${__APP_VERSION__}` : `dev (${__BUILD_HASH__})`}
         </div>
 
-        <p style={{ fontSize: 13, lineHeight: 1.5, color: UI_TEXT_PRIMARY, margin: '0 0 16px' }}>
+        <p style={{ fontSize: 13, lineHeight: 1.5, color: UI_TEXT_PRIMARY, margin: '0 0 12px' }}>
           Règle, compas et rapporteur numériques pour les enfants qui ont du mal avec les vrais.
           L'enfant fait le raisonnement, l'outil exécute le geste.
+        </p>
+        <p style={{ fontSize: 12, lineHeight: 1.5, color: UI_TEXT_SECONDARY, margin: '0 0 16px' }}>
+          Mesure d'adaptation pour les élèves ayant un trouble développemental de la coordination
+          (TDC). Conçu pour être inscrit au plan d'intervention.
         </p>
 
         <div style={{ fontSize: 12, color: UI_TEXT_SECONDARY, marginBottom: 8 }}>
