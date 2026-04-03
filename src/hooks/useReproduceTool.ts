@@ -16,6 +16,8 @@ import { findConnectedElements } from '@/engine/reproduce';
 import { detectAllFaces, classifyFigures } from '@/engine/figures';
 import { CSS_PX_PER_MM } from '@/engine/viewport';
 import { CANVAS_SELECTION_BG } from '@/config/theme';
+import { useTransformAnimation } from './useTransformAnimation';
+import { computeTranslationAnimData } from '@/engine/transform-animation';
 
 type ReproducePhase = 'select_figure' | 'place_copy';
 
@@ -31,6 +33,7 @@ interface UseReproduceToolOptions {
   dispatch: (action: ConstructionAction) => void;
   viewport: ViewportState;
   isActive?: boolean;
+  animateTransformations?: boolean;
 }
 
 export function useReproduceTool({
@@ -38,11 +41,20 @@ export function useReproduceTool({
   dispatch,
   viewport,
   isActive = true,
+  animateTransformations = false,
 }: UseReproduceToolOptions): ToolHookResult {
   const [phase, setPhase] = useState<ReproducePhase>('select_figure');
   const [selected, setSelected] = useState<SelectedElements | null>(null);
   const [cursorMm, setCursorMm] = useState<{ x: number; y: number } | null>(null);
   const [snapResult, setSnapResult] = useState<SnapResult | null>(null);
+
+  const anim = useTransformAnimation({
+    viewport,
+    animate: animateTransformations,
+    points: state.points,
+    segments: state.segments,
+    circles: state.circles,
+  });
 
   const tolerances = useMemo(
     () => scaleTolerances(DEFAULT_TOLERANCES, TOLERANCE_PROFILES[state.toleranceProfile]),
@@ -146,16 +158,29 @@ export function useReproduceTool({
         const offsetX = target.x - selected.anchorMm.x;
         const offsetY = target.y - selected.anchorMm.y;
 
-        dispatch({
-          type: 'REPRODUCE_ELEMENTS',
-          pointIds: selected.pointIds,
-          segmentIds: selected.segmentIds,
-          circleIds: selected.circleIds,
-          offsetX,
-          offsetY,
-        });
+        const doDispatch = () => {
+          dispatch({
+            type: 'REPRODUCE_ELEMENTS',
+            pointIds: selected.pointIds,
+            segmentIds: selected.segmentIds,
+            circleIds: selected.circleIds,
+            offsetX,
+            offsetY,
+          });
+          reset();
+        };
 
-        reset();
+        const animStarted = anim.startAnimation(
+          computeTranslationAnimData(
+            selected.pointIds,
+            selected.segmentIds,
+            state,
+            offsetX,
+            offsetY,
+          ),
+          doDispatch,
+        );
+        if (!animStarted) doDispatch();
       }
     },
     [isActive, phase, state, selected, dispatch, reset, tolerances],
@@ -309,6 +334,21 @@ export function useReproduceTool({
     return elements.length > 0 ? elements : null;
   }, [selected, phase, cursorMm, snapResult, state, viewport]);
 
+  const mergedOverlay = useMemo(() => {
+    const base = overlayElements
+      ? Array.isArray(overlayElements)
+        ? overlayElements
+        : [overlayElements]
+      : [];
+    const animElems = anim.animationOverlay
+      ? Array.isArray(anim.animationOverlay)
+        ? anim.animationOverlay
+        : [anim.animationOverlay]
+      : [];
+    const all = [...base, ...animElems];
+    return all.length > 0 ? all : null;
+  }, [overlayElements, anim.animationOverlay]);
+
   return {
     handleClick,
     handleCursorMove,
@@ -317,6 +357,6 @@ export function useReproduceTool({
     isIdle: phase === 'select_figure',
     statusMessage,
     snapResult: phase === 'place_copy' ? snapResult : null,
-    overlayElements,
+    overlayElements: mergedOverlay,
   };
 }

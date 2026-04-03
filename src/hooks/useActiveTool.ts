@@ -62,6 +62,7 @@ export function useActiveTool({
     dispatch,
     viewport,
     isActive: active === 'reproduce',
+    animateTransformations,
   });
   const perpendicularTool = useConstrainedLineTool({
     state,
@@ -95,6 +96,7 @@ export function useActiveTool({
     dispatch,
     viewport,
     isActive: active === 'frieze',
+    animateTransformations,
   });
   const symmetryTool = useSymmetryTool({
     state,

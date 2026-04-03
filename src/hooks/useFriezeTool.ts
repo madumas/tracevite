@@ -22,6 +22,8 @@ import { detectAllFaces, classifyFigures } from '@/engine/figures';
 import { distance } from '@/engine/geometry';
 import { CSS_PX_PER_MM } from '@/engine/viewport';
 import { CANVAS_SELECTION_BG, CANVAS_GUIDE } from '@/config/theme';
+import { useTransformAnimation } from './useTransformAnimation';
+import { computeTranslationAnimData } from '@/engine/transform-animation';
 import { FriezePanel } from '@/components/FriezePanel';
 
 type FriezePhase =
@@ -46,6 +48,7 @@ interface UseFriezeToolOptions {
   dispatch: (action: ConstructionAction) => void;
   viewport: ViewportState;
   isActive?: boolean;
+  animateTransformations?: boolean;
 }
 
 export function useFriezeTool({
@@ -53,6 +56,7 @@ export function useFriezeTool({
   dispatch,
   viewport,
   isActive = true,
+  animateTransformations = false,
 }: UseFriezeToolOptions): ToolHookResult {
   const [phase, setPhase] = useState<FriezePhase>('select_figure');
   const [selected, setSelected] = useState<SelectedElements | null>(null);
@@ -65,6 +69,14 @@ export function useFriezeTool({
   const [isTiling, setIsTiling] = useState(false);
   const [cursorMm, setCursorMm] = useState<{ x: number; y: number } | null>(null);
   const [snapResult, setSnapResult] = useState<SnapResult | null>(null);
+
+  const anim = useTransformAnimation({
+    viewport,
+    animate: animateTransformations,
+    points: state.points,
+    segments: state.segments,
+    circles: state.circles,
+  });
 
   const tolerances = useMemo(
     () => scaleTolerances(DEFAULT_TOLERANCES, TOLERANCE_PROFILES[state.toleranceProfile]),
@@ -241,17 +253,33 @@ export function useFriezeTool({
 
   const handleValidate = useCallback(() => {
     if (!selected || !vector1) return;
-    dispatch({
-      type: 'REPRODUCE_FRIEZE',
-      pointIds: selected.pointIds,
-      segmentIds: selected.segmentIds,
-      circleIds: selected.circleIds,
-      vector1,
-      count1: effectiveCount1,
-      vector2: isTiling && vector2 ? vector2 : undefined,
-      count2: isTiling && vector2 ? effectiveCount2 : undefined,
-    });
-    reset();
+
+    const doDispatch = () => {
+      dispatch({
+        type: 'REPRODUCE_FRIEZE',
+        pointIds: selected.pointIds,
+        segmentIds: selected.segmentIds,
+        circleIds: selected.circleIds,
+        vector1,
+        count1: effectiveCount1,
+        vector2: isTiling && vector2 ? vector2 : undefined,
+        count2: isTiling && vector2 ? effectiveCount2 : undefined,
+      });
+      reset();
+    };
+
+    // Animate only the first copy (vector1 direction)
+    const animStarted = anim.startAnimation(
+      computeTranslationAnimData(
+        selected.pointIds,
+        selected.segmentIds,
+        state,
+        vector1.dx,
+        vector1.dy,
+      ),
+      doDispatch,
+    );
+    if (!animStarted) doDispatch();
   }, [selected, vector1, vector2, effectiveCount1, effectiveCount2, isTiling, dispatch, reset]);
 
   const handleStartTiling = useCallback(() => {
@@ -456,6 +484,21 @@ export function useFriezeTool({
     viewport,
   ]);
 
+  const mergedOverlay = useMemo(() => {
+    const base = overlayElements
+      ? Array.isArray(overlayElements)
+        ? overlayElements
+        : [overlayElements]
+      : [];
+    const animElems = anim.animationOverlay
+      ? Array.isArray(anim.animationOverlay)
+        ? anim.animationOverlay
+        : [anim.animationOverlay]
+      : [];
+    const all = [...base, ...animElems];
+    return all.length > 0 ? all : null;
+  }, [overlayElements, anim.animationOverlay]);
+
   // Tool panel (floating stepper UI)
   const toolPanel = useMemo(() => {
     if (phase !== 'choose_count' || !selected) return undefined;
@@ -500,7 +543,7 @@ export function useFriezeTool({
     isIdle: phase === 'select_figure',
     statusMessage,
     snapResult: needsSnap ? snapResult : null,
-    overlayElements,
+    overlayElements: mergedOverlay,
     toolPanel,
   };
 }
