@@ -1090,6 +1090,7 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
                 gridSizeMm={state.gridSizeMm}
                 pageFormat={preferences.pageFormat}
                 landscape={printLandscape}
+                reinforced={preferences.reinforcedGrid}
               />
               {state.cartesianMode !== 'off' && state.displayMode === 'complet' && (
                 <CartesianLayer

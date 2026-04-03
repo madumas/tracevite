@@ -32,6 +32,7 @@ export interface UserPreferences {
   readonly cursorSmoothing: boolean;
   readonly fatigueReminderMinutes: number | null; // null = off
   readonly pageFormat: PageFormat;
+  readonly reinforcedGrid: boolean;
 }
 
 // ── Defaults ─────────────────────────────────────────────
@@ -43,6 +44,7 @@ const DEFAULT_PREFERENCES: UserPreferences = {
   cursorSmoothing: false,
   fatigueReminderMinutes: null,
   pageFormat: 'letter',
+  reinforcedGrid: false,
 };
 
 // ── localStorage persistence ─────────────────────────────
@@ -83,6 +85,10 @@ export function loadPreferences(): UserPreferences {
       pageFormat: VALID_PAGE_FORMATS.includes(data.pageFormat as PageFormat)
         ? (data.pageFormat as PageFormat)
         : DEFAULT_PREFERENCES.pageFormat,
+      reinforcedGrid:
+        typeof data.reinforcedGrid === 'boolean'
+          ? data.reinforcedGrid
+          : DEFAULT_PREFERENCES.reinforcedGrid,
     };
   } catch {
     return DEFAULT_PREFERENCES;

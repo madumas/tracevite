@@ -10,6 +10,7 @@ interface GridLayerProps {
   readonly gridSizeMm: GridSize;
   readonly pageFormat?: PageFormat;
   readonly landscape?: boolean;
+  readonly reinforced?: boolean;
 }
 
 /**
@@ -21,8 +22,12 @@ export const GridLayer = memo(function GridLayer({
   gridSizeMm,
   pageFormat = 'letter',
   landscape = true,
+  reinforced = false,
 }: GridLayerProps) {
   const colors = useCanvasColors();
+  const gridOpacity = reinforced ? Math.min(colors.gridOpacity * 1.6, 0.85) : colors.gridOpacity;
+  const gridStrokeWidth = reinforced ? 1.5 : 1;
+  const subGridStrokeWidth = reinforced ? 0.8 : 0.5;
   const pxPerMm = viewport.zoom * CSS_PX_PER_MM;
   const gridPx = gridSizeMm * pxPerMm;
 
@@ -61,8 +66,8 @@ export const GridLayer = memo(function GridLayer({
         x2={sx}
         y2={gy2}
         stroke={colors.grid}
-        strokeWidth={1}
-        opacity={colors.gridOpacity}
+        strokeWidth={gridStrokeWidth}
+        opacity={gridOpacity}
       />,
     );
   }
@@ -79,8 +84,8 @@ export const GridLayer = memo(function GridLayer({
         x2={gx2}
         y2={sy}
         stroke={colors.grid}
-        strokeWidth={1}
-        opacity={colors.gridOpacity}
+        strokeWidth={gridStrokeWidth}
+        opacity={gridOpacity}
       />,
     );
   }
@@ -100,8 +105,8 @@ export const GridLayer = memo(function GridLayer({
           x2={sx}
           y2={gy2}
           stroke={colors.grid}
-          strokeWidth={0.5}
-          opacity={colors.gridOpacity * 0.5}
+          strokeWidth={subGridStrokeWidth}
+          opacity={gridOpacity * 0.5}
         />,
       );
     }
@@ -118,8 +123,8 @@ export const GridLayer = memo(function GridLayer({
           x2={gx2}
           y2={sy}
           stroke={colors.grid}
-          strokeWidth={0.5}
-          opacity={colors.gridOpacity * 0.5}
+          strokeWidth={subGridStrokeWidth}
+          opacity={gridOpacity * 0.5}
         />,
       );
     }

@@ -405,6 +405,17 @@ export const SettingsDialog = memo(function SettingsDialog({
           />
         </div>
 
+        {/* Reinforced grid */}
+        <div style={rowStyle}>
+          <span>Grille renforcée</span>
+          <input
+            type="checkbox"
+            checked={prefs.reinforcedGrid}
+            onChange={(e) => updatePref('reinforcedGrid', e.target.checked)}
+            style={{ width: 20, height: 20, cursor: 'pointer', minWidth: 44, minHeight: 44 }}
+          />
+        </div>
+
         {/* Cursor smoothing — only when tolerance is very_large */}
         {toleranceProfile === 'very_large' && (
           <div style={rowStyle}>
