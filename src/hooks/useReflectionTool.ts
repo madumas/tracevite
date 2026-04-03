@@ -3,17 +3,19 @@
  * State machine: CHOOSE_AXIS → AXIS_DRAWING → AXIS_DEFINED → (reflect, repeat or finish).
  */
 
-import { useState, useCallback, useMemo, useEffect, useRef, createElement } from 'react';
+import { useState, useCallback, useMemo, createElement } from 'react';
 import type { ConstructionState, ViewportState, SnapResult } from '@/model/types';
 import type { ConstructionAction } from '@/model/reducer';
 import type { ToolHookResult } from './types';
 import { hitTestSegment, hitTestCircle } from '@/engine/hit-test';
 import { findSnap, DEFAULT_TOLERANCES, scaleTolerances } from '@/engine/snap';
 import { TOLERANCE_PROFILES } from '@/config/accessibility';
-import { constrainAxisAngle, reflectPoint } from '@/engine/reflection';
+import { constrainAxisAngle } from '@/engine/reflection';
 import { detectAllFaces, classifyFigures } from '@/engine/figures';
 import { STATUS_REFLECTION_AXIS, STATUS_REFLECTION_SELECT } from '@/config/messages';
 import { CSS_PX_PER_MM } from '@/engine/viewport';
+import { useTransformAnimation } from './useTransformAnimation';
+import { computeReflectionAnimData } from '@/engine/transform-animation';
 
 type ReflectionPhase = 'choose_axis' | 'axis_first_point' | 'axis_defined';
 
@@ -22,6 +24,7 @@ interface UseReflectionToolOptions {
   dispatch: (action: ConstructionAction) => void;
   viewport: ViewportState;
   isActive?: boolean;
+  animateTransformations?: boolean;
 }
 
 export function useReflectionTool({
@@ -29,6 +32,7 @@ export function useReflectionTool({
   dispatch,
   viewport,
   isActive = true,
+  animateTransformations = false,
 }: UseReflectionToolOptions): ToolHookResult {
   const [phase, setPhase] = useState<ReflectionPhase>('choose_axis');
   const [axisP1, setAxisP1] = useState<{ x: number; y: number } | null>(null);
@@ -36,20 +40,16 @@ export function useReflectionTool({
   const [cursorMm, setCursorMm] = useState<{ x: number; y: number } | null>(null);
   const [snapResult, setSnapResult] = useState<SnapResult | null>(null);
   const [lastReflectionMsg, setLastReflectionMsg] = useState<string | null>(null);
-  const [stepByStep, setStepByStep] = useState(false);
-  const [animSteps, setAnimSteps] = useState<
-    {
-      original: { x: number; y: number };
-      foot: { x: number; y: number };
-      image: { x: number; y: number };
-      label: string;
-    }[]
-  >([]);
-  const [animIndex, setAnimIndex] = useState(-1);
-  const animTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const [pendingReflect, setPendingReflect] = useState<ConstructionAction | null>(null);
 
   const is2eCycle = state.displayMode === 'simplifie';
+
+  const anim = useTransformAnimation({
+    viewport,
+    animate: animateTransformations,
+    points: state.points,
+    segments: state.segments,
+    circles: state.circles,
+  });
 
   const tolerances = useMemo(
     () => scaleTolerances(DEFAULT_TOLERANCES, TOLERANCE_PROFILES[state.toleranceProfile]),
@@ -63,56 +63,8 @@ export function useReflectionTool({
     setCursorMm(null);
     setSnapResult(null);
     setLastReflectionMsg(null);
-    setAnimSteps([]);
-    setAnimIndex(-1);
-    setPendingReflect(null);
-    if (animTimerRef.current) clearTimeout(animTimerRef.current);
-  }, []);
-
-  // Step-by-step animation timer — stops when tool is inactive
-  useEffect(() => {
-    if (!isActive || animIndex < 0 || animIndex >= animSteps.length) return;
-    animTimerRef.current = setTimeout(() => {
-      setAnimIndex((i) => i + 1);
-    }, 500);
-    return () => {
-      if (animTimerRef.current) clearTimeout(animTimerRef.current);
-    };
-  }, [isActive, animIndex, animSteps.length]);
-
-  // Dispatch deferred REFLECT_ELEMENTS once animation finishes
-  useEffect(() => {
-    if (pendingReflect && animSteps.length > 0 && animIndex >= animSteps.length) {
-      dispatch(pendingReflect);
-      setPendingReflect(null);
-      setAnimSteps([]);
-      setAnimIndex(-1);
-    }
-  }, [animIndex, animSteps.length, pendingReflect, dispatch]);
-
-  /** Launch step-by-step animation for reflected points. */
-  const launchStepAnimation = useCallback(
-    (pointIds: string[], ax1: { x: number; y: number }, ax2: { x: number; y: number }) => {
-      const pointMap = new Map(state.points.map((p) => [p.id, p]));
-      const steps = pointIds
-        .map((pid) => {
-          const pt = pointMap.get(pid);
-          if (!pt) return null;
-          const reflected = reflectPoint(pt, ax1, ax2);
-          // Foot = projection on axis
-          const dx = ax2.x - ax1.x;
-          const dy = ax2.y - ax1.y;
-          const lenSq = dx * dx + dy * dy;
-          const t = lenSq === 0 ? 0 : ((pt.x - ax1.x) * dx + (pt.y - ax1.y) * dy) / lenSq;
-          const foot = { x: ax1.x + t * dx, y: ax1.y + t * dy };
-          return { original: { x: pt.x, y: pt.y }, foot, image: reflected, label: pt.label };
-        })
-        .filter(Boolean) as typeof animSteps;
-      setAnimSteps(steps);
-      setAnimIndex(0);
-    },
-    [state.points],
-  );
+    anim.cancelAnimation();
+  }, [anim]);
 
   /** Find the smallest figure containing a given segment. */
   const findFigureForSegment = useCallback(
@@ -184,12 +136,18 @@ export function useReflectionTool({
               axisP1,
               axisP2,
             };
-            if (stepByStep) {
-              launchStepAnimation([...figure.pointIds], axisP1, axisP2);
-              setPendingReflect(reflectAction);
-            } else {
-              dispatch(reflectAction);
-            }
+            const doDispatch = () => dispatch(reflectAction);
+            const animStarted = anim.startAnimation(
+              computeReflectionAnimData(
+                [...figure.pointIds],
+                [...figure.segmentIds],
+                state,
+                axisP1,
+                axisP2,
+              ),
+              doDispatch,
+            );
+            if (!animStarted) doDispatch();
             setLastReflectionMsg(`${figure.name} réfléchi.`);
           } else {
             // Reflect the single segment
@@ -202,12 +160,18 @@ export function useReflectionTool({
                 axisP1,
                 axisP2,
               };
-              if (stepByStep) {
-                launchStepAnimation([seg.startPointId, seg.endPointId], axisP1, axisP2);
-                setPendingReflect(reflectAction);
-              } else {
-                dispatch(reflectAction);
-              }
+              const doDispatch2 = () => dispatch(reflectAction);
+              const animStarted2 = anim.startAnimation(
+                computeReflectionAnimData(
+                  [seg.startPointId, seg.endPointId],
+                  [segId],
+                  state,
+                  axisP1,
+                  axisP2,
+                ),
+                doDispatch2,
+              );
+              if (!animStarted2) doDispatch2();
               const pointMap = new Map(state.points.map((p) => [p.id, p]));
               const startLabel = pointMap.get(seg.startPointId)?.label ?? '?';
               const endLabel = pointMap.get(seg.endPointId)?.label ?? '?';
@@ -250,8 +214,7 @@ export function useReflectionTool({
       findFigureForSegment,
       reset,
       tolerances,
-      stepByStep,
-      launchStepAnimation,
+      anim,
     ],
   );
 
@@ -352,64 +315,23 @@ export function useReflectionTool({
       );
     }
 
-    // Step-by-step animation: show dashed lines point → foot → image
-    if (animSteps.length > 0 && animIndex >= 0) {
-      const pxPerMm = viewport.zoom * CSS_PX_PER_MM;
-      for (let i = 0; i < Math.min(animIndex, animSteps.length); i++) {
-        const step = animSteps[i]!;
-        const ox = (step.original.x - viewport.panX) * pxPerMm;
-        const oy = (step.original.y - viewport.panY) * pxPerMm;
-        const fx = (step.foot.x - viewport.panX) * pxPerMm;
-        const fy = (step.foot.y - viewport.panY) * pxPerMm;
-        const ix = (step.image.x - viewport.panX) * pxPerMm;
-        const iy = (step.image.y - viewport.panY) * pxPerMm;
-        // Line from original to foot
-        elements.push(
-          createElement('line', {
-            key: `step-of-${i}`,
-            x1: ox,
-            y1: oy,
-            x2: fx,
-            y2: fy,
-            stroke: '#7A8B99',
-            strokeWidth: 1,
-            strokeDasharray: '4 3',
-            opacity: 0.7,
-            pointerEvents: 'none',
-          }),
-        );
-        // Line from foot to image
-        elements.push(
-          createElement('line', {
-            key: `step-fi-${i}`,
-            x1: fx,
-            y1: fy,
-            x2: ix,
-            y2: iy,
-            stroke: '#7A8B99',
-            strokeWidth: 1,
-            strokeDasharray: '4 3',
-            opacity: 0.7,
-            pointerEvents: 'none',
-          }),
-        );
-        // Image point marker
-        elements.push(
-          createElement('circle', {
-            key: `step-img-${i}`,
-            cx: ix,
-            cy: iy,
-            r: 5,
-            fill: '#7A8B99',
-            opacity: 0.6,
-            pointerEvents: 'none',
-          }),
-        );
-      }
-    }
-
     return elements.length > 0 ? elements : null;
-  }, [axisP1, axisP2, phase, cursorMm, viewport, is2eCycle, state.points, animSteps, animIndex]);
+  }, [axisP1, axisP2, phase, cursorMm, viewport, is2eCycle]);
+
+  const mergedOverlay = useMemo(() => {
+    const base = overlayElements
+      ? Array.isArray(overlayElements)
+        ? overlayElements
+        : [overlayElements]
+      : [];
+    const animElems = anim.animationOverlay
+      ? Array.isArray(anim.animationOverlay)
+        ? anim.animationOverlay
+        : [anim.animationOverlay]
+      : [];
+    const all = [...base, ...animElems];
+    return all.length > 0 ? all : null;
+  }, [overlayElements, anim.animationOverlay]);
 
   return {
     handleClick,
@@ -419,8 +341,6 @@ export function useReflectionTool({
     isIdle: false,
     statusMessage,
     snapResult,
-    overlayElements,
-    stepByStep,
-    onToggleStepByStep: () => setStepByStep((prev) => !prev),
+    overlayElements: mergedOverlay,
   };
 }

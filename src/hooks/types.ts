@@ -30,8 +30,4 @@ export interface ToolHookResult {
   activePointId?: string | null;
   /** Circle tool: ID of the last created circle (for auto-showing RadiusInput). */
   lastCreatedCircleId?: string | null;
-  /** Reflection tool: step-by-step animation toggle (v2). */
-  stepByStep?: boolean;
-  /** Reflection tool: toggle step-by-step mode (v2). */
-  onToggleStepByStep?: () => void;
 }

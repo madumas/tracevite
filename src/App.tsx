@@ -976,10 +976,7 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
           </span>
         )}
         {/* Right-side buttons grouped in a single flex container */}
-        {(!tool.isIdle ||
-          cluttered ||
-          (!demoMode && state.consigne && consigneDismissed) ||
-          (state.activeTool === 'reflection' && tool.onToggleStepByStep)) && (
+        {(!tool.isIdle || cluttered || (!demoMode && state.consigne && consigneDismissed)) && (
           <div style={{ marginLeft: 'auto', display: 'flex', gap: 4, alignItems: 'center' }}>
             {cluttered && (
               <button
@@ -1040,23 +1037,6 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
                 data-testid="consigne-show"
               >
                 Voir la consigne
-              </button>
-            )}
-            {state.activeTool === 'reflection' && tool.onToggleStepByStep && (
-              <button
-                onClick={tool.onToggleStepByStep}
-                style={{
-                  padding: '2px 10px',
-                  background: tool.stepByStep ? '#0a7e7a' : 'transparent',
-                  color: tool.stepByStep ? '#FFF' : '#4A5568',
-                  border: '1px solid #D1D8E0',
-                  borderRadius: 4,
-                  cursor: 'pointer',
-                  fontSize: 12,
-                  fontWeight: 500,
-                }}
-              >
-                {tool.stepByStep ? '✓ Voir les étapes' : 'Voir les étapes'}
               </button>
             )}
           </div>

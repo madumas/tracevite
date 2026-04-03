@@ -54,6 +54,7 @@ export function useActiveTool({
     dispatch,
     viewport,
     isActive: active === 'reflection',
+    animateTransformations,
   });
   const pointTool = usePointTool({ state, dispatch, viewport, isActive: active === 'point' });
   const reproduceTool = useReproduceTool({
