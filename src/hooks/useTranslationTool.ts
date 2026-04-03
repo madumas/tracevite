@@ -52,6 +52,7 @@ export function useTranslationTool({
     animate: animateTransformations,
     points: state.points,
     segments: state.segments,
+    circles: state.circles,
   });
 
   const tolerances = useMemo(

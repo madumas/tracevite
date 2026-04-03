@@ -15,6 +15,7 @@ interface UseTransformAnimationOptions {
   animate: boolean; // preference toggle
   points: readonly { id: string; x: number; y: number }[];
   segments: readonly { id: string; startPointId: string; endPointId: string }[];
+  circles: readonly { id: string; centerPointId: string; radiusMm: number }[];
 }
 
 interface TransformAnimationResult {
@@ -33,6 +34,7 @@ export function useTransformAnimation({
   animate,
   points,
   segments,
+  circles,
 }: UseTransformAnimationOptions): TransformAnimationResult {
   const [animData, setAnimData] = useState<TransformAnimData | null>(null);
   const [animT, setAnimT] = useState(0);
@@ -177,8 +179,32 @@ export function useTransformAnimation({
       );
     }
 
+    // Ghost circles at interpolated positions
+    for (const circle of circles) {
+      if (!animData.circleIds.includes(circle.id)) {
+        // For non-scaled circles (rotation, translation), just move the center
+        if (animData.pointIds.includes(circle.centerPointId)) {
+          const pos = animData.interpolatePosition(circle.centerPointId, animT);
+          const r = animData.interpolateRadius(circle.id, animT) || circle.radiusMm;
+          elements.push(
+            createElement('circle', {
+              key: `ghost-circle-${circle.id}`,
+              cx: (pos.x - viewport.panX) * pxPerMm,
+              cy: (pos.y - viewport.panY) * pxPerMm,
+              r: r * pxPerMm,
+              fill: 'none',
+              stroke: CANVAS_GUIDE,
+              strokeWidth: 1.5,
+              opacity: 0.4,
+              pointerEvents: 'none',
+            }),
+          );
+        }
+      }
+    }
+
     return elements;
-  }, [animData, animT, viewport, pointMap, segments]);
+  }, [animData, animT, viewport, pointMap, segments, circles]);
 
   return {
     isAnimating: animData !== null,

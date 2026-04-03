@@ -29,6 +29,10 @@ export interface TransformAnimData {
   readonly pointIds: readonly string[];
   /** Segment IDs involved in the animation. */
   readonly segmentIds: readonly string[];
+  /** Circle IDs involved in the animation. */
+  readonly circleIds: readonly string[];
+  /** Get interpolated radius for a circle at time t (for homothety). Returns original radius if unchanged. */
+  readonly interpolateRadius: (circleId: string, t: number) => number;
 }
 
 /** Compute animation data for a rotation. */
@@ -74,6 +78,8 @@ export function computeRotationAnimData(
     },
     pointIds,
     segmentIds,
+    circleIds: [],
+    interpolateRadius: (_cid, _t) => 0,
   };
 }
 
@@ -107,6 +113,8 @@ export function computeTranslationAnimData(
     },
     pointIds,
     segmentIds,
+    circleIds: [],
+    interpolateRadius: (_cid, _t) => 0,
   };
 }
 
@@ -139,6 +147,12 @@ export function computeHomothetyAnimData(
     },
     pointIds,
     segmentIds,
+    circleIds: [],
+    interpolateRadius: (cid, t) => {
+      const circle = state.circles.find((c) => c.id === cid);
+      if (!circle) return 0;
+      return circle.radiusMm * (1 + (factor - 1) * t);
+    },
   };
 }
 
@@ -183,5 +197,7 @@ export function computeReflectionAnimData(
     },
     pointIds,
     segmentIds,
+    circleIds: [],
+    interpolateRadius: (_cid, _t) => 0,
   };
 }

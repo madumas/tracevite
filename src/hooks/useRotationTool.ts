@@ -49,6 +49,7 @@ export function useRotationTool({
     animate: animateTransformations,
     points: state.points,
     segments: state.segments,
+    circles: state.circles,
   });
 
   const tolerances = useMemo(
@@ -234,8 +235,8 @@ export function useRotationTool({
           }),
         );
 
-        // Arrow at end of arc
-        const arrowAngle = endAngle + (angleDeg > 0 ? Math.PI / 2 : -Math.PI / 2);
+        // Arrow at end of arc — tangent direction at endpoint
+        const arrowAngle = endAngle + (angleDeg > 0 ? -Math.PI / 2 : Math.PI / 2);
         const arrowLen = 6;
         elements.push(
           createElement('line', {
