@@ -33,6 +33,7 @@ export interface UserPreferences {
   readonly fatigueReminderMinutes: number | null; // null = off
   readonly pageFormat: PageFormat;
   readonly reinforcedGrid: boolean;
+  readonly focusMode: boolean;
 }
 
 // ── Defaults ─────────────────────────────────────────────
@@ -45,6 +46,7 @@ const DEFAULT_PREFERENCES: UserPreferences = {
   fatigueReminderMinutes: null,
   pageFormat: 'letter',
   reinforcedGrid: false,
+  focusMode: false,
 };
 
 // ── localStorage persistence ─────────────────────────────
@@ -89,6 +91,8 @@ export function loadPreferences(): UserPreferences {
         typeof data.reinforcedGrid === 'boolean'
           ? data.reinforcedGrid
           : DEFAULT_PREFERENCES.reinforcedGrid,
+      focusMode:
+        typeof data.focusMode === 'boolean' ? data.focusMode : DEFAULT_PREFERENCES.focusMode,
     };
   } catch {
     return DEFAULT_PREFERENCES;

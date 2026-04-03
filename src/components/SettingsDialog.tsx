@@ -405,6 +405,17 @@ export const SettingsDialog = memo(function SettingsDialog({
           />
         </div>
 
+        {/* Focus mode */}
+        <div style={rowStyle}>
+          <span>Mode focus (atténuer les éléments éloignés)</span>
+          <input
+            type="checkbox"
+            checked={prefs.focusMode}
+            onChange={(e) => updatePref('focusMode', e.target.checked)}
+            style={{ width: 20, height: 20, cursor: 'pointer', minWidth: 44, minHeight: 44 }}
+          />
+        </div>
+
         {/* Reinforced grid */}
         <div style={rowStyle}>
           <span>Grille renforcée</span>

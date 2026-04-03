@@ -588,6 +588,37 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
     () => isAngleCluttered(state, state.displayMode),
     [state.segments.length, state.displayMode],
   );
+  // Focus mode: compute dimmed element IDs (segments + points not adjacent to selection)
+  const focusDimmedIds = useMemo(() => {
+    if (!preferences.focusMode || !state.selectedElementId) return undefined;
+    const selectedSeg = state.segments.find((s) => s.id === state.selectedElementId);
+    if (!selectedSeg) return undefined;
+
+    // Find adjacent points (directly connected to selected segment)
+    const adjacentPointIds = new Set([selectedSeg.startPointId, selectedSeg.endPointId]);
+
+    // Find adjacent segments (share a point with selected)
+    const adjacentSegIds = new Set<string>();
+    adjacentSegIds.add(selectedSeg.id);
+    for (const seg of state.segments) {
+      if (adjacentPointIds.has(seg.startPointId) || adjacentPointIds.has(seg.endPointId)) {
+        adjacentSegIds.add(seg.id);
+        adjacentPointIds.add(seg.startPointId);
+        adjacentPointIds.add(seg.endPointId);
+      }
+    }
+
+    // Dimmed = everything NOT adjacent
+    const dimmed = new Set<string>();
+    for (const seg of state.segments) {
+      if (!adjacentSegIds.has(seg.id)) dimmed.add(seg.id);
+    }
+    for (const pt of state.points) {
+      if (!adjacentPointIds.has(pt.id)) dimmed.add(pt.id);
+    }
+    return dimmed.size > 0 ? dimmed : undefined;
+  }, [preferences.focusMode, state.selectedElementId, state.segments, state.points]);
+
   // Track first appearance of clutter for button pulse animation
   const [clutterBtnPulse, setClutterBtnPulse] = useState(false);
   useEffect(() => {
@@ -1113,6 +1144,7 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
                 estimationMode={state.estimationMode && !estimationRevealed}
                 cluttered={effectiveCluttered}
                 hoveredElementId={hoveredPanelElementId ?? selection.hoveredElement?.id ?? null}
+                focusDimmedIds={focusDimmedIds}
               />
               <CircleLayer
                 circles={state.circles}
@@ -1130,6 +1162,7 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
                 fontScale={effectiveFontScale}
                 pointColor={effectiveSegmentColor}
                 labelObstacles={labelObstacles}
+                focusDimmedIds={focusDimmedIds}
               />
 
               {/* Angle arcs and markers */}

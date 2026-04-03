@@ -12,6 +12,7 @@ interface PointLayerProps {
   readonly fontScale?: number;
   readonly pointColor?: string;
   readonly labelObstacles?: Map<string, Obstacle[]>;
+  readonly focusDimmedIds?: ReadonlySet<string>;
 }
 
 export const PointLayer = memo(function PointLayer({
@@ -21,6 +22,7 @@ export const PointLayer = memo(function PointLayer({
   fontScale = 1,
   pointColor = CANVAS_POINT,
   labelObstacles,
+  focusDimmedIds,
 }: PointLayerProps) {
   const pxPerMm = viewport.zoom * CSS_PX_PER_MM;
   const radiusPx = POINT_DISPLAY_RADIUS_MM * CSS_PX_PER_MM;
@@ -68,8 +70,10 @@ export const PointLayer = memo(function PointLayer({
           height: labelHeight,
         });
 
+        const isDimmed = focusDimmedIds?.has(point.id) ?? false;
+
         return (
-          <g key={point.id}>
+          <g key={point.id} opacity={isDimmed ? 0.3 : undefined}>
             <circle
               cx={sx}
               cy={sy}

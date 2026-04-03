@@ -18,6 +18,7 @@ interface SegmentLayerProps {
   readonly estimationMode?: boolean;
   readonly cluttered?: boolean;
   readonly hoveredElementId?: string | null;
+  readonly focusDimmedIds?: ReadonlySet<string>;
 }
 
 export const SegmentLayer = memo(function SegmentLayer({
@@ -33,6 +34,7 @@ export const SegmentLayer = memo(function SegmentLayer({
   estimationMode = false,
   cluttered = false,
   hoveredElementId = null,
+  focusDimmedIds,
 }: SegmentLayerProps) {
   const colors = useCanvasColors();
   const pxPerMm = viewport.zoom * CSS_PX_PER_MM;
@@ -152,8 +154,10 @@ export const SegmentLayer = memo(function SegmentLayer({
         const offsetX = len > 0 ? (-dy / len) * 14 : 0;
         const offsetY = len > 0 ? (dx / len) * 14 : -14;
 
+        const isDimmed = focusDimmedIds?.has(segment.id) ?? false;
+
         return (
-          <g key={segment.id}>
+          <g key={segment.id} opacity={isDimmed ? 0.3 : 1}>
             {/* Invisible hit zone for interaction */}
             <line
               x1={sx1}
