@@ -155,11 +155,11 @@ export function useRotationTool({
   // Status message
   let statusMessage: string;
   if (phase === 'set_center') {
-    statusMessage = 'Rotation — Clique pour placer le centre de rotation';
+    statusMessage = 'Étape 1/3 — Rotation — Clique pour placer le centre de rotation';
   } else if (phase === 'set_angle') {
-    statusMessage = "Rotation — Choisis l'angle de rotation";
+    statusMessage = "Étape 2/3 — Rotation — Choisis l'angle de rotation";
   } else {
-    statusMessage = 'Rotation — Clique sur un segment pour faire tourner la figure.';
+    statusMessage = 'Étape 3/3 — Rotation — Clique sur un segment pour faire tourner la figure.';
   }
 
   // Overlay: center marker + angle arc preview

@@ -161,11 +161,11 @@ export function useTranslationTool({
   // Status message
   let statusMessage: string;
   if (phase === 'vector_start') {
-    statusMessage = 'Translation — Clique pour placer le début de la flèche de translation';
+    statusMessage = 'Étape 1/3 — Translation — Clique pour placer le début de la flèche';
   } else if (phase === 'vector_end') {
-    statusMessage = 'Translation — Clique pour placer la fin de la flèche';
+    statusMessage = 'Étape 2/3 — Translation — Clique pour placer la fin de la flèche';
   } else {
-    statusMessage = 'Translation — Clique sur un segment pour translater la figure.';
+    statusMessage = 'Étape 3/3 — Translation — Clique sur un segment pour translater la figure.';
   }
 
   // Overlay: translation arrow + preview

@@ -154,11 +154,12 @@ export function useHomothetyTool({
   // Status message
   let statusMessage: string;
   if (phase === 'set_center') {
-    statusMessage = "Agrandir/Réduire — Clique pour placer le centre d'agrandissement";
+    statusMessage = "Étape 1/3 — Agrandir/Réduire — Clique pour placer le centre d'agrandissement";
   } else if (phase === 'set_factor') {
-    statusMessage = 'Agrandir/Réduire — Choisis le facteur';
+    statusMessage = 'Étape 2/3 — Agrandir/Réduire — Choisis le facteur';
   } else {
-    statusMessage = 'Agrandir/Réduire — Clique sur un segment pour agrandir ou réduire la figure.';
+    statusMessage =
+      'Étape 3/3 — Agrandir/Réduire — Clique sur un segment pour agrandir ou réduire la figure.';
   }
 
   // Overlay: center marker

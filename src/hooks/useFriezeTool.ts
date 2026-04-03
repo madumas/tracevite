@@ -263,27 +263,27 @@ export function useFriezeTool({
   let statusMessage: string;
   switch (phase) {
     case 'select_figure':
-      statusMessage = 'Frise — Clique sur un segment pour sélectionner la figure à répéter';
+      statusMessage = 'Étape 1/3 — Frise — Clique sur un segment pour sélectionner la figure';
       break;
     case 'vector1_start':
-      statusMessage = 'Frise — Clique pour placer le début de la flèche de translation';
+      statusMessage = 'Étape 2/3 — Frise — Clique pour placer le début de la flèche';
       break;
     case 'vector1_end':
-      statusMessage = 'Frise — Clique pour placer la fin de la flèche';
+      statusMessage = 'Étape 2/3 — Frise — Clique pour placer la fin de la flèche';
       break;
     case 'choose_count': {
       const totalCopies =
         isTiling && vector2 ? effectiveCount1 * effectiveCount2 - 1 : effectiveCount1 - 1;
       const totalSegs = totalCopies * (selected?.segmentIds.length ?? 0);
       const prefix = isTiling && vector2 ? 'Dallage' : 'Frise';
-      statusMessage = `${prefix} — ${totalCopies} copie${totalCopies > 1 ? 's' : ''} (${totalSegs} segments). Utilise + et − pour changer.`;
+      statusMessage = `Étape 3/3 — ${prefix} — ${totalCopies} copie${totalCopies > 1 ? 's' : ''} (${totalSegs} segments). Utilise + et − pour changer.`;
       break;
     }
     case 'vector2_start':
-      statusMessage = 'Dallage — Clique pour placer le début de la deuxième flèche';
+      statusMessage = 'Étape 2/3 — Dallage — Clique pour placer le début de la deuxième flèche';
       break;
     case 'vector2_end':
-      statusMessage = 'Dallage — Clique pour placer la fin de la deuxième flèche';
+      statusMessage = 'Étape 2/3 — Dallage — Clique pour placer la fin de la deuxième flèche';
       break;
   }
 

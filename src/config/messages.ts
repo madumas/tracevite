@@ -5,8 +5,9 @@
 
 // ── Status bar messages (spec §10.1) ───────────────────────
 
-export const STATUS_SEGMENT_IDLE = 'Segment — Clique pour placer le premier point';
-export const STATUS_SEGMENT_FIRST_PLACED = 'Segment — Clique pour placer le deuxième point';
+export const STATUS_SEGMENT_IDLE = 'Étape 1/2 — Segment — Clique pour placer le premier point';
+export const STATUS_SEGMENT_FIRST_PLACED =
+  'Étape 2/2 — Segment — Clique pour placer le deuxième point';
 export const STATUS_SEGMENT_CHAINING = (label: string) =>
   `Segment — Continue depuis le sommet ${label}.`;
 

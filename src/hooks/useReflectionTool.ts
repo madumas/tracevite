@@ -281,13 +281,13 @@ export function useReflectionTool({
   // Status message
   let statusMessage: string;
   if (phase === 'choose_axis') {
-    statusMessage = STATUS_REFLECTION_AXIS;
+    statusMessage = `Étape 1/2 — ${STATUS_REFLECTION_AXIS}`;
   } else if (phase === 'axis_first_point') {
-    statusMessage = "Réflexion — Clique pour placer le deuxième point de l'axe";
+    statusMessage = "Étape 1/2 — Réflexion — Clique pour placer le deuxième point de l'axe";
   } else {
     statusMessage = lastReflectionMsg
-      ? `Réflexion — ${lastReflectionMsg} Clique sur un autre élément.`
-      : STATUS_REFLECTION_SELECT;
+      ? `Étape 2/2 — Réflexion — ${lastReflectionMsg} Clique sur un autre élément.`
+      : `Étape 2/2 — ${STATUS_REFLECTION_SELECT}`;
   }
 
   // Overlay: axis line (dashed red)
