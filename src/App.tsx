@@ -6,7 +6,6 @@ import {
 } from '@/model/context';
 import { Toolbar } from '@/components/Toolbar';
 import { ActionBar } from '@/components/ActionBar';
-import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { SnapFeedback } from '@/components/SnapFeedback';
 import { ContextActionBar } from '@/components/ContextActionBar';
 import { AngleLayer } from '@/components/AngleLayer';
@@ -43,14 +42,7 @@ import { SegmentLayer } from '@/components/SegmentLayer';
 import { PointLayer } from '@/components/PointLayer';
 import { CircleLayer } from '@/components/CircleLayer';
 import { NavigationControls } from '@/components/NavigationControls';
-import {
-  CONFIRM_NEW_TITLE,
-  CONFIRM_NEW_SUBTITLE,
-  CONFIRM_NEW_CANCEL,
-  CONFIRM_NEW_CONFIRM,
-  STATUS_DELETE_MODE,
-  STATUS_DELETE_CONFIRM,
-} from '@/config/messages';
+import { STATUS_DELETE_MODE, STATUS_DELETE_CONFIRM } from '@/config/messages';
 import { hitTestElement } from '@/engine/hit-test';
 import { ConsigneBanner } from '@/components/ConsigneBanner';
 import { SlotManager } from '@/components/SlotManager';
@@ -163,7 +155,6 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
   const containerSize = useContainerSize(containerRef);
   const { viewport, zoomIn, zoomOut, resetZoom, panUp, panDown, panLeft, panRight, pinchZoomPan } =
     useViewport(containerRef, containerSize);
-  const [showNewConfirm, setShowNewConfirm] = useState(false);
   const [consigneDismissed, setConsigneDismissed] = useState(false);
   const initializedRef = useRef(false);
 
@@ -453,13 +444,6 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
   const [printIncludeMeasurements, setPrintIncludeMeasurements] = useState(true);
   const [printIncludeConsigne, setPrintIncludeConsigne] = useState(false);
   const handlePrint = useCallback(() => setShowPrintDialog(true), []);
-  const handleNewConstruction = useCallback(() => setShowNewConfirm(true), []);
-  const handleConfirmNew = useCallback(() => {
-    slotManager.createNewSlot();
-    tool.reset();
-    setShowNewConfirm(false);
-    setEstimationRevealed(false);
-  }, [slotManager, tool]);
 
   // Context action bar handlers
   const handleToggleLock = useCallback(
@@ -488,8 +472,8 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
         // Mobile panel overlay has highest priority (z-index 1000)
         if (isNarrow && !panelCollapsed) {
           setPanelCollapsed(true);
-        } else if (showNewConfirm) {
-          setShowNewConfirm(false);
+        } else if (showSlotManager) {
+          setShowSlotManager(false);
         } else if (deleteMode) {
           setDeleteMode(false);
           setDeleteConfirmId(null);
@@ -549,7 +533,6 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
     canUndo,
     canRedo,
     dispatch,
-    showNewConfirm,
     hasElements,
     handlePrint,
     state.selectedElementId,
@@ -558,6 +541,7 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
     state.snapEnabled,
     selection,
     deleteMode,
+    showSlotManager,
     showToast,
     isNarrow,
     panelCollapsed,
@@ -567,9 +551,7 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
   useEffect(() => {
     const handler = (e: MouseEvent) => {
       e.preventDefault();
-      if (showNewConfirm) {
-        setShowNewConfirm(false);
-      } else if (showSettings) {
+      if (showSettings) {
         setShowSettings(false);
       } else if (showPrintDialog) {
         setShowPrintDialog(false);
@@ -586,15 +568,7 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
     };
     window.addEventListener('contextmenu', handler);
     return () => window.removeEventListener('contextmenu', handler);
-  }, [
-    tool,
-    showNewConfirm,
-    showSettings,
-    showPrintDialog,
-    deleteMode,
-    state.selectedElementId,
-    selection,
-  ]);
+  }, [tool, showSettings, showPrintDialog, deleteMode, state.selectedElementId, selection]);
 
   const [hasNewProperties, setHasNewProperties] = useState(false);
   const prevDerivedCountRef = useRef(0);
@@ -864,7 +838,6 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
         onToolChange={handleToolChange}
         pointToolVisible={state.pointToolVisible}
         fontScale={effectiveFontScale}
-        onTutorialStart={tutorial.start}
         demoMode={demoMode}
         onShowAbout={() => setShowAbout(true)}
         onModeChange={handleModeChange}
@@ -1437,12 +1410,12 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
           if (deleteMode) selection.clearSelection();
         }}
         onPrint={handlePrint}
-        onNewConstruction={handleNewConstruction}
         fontScale={effectiveFontScale}
         estimationMode={state.estimationMode}
         onToggleEstimation={() => setEstimationRevealed((prev) => !prev)}
         onShowSlotManager={() => setShowSlotManager(true)}
         onShowSettings={() => setShowSettings(true)}
+        onShowGuide={tutorial.start}
         onToggleDemoMode={() => {
           if (document.fullscreenElement) {
             document.exitFullscreen();
@@ -1464,20 +1437,6 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
         displayUnit={state.displayUnit}
         onUnitChange={handleUnitChange}
       />
-
-      {showNewConfirm && (
-        <ConfirmDialog
-          title={CONFIRM_NEW_TITLE}
-          subtitle={CONFIRM_NEW_SUBTITLE(
-            slotManager.registry.slots.find((s) => s.id === slotManager.activeSlotId)?.name ??
-              'Construction 1',
-          )}
-          confirmLabel={CONFIRM_NEW_CONFIRM}
-          cancelLabel={CONFIRM_NEW_CANCEL}
-          onConfirm={handleConfirmNew}
-          onCancel={() => setShowNewConfirm(false)}
-        />
-      )}
 
       {showPrintDialog && (
         <PrintDialog

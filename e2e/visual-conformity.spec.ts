@@ -150,14 +150,14 @@ test('visual conformity audit', async ({ page }, testInfo) => {
   await page.keyboard.press('Escape');
   await page.waitForTimeout(200);
 
-  // --- 19: "Nouvelle construction" confirmation dialog ---
-  await page.locator('[data-testid="action-new"]').click();
-  const confirmDialog = page.locator('[data-testid="confirm-dialog"]');
-  if (await confirmDialog.isVisible({ timeout: 2000 }).catch(() => false)) {
-    await page.screenshot({ path: shot('19-new-confirm-dialog.png'), fullPage: true });
-    await confirmDialog.screenshot({ path: shot('19b-new-confirm-detail.png') });
-    // Cancel — don't erase the construction
-    await page.locator('[data-testid="confirm-dialog-cancel"]').click();
+  // --- 19: Slot manager ("Mes travaux") — new construction is inside ---
+  await page.locator('[data-testid="slot-manager-btn"]').click();
+  const slotDialog = page.locator('[data-testid="slot-manager"]');
+  if (await slotDialog.isVisible({ timeout: 2000 }).catch(() => false)) {
+    await page.screenshot({ path: shot('19-slot-manager-dialog.png'), fullPage: true });
+    await slotDialog.screenshot({ path: shot('19b-slot-manager-detail.png') });
+    // Close — don't create a new construction
+    await page.keyboard.press('Escape');
     await page.waitForTimeout(200);
   }
 

@@ -16,8 +16,6 @@ import {
   ACTION_REDO,
   ACTION_DELETE,
   ACTION_PRINT,
-  ACTION_NEW,
-  ACTION_NEW_FULL,
   ACTION_SCALE_NOTE,
   TOOL_SNAP,
   GRID_5MM,
@@ -29,7 +27,6 @@ import {
   RedoIcon,
   DeleteIcon,
   PrintIcon,
-  NewIcon,
   SettingsIcon,
   FullscreenIcon,
   ExitFullscreenIcon,
@@ -46,12 +43,12 @@ interface ActionBarProps {
   readonly onRedo: () => void;
   readonly onToggleDeleteMode?: () => void;
   readonly onPrint: () => void;
-  readonly onNewConstruction: () => void;
   readonly fontScale?: number;
   readonly estimationMode?: boolean;
   readonly onToggleEstimation?: () => void;
   readonly onShowSlotManager?: () => void;
   readonly onShowSettings?: () => void;
+  readonly onShowGuide?: () => void;
   readonly onToggleDemoMode?: () => void;
   readonly demoMode?: boolean;
   readonly snapEnabled: boolean;
@@ -71,12 +68,12 @@ export const ActionBar = memo(function ActionBar({
   onRedo,
   onToggleDeleteMode,
   onPrint,
-  onNewConstruction,
   fontScale = 1,
   estimationMode = false,
   onToggleEstimation,
   onShowSlotManager,
   onShowSettings,
+  onShowGuide,
   onToggleDemoMode,
   demoMode = false,
   snapEnabled,
@@ -337,61 +334,6 @@ export const ActionBar = memo(function ActionBar({
         </button>
       )}
 
-      {/* Settings */}
-      {!demoMode && onShowSettings && (
-        <button
-          onClick={onShowSettings}
-          style={{
-            minWidth: MIN_BUTTON_SIZE_PX,
-            height: MIN_BUTTON_SIZE_PX,
-            padding: 0,
-            border: 'none',
-            borderRadius: 4,
-            background: 'transparent',
-            color: UI_TEXT_PRIMARY,
-            cursor: 'pointer',
-            fontSize: 18,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}
-          aria-label="Paramètres"
-          title="Paramètres"
-          data-testid="settings-button"
-        >
-          <SettingsIcon />
-        </button>
-      )}
-
-      {/* Fullscreen/Demo */}
-      {onToggleDemoMode && (
-        <button
-          onClick={onToggleDemoMode}
-          style={{
-            minWidth: MIN_BUTTON_SIZE_PX,
-            height: MIN_BUTTON_SIZE_PX,
-            padding: 0,
-            border: 'none',
-            borderRadius: 4,
-            background: demoMode ? UI_PRIMARY : 'transparent',
-            color: demoMode ? '#FFF' : UI_TEXT_PRIMARY,
-            cursor: 'pointer',
-            fontSize: 16,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}
-          aria-label="Mode démonstration"
-          title="Mode démonstration (plein écran)"
-          data-testid="demo-toggle"
-        >
-          {demoMode ? <ExitFullscreenIcon /> : <FullscreenIcon />}
-        </button>
-      )}
-
-      {/* ─ sep ─ */}
-      <div style={{ width: 1, height: 24, background: UI_BORDER, margin: '0 4px' }} />
-
       {/* Print */}
       <button
         onClick={onPrint}
@@ -415,32 +357,84 @@ export const ActionBar = memo(function ActionBar({
         <PrintIcon /> <span className="action-label">{ACTION_PRINT}</span>
       </button>
 
-      {/* Separator */}
-      <div style={{ width: 1, height: 24, background: UI_BORDER, margin: '0 4px' }} />
+      {/* ─ Right group: Settings, Aide, Fullscreen (round buttons like RésoMolo) ─ */}
 
-      {/* New construction — outlined red, far right, isolated */}
-      <button
-        onClick={onNewConstruction}
-        className="action-new-btn"
-        style={{
-          minWidth: MIN_BUTTON_SIZE_PX,
-          height: MIN_BUTTON_SIZE_PX,
-          padding: '0 14px',
-          border: `2px solid ${UI_DESTRUCTIVE}`,
-          borderRadius: 4,
-          background: 'transparent',
-          color: UI_DESTRUCTIVE,
-          cursor: 'pointer',
-          fontSize: 'inherit',
-          fontWeight: 500,
-          whiteSpace: 'nowrap',
-        }}
-        data-testid="action-new"
-        aria-label={ACTION_NEW_FULL}
-        title={ACTION_NEW_FULL}
-      >
-        <NewIcon /> <span className="action-label">{ACTION_NEW}</span>
-      </button>
+      {/* Settings */}
+      {!demoMode && onShowSettings && (
+        <button
+          onClick={onShowSettings}
+          style={{
+            width: MIN_BUTTON_SIZE_PX,
+            height: MIN_BUTTON_SIZE_PX,
+            padding: 0,
+            border: `1px solid ${UI_PRIMARY}`,
+            borderRadius: '50%',
+            background: 'none',
+            color: UI_PRIMARY,
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+          aria-label="Paramètres"
+          title="Paramètres"
+          data-testid="settings-button"
+        >
+          <SettingsIcon />
+        </button>
+      )}
+
+      {/* Aide */}
+      {!demoMode && onShowGuide && (
+        <button
+          onClick={onShowGuide}
+          style={{
+            width: MIN_BUTTON_SIZE_PX,
+            height: MIN_BUTTON_SIZE_PX,
+            padding: 0,
+            border: `1px solid ${UI_PRIMARY}`,
+            borderRadius: '50%',
+            background: 'none',
+            color: UI_PRIMARY,
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontSize: 18,
+            fontWeight: 700,
+          }}
+          aria-label="Aide — tutoriel"
+          title="Aide — tutoriel"
+          data-testid="help-tutorial"
+        >
+          ?
+        </button>
+      )}
+
+      {/* Fullscreen/Demo */}
+      {onToggleDemoMode && (
+        <button
+          onClick={onToggleDemoMode}
+          style={{
+            width: MIN_BUTTON_SIZE_PX,
+            height: MIN_BUTTON_SIZE_PX,
+            padding: 0,
+            border: demoMode ? 'none' : `1px solid ${UI_PRIMARY}`,
+            borderRadius: '50%',
+            background: demoMode ? UI_PRIMARY : 'none',
+            color: demoMode ? '#FFF' : UI_PRIMARY,
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+          aria-label="Mode démonstration"
+          title="Mode démonstration (plein écran)"
+          data-testid="demo-toggle"
+        >
+          {demoMode ? <ExitFullscreenIcon /> : <FullscreenIcon />}
+        </button>
+      )}
     </div>
   );
 });

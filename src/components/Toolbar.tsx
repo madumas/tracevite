@@ -33,7 +33,6 @@ interface ToolbarProps {
   readonly onToolChange: (tool: ToolType) => void;
   readonly pointToolVisible: boolean;
   readonly fontScale?: number;
-  readonly onTutorialStart?: () => void;
   readonly demoMode?: boolean;
   readonly onShowAbout?: () => void;
   readonly onModeChange?: (mode: DisplayMode) => void;
@@ -68,7 +67,6 @@ export const Toolbar = memo(function Toolbar({
   onToolChange,
   pointToolVisible,
   fontScale = 1,
-  onTutorialStart,
   demoMode = false,
   onShowAbout,
   onModeChange,
@@ -341,24 +339,6 @@ export const Toolbar = memo(function Toolbar({
           style={{ width: 1, height: 40, background: UI_BORDER, margin: '0 4px', flexShrink: 0 }}
         />
         {!demoMode && onModeChange && <ModeSelector mode={displayMode} onChange={onModeChange} />}
-
-        {onTutorialStart && (
-          <button
-            onClick={onTutorialStart}
-            style={{
-              ...toolBtnBase,
-              minWidth: MIN_BUTTON_SIZE_PX,
-              padding: 0,
-              justifyContent: 'center',
-              color: UI_TEXT_PRIMARY,
-              fontSize: 'inherit',
-            }}
-            aria-label="Aide — tutoriel"
-            data-testid="help-tutorial"
-          >
-            ?
-          </button>
-        )}
       </div>
     </div>
   );
