@@ -35,10 +35,14 @@ export interface SettingsProfile {
   readonly clutterThreshold?: number;
   readonly focusMode?: boolean;
   readonly reinforcedGrid?: boolean;
+  readonly animateTransformations?: boolean;
 }
 
 /** Export current settings to JSON string. */
-export function exportSettings(state: ConstructionState): string {
+export function exportSettings(
+  state: ConstructionState,
+  prefs?: { focusMode?: boolean; reinforcedGrid?: boolean; animateTransformations?: boolean },
+): string {
   const profile: SettingsProfile = {
     type: 'geomolo-settings',
     version: 1,
@@ -58,6 +62,8 @@ export function exportSettings(state: ConstructionState): string {
     cartesianMode: state.cartesianMode !== 'off' ? state.cartesianMode : undefined,
     autoIntersection: state.autoIntersection || undefined,
     clutterThreshold: state.clutterThreshold || undefined,
+    focusMode: prefs?.focusMode || undefined,
+    reinforcedGrid: prefs?.reinforcedGrid || undefined,
   };
   return JSON.stringify(profile, null, 2);
 }
@@ -86,6 +92,7 @@ type MutableSettings = {
 } & {
   focusMode?: boolean;
   reinforcedGrid?: boolean;
+  animateTransformations?: boolean;
 };
 
 /** Import settings from JSON string. Returns partial settings to apply. */
@@ -181,6 +188,10 @@ export function importSettings(json: string): MutableSettings {
 
   if (typeof obj['reinforcedGrid'] === 'boolean') {
     result.reinforcedGrid = obj['reinforcedGrid'];
+  }
+
+  if (typeof obj['animateTransformations'] === 'boolean') {
+    result.animateTransformations = obj['animateTransformations'];
   }
 
   return result;

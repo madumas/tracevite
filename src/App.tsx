@@ -601,14 +601,21 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
     if (!selectedSeg) return undefined;
 
     // Find adjacent points (directly connected to selected segment)
-    const adjacentPointIds = new Set([selectedSeg.startPointId, selectedSeg.endPointId]);
+    const selectedPointIds = new Set([selectedSeg.startPointId, selectedSeg.endPointId]);
 
-    // Find adjacent segments (share a point with selected)
+    // Phase 1: find segments that share a point with the selected segment (1-hop only)
     const adjacentSegIds = new Set<string>();
     adjacentSegIds.add(selectedSeg.id);
     for (const seg of state.segments) {
-      if (adjacentPointIds.has(seg.startPointId) || adjacentPointIds.has(seg.endPointId)) {
+      if (selectedPointIds.has(seg.startPointId) || selectedPointIds.has(seg.endPointId)) {
         adjacentSegIds.add(seg.id);
+      }
+    }
+
+    // Phase 2: collect all points from adjacent segments
+    const adjacentPointIds = new Set(selectedPointIds);
+    for (const seg of state.segments) {
+      if (adjacentSegIds.has(seg.id)) {
         adjacentPointIds.add(seg.startPointId);
         adjacentPointIds.add(seg.endPointId);
       }
