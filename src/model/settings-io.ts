@@ -32,6 +32,9 @@ export interface SettingsProfile {
   readonly estimationMode?: boolean;
   readonly cartesianMode?: CartesianMode;
   readonly autoIntersection?: boolean;
+  readonly clutterThreshold?: number;
+  readonly focusMode?: boolean;
+  readonly reinforcedGrid?: boolean;
 }
 
 /** Export current settings to JSON string. */
@@ -54,6 +57,7 @@ export function exportSettings(state: ConstructionState): string {
     estimationMode: state.estimationMode || undefined,
     cartesianMode: state.cartesianMode !== 'off' ? state.cartesianMode : undefined,
     autoIntersection: state.autoIntersection || undefined,
+    clutterThreshold: state.clutterThreshold || undefined,
   };
   return JSON.stringify(profile, null, 2);
 }
@@ -77,7 +81,11 @@ type MutableSettings = {
     | 'estimationMode'
     | 'cartesianMode'
     | 'autoIntersection'
+    | 'clutterThreshold'
   >]?: ConstructionState[K];
+} & {
+  focusMode?: boolean;
+  reinforcedGrid?: boolean;
 };
 
 /** Import settings from JSON string. Returns partial settings to apply. */
@@ -161,6 +169,18 @@ export function importSettings(json: string): MutableSettings {
 
   if (typeof obj['autoIntersection'] === 'boolean') {
     result.autoIntersection = obj['autoIntersection'];
+  }
+
+  if (typeof obj['clutterThreshold'] === 'number' && obj['clutterThreshold'] >= 0) {
+    result.clutterThreshold = obj['clutterThreshold'];
+  }
+
+  if (typeof obj['focusMode'] === 'boolean') {
+    result.focusMode = obj['focusMode'];
+  }
+
+  if (typeof obj['reinforcedGrid'] === 'boolean') {
+    result.reinforcedGrid = obj['reinforcedGrid'];
   }
 
   return result;
