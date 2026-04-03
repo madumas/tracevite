@@ -37,6 +37,54 @@ export function nearestGridPoint(
 }
 
 /**
+ * Find all points where a segment crosses grid lines.
+ * Returns crossings sorted by parameter t along the segment.
+ */
+export function segmentGridCrossings(
+  p1: { readonly x: number; readonly y: number },
+  p2: { readonly x: number; readonly y: number },
+  gridSizeMm: number,
+): { x: number; y: number }[] {
+  const dx = p2.x - p1.x;
+  const dy = p2.y - p1.y;
+  const crossings: { x: number; y: number; t: number }[] = [];
+  const EPS = 1e-9;
+
+  // Vertical grid lines (x = n * G)
+  if (Math.abs(dx) > EPS) {
+    const nMin = Math.ceil(Math.min(p1.x, p2.x) / gridSizeMm);
+    const nMax = Math.floor(Math.max(p1.x, p2.x) / gridSizeMm);
+    for (let n = nMin; n <= nMax; n++) {
+      const xg = n * gridSizeMm;
+      const t = (xg - p1.x) / dx;
+      if (t >= -EPS && t <= 1 + EPS) {
+        crossings.push({ x: xg, y: p1.y + t * dy, t: Math.max(0, Math.min(1, t)) });
+      }
+    }
+  }
+
+  // Horizontal grid lines (y = m * G)
+  if (Math.abs(dy) > EPS) {
+    const mMin = Math.ceil(Math.min(p1.y, p2.y) / gridSizeMm);
+    const mMax = Math.floor(Math.max(p1.y, p2.y) / gridSizeMm);
+    for (let m = mMin; m <= mMax; m++) {
+      const yg = m * gridSizeMm;
+      const t = (yg - p1.y) / dy;
+      if (t >= -EPS && t <= 1 + EPS) {
+        const x = p1.x + t * dx;
+        // Deduplicate corners (already added by vertical pass)
+        if (!crossings.some((c) => Math.abs(c.x - x) < EPS && Math.abs(c.y - yg) < EPS)) {
+          crossings.push({ x, y: yg, t: Math.max(0, Math.min(1, t)) });
+        }
+      }
+    }
+  }
+
+  crossings.sort((a, b) => a.t - b.t);
+  return crossings.map(({ x, y }) => ({ x, y }));
+}
+
+/**
  * Angle between two rays sharing a vertex, in degrees [0, 180].
  * Returns the smaller of the two possible angles.
  */

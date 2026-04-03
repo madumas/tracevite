@@ -10,6 +10,7 @@ import {
   perpendicularDirection,
   parallelDirection,
   projectOntoConstrainedLine,
+  segmentGridCrossings,
 } from './geometry';
 
 describe('distance', () => {
@@ -318,5 +319,45 @@ describe('projectOntoConstrainedLine', () => {
     const result = projectOntoConstrainedLine({ x: 10, y: 0 }, { x: 0, y: 0 }, dir);
     expect(result.x).toBeCloseTo(5);
     expect(result.y).toBeCloseTo(5);
+  });
+});
+
+describe('segmentGridCrossings', () => {
+  it('finds crossings for diagonal segment at 45°', () => {
+    const crossings = segmentGridCrossings({ x: 0, y: 0 }, { x: 50, y: 50 }, 10);
+    // Should cross at (10,10), (20,20), (30,30), (40,40), (50,50)
+    // Plus intermediate crossings where only x or y hits a grid line
+    expect(crossings.length).toBeGreaterThanOrEqual(5);
+    // Corner crossings should be exact
+    expect(crossings.some((c) => c.x === 10 && c.y === 10)).toBe(true);
+    expect(crossings.some((c) => c.x === 30 && c.y === 30)).toBe(true);
+  });
+
+  it('finds crossings for horizontal segment', () => {
+    const crossings = segmentGridCrossings({ x: 0, y: 25 }, { x: 50, y: 25 }, 10);
+    // Crosses vertical grid lines at x=0, 10, 20, 30, 40, 50
+    expect(crossings.length).toBe(6);
+    expect(crossings[0]!.y).toBe(25);
+    expect(crossings[1]!.x).toBe(10);
+  });
+
+  it('finds crossings for vertical segment', () => {
+    const crossings = segmentGridCrossings({ x: 15, y: 0 }, { x: 15, y: 40 }, 10);
+    // Crosses horizontal grid lines at y=0, 10, 20, 30, 40
+    expect(crossings.length).toBe(5);
+    expect(crossings[0]!.x).toBe(15);
+  });
+
+  it('returns empty for very short segment within one grid cell', () => {
+    const crossings = segmentGridCrossings({ x: 12, y: 12 }, { x: 13, y: 13 }, 10);
+    expect(crossings.length).toBe(0);
+  });
+
+  it('deduplicates corner crossings', () => {
+    // Segment from grid corner to grid corner
+    const crossings = segmentGridCrossings({ x: 0, y: 0 }, { x: 20, y: 20 }, 10);
+    // Corners (0,0), (10,10), (20,20) should appear only once each
+    const at10 = crossings.filter((c) => Math.abs(c.x - 10) < 0.01 && Math.abs(c.y - 10) < 0.01);
+    expect(at10.length).toBe(1);
   });
 });

@@ -5,6 +5,7 @@ import {
   midpoint,
   segmentAngle,
   pointOnSegmentProjection,
+  segmentGridCrossings,
 } from './geometry';
 import {
   SNAP_TOLERANCE_POINT_MM,
@@ -143,6 +144,7 @@ export function findSnap(
   // Ensures T-junction points are placed exactly on the segment, no kink.
   let bestSegDist = Infinity;
   let bestSegPos: { x: number; y: number } | undefined;
+  let bestSegSeg: { start: { x: number; y: number }; end: { x: number; y: number } } | undefined;
 
   for (const seg of state.segments) {
     const start = pointMap.get(seg.startPointId);
@@ -157,11 +159,27 @@ export function findSnap(
       if (distToStart > tolerances.pointMm && distToEnd > tolerances.pointMm) {
         bestSegDist = dist;
         bestSegPos = projection;
+        bestSegSeg = { start, end };
       }
     }
   }
 
-  if (bestSegPos) {
+  if (bestSegPos && bestSegSeg) {
+    // Quantize projection to nearest grid crossing on the segment
+    const crossings = segmentGridCrossings(bestSegSeg.start, bestSegSeg.end, state.gridSizeMm);
+    if (crossings.length > 0) {
+      let nearest = crossings[0]!;
+      let nearestDist = distance(bestSegPos, nearest);
+      for (let i = 1; i < crossings.length; i++) {
+        const d = distance(bestSegPos, crossings[i]!);
+        if (d < nearestDist) {
+          nearestDist = d;
+          nearest = crossings[i]!;
+        }
+      }
+      return { snappedPosition: nearest, snapType: 'segment' };
+    }
+    // Short segment with no grid crossings — use raw projection
     return { snappedPosition: bestSegPos, snapType: 'segment' };
   }
 
