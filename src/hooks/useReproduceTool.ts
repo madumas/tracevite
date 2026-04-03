@@ -205,9 +205,9 @@ export function useReproduceTool({
   // Status message
   let statusMessage: string;
   if (phase === 'select_figure') {
-    statusMessage = 'Reproduire — Clique sur un segment pour sélectionner la figure à reproduire';
+    statusMessage = 'Étape 1/2 — Reproduire — Clique sur un segment pour sélectionner la figure';
   } else {
-    statusMessage = 'Reproduire — Clique pour placer la copie';
+    statusMessage = 'Étape 2/2 — Reproduire — Clique pour placer la copie';
   }
 
   // Overlay: highlight selected segments + ghost preview at cursor

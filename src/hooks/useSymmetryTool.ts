@@ -171,11 +171,11 @@ export function useSymmetryTool({
   let statusMessage: string;
   if (phase === 'choose_axis') {
     statusMessage =
-      'Symétrie — Clique sur un segment (axe) ou clique deux points pour tracer l\u2019axe';
+      'Étape 1/2 — Symétrie — Clique sur un segment (axe) ou clique deux points pour tracer l\u2019axe';
   } else if (phase === 'axis_second_point') {
-    statusMessage = 'Symétrie — Clique pour placer le deuxième point de l\u2019axe';
+    statusMessage = 'Étape 1/2 — Symétrie — Clique pour placer le deuxième point de l\u2019axe';
   } else if (phase === 'select_figure') {
-    statusMessage = 'Symétrie — Clique sur la figure à vérifier';
+    statusMessage = 'Étape 2/2 — Symétrie — Clique sur la figure à vérifier';
   } else if (result?.isSymmetric) {
     statusMessage = 'Symétrie — La figure est symétrique par rapport à cet axe!';
   } else {

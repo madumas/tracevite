@@ -152,11 +152,11 @@ export function useConstrainedLineTool({
   // Status message
   let statusMessage: string;
   if (phase === 'select_reference') {
-    statusMessage = `${toolLabel} — Clique sur un segment de référence`;
+    statusMessage = `Étape 1/2 — ${toolLabel} — Clique sur un segment de référence`;
   } else if (phase === 'place_start') {
-    statusMessage = `${toolLabel} — Clique pour placer le point de départ`;
+    statusMessage = `Étape 2/2 — ${toolLabel} — Clique pour placer le point de départ`;
   } else {
-    statusMessage = `${toolLabel} — Clique pour placer le point d'arrivée`;
+    statusMessage = `Étape 2/2 — ${toolLabel} — Clique pour placer le point d'arrivée`;
   }
 
   // Overlay: reference highlight + constrained ghost line

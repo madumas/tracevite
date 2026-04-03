@@ -11,12 +11,12 @@ export const STATUS_SEGMENT_FIRST_PLACED =
 export const STATUS_SEGMENT_CHAINING = (label: string) =>
   `Segment — Continue depuis le sommet ${label}.`;
 
-export const STATUS_CIRCLE_IDLE = 'Cercle — Clique pour placer le centre';
-export const STATUS_CIRCLE_CENTER_PLACED = 'Cercle — Clique pour fixer le rayon';
+export const STATUS_CIRCLE_IDLE = 'Étape 1/2 — Cercle — Clique pour placer le centre';
+export const STATUS_CIRCLE_CENTER_PLACED = 'Étape 2/2 — Cercle — Clique pour fixer le rayon';
 
-export const STATUS_MOVE_IDLE = 'Déplacer — Clique sur un point pour le ramasser';
+export const STATUS_MOVE_IDLE = 'Étape 1/2 — Déplacer — Clique sur un point pour le ramasser';
 export const STATUS_MOVE_PICKED = (label: string) =>
-  `Déplacer — Clique pour déposer le point ${label}.`;
+  `Étape 2/2 — Déplacer — Clique pour déposer le point ${label}.`;
 
 export const STATUS_REFLECTION_AXIS =
   "Réflexion — Clique deux points pour tracer l'axe de réflexion";

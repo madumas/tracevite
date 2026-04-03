@@ -136,9 +136,9 @@ export function useCompareTool({
   // Status message
   let statusMessage: string;
   if (phase === 'select_first') {
-    statusMessage = 'Comparer — Clique sur une figure, un segment ou un cercle';
+    statusMessage = 'Étape 1/2 — Comparer — Clique sur une figure, un segment ou un cercle';
   } else if (phase === 'select_second') {
-    statusMessage = 'Comparer — Clique sur la deuxième figure';
+    statusMessage = 'Étape 2/2 — Comparer — Clique sur la deuxième figure';
   } else if (comparisonResult?.isIsometric) {
     statusMessage = 'Comparer — Les figures sont isométriques!';
   } else {
