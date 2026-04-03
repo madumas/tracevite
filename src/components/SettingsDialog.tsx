@@ -382,12 +382,13 @@ export const SettingsDialog = memo(function SettingsDialog({
             onChange={(e) => onClutterThresholdChange(Number(e.target.value))}
             style={{ height: MIN_BUTTON_SIZE_PX - 8, fontSize: 'inherit', cursor: 'pointer' }}
           >
-            <option value={0}>Auto ({displayMode === 'simplifie' ? 5 : 6})</option>
+            <option value={0}>Normal ({displayMode === 'simplifie' ? 5 : 6})</option>
+            <option value={3}>Peu d'éléments (3)</option>
             <option value={4}>4 segments</option>
             <option value={5}>5 segments</option>
             <option value={6}>6 segments</option>
             <option value={8}>8 segments</option>
-            <option value={10}>10 segments</option>
+            <option value={10}>Construction complexe (10)</option>
             <option value={15}>15 segments</option>
             <option value={999}>Toujours afficher</option>
           </select>
