@@ -1147,6 +1147,7 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
                 displayUnit={state.displayUnit}
                 fontScale={effectiveFontScale}
                 estimationMode={state.estimationMode}
+                focusDimmedIds={focusDimmedIds}
               />
               <PointLayer
                 points={state.points}
@@ -1173,6 +1174,7 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
                 activeGestureHideAll={!!tool.isActiveGesture && !tool.activePointId}
                 activeVertexPointId={tool.activePointId ?? undefined}
                 angleLabelObstacles={angleLabelObstacles}
+                focusDimmedIds={focusDimmedIds}
               />
 
               {/* Tool-specific overlays (ghost segment, ghost circle, etc.) */}

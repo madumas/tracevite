@@ -13,6 +13,7 @@ interface CircleLayerProps {
   readonly displayUnit: DisplayUnit;
   readonly fontScale: number;
   readonly estimationMode?: boolean;
+  readonly focusDimmedIds?: ReadonlySet<string>;
 }
 
 export const CircleLayer = memo(function CircleLayer({
@@ -23,6 +24,7 @@ export const CircleLayer = memo(function CircleLayer({
   displayUnit,
   fontScale,
   estimationMode = false,
+  focusDimmedIds,
 }: CircleLayerProps) {
   const colors = useCanvasColors();
   const pxPerMm = viewport.zoom * CSS_PX_PER_MM;
@@ -39,8 +41,10 @@ export const CircleLayer = memo(function CircleLayer({
         const r = circle.radiusMm * pxPerMm;
         const isSelected = circle.id === selectedElementId;
 
+        const isDimmed = focusDimmedIds?.has(circle.centerPointId) ?? false;
+
         return (
-          <g key={circle.id}>
+          <g key={circle.id} opacity={isDimmed ? 0.3 : undefined}>
             {isSelected && (
               <circle
                 cx={cx}

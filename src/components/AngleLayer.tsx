@@ -25,6 +25,7 @@ interface AngleLayerProps {
   readonly activeVertexPointId?: string;
   /** Pre-computed obstacles per vertex for angle label anti-overlap. */
   readonly angleLabelObstacles?: Map<string, Obstacle[]>;
+  readonly focusDimmedIds?: ReadonlySet<string>;
 }
 
 const ARC_RADIUS_PX = 22;
@@ -49,6 +50,7 @@ export const AngleLayer = memo(function AngleLayer({
   activeGestureHideAll,
   activeVertexPointId,
   angleLabelObstacles,
+  focusDimmedIds,
 }: AngleLayerProps) {
   const colors = useCanvasColors();
   const pxPerMm = viewport.zoom * CSS_PX_PER_MM;
@@ -263,8 +265,10 @@ export const AngleLayer = memo(function AngleLayer({
         // Single arc per angle, staggered radius to avoid overlap at same vertex
         const arcR = angleArcRadius.get(index) ?? r;
 
+        const isAngleDimmed = focusDimmedIds?.has(angle.vertexPointId) ?? false;
+
         return (
-          <g key={index}>
+          <g key={index} opacity={isAngleDimmed ? 0.3 : undefined}>
             {(() => {
               const ax1 = sx + Math.cos(arcStart) * arcR;
               const ay1 = sy + Math.sin(arcStart) * arcR;

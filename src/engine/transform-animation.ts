@@ -122,6 +122,7 @@ export function computeTranslationAnimData(
 export function computeHomothetyAnimData(
   pointIds: readonly string[],
   segmentIds: readonly string[],
+  circleIds: readonly string[],
   state: ConstructionState,
   center: { x: number; y: number },
   factor: number,
@@ -147,7 +148,7 @@ export function computeHomothetyAnimData(
     },
     pointIds,
     segmentIds,
-    circleIds: [],
+    circleIds,
     interpolateRadius: (cid, t) => {
       const circle = state.circles.find((c) => c.id === cid);
       if (!circle) return 0;

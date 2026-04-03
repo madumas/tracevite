@@ -140,7 +140,7 @@ export function useHomothetyTool({
           });
 
         const animStarted = anim.startAnimation(
-          computeHomothetyAnimData(pointIds, segmentIds, state, center, factor),
+          computeHomothetyAnimData(pointIds, segmentIds, circleIds, state, center, factor),
           doDispatch,
         );
         if (!animStarted) doDispatch();
