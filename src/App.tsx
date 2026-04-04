@@ -20,6 +20,7 @@ import {
   UI_BG,
   UI_PRIMARY,
   UI_TEXT_PRIMARY,
+  UI_TEXT_SECONDARY,
   STATUS_BAR_HEIGHT,
   STATUS_BAR_BG,
   getCanvasColors,
@@ -42,7 +43,15 @@ import { SegmentLayer } from '@/components/SegmentLayer';
 import { PointLayer } from '@/components/PointLayer';
 import { CircleLayer } from '@/components/CircleLayer';
 import { NavigationControls } from '@/components/NavigationControls';
-import { STATUS_DELETE_MODE, STATUS_DELETE_CONFIRM } from '@/config/messages';
+import {
+  STATUS_DELETE_MODE,
+  STATUS_DELETE_CONFIRM,
+  CONFIRM_NEW_TITLE,
+  CONFIRM_NEW_SUBTITLE,
+  CONFIRM_NEW_CANCEL,
+  CONFIRM_NEW_CONFIRM,
+} from '@/config/messages';
+import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { hitTestElement } from '@/engine/hit-test';
 import { ConsigneBanner } from '@/components/ConsigneBanner';
 import { SlotManager } from '@/components/SlotManager';
@@ -165,6 +174,11 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
   const initializedRef = useRef(false);
 
   const [showSlotManager, setShowSlotManager] = useState(false);
+  const [showConfirmNew, setShowConfirmNew] = useState(false);
+  const [showAllProps, setShowAllProps] = useState(false);
+  const [hiddenOps, setHiddenOps] = useState<Set<string>>(new Set());
+  // Reset "show all" filter when selection changes
+  useEffect(() => setShowAllProps(false), [state.selectedElementId]);
   const [showSettings, setShowSettings] = useState(false);
   const [showAbout, setShowAbout] = useState(false);
 
@@ -590,13 +604,14 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
     () => computeDerived(state, state.displayMode),
     [state.points, state.segments, state.circles, state.displayMode],
   );
+  const [tempFocusMode, setTempFocusMode] = useState(false);
   const cluttered = useMemo(
     () => isAngleCluttered(state, state.displayMode),
     [state.segments.length, state.displayMode],
   );
   // Focus mode: compute dimmed element IDs (segments + points not adjacent to selection)
   const focusDimmedIds = useMemo(() => {
-    if (!preferences.focusMode || !state.selectedElementId) return undefined;
+    if (!(preferences.focusMode || tempFocusMode) || !state.selectedElementId) return undefined;
     const selectedSeg = state.segments.find((s) => s.id === state.selectedElementId);
     if (!selectedSeg) return undefined;
 
@@ -630,7 +645,42 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
       if (!adjacentPointIds.has(pt.id)) dimmed.add(pt.id);
     }
     return dimmed.size > 0 ? dimmed : undefined;
-  }, [preferences.focusMode, state.selectedElementId, state.segments, state.points]);
+  }, [preferences.focusMode, tempFocusMode, state.selectedElementId, state.segments, state.points]);
+
+  // Auto-select last segment after transformation + temporary focus mode
+  const prevSegCount = useRef(state.segments.length);
+  const [primeHintShown, setPrimeHintShown] = useState(false);
+  const [primeHint, setPrimeHint] = useState<string | null>(null);
+  useEffect(() => {
+    const delta = state.segments.length - prevSegCount.current;
+    prevSegCount.current = state.segments.length;
+    if (delta >= 3 && state.segments.length > 0) {
+      // Auto-select last segment created
+      const lastSeg = state.segments[state.segments.length - 1]!;
+      dispatch({ type: 'SET_SELECTED_ELEMENT', elementId: lastSeg.id });
+      // Temporarily enable focus mode (10s with gradual fade-out)
+      if (!preferences.focusMode) {
+        setTempFocusMode(true);
+        const t = setTimeout(() => setTempFocusMode(false), 10000);
+        // Cleanup handled by React
+        return () => clearTimeout(t);
+      }
+      // Show prime hint once
+      if (!primeHintShown && state.points.some((p) => p.label.includes("'"))) {
+        setPrimeHintShown(true);
+        setPrimeHint("Les points avec ' sont les copies issues de la transformation.");
+        const t = setTimeout(() => setPrimeHint(null), 5000);
+        return () => clearTimeout(t);
+      }
+    }
+  }, [
+    state.segments.length,
+    preferences.focusMode,
+    state.segments,
+    state.points,
+    dispatch,
+    primeHintShown,
+  ]);
 
   // Track first appearance of clutter for button pulse animation
   const [clutterBtnPulse, setClutterBtnPulse] = useState(false);
@@ -644,6 +694,24 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
   }, [cluttered, clutterHintShown]);
 
   const effectiveCluttered = cluttered && !forceShowLabels;
+
+  // Filter out elements belonging to hidden transform operations
+  const visibleSegments = useMemo(
+    () =>
+      hiddenOps.size === 0
+        ? state.segments
+        : state.segments.filter(
+            (s) => !s.transformOperation || !hiddenOps.has(s.transformOperation),
+          ),
+    [state.segments, hiddenOps],
+  );
+  const visiblePoints = useMemo(
+    () =>
+      hiddenOps.size === 0
+        ? state.points
+        : state.points.filter((p) => !p.transformOperation || !hiddenOps.has(p.transformOperation)),
+    [state.points, hiddenOps],
+  );
 
   const handleForceShowLabels = useCallback(() => {
     setForceShowLabels((prev) => {
@@ -932,6 +1000,11 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
               if (dashIdx < 0) return raw; // hint messages without separator
               const toolName = raw.slice(0, dashIdx);
               const instruction = raw.slice(dashIdx + 3);
+              // Parse step progress from toolName (e.g. "Étape 1/2 — Segment")
+              const stepMatch = toolName.match(/(\d+)\/(\d+)/);
+              const stepCurrent = stepMatch ? parseInt(stepMatch[1]!, 10) : 0;
+              const stepTotal = stepMatch ? parseInt(stepMatch[2]!, 10) : 0;
+
               return (
                 <>
                   <span
@@ -946,6 +1019,23 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
                       whiteSpace: 'nowrap',
                     }}
                   >
+                    {stepTotal >= 2 && (
+                      <span style={{ marginRight: 5 }}>
+                        {Array.from({ length: stepTotal }, (_, i) => (
+                          <span
+                            key={i}
+                            style={{
+                              display: 'inline-block',
+                              width: 6,
+                              height: 6,
+                              borderRadius: '50%',
+                              background: i < stepCurrent ? '#FFF' : 'rgba(255,255,255,0.35)',
+                              margin: '0 1px',
+                            }}
+                          />
+                        ))}
+                      </span>
+                    )}
                     {toolName}
                   </span>
                   {instruction}
@@ -954,16 +1044,16 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
                       style={{
                         background: '#FEF3C7',
                         color: '#B45309',
-                        padding: '1px 8px',
+                        padding: '2px 10px',
                         borderRadius: 4,
-                        fontSize: 11 * effectiveFontScale,
+                        fontSize: 12 * effectiveFontScale,
                         fontWeight: 600,
                         marginLeft: 8,
                         whiteSpace: 'nowrap',
                       }}
                       data-testid="estimation-badge"
                     >
-                      Estimation
+                      ◈ Estimation
                     </span>
                   )}
                 </>
@@ -975,11 +1065,24 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
             style={{
               marginLeft: 8,
               fontSize: 12 * effectiveFontScale,
-              color: '#7A8B99',
-              fontWeight: 500,
+              color: '#0a7e7a',
+              fontWeight: 600,
+              animation: 'figure-closed-flash 400ms ease-out',
             }}
           >
-            {figureClosedHint}
+            ✓ {figureClosedHint}
+          </span>
+        )}
+        {primeHint && (
+          <span
+            style={{
+              marginLeft: 8,
+              fontSize: 11 * effectiveFontScale,
+              color: UI_TEXT_SECONDARY,
+              fontStyle: 'italic',
+            }}
+          >
+            {primeHint}
           </span>
         )}
         {/* Right-side buttons grouped in a single flex container */}
@@ -1125,8 +1228,8 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
                 />
               )}
               <SegmentLayer
-                segments={state.segments}
-                points={state.points}
+                segments={visibleSegments}
+                points={visiblePoints}
                 viewport={viewport}
                 displayUnit={state.displayUnit}
                 selectedElementId={state.selectedElementId}
@@ -1150,7 +1253,7 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
                 focusDimmedIds={focusDimmedIds}
               />
               <PointLayer
-                points={state.points}
+                points={visiblePoints}
                 viewport={viewport}
                 selectedElementId={state.selectedElementId}
                 fontScale={effectiveFontScale}
@@ -1326,6 +1429,17 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
             estimationActive={state.estimationMode && !estimationRevealed}
             onHoverElement={setHoveredPanelElementId}
             hoveredElementId={hoveredPanelElementId}
+            showAllProperties={showAllProps}
+            onToggleShowAll={() => setShowAllProps(!showAllProps)}
+            hiddenOps={hiddenOps}
+            onToggleOp={(opId) =>
+              setHiddenOps((prev) => {
+                const next = new Set(prev);
+                if (next.has(opId)) next.delete(opId);
+                else next.add(opId);
+                return next;
+              })
+            }
           />
         )}
         {isNarrow && (
@@ -1356,36 +1470,51 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
         )}
       </div>
 
-      {/* Mobile panel overlay */}
+      {/* Mobile panel bottom sheet */}
       {isNarrow && !panelCollapsed && (
         <div
           style={{
             position: 'fixed',
             inset: 0,
-            background: 'rgba(0,0,0,0.3)',
+            background: 'rgba(0,0,0,0.2)',
             zIndex: 1000,
-            display: 'flex',
-            flexDirection: 'column',
           }}
           onClick={() => setPanelCollapsed(true)}
         >
           <div
             style={{
-              flex: 1,
+              position: 'fixed',
+              left: 0,
+              right: 0,
+              bottom: 0,
+              height: '50vh',
+              maxHeight: '75vh',
               background: UI_BG,
-              marginTop: 60,
               borderTopLeftRadius: 12,
               borderTopRightRadius: 12,
               overflow: 'auto',
+              boxShadow: '0 -4px 16px rgba(0,0,0,0.15)',
+              animation: 'slide-up 200ms ease-out',
             }}
             onClick={(e) => e.stopPropagation()}
           >
+            {/* Drag handle indicator */}
+            <div style={{ display: 'flex', justifyContent: 'center', padding: '8px 0 4px' }}>
+              <div
+                style={{
+                  width: 36,
+                  height: 4,
+                  borderRadius: 2,
+                  background: '#C0C8D0',
+                }}
+              />
+            </div>
             <div
               style={{
                 display: 'flex',
                 justifyContent: 'space-between',
                 alignItems: 'center',
-                padding: '12px 16px',
+                padding: '4px 16px 8px',
                 borderBottom: '1px solid #D1D8E0',
               }}
             >
@@ -1393,11 +1522,16 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
               <button
                 onClick={() => setPanelCollapsed(true)}
                 style={{
+                  width: 44,
+                  height: 44,
                   background: 'transparent',
                   border: 'none',
                   fontSize: 18,
                   cursor: 'pointer',
                   color: '#666',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
                 }}
                 aria-label="Fermer"
               >
@@ -1425,6 +1559,17 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
               estimationActive={state.estimationMode && !estimationRevealed}
               onHoverElement={setHoveredPanelElementId}
               hoveredElementId={hoveredPanelElementId}
+              hiddenOps={hiddenOps}
+              onToggleOp={(opId) =>
+                setHiddenOps((prev) => {
+                  const next = new Set(prev);
+                  if (next.has(opId)) next.delete(opId);
+                  else next.add(opId);
+                  return next;
+                })
+              }
+              showAllProperties={showAllProps}
+              onToggleShowAll={() => setShowAllProps(!showAllProps)}
             />
           </div>
         </div>
@@ -1514,8 +1659,12 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
             setShowSlotManager(false);
           }}
           onCreate={(name) => {
-            slotManager.createNewSlot(name);
-            setShowSlotManager(false);
+            if (state.points.length > 0) {
+              setShowConfirmNew(true);
+            } else {
+              slotManager.createNewSlot(name);
+              setShowSlotManager(false);
+            }
           }}
           onDelete={(id) => slotManager.removeSlot(id)}
           onRename={(id, name) => slotManager.renameCurrentSlot(id, name)}
@@ -1528,6 +1677,25 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
             setShowSlotManager(false);
           }}
           onClose={() => setShowSlotManager(false)}
+        />
+      )}
+
+      {/* Confirm dialog for new construction */}
+      {showConfirmNew && (
+        <ConfirmDialog
+          title={CONFIRM_NEW_TITLE}
+          subtitle={CONFIRM_NEW_SUBTITLE(
+            slotManager.registry.slots.find((s) => s.id === slotManager.activeSlotId)?.name ??
+              'Construction',
+          )}
+          confirmLabel={CONFIRM_NEW_CONFIRM}
+          cancelLabel={CONFIRM_NEW_CANCEL}
+          onConfirm={() => {
+            slotManager.createNewSlot();
+            setShowConfirmNew(false);
+            setShowSlotManager(false);
+          }}
+          onCancel={() => setShowConfirmNew(false)}
         />
       )}
 
