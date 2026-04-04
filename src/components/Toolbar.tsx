@@ -255,6 +255,19 @@ export const Toolbar = memo(function Toolbar({
             <ParallelIcon /> <span className="tool-label">Parallèle</span>
           </button>
         )}
+        {/* ─ thin sep (Construire lignes | Transformer figures) ─ */}
+        {(!needsOverflow || moreOpen) && (
+          <div
+            style={{
+              width: 1,
+              height: 20,
+              background: UI_BORDER,
+              margin: '0 3px',
+              flexShrink: 0,
+              opacity: 0.35,
+            }}
+          />
+        )}
         <button
           ref={refIfActive('reflection')}
           onClick={() => onToolChange('reflection')}
@@ -287,6 +300,19 @@ export const Toolbar = memo(function Toolbar({
           >
             <FriezeIcon /> <span className="tool-label">Frise</span>
           </button>
+        )}
+        {/* ─ thin sep (Copier | Transformer 3e cycle) ─ */}
+        {!isSimple && (
+          <div
+            style={{
+              width: 1,
+              height: 20,
+              background: UI_BORDER,
+              margin: '0 3px',
+              flexShrink: 0,
+              opacity: 0.35,
+            }}
+          />
         )}
         {/* Translation — complet only (3e cycle) */}
         {!isSimple && (

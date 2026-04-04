@@ -532,5 +532,6 @@ export function useRotationTool({
     snapResult,
     overlayElements: mergedOverlay,
     toolPanel,
+    isPreviewActive: previewAngle != null,
   };
 }

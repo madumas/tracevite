@@ -164,7 +164,7 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
     ? canvasColors.segment
     : preferences.segmentColor;
   // Responsive breakpoints
-  const isNarrow = useMediaQuery('(max-width: 768px)');
+  const isNarrow = useMediaQuery('(max-width: 1024px)');
 
   const containerRef = useRef<HTMLDivElement>(null);
   const containerSize = useContainerSize(containerRef);
@@ -1227,40 +1227,43 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
                   displayUnit={state.displayUnit}
                 />
               )}
-              <SegmentLayer
-                segments={visibleSegments}
-                points={visiblePoints}
-                viewport={viewport}
-                displayUnit={state.displayUnit}
-                selectedElementId={state.selectedElementId}
-                properties={derived.properties}
-                hideProperties={gestureHideProperties}
-                fontScale={effectiveFontScale}
-                segmentColor={effectiveSegmentColor}
-                estimationMode={state.estimationMode && !estimationRevealed}
-                cluttered={effectiveCluttered}
-                hoveredElementId={hoveredPanelElementId ?? selection.hoveredElement?.id ?? null}
-                focusDimmedIds={focusDimmedIds}
-              />
-              <CircleLayer
-                circles={state.circles}
-                points={state.points}
-                viewport={viewport}
-                selectedElementId={state.selectedElementId}
-                displayUnit={state.displayUnit}
-                fontScale={effectiveFontScale}
-                estimationMode={state.estimationMode}
-                focusDimmedIds={focusDimmedIds}
-              />
-              <PointLayer
-                points={visiblePoints}
-                viewport={viewport}
-                selectedElementId={state.selectedElementId}
-                fontScale={effectiveFontScale}
-                pointColor={effectiveSegmentColor}
-                labelObstacles={labelObstacles}
-                focusDimmedIds={focusDimmedIds}
-              />
+              {/* Dim existing construction during ghost preview (rotation/homothety) */}
+              <g opacity={tool.isPreviewActive ? 0.15 : undefined}>
+                <SegmentLayer
+                  segments={visibleSegments}
+                  points={visiblePoints}
+                  viewport={viewport}
+                  displayUnit={state.displayUnit}
+                  selectedElementId={state.selectedElementId}
+                  properties={derived.properties}
+                  hideProperties={gestureHideProperties}
+                  fontScale={effectiveFontScale}
+                  segmentColor={effectiveSegmentColor}
+                  estimationMode={state.estimationMode && !estimationRevealed}
+                  cluttered={effectiveCluttered}
+                  hoveredElementId={hoveredPanelElementId ?? selection.hoveredElement?.id ?? null}
+                  focusDimmedIds={focusDimmedIds}
+                />
+                <CircleLayer
+                  circles={state.circles}
+                  points={state.points}
+                  viewport={viewport}
+                  selectedElementId={state.selectedElementId}
+                  displayUnit={state.displayUnit}
+                  fontScale={effectiveFontScale}
+                  estimationMode={state.estimationMode}
+                  focusDimmedIds={focusDimmedIds}
+                />
+                <PointLayer
+                  points={visiblePoints}
+                  viewport={viewport}
+                  selectedElementId={state.selectedElementId}
+                  fontScale={effectiveFontScale}
+                  pointColor={effectiveSegmentColor}
+                  labelObstacles={labelObstacles}
+                  focusDimmedIds={focusDimmedIds}
+                />
+              </g>
 
               {/* Angle arcs and markers */}
               <AngleLayer
@@ -1307,13 +1310,18 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
             )}
 
           {/* Tool-specific floating panel (e.g. frieze count stepper) */}
+          {/* On narrow (tablet), position at top to avoid hand grip zone conflict */}
           {tool.toolPanel && (
             <div
               style={{
                 position: 'absolute',
-                bottom: STATUS_BAR_HEIGHT + 12,
-                left: '50%',
-                transform: 'translateX(-50%)',
+                ...(isNarrow
+                  ? { top: 80, left: '50%', transform: 'translateX(-50%)' }
+                  : {
+                      bottom: STATUS_BAR_HEIGHT + 12,
+                      left: '50%',
+                      transform: 'translateX(-50%)',
+                    }),
                 zIndex: 25,
               }}
             >

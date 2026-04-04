@@ -46,7 +46,7 @@ export const AngleLayer = memo(function AngleLayer({
   displayMode,
   cluttered,
   selectedElementId,
-  hoveredElementId,
+  hoveredElementId: _hoveredElementId,
   selectedFigurePointIds,
   hideProperties: _hideProperties = false,
   fontScale = 1,
@@ -165,27 +165,18 @@ export const AngleLayer = memo(function AngleLayer({
 
         // Check visibility (clutter management)
         if (cluttered) {
-          const isVertexHovered = hoveredElementId === angle.vertexPointId;
           const isVertexSelected = selectedElementId === angle.vertexPointId;
           const isInSelectedFigure = selectedFigurePointIds?.includes(angle.vertexPointId);
-          // Also show if a connected segment is hovered or selected (touch equivalent)
-          const isSegmentHoveredOrSelected =
-            (hoveredElementId !== null || selectedElementId !== null) &&
+          // Show if a connected segment is selected (selection-only, no hover — TDC accessibility)
+          const isSegmentSelected =
+            selectedElementId !== null &&
             angles.some(
               (a) =>
                 a.vertexPointId === angle.vertexPointId &&
-                (a.ray1PointId === hoveredElementId ||
-                  a.ray2PointId === hoveredElementId ||
-                  a.ray1PointId === selectedElementId ||
-                  a.ray2PointId === selectedElementId),
+                (a.ray1PointId === selectedElementId || a.ray2PointId === selectedElementId),
             );
 
-          if (
-            !isVertexHovered &&
-            !isVertexSelected &&
-            !isInSelectedFigure &&
-            !isSegmentHoveredOrSelected
-          ) {
+          if (!isVertexSelected && !isInSelectedFigure && !isSegmentSelected) {
             return null;
           }
         }

@@ -33,14 +33,16 @@ export function FatigueReminder({ onDismiss }: FatigueReminderProps) {
       <button
         onClick={onDismiss}
         style={{
-          padding: '4px 12px',
+          padding: '4px 16px',
+          minHeight: 44,
+          minWidth: 44,
           background: '#E65100',
           color: '#FFF',
           border: 'none',
           borderRadius: 4,
           cursor: 'pointer',
-          fontSize: 12,
-          fontWeight: 500,
+          fontSize: 13,
+          fontWeight: 600,
         }}
       >
         OK

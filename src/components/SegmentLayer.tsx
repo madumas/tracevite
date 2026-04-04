@@ -39,7 +39,7 @@ export const SegmentLayer = memo(function SegmentLayer({
   segmentColor = CANVAS_SEGMENT,
   estimationMode = false,
   cluttered = false,
-  hoveredElementId = null,
+  hoveredElementId: _hoveredElementId = null,
   focusDimmedIds,
 }: SegmentLayerProps) {
   const colors = useCanvasColors();
@@ -249,8 +249,6 @@ export const SegmentLayer = memo(function SegmentLayer({
                     len > 0 &&
                     (!cluttered ||
                       isSelected ||
-                      segment.id === hoveredElementId ||
-                      parallelPeers.get(segment.id)?.includes(hoveredElementId ?? '') ||
                       parallelPeers.get(segment.id)?.includes(selectedElementId ?? '')) && (
                       <g>
                         {Array.from(
@@ -286,8 +284,6 @@ export const SegmentLayer = memo(function SegmentLayer({
                     len > 0 &&
                     (!cluttered ||
                       isSelected ||
-                      segment.id === hoveredElementId ||
-                      congruencePeers.get(segment.id)?.includes(hoveredElementId ?? '') ||
                       congruencePeers.get(segment.id)?.includes(selectedElementId ?? '')) && (
                       <g>
                         {Array.from(

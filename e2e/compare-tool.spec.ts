@@ -6,8 +6,10 @@ import { expectSegmentCount } from './helpers/assertions';
 test.beforeEach(async ({ page }) => {
   await page.goto('/');
   await page.waitForSelector('[data-testid="canvas-svg"]');
+  // Default: complet mode for most tests
   await page.locator('[data-testid="mode-selector"]').click();
   await page.locator('[data-testid="mode-option-complet"]').click();
+  await page.waitForTimeout(200);
 });
 
 test.describe('Compare tool', () => {
@@ -61,5 +63,36 @@ test.describe('Compare tool', () => {
     // Click anywhere to reset
     await interactCanvas(page, testInfo, 100, 100);
     await waitForStatus(page, /Comparer.*Clique/);
+  });
+
+  test('uses PFEQ vocabulary in Simplifié mode', async ({ page }, testInfo) => {
+    // Switch to Simplifié
+    await page.locator('[data-testid="mode-selector"]').click();
+    await page.locator('[data-testid="mode-option-simplifie"]').click();
+    await page.waitForTimeout(200);
+
+    // Create two identical segments
+    await interactCanvas(page, testInfo, 40, 60);
+    await waitForStatus(page, /deuxième point/);
+    await interactCanvas(page, testInfo, 90, 60);
+    await page.keyboard.press('Escape');
+    await interactCanvas(page, testInfo, 40, 120);
+    await waitForStatus(page, /deuxième point/);
+    await interactCanvas(page, testInfo, 90, 120);
+    await page.keyboard.press('Escape');
+
+    // Compare is behind "Plus d'outils" in Simplifié
+    const moreBtn = page.locator('[data-testid="more-tools"]');
+    if (await moreBtn.isVisible({ timeout: 1000 }).catch(() => false)) {
+      await moreBtn.click();
+      await page.waitForTimeout(200);
+    }
+    await selectTool(page, 'compare');
+    await interactCanvas(page, testInfo, 65, 60);
+    await waitForStatus(page, /deuxième/);
+    await interactCanvas(page, testInfo, 65, 120);
+
+    // Simplifié should say "même forme" not "isométriques"
+    await waitForStatus(page, /même forme/);
   });
 });

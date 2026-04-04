@@ -1728,6 +1728,82 @@ test('visual conformity — PFEQ figures & tools', async ({ page }, testInfo) =>
   await page.screenshot({ path: shot('103-settings-reinitialiser.png'), fullPage: true });
   await page.keyboard.press('Escape');
   await page.waitForTimeout(200);
+
+  // ── 104: Comparer tool in Simplifié mode — PFEQ vocabulary ──
+  await page.goto('/');
+  await page.waitForSelector('[data-testid="canvas-svg"]');
+  await page.waitForTimeout(300);
+  // Stay in Simplifié (default)
+  await interact(40, 60);
+  await interact(90, 60);
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(200);
+  await interact(40, 120);
+  await interact(90, 120);
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(200);
+  const compareBtn = page.locator('[data-testid="tool-compare"]');
+  // Compare may be behind "Plus d'outils" in Simplifié
+  const moreBtn104 = page.locator('[data-testid="more-tools"]');
+  if (await moreBtn104.isVisible({ timeout: 1000 }).catch(() => false)) {
+    await moreBtn104.click();
+    await page.waitForTimeout(200);
+  }
+  if (await compareBtn.isVisible({ timeout: 2000 }).catch(() => false)) {
+    await compareBtn.click();
+    await page.waitForTimeout(200);
+    await interact(65, 60);
+    await page.waitForTimeout(300);
+    await interact(65, 120);
+    await page.waitForTimeout(500);
+    await page.screenshot({ path: shot('104-comparer-simplifie-result.png'), fullPage: true });
+  }
+
+  // ── 105: Frise with 3 copies — color differentiation ──
+  await freshComplet();
+  await interact(50, 50);
+  await interact(80, 50);
+  await interact(80, 70);
+  await interact(50, 50);
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(200);
+  const friezeBtn105 = page.locator('[data-testid="tool-frieze"]');
+  if (await friezeBtn105.isVisible({ timeout: 2000 }).catch(() => false)) {
+    await friezeBtn105.click();
+    await page.waitForTimeout(300);
+    await interact(65, 60);
+    await page.waitForTimeout(500);
+    // Set count to 4 (3 copies + original)
+    const plusBtn = page.locator('button:has-text("+")');
+    if (await plusBtn.isVisible({ timeout: 1000 }).catch(() => false)) {
+      await plusBtn.click();
+      await plusBtn.click();
+      await page.waitForTimeout(200);
+    }
+    // Define vector
+    await interact(100, 60);
+    await page.waitForTimeout(300);
+    // Confirm
+    const confirmFrieze = page.locator('button:has-text("Confirmer")');
+    if (await confirmFrieze.isVisible({ timeout: 1000 }).catch(() => false)) {
+      await confirmFrieze.click();
+      await page.waitForTimeout(500);
+    }
+    await page.screenshot({ path: shot('105-frise-3-copies-colors.png'), fullPage: true });
+  }
+
+  // ── 106: Toolbar Complet mode with sub-group separators ──
+  await freshComplet();
+  await page.locator('[data-testid="toolbar"]').screenshot({ path: shot('106-toolbar-complet-subgroups.png') });
+
+  // ── 107: Settings — profil rapide + subdivision ──
+  await freshComplet();
+  const settingsBtn107 = page.locator('[data-testid="settings-button"]');
+  await settingsBtn107.click();
+  await page.waitForTimeout(300);
+  await page.screenshot({ path: shot('107-settings-profils-rapides.png'), fullPage: true });
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(200);
 });
 
 // --- Separate test: iPad landscape layout ---

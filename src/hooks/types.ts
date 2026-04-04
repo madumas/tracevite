@@ -30,4 +30,6 @@ export interface ToolHookResult {
   activePointId?: string | null;
   /** Circle tool: ID of the last created circle (for auto-showing RadiusInput). */
   lastCreatedCircleId?: string | null;
+  /** True when a ghost preview is active (rotation/homothety). */
+  isPreviewActive?: boolean;
 }

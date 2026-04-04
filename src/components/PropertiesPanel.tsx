@@ -540,6 +540,14 @@ export const PropertiesPanel = memo(function PropertiesPanel({
             >
               {Array.from(ops.entries()).map(([opId, { type, count }]) => {
                 const hidden = hiddenOps?.has(opId) ?? false;
+                const opPoints = state.points.filter((p) => p.transformOperation === opId);
+                const pointLabels =
+                  opPoints.length > 0
+                    ? opPoints
+                        .slice(0, 4)
+                        .map((p) => p.label)
+                        .join('')
+                    : '';
                 return (
                   <div
                     key={opId}
@@ -555,14 +563,25 @@ export const PropertiesPanel = memo(function PropertiesPanel({
                     }}
                   >
                     <span style={{ fontSize: 12 * fontScale, color: UI_TEXT_PRIMARY }}>
-                      {typeLabels[type] ?? type} ({count} côtés)
+                      {typeLabels[type] ?? type}
+                      {pointLabels ? ` — ${pointLabels}` : ` (${count})`}
                     </span>
-                    <span
-                      style={{ fontSize: 16, marginLeft: 8 }}
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 16 16"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      style={{ marginLeft: 8, flexShrink: 0 }}
                       aria-label={hidden ? "Afficher l'image" : "Masquer l'image"}
                     >
-                      {hidden ? '👁‍🗨' : '👁'}
-                    </span>
+                      <path d="M1 8s2.5-5 7-5 7 5 7 5-2.5 5-7 5-7-5-7-5Z" />
+                      <circle cx="8" cy="8" r="2" />
+                      {hidden && <line x1="2" y1="14" x2="14" y2="2" />}
+                    </svg>
                   </div>
                 );
               })}

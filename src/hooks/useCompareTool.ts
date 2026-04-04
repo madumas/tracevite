@@ -140,9 +140,15 @@ export function useCompareTool({
   } else if (phase === 'select_second') {
     statusMessage = 'Étape 2/2 — Comparer — Clique sur la deuxième figure';
   } else if (comparisonResult?.isIsometric) {
-    statusMessage = 'Comparer — Les figures sont isométriques!';
+    statusMessage =
+      state.displayMode === 'simplifie'
+        ? 'Comparer — Les figures ont la même forme et la même grandeur!'
+        : 'Comparer — Les figures sont isométriques!';
   } else {
-    statusMessage = 'Comparer — Les figures ne sont pas isométriques. Clique pour recommencer.';
+    statusMessage =
+      state.displayMode === 'simplifie'
+        ? "Comparer — Les figures n'ont pas la même forme ou la même grandeur. Clique pour recommencer."
+        : 'Comparer — Les figures ne sont pas isométriques. Clique pour recommencer.';
   }
 
   // Overlay rendering

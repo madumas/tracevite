@@ -3,7 +3,7 @@
  * Accessible via ⚙️ button in header.
  */
 
-import { memo, useEffect } from 'react';
+import { memo, useEffect, useState } from 'react';
 import type { ToleranceProfile, ChainTimeout, FontScale, SoundMode } from '@/model/types';
 import {
   UI_PRIMARY,
@@ -110,6 +110,7 @@ export const SettingsDialog = memo(function SettingsDialog({
 }: SettingsDialogProps) {
   const prefs = usePreferences();
   const updatePref = useUpdatePreference();
+  const [activeProfile, setActiveProfile] = useState('');
   // Close on Escape
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -154,7 +155,7 @@ export const SettingsDialog = memo(function SettingsDialog({
           <span>Profil rapide</span>
           <select
             style={selectStyle}
-            defaultValue=""
+            value={activeProfile}
             onChange={(e) => {
               const v = e.target.value;
               if (v === 'standard') {
@@ -162,11 +163,13 @@ export const SettingsDialog = memo(function SettingsDialog({
                 onFontScaleChange(1);
                 onChainTimeoutChange(8000);
                 onSoundModeChange('reduced');
+                setActiveProfile('standard');
               } else if (v === 'accrue') {
                 onToleranceChange('large');
                 onFontScaleChange(1.25);
                 onChainTimeoutChange(8000);
                 onSoundModeChange('reduced');
+                setActiveProfile('accrue');
               } else if (v === 'maximale') {
                 onToleranceChange('very_large');
                 onFontScaleChange(1.5);
@@ -174,13 +177,11 @@ export const SettingsDialog = memo(function SettingsDialog({
                 onSoundModeChange('reduced');
                 updatePref('highContrast', true);
                 updatePref('fatigueReminderMinutes', 15);
+                setActiveProfile('maximale');
               }
-              e.target.value = '';
             }}
           >
-            <option value="" disabled>
-              Choisir…
-            </option>
+            <option value="">Choisir…</option>
             <option value="standard">Standard</option>
             <option value="accrue">Accessibilité accrue</option>
             <option value="maximale">Accessibilité maximale</option>
@@ -434,6 +435,12 @@ export const SettingsDialog = memo(function SettingsDialog({
           </select>
         </div>
 
+        {/* ── Sub-section: Visuel ──── */}
+        <div
+          style={{ fontSize: 10, color: UI_TEXT_SECONDARY, padding: '6px 0 2px', fontWeight: 600 }}
+        >
+          Visuel
+        </div>
         {/* High contrast toggle */}
         <div style={rowStyle}>
           <span>Contraste élevé</span>
@@ -478,6 +485,12 @@ export const SettingsDialog = memo(function SettingsDialog({
           />
         </div>
 
+        {/* ── Sub-section: Moteur ──── */}
+        <div
+          style={{ fontSize: 10, color: UI_TEXT_SECONDARY, padding: '6px 0 2px', fontWeight: 600 }}
+        >
+          Moteur
+        </div>
         {/* Cursor smoothing — only when tolerance is very_large */}
         {toleranceProfile === 'very_large' && (
           <div style={rowStyle}>

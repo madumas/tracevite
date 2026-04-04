@@ -482,5 +482,6 @@ export function useHomothetyTool({
     snapResult,
     overlayElements: mergedOverlay,
     toolPanel,
+    isPreviewActive: previewFactor != null,
   };
 }
