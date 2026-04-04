@@ -128,7 +128,7 @@ export async function loadSlotData(slotId: string): Promise<{
 
     // Fallback: localStorage mirror
     if (!serialized) {
-      serialized = lsGet(LS_SLOT_DATA_PREFIX + slotId);
+      serialized = lsGet(LS_SLOT_DATA_PREFIX + slotId) ?? undefined;
       if (serialized) {
         // Restore to IDB
         await set(SLOT_DATA_PREFIX + slotId, serialized);
