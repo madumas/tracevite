@@ -1,7 +1,12 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import type { ConstructionState } from '@/model/types';
 import type { UndoManager } from '@/model/undo';
-import { saveSlotData, saveRegistry, loadRegistry } from '@/model/slot-persistence';
+import {
+  saveSlotData,
+  saveSlotDataSync,
+  saveRegistry,
+  loadRegistry,
+} from '@/model/slot-persistence';
 import { updateSlotMetadata } from '@/model/slots';
 import { AUTO_SAVE_DEBOUNCE_MS } from '@/config/accessibility';
 import { generateThumbnail } from '@/engine/thumbnail';
@@ -65,6 +70,9 @@ export function useAutoSave(
     const handler = () => {
       const activeSlotId = slotIdRef.current;
       if (activeSlotId) {
+        // Synchronous localStorage save (guaranteed to complete before unload)
+        saveSlotDataSync(activeSlotId, stateRef.current);
+        // Also attempt async IDB save (may not complete)
         saveSlotData(activeSlotId, stateRef.current, undoRef.current).catch(() => {});
       }
     };
