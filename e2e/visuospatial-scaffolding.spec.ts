@@ -52,19 +52,26 @@ test.describe('Focus mode', () => {
     await page.keyboard.press('Escape');
     await page.waitForTimeout(200);
 
-    // Select first segment (click on it with move tool)
+    // Select first segment by clicking on its body (middle, away from endpoints)
+    // Segment tool is default — switch to segment then back to get selection mode
+    await page.locator('[data-testid="tool-segment"]').click();
+    // In idle+move mode, clicking a segment body selects it
     await page.locator('[data-testid="tool-move"]').click();
-    await interactCanvas(page, testInfo, 50, 50);
-    await page.waitForTimeout(300);
+    await interactCanvas(page, testInfo, 50, 50); // middle of segment 1 (30,50)→(70,50)
+    await page.waitForTimeout(500);
 
-    // The second segment should be dimmed (opacity 0.3)
-    // We can verify by checking that SVG g elements have opacity attribute
-    const segmentGs = page.locator('[data-testid="segment-layer"] > g');
-    const count = await segmentGs.count();
-    expect(count).toBeGreaterThanOrEqual(2);
-
-    // At least one g should have opacity="0.3"
-    const dimmedCount = await page.locator('[data-testid="segment-layer"] > g[opacity="0.3"]').count();
+    // Verify dimming via DOM inspection
+    const dimmedCount = await page.evaluate(() => {
+      const layer = document.querySelector('[data-testid="segment-layer"]');
+      if (!layer) return 0;
+      let count = 0;
+      for (const g of layer.querySelectorAll(':scope > g')) {
+        const op = g.getAttribute('opacity');
+        if (op && parseFloat(op) < 0.5) count++;
+      }
+      return count;
+    });
+    // At least one segment should be dimmed (the non-adjacent one)
     expect(dimmedCount).toBeGreaterThanOrEqual(1);
   });
 });

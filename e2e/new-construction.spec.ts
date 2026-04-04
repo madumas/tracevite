@@ -16,8 +16,10 @@ test.describe('New construction confirmation', () => {
     await interactCanvas(page, testInfo, 100, 50);
     await expectSegmentCount(page, 1);
 
-    // Click new construction
-    await clickAction(page, 'new');
+    // Open slot manager then click "Nouvelle construction"
+    await page.locator('[data-testid="slot-manager-btn"]').click();
+    await page.waitForTimeout(300);
+    await page.locator('[data-testid="slot-new"]').click();
 
     // Confirm dialog should appear
     await expect(page.locator('[data-testid="confirm-dialog"]')).toBeVisible();
@@ -37,8 +39,10 @@ test.describe('New construction confirmation', () => {
     await interactCanvas(page, testInfo, 100, 50);
     await expectSegmentCount(page, 1);
 
-    // Click new construction
-    await clickAction(page, 'new');
+    // Open slot manager then click "Nouvelle construction"
+    await page.locator('[data-testid="slot-manager-btn"]').click();
+    await page.waitForTimeout(300);
+    await page.locator('[data-testid="slot-new"]').click();
     await expect(page.locator('[data-testid="confirm-dialog"]')).toBeVisible();
 
     // Cancel

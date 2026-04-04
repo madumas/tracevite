@@ -331,8 +331,8 @@ export function useRotationTool({
       ),
       createElement(
         'div',
-        { style: { display: 'flex', gap: 8 } },
-        ...[60, 90, 120, 180, 270].map((deg) =>
+        { style: { display: 'flex', gap: 8, flexWrap: 'wrap' as const } },
+        ...([60, 90, 120, 180, 270] as const).map((deg) =>
           createElement(
             'button',
             {
@@ -341,13 +341,15 @@ export function useRotationTool({
               style: {
                 minWidth: 44,
                 height: 44,
+                padding: '0 8px',
                 border: '1px solid #D1D8E0',
                 borderRadius: 6,
                 background: '#F5F7FA',
                 cursor: 'pointer',
                 fontWeight: 500,
-                fontSize: 14,
+                fontSize: 13,
               },
+              title: `${deg}°`,
             },
             `${deg}°`,
           ),
@@ -409,7 +411,7 @@ export function useRotationTool({
       createElement(
         'div',
         { style: { fontSize: 13, color: '#4A5568', marginTop: 2 } },
-        "Sens des aiguilles d'une montre",
+        'Sens horaire ↻',
       ),
     );
   }, [phase, isActive, confirmAngle]);

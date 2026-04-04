@@ -21,7 +21,7 @@ test.describe('Reflection tool', () => {
 
     // Select reflection tool
     await selectTool(page, 'reflection');
-    await waitForStatus(page, /axe de symétrie/);
+    await waitForStatus(page, /axe de réflexion/);
 
     // Define vertical axis with 2 clicks
     await interactCanvas(page, testInfo, 110, 30);

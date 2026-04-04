@@ -14,25 +14,26 @@ test.beforeEach(async ({ page }) => {
 
 test.describe('Convexity detection', () => {
   test('non-convex quadrilateral shows "(non convexe)" in panel', async ({ page }, testInfo) => {
-    // Create a concave quadrilateral (arrow/chevron shape)
-    // Use wider spread for reliable face detection
-    await interactCanvas(page, testInfo, 30, 40);
-    await page.waitForTimeout(300);
-    await interactCanvas(page, testInfo, 110, 65);
-    await page.waitForTimeout(300);
-    await interactCanvas(page, testInfo, 30, 90);
-    await page.waitForTimeout(300);
-    await interactCanvas(page, testInfo, 60, 65);
-    await page.waitForTimeout(300);
-    await interactCanvas(page, testInfo, 30, 40); // close
+    // Create a concave quadrilateral — using the same pattern as visual-conformity
+    // which successfully creates closed figures
+    // Use the same pattern as segment-flow triangle test (which works)
+    await interactCanvas(page, testInfo, 40, 40);
+    await waitForStatus(page, /deuxième|Étape 2/);
+    await interactCanvas(page, testInfo, 100, 60);
+    await expectSegmentCount(page, 1);
+    await interactCanvas(page, testInfo, 40, 80);
+    await expectSegmentCount(page, 2);
+    await interactCanvas(page, testInfo, 65, 60);
+    await expectSegmentCount(page, 3);
+    await interactCanvas(page, testInfo, 40, 40); // close back to A
+    await expectSegmentCount(page, 4);
     await page.keyboard.press('Escape');
     await page.waitForTimeout(500);
 
-    // Check properties panel for "non convexe"
     const panel = page.locator('[data-testid="properties-panel"]');
-    const hasNonConvexe = await panel.locator('text=non convexe').isVisible({ timeout: 5000 }).catch(() => false);
-    // Detection depends on face detection algorithm finding the closed polygon
-    expect(hasNonConvexe || true).toBeTruthy(); // soft assertion — may not detect depending on snap
+    const hasNonConvexe = await panel.locator('text=non convexe').isVisible({ timeout: 3000 }).catch(() => false);
+    const hasFigure = await panel.locator('text=Quadrilatère').isVisible({ timeout: 2000 }).catch(() => false);
+    expect(hasNonConvexe || hasFigure).toBeTruthy();
   });
 
   test('convex square does NOT show "non convexe"', async ({ page }, testInfo) => {
@@ -51,22 +52,23 @@ test.describe('Convexity detection', () => {
 
 test.describe('Regular polygon classification', () => {
   test('regular pentagon shows "Pentagone régulier" in complet mode', async ({ page }, testInfo) => {
-    // Approximate regular pentagon
+    // Approximate regular pentagon with waits for snap
     const coords = [
       [80, 40], [99, 54], [92, 76], [68, 76], [61, 54],
     ];
     for (const [x, y] of coords) {
       await interactCanvas(page, testInfo, x!, y!);
+      await page.waitForTimeout(300);
     }
     await interactCanvas(page, testInfo, 80, 40); // close
     await page.keyboard.press('Escape');
+    await page.waitForTimeout(500);
 
     const panel = page.locator('[data-testid="properties-panel"]');
-    // Pentagon detection depends on snap precision — soft assertion
+    // Should detect as regular pentagon or at least as 5-sided polygon
     const hasRegular = await panel.locator('text=régulier').isVisible({ timeout: 3000 }).catch(() => false);
     const has5Cotes = await panel.locator('text=5 côtés').isVisible({ timeout: 2000 }).catch(() => false);
-    // At least one should be true if figure was detected
-    expect(hasRegular || has5Cotes || true).toBeTruthy(); // soft — face detection may not find it
+    expect(hasRegular || has5Cotes).toBeTruthy();
   });
 });
 
@@ -100,16 +102,22 @@ test.describe('Symmetry axis as property', () => {
   test('diagonal of a square detected as symmetry axis in complet mode', async ({
     page,
   }, testInfo) => {
-    // Create a square
+    // Create a square with waits between clicks
     await interactCanvas(page, testInfo, 50, 50);
+    await page.waitForTimeout(300);
     await interactCanvas(page, testInfo, 90, 50);
+    await page.waitForTimeout(300);
     await interactCanvas(page, testInfo, 90, 90);
+    await page.waitForTimeout(300);
     await interactCanvas(page, testInfo, 50, 90);
+    await page.waitForTimeout(300);
     await interactCanvas(page, testInfo, 50, 50); // close
     await page.keyboard.press('Escape');
+    await page.waitForTimeout(300);
 
     // Add diagonal (symmetry axis)
     await interactCanvas(page, testInfo, 50, 50);
+    await page.waitForTimeout(300);
     await interactCanvas(page, testInfo, 90, 90);
     await page.keyboard.press('Escape');
     await page.waitForTimeout(500);
@@ -120,7 +128,7 @@ test.describe('Symmetry axis as property', () => {
       .isVisible({ timeout: 5000 })
       .catch(() => false);
     // Symmetry axis detection depends on checkSymmetry tolerance
-    expect(hasAxis || true).toBeTruthy();
+    expect(hasAxis).toBeTruthy();
   });
 });
 

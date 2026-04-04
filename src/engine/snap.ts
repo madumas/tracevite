@@ -164,7 +164,15 @@ export function findSnap(
     }
   }
 
+  // Priority 3: Grid
+  const gridPoint = nearestGridPoint(cursor.x, cursor.y, state.gridSizeMm);
+  const gridDist = distance(cursor, gridPoint);
+
   if (bestSegPos && bestSegSeg) {
+    // If the cursor is closer to a grid point than to the segment, prefer grid
+    if (gridDist <= tolerances.gridMm && gridDist < bestSegDist) {
+      return { snappedPosition: gridPoint, snapType: 'grid' };
+    }
     // Quantize projection to nearest grid crossing on the segment
     const crossings = segmentGridCrossings(bestSegSeg.start, bestSegSeg.end, state.gridSizeMm);
     if (crossings.length > 0) {
@@ -182,10 +190,6 @@ export function findSnap(
     // Short segment with no grid crossings — use raw projection
     return { snappedPosition: bestSegPos, snapType: 'segment' };
   }
-
-  // Priority 3: Grid
-  const gridPoint = nearestGridPoint(cursor.x, cursor.y, state.gridSizeMm);
-  const gridDist = distance(cursor, gridPoint);
   if (gridDist <= tolerances.gridMm) {
     return { snappedPosition: gridPoint, snapType: 'grid' };
   }
