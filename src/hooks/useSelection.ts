@@ -3,10 +3,13 @@
  * Handles element selection when tool is idle, and hover tracking.
  */
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import type { ConstructionState, ToolType } from '@/model/types';
 import type { ConstructionAction } from '@/model/reducer';
 import { hitTestElement, type HitTestResult } from '@/engine/hit-test';
+
+/** Delay before clearing hover state (ms) — compensates for TDC tremors. */
+const HOVER_EXIT_DELAY_MS = 300;
 
 /** Tools that create new geometry — midpoint snaps take priority over selection. */
 const CONSTRUCTION_TOOLS: readonly ToolType[] = ['segment', 'point', 'circle'];
@@ -37,11 +40,25 @@ export function useSelection({
   activeTool,
 }: UseSelectionOptions): SelectionResult {
   const [hoveredElement, setHoveredElement] = useState<HitTestResult | null>(null);
+  const hoverExitTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const updateHover = useCallback(
     (mmPos: { x: number; y: number }) => {
       const hit = hitTestElement(mmPos, state);
-      setHoveredElement(hit);
+      if (hit) {
+        // Cursor is on an element — cancel any pending exit and update immediately
+        if (hoverExitTimer.current) {
+          clearTimeout(hoverExitTimer.current);
+          hoverExitTimer.current = null;
+        }
+        setHoveredElement(hit);
+      } else if (!hoverExitTimer.current) {
+        // Cursor left element — delay clearing to compensate for TDC tremors
+        hoverExitTimer.current = setTimeout(() => {
+          setHoveredElement(null);
+          hoverExitTimer.current = null;
+        }, HOVER_EXIT_DELAY_MS);
+      }
     },
     [state],
   );
@@ -82,6 +99,10 @@ export function useSelection({
   );
 
   const clearHover = useCallback(() => {
+    if (hoverExitTimer.current) {
+      clearTimeout(hoverExitTimer.current);
+      hoverExitTimer.current = null;
+    }
     setHoveredElement(null);
   }, []);
 

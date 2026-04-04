@@ -101,6 +101,7 @@ export function createSoundEngine(): SoundEngine {
 
   function playFigureClosed() {
     if (mode === 'off') return;
+    vibrate(30); // Haptic feedback on figure closure
     ensureContext();
     if (!ctx || !gainNode) return;
 

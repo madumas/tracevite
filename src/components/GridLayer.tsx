@@ -25,8 +25,8 @@ export const GridLayer = memo(function GridLayer({
   reinforced = false,
 }: GridLayerProps) {
   const colors = useCanvasColors();
-  const gridOpacity = reinforced ? Math.min(colors.gridOpacity * 1.6, 0.85) : colors.gridOpacity;
-  const gridStrokeWidth = reinforced ? 1.5 : 1;
+  const gridOpacity = reinforced ? Math.min(colors.gridOpacity * 2.0, 0.85) : colors.gridOpacity;
+  const gridStrokeWidth = reinforced ? 2 : 1;
   const subGridStrokeWidth = reinforced ? 0.8 : 0.5;
   const pxPerMm = viewport.zoom * CSS_PX_PER_MM;
   const gridPx = gridSizeMm * pxPerMm;

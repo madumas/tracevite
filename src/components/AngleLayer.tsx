@@ -2,7 +2,11 @@ import { memo } from 'react';
 import type { AngleInfo, ViewportState, DisplayMode } from '@/model/types';
 import { useCanvasColors } from '@/config/theme';
 import { CSS_PX_PER_MM } from '@/engine/viewport';
-import { MIN_CANVAS_FONT_PX, POINT_DISPLAY_RADIUS_MM } from '@/config/accessibility';
+import {
+  MIN_CANVAS_FONT_PX,
+  POINT_DISPLAY_RADIUS_MM,
+  FOCUS_DIM_OPACITY,
+} from '@/config/accessibility';
 import { chooseAngleLabelPosition, type Obstacle } from '@/engine/label-placement';
 
 interface AngleLayerProps {
@@ -267,7 +271,7 @@ export const AngleLayer = memo(function AngleLayer({
         const isAngleDimmed = focusDimmedIds?.has(angle.vertexPointId) ?? false;
 
         return (
-          <g key={index} opacity={isAngleDimmed ? 0.3 : undefined}>
+          <g key={index} opacity={isAngleDimmed ? FOCUS_DIM_OPACITY : undefined}>
             {(() => {
               const ax1 = sx + Math.cos(arcStart) * arcR;
               const ay1 = sy + Math.sin(arcStart) * arcR;

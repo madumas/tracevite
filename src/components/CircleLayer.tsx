@@ -1,7 +1,7 @@
 import { memo } from 'react';
 import type { Circle, Point, ViewportState, DisplayUnit } from '@/model/types';
 import { useCanvasColors } from '@/config/theme';
-import { MIN_CANVAS_FONT_PX } from '@/config/accessibility';
+import { MIN_CANVAS_FONT_PX, FOCUS_DIM_OPACITY } from '@/config/accessibility';
 import { CSS_PX_PER_MM } from '@/engine/viewport';
 import { formatLength } from '@/engine/format';
 
@@ -44,7 +44,7 @@ export const CircleLayer = memo(function CircleLayer({
         const isDimmed = focusDimmedIds?.has(circle.centerPointId) ?? false;
 
         return (
-          <g key={circle.id} opacity={isDimmed ? 0.3 : undefined}>
+          <g key={circle.id} opacity={isDimmed ? FOCUS_DIM_OPACITY : undefined}>
             {isSelected && (
               <circle
                 cx={cx}

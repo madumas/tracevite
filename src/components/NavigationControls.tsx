@@ -29,7 +29,7 @@ const navBtnStyle: React.CSSProperties = {
   justifyContent: 'center',
   fontSize: 18,
   color: '#4A5568',
-  opacity: 0.5,
+  opacity: 0.7,
   zIndex: 30,
 };
 

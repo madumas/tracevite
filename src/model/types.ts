@@ -10,6 +10,7 @@ export interface Point {
   readonly y: number; // mm
   readonly label: string; // "A", "B", ... "Z", "AA", "AB", ...
   readonly locked: boolean;
+  readonly transformOperation?: string; // groups elements by transformation (e.g. "reflection-1698765432")
 }
 
 /** A segment connecting two points. */
@@ -19,6 +20,9 @@ export interface Segment {
   readonly endPointId: string;
   readonly lengthMm: number; // computed, stored for quick access
   readonly fixedLength?: number; // mm — when user fixes exact length
+  readonly isTransformed?: boolean; // true for segments created by transformations
+  readonly transformOperation?: string; // groups elements by transformation
+  readonly transformGroupIndex?: number; // copy index within a frieze
 }
 
 /** A circle defined by center and radius. */

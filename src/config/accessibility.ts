@@ -57,6 +57,9 @@ export const MIN_BUTTON_SIZE_PX = 44;
 /** Minimum spacing between adjacent buttons (px). */
 export const MIN_BUTTON_GAP_PX = 8;
 
+/** Focus mode: opacity for dimmed (non-adjacent) elements. Lower = stronger contrast. */
+export const FOCUS_DIM_OPACITY = 0.15;
+
 /** Visual clutter thresholds — hide canvas labels when segment count exceeds. */
 export const CLUTTER_THRESHOLDS = {
   simplifie: 5,

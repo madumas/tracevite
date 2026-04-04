@@ -44,7 +44,7 @@ export const GhostSegment = memo(function GhostSegment({
         x2={sx2}
         y2={sy2}
         stroke={colors.ghost}
-        strokeWidth={2}
+        strokeWidth={2.5}
         strokeDasharray="6 4"
         opacity={opacity}
       />

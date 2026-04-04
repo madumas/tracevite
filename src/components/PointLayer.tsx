@@ -1,7 +1,11 @@
 import { memo } from 'react';
 import type { Point, ViewportState } from '@/model/types';
 import { CANVAS_POINT } from '@/config/theme';
-import { POINT_DISPLAY_RADIUS_MM, MIN_CANVAS_FONT_PX } from '@/config/accessibility';
+import {
+  POINT_DISPLAY_RADIUS_MM,
+  MIN_CANVAS_FONT_PX,
+  FOCUS_DIM_OPACITY,
+} from '@/config/accessibility';
 import { CSS_PX_PER_MM } from '@/engine/viewport';
 import { chooseLabelOffset, type Obstacle } from '@/engine/label-placement';
 
@@ -73,7 +77,7 @@ export const PointLayer = memo(function PointLayer({
         const isDimmed = focusDimmedIds?.has(point.id) ?? false;
 
         return (
-          <g key={point.id} opacity={isDimmed ? 0.3 : undefined}>
+          <g key={point.id} opacity={isDimmed ? FOCUS_DIM_OPACITY : undefined}>
             <circle
               cx={sx}
               cy={sy}
