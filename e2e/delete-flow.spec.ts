@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { clickCanvas, tapCanvas } from './helpers/canvas';
+import { clickCanvas, tapCanvas, interactCanvas } from './helpers/canvas';
 import { selectTool, waitForStatus } from './helpers/toolbar';
 import { expectPointCount, expectSegmentCount } from './helpers/assertions';
 
@@ -47,20 +47,20 @@ test.describe('Delete via ContextActionBar micro-confirmation', () => {
     const isTouchProject = testInfo.project.name !== 'Desktop Chrome';
     const click = isTouchProject ? tapCanvas : clickCanvas;
 
-    // Create two segments
-    await click(page, 50, 50);
-    await waitForStatus(page, /deuxième point/);
-    await click(page, 150, 50);
+    // Create two segments via chaining (A→B→C)
+    await interactCanvas(page, testInfo, 40, 60);
+    await waitForStatus(page, /deuxième/);
+    await interactCanvas(page, testInfo, 100, 60);
     await expectSegmentCount(page, 1);
-
-    await click(page, 150, 50);
-    await waitForStatus(page, /deuxième point/);
-    await click(page, 150, 150);
+    await waitForStatus(page, /Continue/);
+    await interactCanvas(page, testInfo, 80, 100);
     await expectSegmentCount(page, 2);
+    await page.keyboard.press('Escape');
+    await page.waitForTimeout(200);
 
-    // Select first segment
+    // Select first segment (horizontal AB)
     await selectTool(page, 'select');
-    await click(page, 100, 50);
+    await interactCanvas(page, testInfo, 70, 60);
 
     const deleteBtn = page.locator('[data-testid="context-delete"]');
     await expect(deleteBtn).toBeVisible({ timeout: 3000 });
@@ -70,7 +70,7 @@ test.describe('Delete via ContextActionBar micro-confirmation', () => {
     await expect(deleteBtn).toHaveText(/Effacer/);
 
     // Click on second segment — should reset confirmation
-    await click(page, 150, 100);
+    await interactCanvas(page, testInfo, 90, 80);
 
     // Delete button should show "Supprimer" again (not "Effacer...")
     const newDeleteBtn = page.locator('[data-testid="context-delete"]');

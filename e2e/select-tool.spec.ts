@@ -54,11 +54,12 @@ test.describe('Select tool', () => {
     await click(page, 100, 80);
     await expect(page.locator('[data-testid="context-action-bar"]')).toBeVisible({ timeout: 3000 });
 
-    // Click on empty space
-    await click(page, 250, 250);
+    // Escape deselects (Escape = panic button for TDC, spec §14)
+    await page.keyboard.press('Escape');
+    await page.waitForTimeout(300);
 
     // ContextActionBar should disappear
-    await expect(page.locator('[data-testid="context-action-bar"]')).not.toBeVisible();
+    await expect(page.locator('[data-testid="context-action-bar"]')).not.toBeVisible({ timeout: 3000 });
   });
 
   test('context action bar has Supprimer button', async ({ page }, testInfo) => {

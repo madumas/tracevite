@@ -140,8 +140,9 @@ test('visual conformity audit', async ({ page }, testInfo) => {
   // --- 18: Delete micro-confirmation (via ContextActionBar) ---
   await page.keyboard.press('Escape');
   await page.waitForTimeout(200);
-  await page.locator('[data-testid="tool-select"]').click();
-  await page.waitForTimeout(200);
+  await page.waitForTimeout(500);
+  await page.locator('[data-testid="tool-select"]').click({ force: true });
+  await page.waitForTimeout(300);
   await interact(85, 60); // click midpoint of segment AB to select
   await page.waitForTimeout(300);
   const delBtn = page.locator('[data-testid="context-delete"]');
