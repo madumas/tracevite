@@ -88,6 +88,7 @@ export function reproduceElements(
       label,
       locked: false,
       ...(transformOperation ? { transformOperation } : {}),
+      ...(groupIndex != null ? { transformGroupIndex: groupIndex } : {}),
     });
   }
 

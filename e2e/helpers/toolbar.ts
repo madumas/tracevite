@@ -21,7 +21,16 @@ export type ToolName =
 export type ActionName = 'undo' | 'redo' | 'print' | 'new';
 
 export async function selectTool(page: Page, tool: ToolName): Promise<void> {
-  await page.locator(`[data-testid="tool-${tool}"]`).click();
+  const toolBtn = page.locator(`[data-testid="tool-${tool}"]`);
+  if (!(await toolBtn.isVisible().catch(() => false))) {
+    // Tool may be behind "Plus d'outils" on narrow screens or in Simplifié mode
+    const moreBtn = page.locator('[data-testid="more-tools"]');
+    if (await moreBtn.isVisible().catch(() => false)) {
+      await moreBtn.click();
+      await page.waitForTimeout(200);
+    }
+  }
+  await toolBtn.click();
 }
 
 export async function clickAction(page: Page, action: ActionName): Promise<void> {

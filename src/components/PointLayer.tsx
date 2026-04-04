@@ -1,6 +1,6 @@
 import { memo } from 'react';
 import type { Point, ViewportState } from '@/model/types';
-import { CANVAS_POINT } from '@/config/theme';
+import { CANVAS_POINT, CANVAS_TRANSFORMED, CANVAS_TRANSFORM_PALETTE } from '@/config/theme';
 import {
   POINT_DISPLAY_RADIUS_MM,
   MIN_CANVAS_FONT_PX,
@@ -75,6 +75,12 @@ export const PointLayer = memo(function PointLayer({
         });
 
         const isDimmed = focusDimmedIds?.has(point.id) ?? false;
+        const effectiveColor =
+          point.transformGroupIndex != null
+            ? CANVAS_TRANSFORM_PALETTE[point.transformGroupIndex % CANVAS_TRANSFORM_PALETTE.length]!
+            : point.transformOperation
+              ? CANVAS_TRANSFORMED
+              : pointColor;
 
         return (
           <g key={point.id} opacity={isDimmed ? FOCUS_DIM_OPACITY : undefined}>
@@ -82,14 +88,14 @@ export const PointLayer = memo(function PointLayer({
               cx={sx}
               cy={sy}
               r={radiusPx}
-              fill={pointColor}
+              fill={effectiveColor}
               opacity={isSelected ? 1 : 0.8}
               data-testid={`point-${point.id}`}
             />
             <text
               x={sx + offset.dx}
               y={sy + offset.dy}
-              fill={pointColor}
+              fill={effectiveColor}
               fontSize={fontSize}
               fontFamily="system-ui, sans-serif"
               textAnchor={offset.textAnchor}
