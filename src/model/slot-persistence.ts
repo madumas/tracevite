@@ -17,6 +17,10 @@ const REGISTRY_KEY = 'geomolo_registry';
 const SLOT_DATA_PREFIX = 'geomolo_slot_';
 const SLOT_UNDO_PREFIX = 'geomolo_undo_';
 
+// localStorage mirror keys (same names — localStorage and IDB are separate namespaces)
+const LS_REGISTRY_KEY = 'geomolo_registry';
+const LS_SLOT_DATA_PREFIX = 'geomolo_slot_';
+
 // Legacy keys from TraceVite branding
 const LEGACY_REGISTRY_KEY = 'tracevite_registry';
 const LEGACY_SLOT_DATA_PREFIX = 'tracevite_slot_';
@@ -26,16 +30,59 @@ const LEGACY_SLOT_UNDO_PREFIX = 'tracevite_undo_';
 const LEGACY_CONSTRUCTION_KEY = 'tracevite_construction';
 const LEGACY_UNDO_KEY = 'tracevite_undo';
 
+// ── localStorage helpers (silent fail) ───────────────────
+
+function lsSet(key: string, value: string): void {
+  try {
+    localStorage.setItem(key, value);
+  } catch {
+    // Quota exceeded or unavailable — non-critical
+  }
+}
+
+function lsGet(key: string): string | null {
+  try {
+    return localStorage.getItem(key);
+  } catch {
+    return null;
+  }
+}
+
+function lsRemove(key: string): void {
+  try {
+    localStorage.removeItem(key);
+  } catch {
+    // non-critical
+  }
+}
+
 // ── Registry operations ───────────────────────────────────
 
 export async function loadRegistry(): Promise<SlotRegistry | null> {
-  const result =
+  let result =
     (await get<SlotRegistry>(REGISTRY_KEY)) ?? (await get<SlotRegistry>(LEGACY_REGISTRY_KEY));
+
+  // Fallback: localStorage mirror (Firefox hard refresh can wipe IDB)
+  if (!result) {
+    const lsData = lsGet(LS_REGISTRY_KEY);
+    if (lsData) {
+      try {
+        result = JSON.parse(lsData) as SlotRegistry;
+        // Restore to IDB for future normal loads
+        await set(REGISTRY_KEY, result);
+      } catch {
+        // Corrupted localStorage — ignore
+      }
+    }
+  }
+
   return result ?? null;
 }
 
 export async function saveRegistry(registry: SlotRegistry): Promise<void> {
   await set(REGISTRY_KEY, registry);
+  // Mirror to localStorage
+  lsSet(LS_REGISTRY_KEY, JSON.stringify(registry));
 }
 
 // ── Slot data operations ──────────────────────────────────
@@ -55,6 +102,18 @@ export async function saveSlotData(
     set(SLOT_DATA_PREFIX + slotId, serialized),
     set(SLOT_UNDO_PREFIX + slotId, undoData),
   ]);
+
+  // Mirror construction data to localStorage (undo skipped — too large)
+  lsSet(LS_SLOT_DATA_PREFIX + slotId, serialized);
+}
+
+/**
+ * Synchronous localStorage-only save for beforeunload.
+ * IDB writes are async and may not complete before page unloads.
+ */
+export function saveSlotDataSync(slotId: string, state: ConstructionState): void {
+  const serialized = serializeState(state);
+  lsSet(LS_SLOT_DATA_PREFIX + slotId, serialized);
 }
 
 export async function loadSlotData(slotId: string): Promise<{
@@ -63,9 +122,19 @@ export async function loadSlotData(slotId: string): Promise<{
   future: ConstructionState[];
 } | null> {
   try {
-    const serialized =
+    let serialized =
       (await get<string>(SLOT_DATA_PREFIX + slotId)) ??
       (await get<string>(LEGACY_SLOT_DATA_PREFIX + slotId));
+
+    // Fallback: localStorage mirror
+    if (!serialized) {
+      serialized = lsGet(LS_SLOT_DATA_PREFIX + slotId);
+      if (serialized) {
+        // Restore to IDB
+        await set(SLOT_DATA_PREFIX + slotId, serialized);
+      }
+    }
+
     if (!serialized) return null;
 
     const state = deserializeState(serialized);
@@ -98,6 +167,7 @@ export async function deleteSlotData(slotId: string): Promise<void> {
     del(LEGACY_SLOT_DATA_PREFIX + slotId),
     del(LEGACY_SLOT_UNDO_PREFIX + slotId),
   ]);
+  lsRemove(LS_SLOT_DATA_PREFIX + slotId);
 }
 
 // ── Migration ─────────────────────────────────────────────
