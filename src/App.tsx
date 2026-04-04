@@ -1112,7 +1112,7 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
             )}
             {!tool.isIdle && !deleteMode && (
               <button
-                onClick={() => tool.handleEscape()}
+                onClick={() => tool.reset()}
                 style={{
                   padding: '2px 12px',
                   background: UI_PRIMARY,
