@@ -1,7 +1,13 @@
 import { memo } from 'react';
 import type { Point, Segment, ViewportState, DisplayUnit, DetectedProperty } from '@/model/types';
-import { CANVAS_SEGMENT, useCanvasColors } from '@/config/theme';
-import { MIN_CANVAS_FONT_PX, SEGMENT_HIT_ZONE_MM } from '@/config/accessibility';
+import {
+  CANVAS_SEGMENT,
+  CANVAS_TRANSFORMED,
+  CANVAS_TRANSFORM_PALETTE,
+  CANVAS_TRANSFORM_DASHES,
+  useCanvasColors,
+} from '@/config/theme';
+import { MIN_CANVAS_FONT_PX, SEGMENT_HIT_ZONE_MM, FOCUS_DIM_OPACITY } from '@/config/accessibility';
 import { CSS_PX_PER_MM } from '@/engine/viewport';
 import { formatLength } from '@/engine/format';
 
@@ -157,7 +163,7 @@ export const SegmentLayer = memo(function SegmentLayer({
         const isDimmed = focusDimmedIds?.has(segment.id) ?? false;
 
         return (
-          <g key={segment.id} opacity={isDimmed ? 0.3 : 1}>
+          <g key={segment.id} opacity={isDimmed ? FOCUS_DIM_OPACITY : 1}>
             {/* Invisible hit zone for interaction */}
             <line
               x1={sx1}
@@ -181,36 +187,49 @@ export const SegmentLayer = memo(function SegmentLayer({
               />
             )}
             {/* Visible segment */}
-            <line
-              x1={sx1}
-              y1={sy1}
-              x2={sx2}
-              y2={sy2}
-              stroke={segmentColor}
-              strokeWidth={2}
-              strokeLinecap="round"
-              data-testid={`segment-${segment.id}`}
-            />
-            {/* Length label — hidden in estimation mode or when cluttered (unless selected/hovered) */}
-            {!estimationMode &&
-              (!cluttered ||
-                segment.id === selectedElementId ||
-                segment.id === hoveredElementId) && (
-                <text
-                  x={midSx + offsetX}
-                  y={midSy + offsetY}
-                  fill={colors.measurement}
-                  fontSize={Math.max(MIN_CANVAS_FONT_PX, 13) * fontScale}
-                  fontFamily="system-ui, sans-serif"
-                  textAnchor="middle"
-                  dominantBaseline="central"
-                  paintOrder="stroke"
-                  stroke="white"
-                  strokeWidth={3}
-                >
-                  {lengthText}
-                </text>
-              )}
+            {(() => {
+              let stroke = segmentColor;
+              let dashArray: string | undefined;
+              if (segment.isTransformed) {
+                if (segment.transformGroupIndex != null) {
+                  const idx = segment.transformGroupIndex % CANVAS_TRANSFORM_PALETTE.length;
+                  stroke = CANVAS_TRANSFORM_PALETTE[idx]!;
+                  dashArray = CANVAS_TRANSFORM_DASHES[idx];
+                } else {
+                  stroke = CANVAS_TRANSFORMED;
+                }
+              }
+              return (
+                <line
+                  x1={sx1}
+                  y1={sy1}
+                  x2={sx2}
+                  y2={sy2}
+                  stroke={stroke}
+                  strokeWidth={2}
+                  strokeLinecap="round"
+                  strokeDasharray={dashArray}
+                  data-testid={`segment-${segment.id}`}
+                />
+              );
+            })()}
+            {/* Length label — hidden in estimation mode or when cluttered (unless selected) */}
+            {!estimationMode && (!cluttered || segment.id === selectedElementId) && (
+              <text
+                x={midSx + offsetX}
+                y={midSy + offsetY}
+                fill={colors.measurement}
+                fontSize={Math.max(MIN_CANVAS_FONT_PX, 13) * fontScale}
+                fontFamily="system-ui, sans-serif"
+                textAnchor="middle"
+                dominantBaseline="central"
+                paintOrder="stroke"
+                stroke="white"
+                strokeWidth={3}
+              >
+                {lengthText}
+              </text>
+            )}
             {/* When both parallel and congruence marks present, offset each ±8px from midpoint */}
             {(() => {
               const hasParallel = parallelSegColor.has(segment.id);

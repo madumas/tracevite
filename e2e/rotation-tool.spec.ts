@@ -30,10 +30,13 @@ test.describe('Rotation tool', () => {
     await interactCanvas(page, testInfo, 50, 50);
     await waitForStatus(page, /Étape 2\/3.*angle/);
 
-    // Phase 2: angle panel should appear — click 90° preset
+    // Phase 2: angle panel should appear — click 90° preset → shows ghost preview
     const btn90 = page.locator('button', { hasText: '90°' });
     await expect(btn90).toBeVisible({ timeout: 3000 });
     await btn90.click();
+    await waitForStatus(page, /Aperçu/);
+    // Confirm the preview to advance to phase 3
+    await page.locator('button:has-text("Confirmer")').click();
     await waitForStatus(page, /Étape 3\/3.*segment/);
 
     // Phase 3: click on a segment of the triangle to rotate it
@@ -57,13 +60,16 @@ test.describe('Rotation tool', () => {
     // Place center
     await interactCanvas(page, testInfo, 50, 60);
 
-    // Type angle in input field + click OK
+    // Type angle in input field + click OK → shows ghost preview
     const input = page.locator('#rotation-angle-input');
     await expect(input).toBeVisible({ timeout: 3000 });
     await input.fill('45');
 
     const okBtn = page.locator('button', { hasText: 'OK' });
     await okBtn.click();
+    await waitForStatus(page, /Aperçu/);
+    // Confirm the preview
+    await page.locator('button:has-text("Confirmer")').click();
     await waitForStatus(page, /Étape 3\/3/);
 
     // Click on the segment

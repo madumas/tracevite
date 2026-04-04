@@ -260,6 +260,7 @@ export function reduce(state: ReducerState, action: ConstructionAction): Reducer
     }
 
     case 'REFLECT_ELEMENTS': {
+      const opId = `reflection-${generateId()}`;
       const {
         points: newPoints,
         segments: newSegments,
@@ -270,6 +271,7 @@ export function reduce(state: ReducerState, action: ConstructionAction): Reducer
         current,
         action.axisP1,
         action.axisP2,
+        opId,
       );
 
       // Reflect circles: create new circle with reflected center and same radius
@@ -297,6 +299,7 @@ export function reduce(state: ReducerState, action: ConstructionAction): Reducer
     }
 
     case 'REPRODUCE_FRIEZE': {
+      const opId = `frieze-${generateId()}`;
       const result = reproduceFrieze(
         action.pointIds,
         action.segmentIds,
@@ -306,6 +309,7 @@ export function reduce(state: ReducerState, action: ConstructionAction): Reducer
         action.count1,
         action.vector2,
         action.count2,
+        opId,
       );
       if (result.points.length === 0) return state;
       const newState: typeof current = {
@@ -318,6 +322,7 @@ export function reduce(state: ReducerState, action: ConstructionAction): Reducer
     }
 
     case 'REPRODUCE_ELEMENTS': {
+      const opId = `reproduce-${generateId()}`;
       const result = reproduceElements(
         action.pointIds,
         action.segmentIds,
@@ -325,6 +330,9 @@ export function reduce(state: ReducerState, action: ConstructionAction): Reducer
         current,
         action.offsetX,
         action.offsetY,
+        [],
+        undefined,
+        opId,
       );
       const newState: typeof current = {
         ...current,
@@ -336,6 +344,7 @@ export function reduce(state: ReducerState, action: ConstructionAction): Reducer
     }
 
     case 'ROTATE_ELEMENTS': {
+      const opId = `rotation-${generateId()}`;
       const result = rotateConstruction(
         action.pointIds,
         action.segmentIds,
@@ -343,6 +352,7 @@ export function reduce(state: ReducerState, action: ConstructionAction): Reducer
         current,
         action.center,
         action.angleDeg,
+        opId,
       );
       const newState: typeof current = {
         ...current,
@@ -354,6 +364,7 @@ export function reduce(state: ReducerState, action: ConstructionAction): Reducer
     }
 
     case 'SCALE_ELEMENTS': {
+      const opId = `scale-${generateId()}`;
       const result = scaleConstruction(
         action.pointIds,
         action.segmentIds,
@@ -361,6 +372,7 @@ export function reduce(state: ReducerState, action: ConstructionAction): Reducer
         current,
         action.center,
         action.factor,
+        opId,
       );
       const newState: typeof current = {
         ...current,

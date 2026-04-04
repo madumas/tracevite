@@ -64,6 +64,8 @@ export function reproduceElements(
   offsetX: number,
   offsetY: number,
   extraLabels: readonly string[] = [],
+  groupIndex?: number,
+  transformOperation?: string,
 ): ReproduceResult {
   const pointMap = new Map(state.points.map((p) => [p.id, p]));
   const existingLabels = [...state.points.map((p) => p.label), ...extraLabels];
@@ -85,6 +87,7 @@ export function reproduceElements(
       y: original.y + offsetY,
       label,
       locked: false,
+      ...(transformOperation ? { transformOperation } : {}),
     });
   }
 
@@ -104,6 +107,9 @@ export function reproduceElements(
       endPointId: newEnd.id,
       lengthMm: distance(newStart, newEnd),
       fixedLength: original.fixedLength,
+      isTransformed: true,
+      ...(groupIndex != null ? { transformGroupIndex: groupIndex } : {}),
+      ...(transformOperation ? { transformOperation } : {}),
     });
   }
 
@@ -144,6 +150,7 @@ export function reproduceFrieze(
   count1: number,
   vector2?: { dx: number; dy: number },
   count2?: number,
+  transformOperation?: string,
 ): ReproduceResult {
   const allPoints: Point[] = [];
   const allSegments: Segment[] = [];
@@ -152,6 +159,7 @@ export function reproduceFrieze(
 
   const rows = count2 != null && vector2 ? count2 : 1;
 
+  let copyIndex = 0;
   for (let j = 0; j < rows; j++) {
     for (let i = 0; i < count1; i++) {
       // Skip (0,0) — that's the original figure
@@ -168,7 +176,10 @@ export function reproduceFrieze(
         ox,
         oy,
         accumulatedLabels,
+        copyIndex,
+        transformOperation,
       );
+      copyIndex++;
 
       allPoints.push(...result.points);
       allSegments.push(...result.segments);

@@ -20,8 +20,9 @@ test.describe('Slot Manager (multi-construction)', () => {
     await page.locator('[data-testid="slot-manager-btn"]').click();
     await expect(page.locator('[data-testid="slot-manager"]')).toBeVisible({ timeout: 3000 });
 
-    // Create new slot
+    // Create new slot — triggers confirmation dialog when canvas has content
     await page.locator('[data-testid="slot-new"]').click();
+    await page.locator('[data-testid="confirm-dialog-confirm"]').click();
 
     // New slot should be active — canvas is empty
     await page.keyboard.press('Escape'); // close manager if still open
@@ -40,8 +41,9 @@ test.describe('Slot Manager (multi-construction)', () => {
     await page.locator('[data-testid="slot-manager-btn"]').click();
     await expect(page.locator('[data-testid="slot-manager"]')).toBeVisible();
 
-    // Create new slot — should switch to empty canvas
+    // Create new slot — confirm dialog appears since canvas has content
     await page.locator('[data-testid="slot-new"]').click();
+    await page.locator('[data-testid="confirm-dialog-confirm"]').click();
     await page.keyboard.press('Escape');
 
     await expectSegmentCount(page, 0);

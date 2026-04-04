@@ -46,8 +46,8 @@ textarea,
   }
 }
 
-/* ── Small tablet / phone (≤900px): toolbar icon-only ──── */
-@media (max-width: 900px) {
+/* ── Phone only (≤600px): toolbar icon-only — iPad keeps labels ── */
+@media (max-width: 600px) {
   .tool-label {
     display: none;
   }
@@ -61,8 +61,8 @@ textarea,
   }
 }
 
-/* ── Action bar: icon-only on narrow screens ───────────── */
-@media (max-width: 900px) {
+/* ── Action bar: icon-only on phone only ──────────────── */
+@media (max-width: 600px) {
   .action-label {
     display: none;
   }
@@ -87,6 +87,54 @@ textarea,
     transform: scale(1.8);
     opacity: 0.6;
   }
+}
+
+/* ── Figure closed celebration ────────────────────────── */
+@keyframes figure-closed-flash {
+  0% {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  40% {
+    opacity: 1;
+    transform: scale(1.03);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes slide-up {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .slide-up,
+  [style*='slide-up'] {
+    animation: none !important;
+  }
+}
+
+/* ── Properties panel scroll fade indicator ──────────── */
+[data-testid='properties-panel'] {
+  position: relative;
+}
+[data-testid='properties-panel']::after {
+  content: '';
+  position: sticky;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 20px;
+  display: block;
+  background: linear-gradient(transparent, #f5f7fa);
+  pointer-events: none;
 }
 
 /* ── "Nouvelle construction" button: filled red on hover ───── */

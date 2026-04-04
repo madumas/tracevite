@@ -31,6 +31,10 @@ interface PropertiesPanelProps {
   readonly estimationActive?: boolean;
   readonly onHoverElement?: (elementId: string | null) => void;
   readonly hoveredElementId?: string | null;
+  readonly showAllProperties?: boolean;
+  readonly onToggleShowAll?: () => void;
+  readonly hiddenOps?: ReadonlySet<string>;
+  readonly onToggleOp?: (opId: string) => void;
 }
 
 export const PropertiesPanel = memo(function PropertiesPanel({
@@ -50,6 +54,10 @@ export const PropertiesPanel = memo(function PropertiesPanel({
   estimationActive = false,
   onHoverElement,
   hoveredElementId,
+  showAllProperties = true,
+  onToggleShowAll,
+  hiddenOps,
+  onToggleOp,
 }: PropertiesPanelProps) {
   const isLeft = panelPosition === 'left';
 
@@ -105,6 +113,18 @@ export const PropertiesPanel = memo(function PropertiesPanel({
 
   const figurePointIds = new Set(figures.flatMap((f) => [...f.pointIds]));
   const figureSegmentIds = new Set(figures.flatMap((f) => [...f.segmentIds]));
+
+  // Filter by selected figure when a figure element is selected
+  const selectedFigure =
+    state.selectedElementId && !showAllProperties
+      ? (figures.find(
+          (f) =>
+            f.segmentIds.includes(state.selectedElementId!) ||
+            f.pointIds.includes(state.selectedElementId!),
+        ) ?? null)
+      : null;
+  const filterSegIds = selectedFigure ? new Set(selectedFigure.segmentIds) : null;
+  const filterPtIds = selectedFigure ? new Set(selectedFigure.pointIds) : null;
 
   // Build set of segment IDs that are "côtés de l'angle droit" in right triangles (spec §9.1)
   const rightAngleSideIds = new Set<string>();
@@ -165,7 +185,33 @@ export const PropertiesPanel = memo(function PropertiesPanel({
             ◀
           </button>
         )}
-        <span style={{ fontSize: 11, fontWeight: 600, color: UI_TEXT_SECONDARY }}>Propriétés</span>
+        <span style={{ fontSize: 11, fontWeight: 600, color: UI_TEXT_SECONDARY }}>
+          Propriétés
+          {selectedFigure && (
+            <>
+              <span style={{ marginLeft: 4, fontSize: 10, color: UI_PRIMARY, fontWeight: 400 }}>
+                ({selectedFigure.name})
+              </span>
+              {onToggleShowAll && (
+                <button
+                  onClick={onToggleShowAll}
+                  style={{
+                    marginLeft: 4,
+                    fontSize: 10,
+                    color: UI_PRIMARY,
+                    background: 'none',
+                    border: 'none',
+                    cursor: 'pointer',
+                    textDecoration: 'underline',
+                    padding: 0,
+                  }}
+                >
+                  Voir tout
+                </button>
+              )}
+            </>
+          )}
+        </span>
         {!isLeft && (
           <button
             onClick={onToggleCollapsed}
@@ -193,47 +239,52 @@ export const PropertiesPanel = memo(function PropertiesPanel({
         }
         defaultOpen
       >
-        {state.segments.map((seg, index) => {
-          const start = state.points.find((p) => p.id === seg.startPointId);
-          const end = state.points.find((p) => p.id === seg.endPointId);
-          if (!start || !end) return null;
-          const label = `${start.label}${end.label}`;
-          const prefix = figureSegmentIds.has(seg.id) ? 'Côté' : 'Segment';
-          const isSelected = seg.id === state.selectedElementId;
-          const isHovered = seg.id === hoveredElementId;
-          const zebra = index % 2 !== 0 ? '#F8FAFC' : 'transparent';
-          const bg = isSelected ? '#E8F0FA' : isHovered ? '#F0F4F8' : zebra;
+        {state.segments
+          .filter((seg) => !filterSegIds || filterSegIds.has(seg.id))
+          .map((seg, index) => {
+            const start = state.points.find((p) => p.id === seg.startPointId);
+            const end = state.points.find((p) => p.id === seg.endPointId);
+            if (!start || !end) return null;
+            const label = `${start.label}${end.label}`;
+            const prefix = figureSegmentIds.has(seg.id) ? 'Côté' : 'Segment';
+            const isSelected = seg.id === state.selectedElementId;
+            const isHovered = seg.id === hoveredElementId;
+            const zebra = index % 2 !== 0 ? '#F8FAFC' : 'transparent';
+            const bg = isSelected ? '#E8F0FA' : isHovered ? '#F0F4F8' : zebra;
 
-          return (
-            <div
-              key={seg.id}
-              onClick={() => onSelectElement(seg.id)}
-              onPointerEnter={() => onHoverElement?.(seg.id)}
-              onPointerLeave={() => onHoverElement?.(null)}
-              style={{
-                padding: '2px 4px',
-                cursor: 'pointer',
-                color: UI_TEXT_PRIMARY,
-                background: bg,
-                borderRadius: 2,
-              }}
-            >
-              <span style={{ fontWeight: 500 }}>
-                {prefix} {label}
-              </span>
-              {!estimationActive && (
-                <span style={{ color: UI_TEXT_SECONDARY, marginLeft: 6 }}>
-                  {formatLength(seg.lengthMm, state.displayUnit)}
+            return (
+              <div
+                key={seg.id}
+                ref={(el) => {
+                  if (isSelected && el) el.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+                }}
+                onClick={() => onSelectElement(seg.id)}
+                onPointerEnter={() => onHoverElement?.(seg.id)}
+                onPointerLeave={() => onHoverElement?.(null)}
+                style={{
+                  padding: '2px 4px',
+                  cursor: 'pointer',
+                  color: UI_TEXT_PRIMARY,
+                  background: bg,
+                  borderRadius: 2,
+                }}
+              >
+                <span style={{ fontWeight: 500 }}>
+                  {prefix} {label}
                 </span>
-              )}
-              {!estimationActive && rightAngleSideIds.has(seg.id) && (
-                <span style={{ color: UI_TEXT_SECONDARY, marginLeft: 4, fontSize: '0.9em' }}>
-                  (côté de l'angle droit)
-                </span>
-              )}
-            </div>
-          );
-        })}
+                {!estimationActive && (
+                  <span style={{ color: UI_TEXT_SECONDARY, marginLeft: 6 }}>
+                    {formatLength(seg.lengthMm, state.displayUnit)}
+                  </span>
+                )}
+                {!estimationActive && rightAngleSideIds.has(seg.id) && (
+                  <span style={{ color: UI_TEXT_SECONDARY, marginLeft: 4, fontSize: '0.9em' }}>
+                    (côté de l'angle droit)
+                  </span>
+                )}
+              </div>
+            );
+          })}
         {state.segments.length === 0 && (
           <div style={{ color: UI_TEXT_SECONDARY, fontStyle: 'italic' }}>Aucun segment</div>
         )}
@@ -251,57 +302,65 @@ export const PropertiesPanel = memo(function PropertiesPanel({
             );
           }
 
-          return angles.map((angle, i) => {
-            const vertex = state.points.find((p) => p.id === angle.vertexPointId);
-            if (!vertex) return null;
-            const ray1 = state.points.find((p) => p.id === angle.ray1PointId);
-            const ray2 = state.points.find((p) => p.id === angle.ray2PointId);
-            if (!ray1 || !ray2) return null;
+          return angles
+            .filter((a) => !filterPtIds || filterPtIds.has(a.vertexPointId))
+            .map((angle, i) => {
+              const vertex = state.points.find((p) => p.id === angle.vertexPointId);
+              if (!vertex) return null;
+              const ray1 = state.points.find((p) => p.id === angle.ray1PointId);
+              const ray2 = state.points.find((p) => p.id === angle.ray2PointId);
+              if (!ray1 || !ray2) return null;
 
-            // Use 3-letter notation when vertex has multiple angles (disambiguation)
-            const needsDisambiguation = (vertexAngleCounts.get(angle.vertexPointId) ?? 0) > 1;
-            const angleLabel = needsDisambiguation
-              ? `∠${ray1.label}${vertex.label}${ray2.label}`
-              : `∠${vertex.label}`;
+              // Use 3-letter notation when vertex has multiple angles (disambiguation)
+              const needsDisambiguation = (vertexAngleCounts.get(angle.vertexPointId) ?? 0) > 1;
+              const fullAngleLabel = needsDisambiguation
+                ? `∠${ray1.label}${vertex.label}${ray2.label}`
+                : `∠${vertex.label}`;
+              // Truncate long labels (>5 chars) for readability — full name in tooltip
+              const angleLabel =
+                fullAngleLabel.length > 6
+                  ? `∠${ray1.label.charAt(0)}${vertex.label.charAt(0)}${ray2.label.charAt(0)}`
+                  : fullAngleLabel;
+              const angleLabelTitle = fullAngleLabel.length > 6 ? fullAngleLabel : undefined;
 
-            const isHovered = angle.vertexPointId === hoveredElementId;
-            const zebra = i % 2 !== 0 ? '#F8FAFC' : 'transparent';
-            const bg = isHovered ? '#F0F4F8' : zebra;
+              const isHovered = angle.vertexPointId === hoveredElementId;
+              const zebra = i % 2 !== 0 ? '#F8FAFC' : 'transparent';
+              const bg = isHovered ? '#F0F4F8' : zebra;
 
-            return (
-              <div
-                key={i}
-                onClick={() => onSelectElement(angle.vertexPointId)}
-                onPointerEnter={() => onHoverElement?.(angle.vertexPointId)}
-                onPointerLeave={() => onHoverElement?.(null)}
-                style={{
-                  padding: '2px 4px',
-                  cursor: 'pointer',
-                  color: UI_TEXT_PRIMARY,
-                  background: bg,
-                  borderRadius: 2,
-                }}
-              >
-                <span>{angleLabel}</span>
-                <span style={{ color: UI_TEXT_SECONDARY, marginLeft: 6 }}>
-                  {displayMode === 'complet' && !estimationActive
-                    ? `${Math.round(angle.degrees)}°`
-                    : ''}{' '}
-                  {angle.classification === 'droit'
-                    ? '(droit)'
-                    : angle.classification === 'aigu'
-                      ? '(aigu)'
-                      : angle.classification === 'obtus'
-                        ? '(obtus)'
-                        : angle.classification === 'plat'
-                          ? displayMode === 'simplifie'
-                            ? '(points alignés)'
-                            : '(plat)'
-                          : ''}
-                </span>
-              </div>
-            );
-          });
+              return (
+                <div
+                  key={i}
+                  onClick={() => onSelectElement(angle.vertexPointId)}
+                  onPointerEnter={() => onHoverElement?.(angle.vertexPointId)}
+                  onPointerLeave={() => onHoverElement?.(null)}
+                  style={{
+                    padding: '2px 4px',
+                    cursor: 'pointer',
+                    color: UI_TEXT_PRIMARY,
+                    background: bg,
+                    borderRadius: 2,
+                  }}
+                >
+                  <span title={angleLabelTitle}>{angleLabel}</span>
+                  <span style={{ color: UI_TEXT_SECONDARY, marginLeft: 6 }}>
+                    {displayMode === 'complet' && !estimationActive
+                      ? `${Math.round(angle.degrees)}°`
+                      : ''}{' '}
+                    {angle.classification === 'droit'
+                      ? '(droit)'
+                      : angle.classification === 'aigu'
+                        ? '(aigu)'
+                        : angle.classification === 'obtus'
+                          ? '(obtus)'
+                          : angle.classification === 'plat'
+                            ? displayMode === 'simplifie'
+                              ? '(points alignés)'
+                              : '(plat)'
+                            : ''}
+                  </span>
+                </div>
+              );
+            });
         })()}
         {angles.length === 0 && (
           <div style={{ color: UI_TEXT_SECONDARY, fontStyle: 'italic' }}>Aucun angle</div>
@@ -345,7 +404,7 @@ export const PropertiesPanel = memo(function PropertiesPanel({
             }}
             data-testid="verify-properties-btn"
           >
-            Vérifier les propriétés
+            Afficher les propriétés
           </button>
         )}
 
@@ -354,8 +413,9 @@ export const PropertiesPanel = memo(function PropertiesPanel({
             {properties
               .filter(
                 (prop) =>
-                  displayMode === 'complet' ||
-                  (prop.type !== 'chord' && prop.type !== 'symmetry_axis'),
+                  (displayMode === 'complet' ||
+                    (prop.type !== 'chord' && prop.type !== 'symmetry_axis')) &&
+                  (!filterSegIds || prop.involvedIds.some((id) => filterSegIds.has(id))),
               )
               .map((prop, i) => (
                 <div key={i} style={{ padding: '2px 0', color: UI_TEXT_PRIMARY }}>
@@ -393,7 +453,9 @@ export const PropertiesPanel = memo(function PropertiesPanel({
                   <summary
                     style={{ cursor: 'pointer', color: UI_TEXT_SECONDARY, fontSize: '0.9em' }}
                   >
-                    Autres polygones ({minorFigures.length})
+                    {minorFigures.length === 1
+                      ? minorFigures[0]!.name
+                      : `Autres polygones (${minorFigures.length})`}
                   </summary>
                   {minorFigures.map((fig) => (
                     <div key={fig.id} style={{ padding: '2px 0' }}>
@@ -448,6 +510,66 @@ export const PropertiesPanel = memo(function PropertiesPanel({
         </AccordionSection>
       )}
 
+      {/* Transform operations visibility toggles */}
+      {onToggleOp &&
+        (() => {
+          const ops = new Map<string, { type: string; count: number }>();
+          for (const seg of state.segments) {
+            if (seg.transformOperation && !ops.has(seg.transformOperation)) {
+              const type = seg.transformOperation.split('-')[0] ?? 'transform';
+              const count = state.segments.filter(
+                (s) => s.transformOperation === seg.transformOperation,
+              ).length;
+              ops.set(seg.transformOperation, { type, count });
+            }
+          }
+          if (ops.size === 0) return null;
+          const typeLabels: Record<string, string> = {
+            reflection: 'Réflexion',
+            rotation: 'Rotation',
+            scale: 'Agrandissement',
+            frieze: 'Frise',
+            reproduce: 'Reproduction',
+          };
+          const hiddenCount = hiddenOps
+            ? Array.from(ops.keys()).filter((k) => hiddenOps.has(k)).length
+            : 0;
+          return (
+            <AccordionSection
+              title={`Transformations${hiddenCount > 0 ? ` (${hiddenCount} masquée${hiddenCount > 1 ? 's' : ''})` : ''}`}
+            >
+              {Array.from(ops.entries()).map(([opId, { type, count }]) => {
+                const hidden = hiddenOps?.has(opId) ?? false;
+                return (
+                  <div
+                    key={opId}
+                    onClick={() => onToggleOp(opId)}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      padding: '4px 0',
+                      minHeight: 44,
+                      cursor: 'pointer',
+                      opacity: hidden ? 0.5 : 1,
+                    }}
+                  >
+                    <span style={{ fontSize: 12 * fontScale, color: UI_TEXT_PRIMARY }}>
+                      {typeLabels[type] ?? type} ({count} côtés)
+                    </span>
+                    <span
+                      style={{ fontSize: 16, marginLeft: 8 }}
+                      aria-label={hidden ? "Afficher l'image" : "Masquer l'image"}
+                    >
+                      {hidden ? '👁‍🗨' : '👁'}
+                    </span>
+                  </div>
+                );
+              })}
+            </AccordionSection>
+          );
+        })()}
+
       {/* Points / Sommets — titre adapté au contexte (spec §9.0) */}
       <AccordionSection
         title={
@@ -456,46 +578,51 @@ export const PropertiesPanel = memo(function PropertiesPanel({
             : 'Points'
         }
       >
-        {state.points.map((point, index) => {
-          const prefix = figurePointIds.has(point.id) ? 'Sommet' : 'Point';
-          const isSelected = point.id === state.selectedElementId;
-          const isHovered = point.id === hoveredElementId;
-          const zebra = index % 2 !== 0 ? '#F8FAFC' : 'transparent';
-          const bg = isSelected ? '#E8F0FA' : isHovered ? '#F0F4F8' : zebra;
-          return (
-            <div
-              key={point.id}
-              onClick={() => onSelectElement(point.id)}
-              onPointerEnter={() => onHoverElement?.(point.id)}
-              onPointerLeave={() => onHoverElement?.(null)}
-              style={{
-                padding: '2px 4px',
-                cursor: 'pointer',
-                color: UI_TEXT_PRIMARY,
-                background: bg,
-                borderRadius: 2,
-              }}
-            >
-              <span>
-                {prefix} {point.label}
-              </span>
-              {point.locked && <span style={{ color: UI_TEXT_SECONDARY, marginLeft: 4 }}>🔒</span>}
-              {state.cartesianMode !== 'off' &&
-                (() => {
-                  const originX = state.cartesianMode === '1quadrant' ? 0 : BOUNDS_WIDTH_MM / 2;
-                  const originY =
-                    state.cartesianMode === '1quadrant' ? BOUNDS_HEIGHT_MM : BOUNDS_HEIGHT_MM / 2;
-                  const cx = point.x - originX;
-                  const cy = originY - point.y;
-                  return (
-                    <span style={{ color: UI_TEXT_SECONDARY, marginLeft: 6, fontSize: '0.9em' }}>
-                      ({formatLength(cx, state.displayUnit)}, {formatLength(cy, state.displayUnit)})
-                    </span>
-                  );
-                })()}
-            </div>
-          );
-        })}
+        {state.points
+          .filter((pt) => !filterPtIds || filterPtIds.has(pt.id))
+          .map((point, index) => {
+            const prefix = figurePointIds.has(point.id) ? 'Sommet' : 'Point';
+            const isSelected = point.id === state.selectedElementId;
+            const isHovered = point.id === hoveredElementId;
+            const zebra = index % 2 !== 0 ? '#F8FAFC' : 'transparent';
+            const bg = isSelected ? '#E8F0FA' : isHovered ? '#F0F4F8' : zebra;
+            return (
+              <div
+                key={point.id}
+                onClick={() => onSelectElement(point.id)}
+                onPointerEnter={() => onHoverElement?.(point.id)}
+                onPointerLeave={() => onHoverElement?.(null)}
+                style={{
+                  padding: '2px 4px',
+                  cursor: 'pointer',
+                  color: UI_TEXT_PRIMARY,
+                  background: bg,
+                  borderRadius: 2,
+                }}
+              >
+                <span>
+                  {prefix} {point.label}
+                </span>
+                {point.locked && (
+                  <span style={{ color: UI_TEXT_SECONDARY, marginLeft: 4 }}>🔒</span>
+                )}
+                {state.cartesianMode !== 'off' &&
+                  (() => {
+                    const originX = state.cartesianMode === '1quadrant' ? 0 : BOUNDS_WIDTH_MM / 2;
+                    const originY =
+                      state.cartesianMode === '1quadrant' ? BOUNDS_HEIGHT_MM : BOUNDS_HEIGHT_MM / 2;
+                    const cx = point.x - originX;
+                    const cy = originY - point.y;
+                    return (
+                      <span style={{ color: UI_TEXT_SECONDARY, marginLeft: 6, fontSize: '0.9em' }}>
+                        ({formatLength(cx, state.displayUnit)},{' '}
+                        {formatLength(cy, state.displayUnit)})
+                      </span>
+                    );
+                  })()}
+              </div>
+            );
+          })}
       </AccordionSection>
     </div>
   );

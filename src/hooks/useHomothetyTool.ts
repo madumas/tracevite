@@ -21,6 +21,7 @@ import { CSS_PX_PER_MM } from '@/engine/viewport';
 import { CANVAS_GUIDE } from '@/config/theme';
 import { useTransformAnimation } from './useTransformAnimation';
 import { computeHomothetyAnimData } from '@/engine/transform-animation';
+import { scalePoint } from '@/engine/homothety';
 
 type HomothetyPhase = 'set_center' | 'set_factor' | 'select_figure';
 
@@ -42,6 +43,7 @@ export function useHomothetyTool({
   const [phase, setPhase] = useState<HomothetyPhase>('set_center');
   const [center, setCenter] = useState<{ x: number; y: number } | null>(null);
   const [factor, setFactor] = useState<number | null>(null);
+  const [previewFactor, setPreviewFactor] = useState<number | null>(null);
   const [snapResult, setSnapResult] = useState<SnapResult | null>(null);
 
   const anim = useTransformAnimation({
@@ -61,11 +63,13 @@ export function useHomothetyTool({
     setPhase('set_center');
     setCenter(null);
     setFactor(null);
+    setPreviewFactor(null);
     setSnapResult(null);
   }, []);
 
   const confirmFactor = useCallback((f: number) => {
     setFactor(f);
+    setPreviewFactor(null);
     setPhase('select_figure');
   }, []);
 
@@ -165,17 +169,24 @@ export function useHomothetyTool({
       setFactor(null);
       setPhase('set_factor');
     } else if (phase === 'set_factor') {
-      setCenter(null);
-      setPhase('set_center');
+      if (previewFactor != null) {
+        setPreviewFactor(null);
+      } else {
+        setCenter(null);
+        setPhase('set_center');
+      }
     }
-  }, [phase]);
+  }, [phase, previewFactor]);
 
   // Status message
   let statusMessage: string;
   if (phase === 'set_center') {
     statusMessage = "Étape 1/3 — Agrandir/Réduire — Clique pour placer le centre d'agrandissement";
   } else if (phase === 'set_factor') {
-    statusMessage = 'Étape 2/3 — Agrandir/Réduire — Choisis le facteur';
+    statusMessage =
+      previewFactor != null
+        ? `Aperçu ×${previewFactor} — Confirmer ou Annuler`
+        : 'Étape 2/3 — Agrandir/Réduire — Choisis le facteur';
   } else {
     statusMessage =
       'Étape 3/3 — Agrandir/Réduire — Clique sur un segment pour agrandir ou réduire la figure.';
@@ -213,9 +224,50 @@ export function useHomothetyTool({
         }),
       );
 
+      // Ghost preview when previewFactor is set (before confirmation)
+      if (phase === 'set_factor' && previewFactor != null) {
+        const pointMap = new Map(state.points.map((p) => [p.id, p]));
+        for (const seg of state.segments) {
+          const start = pointMap.get(seg.startPointId);
+          const end = pointMap.get(seg.endPointId);
+          if (!start || !end) continue;
+          const s1 = scalePoint(start, center, previewFactor);
+          const s2 = scalePoint(end, center, previewFactor);
+          elements.push(
+            createElement('line', {
+              key: `ghost-scale-${seg.id}`,
+              x1: (s1.x - viewport.panX) * pxPerMm,
+              y1: (s1.y - viewport.panY) * pxPerMm,
+              x2: (s2.x - viewport.panX) * pxPerMm,
+              y2: (s2.y - viewport.panY) * pxPerMm,
+              stroke: CANVAS_GUIDE,
+              strokeWidth: 2,
+              strokeDasharray: '4 2',
+              opacity: 0.4,
+              paintOrder: 'stroke',
+              pointerEvents: 'none',
+            }),
+          );
+        }
+        for (const pt of state.points) {
+          const sp = scalePoint(pt, center, previewFactor);
+          elements.push(
+            createElement('circle', {
+              key: `ghost-scale-pt-${pt.id}`,
+              cx: (sp.x - viewport.panX) * pxPerMm,
+              cy: (sp.y - viewport.panY) * pxPerMm,
+              r: 3,
+              fill: CANVAS_GUIDE,
+              opacity: 0.35,
+              pointerEvents: 'none',
+            }),
+          );
+        }
+      }
+
       // Factor label
-      if (factor != null && phase === 'select_figure') {
-        const factorStr = factor === Math.floor(factor) ? `×${factor}` : `×${factor}`;
+      const displayFactor = phase === 'select_figure' ? factor : previewFactor;
+      if (displayFactor != null) {
         elements.push(
           createElement(
             'text',
@@ -230,14 +282,14 @@ export function useHomothetyTool({
               strokeWidth: 3,
               pointerEvents: 'none',
             },
-            factorStr,
+            `×${displayFactor}`,
           ),
         );
       }
     }
 
     return elements.length > 0 ? elements : null;
-  }, [center, factor, phase, viewport]);
+  }, [center, factor, previewFactor, phase, viewport, state.points, state.segments]);
 
   const mergedOverlay = useMemo(() => {
     const base = overlayElements
@@ -257,6 +309,135 @@ export function useHomothetyTool({
   // Floating factor input panel
   const toolPanel = useMemo(() => {
     if (phase !== 'set_factor' || !isActive) return undefined;
+
+    const presetRow = createElement(
+      'div',
+      { style: { display: 'flex', gap: 8 } },
+      ...[
+        { label: '×0,5', value: 0.5 },
+        { label: '×2', value: 2 },
+        { label: '×3', value: 3 },
+      ].map((preset) =>
+        createElement(
+          'button',
+          {
+            key: `preset-${preset.value}`,
+            onClick: () => setPreviewFactor(preset.value),
+            style: {
+              minWidth: 44,
+              height: 44,
+              border: previewFactor === preset.value ? '2px solid #0a7e7a' : '1px solid #D1D8E0',
+              borderRadius: 6,
+              background: previewFactor === preset.value ? '#E0F2F1' : '#F5F7FA',
+              cursor: 'pointer',
+              fontWeight: previewFactor === preset.value ? 700 : 500,
+              fontSize: 14,
+            },
+          },
+          preset.label,
+        ),
+      ),
+    );
+
+    const inputRow = createElement(
+      'div',
+      { style: { display: 'flex', gap: 8, alignItems: 'center' } },
+      createElement('span', { style: { fontSize: 14, color: '#4A5568' } }, '×'),
+      createElement('input', {
+        id: 'homothety-factor-input',
+        type: 'text',
+        inputMode: 'decimal',
+        placeholder: 'ex: 1,5',
+        style: {
+          width: 70,
+          height: 44,
+          border: '1px solid #D1D8E0',
+          borderRadius: 6,
+          padding: '0 8px',
+          fontSize: 14,
+          textAlign: 'center' as const,
+        },
+        onKeyDown: (e: React.KeyboardEvent<HTMLInputElement>) => {
+          if (e.key === 'Enter') {
+            const val = parseFloat((e.target as HTMLInputElement).value.replace(',', '.'));
+            if (!isNaN(val) && val > 0 && val !== 1) setPreviewFactor(val);
+          }
+        },
+        autoFocus: previewFactor == null,
+      }),
+      createElement(
+        'button',
+        {
+          onClick: () => {
+            const input = document.getElementById(
+              'homothety-factor-input',
+            ) as HTMLInputElement | null;
+            if (input) {
+              const val = parseFloat(input.value.replace(',', '.'));
+              if (!isNaN(val) && val > 0 && val !== 1) setPreviewFactor(val);
+            }
+          },
+          style: {
+            minWidth: 44,
+            height: 44,
+            border: '1px solid #0a7e7a',
+            borderRadius: 6,
+            background: previewFactor != null ? '#F5F7FA' : '#0a7e7a',
+            color: previewFactor != null ? '#4A5568' : 'white',
+            cursor: 'pointer',
+            fontWeight: 600,
+            fontSize: 13,
+          },
+        },
+        'OK',
+      ),
+    );
+
+    const confirmRow =
+      previewFactor != null
+        ? createElement(
+            'div',
+            { style: { display: 'flex', gap: 8, marginTop: 4 } },
+            createElement(
+              'button',
+              {
+                onClick: () => confirmFactor(previewFactor),
+                style: {
+                  minWidth: 44,
+                  height: 44,
+                  flex: 1,
+                  border: 'none',
+                  borderRadius: 6,
+                  background: '#0a7e7a',
+                  color: 'white',
+                  cursor: 'pointer',
+                  fontWeight: 600,
+                  fontSize: 13,
+                },
+              },
+              'Confirmer',
+            ),
+            createElement(
+              'button',
+              {
+                onClick: () => setPreviewFactor(null),
+                style: {
+                  minWidth: 44,
+                  height: 44,
+                  flex: 1,
+                  border: '1px solid #D1D8E0',
+                  borderRadius: 6,
+                  background: 'white',
+                  color: '#4A5568',
+                  cursor: 'pointer',
+                  fontWeight: 500,
+                  fontSize: 13,
+                },
+              },
+              'Annuler',
+            ),
+          )
+        : null;
 
     return createElement(
       'div',
@@ -280,94 +461,16 @@ export function useHomothetyTool({
         { style: { fontWeight: 600, fontSize: 13, color: '#1A2433' } },
         'Facteur',
       ),
-      createElement(
-        'div',
-        { style: { display: 'flex', gap: 8 } },
-        ...[
-          { label: '×0,5', value: 0.5 },
-          { label: '×2', value: 2 },
-          { label: '×3', value: 3 },
-        ].map((preset) =>
-          createElement(
-            'button',
-            {
-              key: `preset-${preset.value}`,
-              onClick: () => confirmFactor(preset.value),
-              style: {
-                minWidth: 44,
-                height: 44,
-                border: '1px solid #D1D8E0',
-                borderRadius: 6,
-                background: '#F5F7FA',
-                cursor: 'pointer',
-                fontWeight: 500,
-                fontSize: 14,
-              },
-            },
-            preset.label,
-          ),
-        ),
-      ),
-      createElement(
-        'div',
-        { style: { display: 'flex', gap: 8, alignItems: 'center' } },
-        createElement('span', { style: { fontSize: 14, color: '#4A5568' } }, '×'),
-        createElement('input', {
-          id: 'homothety-factor-input',
-          type: 'text',
-          inputMode: 'decimal',
-          placeholder: 'ex: 1,5',
-          style: {
-            width: 70,
-            height: 44,
-            border: '1px solid #D1D8E0',
-            borderRadius: 6,
-            padding: '0 8px',
-            fontSize: 14,
-            textAlign: 'center' as const,
-          },
-          onKeyDown: (e: React.KeyboardEvent<HTMLInputElement>) => {
-            if (e.key === 'Enter') {
-              const val = parseFloat((e.target as HTMLInputElement).value.replace(',', '.'));
-              if (!isNaN(val) && val > 0 && val !== 1) confirmFactor(val);
-            }
-          },
-          autoFocus: true,
-        }),
-        createElement(
-          'button',
-          {
-            onClick: () => {
-              const input = document.getElementById(
-                'homothety-factor-input',
-              ) as HTMLInputElement | null;
-              if (input) {
-                const val = parseFloat(input.value.replace(',', '.'));
-                if (!isNaN(val) && val > 0 && val !== 1) confirmFactor(val);
-              }
-            },
-            style: {
-              minWidth: 44,
-              height: 44,
-              border: '1px solid #0a7e7a',
-              borderRadius: 6,
-              background: '#0a7e7a',
-              color: 'white',
-              cursor: 'pointer',
-              fontWeight: 600,
-              fontSize: 13,
-            },
-          },
-          'OK',
-        ),
-      ),
+      presetRow,
+      inputRow,
       createElement(
         'div',
         { style: { fontSize: 13, color: '#4A5568', marginTop: 2 } },
         'Plus grand que 1 = agrandir, plus petit = réduire',
       ),
+      confirmRow,
     );
-  }, [phase, isActive, confirmFactor]);
+  }, [phase, isActive, previewFactor, confirmFactor]);
 
   return {
     handleClick,

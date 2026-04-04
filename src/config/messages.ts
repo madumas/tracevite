@@ -46,11 +46,15 @@ export const ACTION_SCALE_NOTE = 'Échelle 1:1 sur papier';
 
 // ── Confirm dialog — new construction ─────────────────────
 
-export const CONFIRM_NEW_TITLE = 'Tu veux commencer une nouvelle figure?';
+export const CONFIRM_NEW_TITLE = 'Tu veux commencer une nouvelle construction?';
 export const CONFIRM_NEW_SUBTITLE = (name: string) =>
-  `Ta figure « ${name} » est sauvegardée. Tu peux la retrouver dans « Mes constructions ».`;
+  `Ta construction « ${name} » est sauvegardée. Tu peux la retrouver dans « Mes constructions ».`;
 export const CONFIRM_NEW_CANCEL = 'Non, je continue';
-export const CONFIRM_NEW_CONFIRM = 'Oui, nouvelle figure';
+export const CONFIRM_NEW_CONFIRM = 'Oui, nouvelle construction';
+
+// ── Transformation hints ──────────────────────────────────
+
+export const PRIME_HINT = "Les points avec ' sont les copies issues de la transformation.";
 
 // ── Toolbar ───────────────────────────────────────────────
 
@@ -78,3 +82,5 @@ export const GRID_2CM = '2 cm';
 // ── Edge case messages (spec §17) ─────────────────────────
 
 export const HINT_SEGMENT_TOO_SHORT = 'Clique un peu plus loin pour tracer un segment';
+export const HINT_LABELS_CLUTTERED =
+  'Les mesures sont dans le panneau — clique sur un segment pour voir';

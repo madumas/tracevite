@@ -98,6 +98,7 @@ export function reflectConstruction(
   state: ConstructionState,
   axisP1: { x: number; y: number },
   axisP2: { x: number; y: number },
+  transformOperation?: string,
 ): {
   points: Point[];
   segments: Array<{ id: string; startPointId: string; endPointId: string; lengthMm: number }>;
@@ -125,6 +126,7 @@ export function reflectConstruction(
       y: reflected.y,
       label,
       locked: false,
+      ...(transformOperation ? { transformOperation } : {}),
     });
   }
 
@@ -134,6 +136,7 @@ export function reflectConstruction(
     startPointId: string;
     endPointId: string;
     lengthMm: number;
+    isTransformed?: boolean;
   }> = [];
 
   for (const sid of segmentIds) {
@@ -149,6 +152,8 @@ export function reflectConstruction(
       startPointId: newStart.id,
       endPointId: newEnd.id,
       lengthMm: original.lengthMm, // Reflection preserves distances
+      isTransformed: true,
+      ...(transformOperation ? { transformOperation } : {}),
     });
   }
 

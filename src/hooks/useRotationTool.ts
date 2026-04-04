@@ -21,6 +21,7 @@ import { CSS_PX_PER_MM } from '@/engine/viewport';
 import { CANVAS_GUIDE } from '@/config/theme';
 import { useTransformAnimation } from './useTransformAnimation';
 import { computeRotationAnimData } from '@/engine/transform-animation';
+import { rotatePoint } from '@/engine/rotation';
 
 type RotationPhase = 'set_center' | 'set_angle' | 'select_figure';
 
@@ -42,6 +43,7 @@ export function useRotationTool({
   const [phase, setPhase] = useState<RotationPhase>('set_center');
   const [center, setCenter] = useState<{ x: number; y: number } | null>(null);
   const [angleDeg, setAngleDeg] = useState<number | null>(null);
+  const [previewAngle, setPreviewAngle] = useState<number | null>(null);
   const [snapResult, setSnapResult] = useState<SnapResult | null>(null);
 
   const anim = useTransformAnimation({
@@ -61,11 +63,13 @@ export function useRotationTool({
     setPhase('set_center');
     setCenter(null);
     setAngleDeg(null);
+    setPreviewAngle(null);
     setSnapResult(null);
   }, []);
 
   const confirmAngle = useCallback((deg: number) => {
     setAngleDeg(deg);
+    setPreviewAngle(null);
     setPhase('select_figure');
   }, []);
 
@@ -165,17 +169,24 @@ export function useRotationTool({
       setAngleDeg(null);
       setPhase('set_angle');
     } else if (phase === 'set_angle') {
-      setCenter(null);
-      setPhase('set_center');
+      if (previewAngle != null) {
+        setPreviewAngle(null);
+      } else {
+        setCenter(null);
+        setPhase('set_center');
+      }
     }
-  }, [phase]);
+  }, [phase, previewAngle]);
 
   // Status message
   let statusMessage: string;
   if (phase === 'set_center') {
     statusMessage = 'Étape 1/3 — Rotation — Clique pour placer le centre de rotation';
   } else if (phase === 'set_angle') {
-    statusMessage = "Étape 2/3 — Rotation — Choisis l'angle de rotation";
+    statusMessage =
+      previewAngle != null
+        ? `Aperçu de la rotation de ${previewAngle}° — Confirmer ou Annuler`
+        : "Étape 2/3 — Rotation — Choisis l'angle de rotation";
   } else {
     statusMessage = 'Étape 3/3 — Rotation — Clique sur un segment pour faire tourner la figure.';
   }
@@ -214,14 +225,57 @@ export function useRotationTool({
         }),
       );
 
-      // Arc preview when angle is defined
-      if (angleDeg != null && phase === 'select_figure') {
+      // Ghost preview when previewAngle is set (before confirmation)
+      if (phase === 'set_angle' && previewAngle != null) {
+        const pointMap = new Map(state.points.map((p) => [p.id, p]));
+        for (const seg of state.segments) {
+          const start = pointMap.get(seg.startPointId);
+          const end = pointMap.get(seg.endPointId);
+          if (!start || !end) continue;
+          const r1 = rotatePoint(start, center, previewAngle);
+          const r2 = rotatePoint(end, center, previewAngle);
+          elements.push(
+            createElement('line', {
+              key: `ghost-rot-${seg.id}`,
+              x1: (r1.x - viewport.panX) * pxPerMm,
+              y1: (r1.y - viewport.panY) * pxPerMm,
+              x2: (r2.x - viewport.panX) * pxPerMm,
+              y2: (r2.y - viewport.panY) * pxPerMm,
+              stroke: CANVAS_GUIDE,
+              strokeWidth: 2,
+              strokeDasharray: '4 2',
+              opacity: 0.4,
+              paintOrder: 'stroke',
+              pointerEvents: 'none',
+            }),
+          );
+        }
+        // Ghost points
+        for (const pt of state.points) {
+          const rp = rotatePoint(pt, center, previewAngle);
+          elements.push(
+            createElement('circle', {
+              key: `ghost-rot-pt-${pt.id}`,
+              cx: (rp.x - viewport.panX) * pxPerMm,
+              cy: (rp.y - viewport.panY) * pxPerMm,
+              r: 3,
+              fill: CANVAS_GUIDE,
+              opacity: 0.35,
+              pointerEvents: 'none',
+            }),
+          );
+        }
+      }
+
+      // Arc preview when angle is defined (confirmed or previewing)
+      const arcAngle = phase === 'select_figure' ? angleDeg : previewAngle;
+      if (arcAngle != null) {
         const r = 20; // px
-        const endAngle = (angleDeg * Math.PI) / 180;
-        const endX = cx + r * Math.cos(endAngle);
-        const endY = cy + r * Math.sin(endAngle);
-        const largeArc = Math.abs(angleDeg) > 180 ? 1 : 0;
-        const sweep = angleDeg > 0 ? 1 : 0;
+        const endRad = (arcAngle * Math.PI) / 180;
+        const endX = cx + r * Math.cos(endRad);
+        const endY = cy + r * Math.sin(endRad);
+        const largeArc = Math.abs(arcAngle) > 180 ? 1 : 0;
+        const sweep = arcAngle > 0 ? 1 : 0;
 
         elements.push(
           createElement('path', {
@@ -236,7 +290,7 @@ export function useRotationTool({
         );
 
         // Arrow at end of arc — tangent direction at endpoint
-        const arrowAngle = endAngle + (angleDeg > 0 ? -Math.PI / 2 : Math.PI / 2);
+        const arrowAngle = endRad + (arcAngle > 0 ? -Math.PI / 2 : Math.PI / 2);
         const arrowLen = 6;
         elements.push(
           createElement('line', {
@@ -269,8 +323,8 @@ export function useRotationTool({
             'text',
             {
               key: 'rotation-angle-label',
-              x: cx + (r + 12) * Math.cos(endAngle / 2),
-              y: cy + (r + 12) * Math.sin(endAngle / 2),
+              x: cx + (r + 12) * Math.cos(endRad / 2),
+              y: cy + (r + 12) * Math.sin(endRad / 2),
               fill: CANVAS_GUIDE,
               fontSize: 12,
               textAnchor: 'middle',
@@ -279,14 +333,14 @@ export function useRotationTool({
               strokeWidth: 3,
               pointerEvents: 'none',
             },
-            `${angleDeg}°`,
+            `${arcAngle}°`,
           ),
         );
       }
     }
 
     return elements.length > 0 ? elements : null;
-  }, [center, angleDeg, phase, viewport]);
+  }, [center, angleDeg, previewAngle, phase, viewport, state.points, state.segments]);
 
   const mergedOverlay = useMemo(() => {
     const base = overlayElements
@@ -306,6 +360,134 @@ export function useRotationTool({
   // Floating angle input panel
   const toolPanel = useMemo(() => {
     if (phase !== 'set_angle' || !isActive) return undefined;
+
+    const presetRow = createElement(
+      'div',
+      { style: { display: 'flex', gap: 8, flexWrap: 'wrap' as const } },
+      ...([60, 90, 120, 180, 270] as const).map((deg) =>
+        createElement(
+          'button',
+          {
+            key: `preset-${deg}`,
+            onClick: () => setPreviewAngle(deg),
+            style: {
+              minWidth: 44,
+              height: 44,
+              padding: '0 8px',
+              border: previewAngle === deg ? '2px solid #0a7e7a' : '1px solid #D1D8E0',
+              borderRadius: 6,
+              background: previewAngle === deg ? '#E0F2F1' : '#F5F7FA',
+              cursor: 'pointer',
+              fontWeight: previewAngle === deg ? 700 : 500,
+              fontSize: 13,
+            },
+            title: `${deg}°`,
+          },
+          `${deg}°`,
+        ),
+      ),
+    );
+
+    const inputRow = createElement(
+      'div',
+      { style: { display: 'flex', gap: 8, alignItems: 'center' } },
+      createElement('input', {
+        id: 'rotation-angle-input',
+        type: 'text',
+        inputMode: 'decimal',
+        placeholder: 'ex: 90',
+        style: {
+          width: 70,
+          height: 44,
+          border: '1px solid #D1D8E0',
+          borderRadius: 6,
+          padding: '0 8px',
+          fontSize: 14,
+          textAlign: 'center' as const,
+        },
+        onKeyDown: (e: React.KeyboardEvent<HTMLInputElement>) => {
+          if (e.key === 'Enter') {
+            const val = parseFloat((e.target as HTMLInputElement).value.replace(',', '.'));
+            if (!isNaN(val) && val % 360 !== 0) setPreviewAngle(val % 360);
+          }
+        },
+        autoFocus: previewAngle == null,
+      }),
+      createElement('span', { style: { fontSize: 14, color: '#4A5568' } }, '°'),
+      createElement(
+        'button',
+        {
+          onClick: () => {
+            const input = document.getElementById(
+              'rotation-angle-input',
+            ) as HTMLInputElement | null;
+            if (input) {
+              const val = parseFloat(input.value.replace(',', '.'));
+              if (!isNaN(val) && val % 360 !== 0) setPreviewAngle(val % 360);
+            }
+          },
+          style: {
+            minWidth: 44,
+            height: 44,
+            border: '1px solid #0a7e7a',
+            borderRadius: 6,
+            background: previewAngle != null ? '#F5F7FA' : '#0a7e7a',
+            color: previewAngle != null ? '#4A5568' : 'white',
+            cursor: 'pointer',
+            fontWeight: 600,
+            fontSize: 13,
+          },
+        },
+        'OK',
+      ),
+    );
+
+    // Confirm/Cancel row when preview is active
+    const confirmRow =
+      previewAngle != null
+        ? createElement(
+            'div',
+            { style: { display: 'flex', gap: 8, marginTop: 4 } },
+            createElement(
+              'button',
+              {
+                onClick: () => confirmAngle(previewAngle),
+                style: {
+                  minWidth: 44,
+                  height: 44,
+                  flex: 1,
+                  border: 'none',
+                  borderRadius: 6,
+                  background: '#0a7e7a',
+                  color: 'white',
+                  cursor: 'pointer',
+                  fontWeight: 600,
+                  fontSize: 13,
+                },
+              },
+              'Confirmer',
+            ),
+            createElement(
+              'button',
+              {
+                onClick: () => setPreviewAngle(null),
+                style: {
+                  minWidth: 44,
+                  height: 44,
+                  flex: 1,
+                  border: '1px solid #D1D8E0',
+                  borderRadius: 6,
+                  background: 'white',
+                  color: '#4A5568',
+                  cursor: 'pointer',
+                  fontWeight: 500,
+                  fontSize: 13,
+                },
+              },
+              'Annuler',
+            ),
+          )
+        : null;
 
     return createElement(
       'div',
@@ -329,92 +511,16 @@ export function useRotationTool({
         { style: { fontWeight: 600, fontSize: 13, color: '#1A2433' } },
         'Angle de rotation',
       ),
-      createElement(
-        'div',
-        { style: { display: 'flex', gap: 8, flexWrap: 'wrap' as const } },
-        ...([60, 90, 120, 180, 270] as const).map((deg) =>
-          createElement(
-            'button',
-            {
-              key: `preset-${deg}`,
-              onClick: () => confirmAngle(deg),
-              style: {
-                minWidth: 44,
-                height: 44,
-                padding: '0 8px',
-                border: '1px solid #D1D8E0',
-                borderRadius: 6,
-                background: '#F5F7FA',
-                cursor: 'pointer',
-                fontWeight: 500,
-                fontSize: 13,
-              },
-              title: `${deg}°`,
-            },
-            `${deg}°`,
-          ),
-        ),
-      ),
-      createElement(
-        'div',
-        { style: { display: 'flex', gap: 8, alignItems: 'center' } },
-        createElement('input', {
-          id: 'rotation-angle-input',
-          type: 'text',
-          inputMode: 'decimal',
-          placeholder: 'ex: 90',
-          style: {
-            width: 70,
-            height: 44,
-            border: '1px solid #D1D8E0',
-            borderRadius: 6,
-            padding: '0 8px',
-            fontSize: 14,
-            textAlign: 'center' as const,
-          },
-          onKeyDown: (e: React.KeyboardEvent<HTMLInputElement>) => {
-            if (e.key === 'Enter') {
-              const val = parseFloat((e.target as HTMLInputElement).value.replace(',', '.'));
-              if (!isNaN(val) && val % 360 !== 0) confirmAngle(val % 360);
-            }
-          },
-          autoFocus: true,
-        }),
-        createElement('span', { style: { fontSize: 14, color: '#4A5568' } }, '°'),
-        createElement(
-          'button',
-          {
-            onClick: () => {
-              const input = document.getElementById(
-                'rotation-angle-input',
-              ) as HTMLInputElement | null;
-              if (input) {
-                const val = parseFloat(input.value.replace(',', '.'));
-                if (!isNaN(val) && val % 360 !== 0) confirmAngle(val % 360);
-              }
-            },
-            style: {
-              minWidth: 44,
-              height: 44,
-              border: '1px solid #0a7e7a',
-              borderRadius: 6,
-              background: '#0a7e7a',
-              color: 'white',
-              cursor: 'pointer',
-              fontWeight: 600,
-              fontSize: 13,
-            },
-          },
-          'OK',
-        ),
-      ),
+      presetRow,
+      inputRow,
       createElement(
         'div',
         { style: { fontSize: 13, color: '#4A5568', marginTop: 2 } },
         'Sens horaire ↻',
       ),
+      confirmRow,
     );
-  }, [phase, isActive, confirmAngle]);
+  }, [phase, isActive, previewAngle, confirmAngle]);
 
   return {
     handleClick,

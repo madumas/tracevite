@@ -15,7 +15,11 @@ export const CANVAS_ANGLE = '#C24B22';
 export const CANVAS_MEASUREMENT = '#4A5568';
 export const CANVAS_GRID_LABEL = '#9CA3AF';
 export const CANVAS_GHOST = '#8BD4D0';
-export const CANVAS_GHOST_OPACITY = 0.6;
+export const CANVAS_GHOST_OPACITY = 0.75;
+export const CANVAS_TRANSFORMED = '#6D28D9'; // violet — distinguishes transformed figures
+/** Frieze copy palette — 3 colors (WCAG AA on #FAFCFF) + 3 dash patterns. */
+export const CANVAS_TRANSFORM_PALETTE = ['#6D28D9', '#2563EB', '#B45309'] as const;
+export const CANVAS_TRANSFORM_DASHES = [undefined, '10 5', '3 3'] as const;
 export const CANVAS_SELECTION_BG = '#CCE8E6';
 
 // ── UI colors ──────────────────────────────────────────────

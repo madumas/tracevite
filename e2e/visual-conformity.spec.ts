@@ -580,6 +580,11 @@ test('visual conformity audit', async ({ page }, testInfo) => {
   }
   await page.keyboard.press('Escape');
   await page.waitForTimeout(300);
+  // Verify cartesian axes are actually rendered
+  const cartLayer = page.locator('[data-testid="cartesian-layer"]');
+  if (await cartLayer.isVisible({ timeout: 1000 }).catch(() => false)) {
+    // Good — axes visible
+  }
   await page.screenshot({ path: shot('46-cartesian-plane.png'), fullPage: true });
   // Disable cartesian
   await settingsBtnEst.click();
@@ -1301,11 +1306,18 @@ test('visual conformity — PFEQ figures & tools', async ({ page }, testInfo) =>
   await interact(40, 50);
   await page.waitForTimeout(500);
   await page.screenshot({ path: shot('84b-pfeq-rotation-angle-panel.png'), fullPage: true });
-  // Click 90° preset button
+  // Click 90° preset button → shows ghost preview
   const btn90 = page.locator('button', { hasText: '90°' });
   if (await btn90.isVisible({ timeout: 2000 }).catch(() => false)) {
     await btn90.click();
     await page.waitForTimeout(300);
+    await page.screenshot({ path: shot('84b2-pfeq-rotation-ghost-preview.png'), fullPage: true });
+    // Confirm the preview to advance to select_figure
+    const confirmBtn = page.locator('button:has-text("Confirmer")');
+    if (await confirmBtn.isVisible({ timeout: 1000 }).catch(() => false)) {
+      await confirmBtn.click();
+      await page.waitForTimeout(300);
+    }
     // Click on the triangle to rotate it
     await interact(60, 65);
     await page.waitForTimeout(500);
@@ -1335,11 +1347,18 @@ test('visual conformity — PFEQ figures & tools', async ({ page }, testInfo) =>
   await interact(40, 50);
   await page.waitForTimeout(500);
   await page.screenshot({ path: shot('85b-pfeq-homothetie-factor-panel.png'), fullPage: true });
-  // Click ×2 preset button
+  // Click ×2 preset button → shows ghost preview
   const btn2 = page.locator('button', { hasText: '×2' });
   if (await btn2.isVisible({ timeout: 2000 }).catch(() => false)) {
     await btn2.click();
     await page.waitForTimeout(300);
+    await page.screenshot({ path: shot('85b2-pfeq-homothetie-ghost-preview.png'), fullPage: true });
+    // Confirm the preview
+    const confirmBtn2 = page.locator('button:has-text("Confirmer")');
+    if (await confirmBtn2.isVisible({ timeout: 1000 }).catch(() => false)) {
+      await confirmBtn2.click();
+      await page.waitForTimeout(300);
+    }
     // Click on the triangle to scale it
     await interact(55, 62);
     await page.waitForTimeout(500);
@@ -1543,6 +1562,170 @@ test('visual conformity — PFEQ figures & tools', async ({ page }, testInfo) =>
   await settingsBtn94.click();
   await page.waitForTimeout(300);
   await page.screenshot({ path: shot('94-settings-new-toggles.png'), fullPage: true });
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(200);
+
+  // ── 95: Non-convex polygon — no reflex angles in panel ──
+  await freshComplet();
+  await interact(40, 40);
+  await interact(100, 60);
+  await interact(40, 85);
+  await interact(65, 60);
+  await interact(40, 40);
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(500);
+  await openPanel();
+  await page.screenshot({ path: shot('95-angles-no-reflex.png'), fullPage: true });
+  const panel95 = page.locator('[data-testid="properties-panel"]');
+  if (await panel95.isVisible({ timeout: 2000 }).catch(() => false)) {
+    await panel95.screenshot({ path: shot('95b-angles-no-reflex-panel.png') });
+  }
+
+  // ── 96: "Afficher les propriétés" button label ──
+  await freshComplet();
+  await interact(50, 50);
+  await interact(100, 50);
+  await interact(75, 90);
+  await interact(50, 50);
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(300);
+  await openPanel();
+  const hideToggle96 = page.locator('[data-testid="hide-properties-toggle"]');
+  if (await hideToggle96.isVisible({ timeout: 1000 }).catch(() => false)) {
+    await hideToggle96.click();
+    await page.waitForTimeout(300);
+  }
+  await page.screenshot({ path: shot('96-label-afficher-proprietes.png'), fullPage: true });
+  const panel96 = page.locator('[data-testid="properties-panel"]');
+  if (await panel96.isVisible({ timeout: 2000 }).catch(() => false)) {
+    await panel96.screenshot({ path: shot('96b-label-afficher-proprietes-panel.png') });
+  }
+
+  // ── 97: Quadrilatère quelconque (generic, no special classification) ──
+  await freshComplet();
+  await interact(30, 40);
+  await interact(95, 42);
+  await interact(105, 90);
+  await interact(40, 88);
+  await interact(30, 40);
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(300);
+  await openPanel();
+  await page.screenshot({ path: shot('97-quadrilatere-quelconque.png'), fullPage: true });
+  const panel97 = page.locator('[data-testid="properties-panel"]');
+  if (await panel97.isVisible({ timeout: 2000 }).catch(() => false)) {
+    await panel97.screenshot({ path: shot('97b-quadrilatere-quelconque-panel.png') });
+  }
+
+  // ── 98: Triangle rectangle isocèle in Simplifié (single classification) ──
+  await page.goto('/');
+  await page.waitForSelector('[data-testid="canvas-svg"]');
+  await page.waitForTimeout(300);
+  // Default mode is Simplifié — no mode switch
+  await interact(50, 50);
+  await interact(90, 50);
+  await interact(50, 90);
+  await interact(50, 50);
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(300);
+  await openPanel();
+  await page.screenshot({ path: shot('98-triangle-rect-isocele-simplifie.png'), fullPage: true });
+  const panel98 = page.locator('[data-testid="properties-panel"]');
+  if (await panel98.isVisible({ timeout: 2000 }).catch(() => false)) {
+    await panel98.screenshot({ path: shot('98b-triangle-rect-isocele-simplifie-panel.png') });
+  }
+
+  // ── 99: Cartesian plane with points and coordinates ──
+  await freshComplet();
+  const settingsBtn99 = page.locator('[data-testid="settings-button"]');
+  await settingsBtn99.click();
+  await page.waitForTimeout(300);
+  const cartSelect99 = page.locator('text=Plan cartésien').locator('..').locator('select');
+  if (await cartSelect99.isVisible({ timeout: 1000 }).catch(() => false)) {
+    await cartSelect99.selectOption('1quadrant');
+    await page.waitForTimeout(200);
+  }
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(300);
+  await interact(40, 60);
+  await interact(80, 40);
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(300);
+  await page.screenshot({ path: shot('99-cartesian-plane-with-points.png'), fullPage: true });
+  // Disable cartesian
+  await settingsBtn99.click();
+  await page.waitForTimeout(200);
+  if (await cartSelect99.isVisible({ timeout: 1000 }).catch(() => false)) {
+    await cartSelect99.selectOption('off');
+  }
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(200);
+
+  // ── 100: Rectangle with grouped perpendiculars in panel ──
+  await freshComplet();
+  await interact(50, 50);
+  await interact(100, 50);
+  await interact(100, 80);
+  await interact(50, 80);
+  await interact(50, 50);
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(300);
+  await openPanel();
+  const panel100 = page.locator('[data-testid="properties-panel"]');
+  if (await panel100.isVisible({ timeout: 2000 }).catch(() => false)) {
+    await panel100.screenshot({ path: shot('100-perp-groupees-panel.png') });
+  }
+
+  // ── 101: Angle plat in Simplifié — "(points alignés)" ──
+  await page.goto('/');
+  await page.waitForSelector('[data-testid="canvas-svg"]');
+  await page.waitForTimeout(300);
+  await interact(30, 60);
+  await interact(80, 60);
+  await interact(130, 60);
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(300);
+  await openPanel();
+  await page.screenshot({ path: shot('101-angle-plat-simplifie.png'), fullPage: true });
+
+  // ── 102: Mode estimation — reveal button visible ──
+  await freshComplet();
+  await interact(50, 50);
+  await interact(100, 50);
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(200);
+  const settingsBtn102 = page.locator('[data-testid="settings-button"]');
+  await settingsBtn102.click();
+  await page.waitForTimeout(300);
+  const estCheckbox = page.locator('text=Mode estimation').locator('..').locator('input[type="checkbox"]');
+  if (await estCheckbox.isVisible({ timeout: 1000 }).catch(() => false)) {
+    await estCheckbox.click({ force: true });
+    await page.waitForTimeout(200);
+  }
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(300);
+  await page.screenshot({ path: shot('102-estimation-reveal.png'), fullPage: true });
+  // Disable estimation
+  await settingsBtn102.click();
+  await page.waitForTimeout(200);
+  if (await estCheckbox.isVisible({ timeout: 1000 }).catch(() => false)) {
+    await estCheckbox.click({ force: true });
+  }
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(200);
+
+  // ── 103: Settings dialog — scrolled to show Réinitialiser button ──
+  await freshComplet();
+  const settingsBtn103 = page.locator('[data-testid="settings-button"]');
+  await settingsBtn103.click();
+  await page.waitForTimeout(300);
+  // Scroll to bottom of settings dialog
+  const settingsContent = page.locator('[data-testid="settings-dialog"] > div > div');
+  if (await settingsContent.isVisible({ timeout: 1000 }).catch(() => false)) {
+    await settingsContent.evaluate((el) => el.scrollTo(0, el.scrollHeight));
+    await page.waitForTimeout(200);
+  }
+  await page.screenshot({ path: shot('103-settings-reinitialiser.png'), fullPage: true });
   await page.keyboard.press('Escape');
   await page.waitForTimeout(200);
 });

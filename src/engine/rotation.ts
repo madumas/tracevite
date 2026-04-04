@@ -45,6 +45,7 @@ export function rotateConstruction(
   state: ConstructionState,
   center: { x: number; y: number },
   angleDeg: number,
+  transformOperation?: string,
 ): RotateResult {
   const pointMap = new Map(state.points.map((p) => [p.id, p]));
   const existingLabels = state.points.map((p) => p.label);
@@ -67,6 +68,7 @@ export function rotateConstruction(
       y: rotated.y,
       label,
       locked: false,
+      ...(transformOperation ? { transformOperation } : {}),
     });
   }
 
@@ -86,6 +88,8 @@ export function rotateConstruction(
       endPointId: newEnd.id,
       lengthMm: distance(newStart, newEnd),
       fixedLength: original.fixedLength,
+      isTransformed: true,
+      ...(transformOperation ? { transformOperation } : {}),
     });
   }
 

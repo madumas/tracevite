@@ -38,6 +38,7 @@ export function scaleConstruction(
   state: ConstructionState,
   center: { x: number; y: number },
   factor: number,
+  transformOperation?: string,
 ): ScaleResult {
   const pointMap = new Map(state.points.map((p) => [p.id, p]));
   const existingLabels = state.points.map((p) => p.label);
@@ -59,6 +60,7 @@ export function scaleConstruction(
       y: scaled.y,
       label,
       locked: false,
+      ...(transformOperation ? { transformOperation } : {}),
     });
   }
 
@@ -77,6 +79,8 @@ export function scaleConstruction(
       endPointId: newEnd.id,
       lengthMm: distance(newStart, newEnd),
       fixedLength: original.fixedLength ? original.fixedLength * Math.abs(factor) : undefined,
+      isTransformed: true,
+      ...(transformOperation ? { transformOperation } : {}),
     });
   }
 
