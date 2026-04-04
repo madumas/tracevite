@@ -1,7 +1,12 @@
+import { useState, useEffect, useRef } from 'react';
 import type { ConstructionState, ViewportState, Segment } from '@/model/types';
-import { UI_SURFACE, UI_BORDER, UI_TEXT_PRIMARY } from '@/config/theme';
+import { UI_SURFACE, UI_BORDER, UI_TEXT_PRIMARY, UI_DESTRUCTIVE } from '@/config/theme';
 import { MIN_BUTTON_SIZE_PX, MIN_BUTTON_GAP_PX } from '@/config/accessibility';
 import { CSS_PX_PER_MM } from '@/engine/viewport';
+import { ACTION_DELETE } from '@/config/messages';
+
+/** Timeout before delete confirmation auto-resets (matches chainTimeoutMs). */
+const DELETE_CONFIRM_TIMEOUT_MS = 8000;
 
 interface ContextActionBarProps {
   readonly state: ConstructionState;
@@ -9,6 +14,7 @@ interface ContextActionBarProps {
   readonly onToggleLock?: (pointId: string) => void;
   readonly onFixCircleRadius?: (circleId: string) => void;
   readonly onFixSegmentLength?: (segmentId: string) => void;
+  readonly onDeleteElement?: (elementId: string) => void;
   readonly containerWidth?: number;
   readonly fontScale?: number;
 }
@@ -23,10 +29,29 @@ export function ContextActionBar({
   onToggleLock,
   onFixCircleRadius,
   onFixSegmentLength,
+  onDeleteElement,
   containerWidth,
   fontScale = 1,
 }: ContextActionBarProps) {
   const { selectedElementId } = state;
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const confirmTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Reset confirmation when selection changes
+  useEffect(() => {
+    setConfirmingDelete(false);
+    if (confirmTimerRef.current) {
+      clearTimeout(confirmTimerRef.current);
+      confirmTimerRef.current = null;
+    }
+  }, [selectedElementId]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (confirmTimerRef.current) clearTimeout(confirmTimerRef.current);
+    };
+  }, []);
 
   if (!selectedElementId) return null;
 
@@ -62,7 +87,7 @@ export function ContextActionBar({
 
   // Keep in bounds (vertical + horizontal clamp)
   if (posY < 10) posY += 100;
-  const estimatedHalfWidth = 100;
+  const estimatedHalfWidth = 150;
   posX = Math.max(
     estimatedHalfWidth + 8,
     Math.min(
@@ -75,8 +100,22 @@ export function ContextActionBar({
 
   // Only show if there are actions to display
   const hasActions =
-    (point && onToggleLock) || (segment && onFixSegmentLength) || (circle && onFixCircleRadius);
+    (point && onToggleLock) ||
+    (segment && onFixSegmentLength) ||
+    (circle && onFixCircleRadius) ||
+    onDeleteElement;
   if (!hasActions) return null;
+
+  // Build concrete delete label (e.g. "Effacer AB ?" or "Effacer le point A ?")
+  const deleteConfirmLabel = confirmingDelete
+    ? point
+      ? `Effacer ${point.label}?`
+      : segment
+        ? `Effacer ${getSegmentLabel(segment, state)}?`
+        : circle
+          ? `Effacer le cercle?`
+          : 'Effacer?'
+    : ACTION_DELETE;
 
   return (
     <div
@@ -158,6 +197,44 @@ export function ContextActionBar({
         >
           Fixer rayon
         </button>
+      )}
+
+      {/* Delete with micro-confirmation */}
+      {onDeleteElement && (
+        <>
+          <div style={{ width: 1, height: 24, background: UI_BORDER, margin: '0 6px' }} />
+          <button
+            onClick={() => {
+              if (confirmingDelete) {
+                onDeleteElement(selectedElementId);
+                setConfirmingDelete(false);
+              } else {
+                setConfirmingDelete(true);
+                if (confirmTimerRef.current) clearTimeout(confirmTimerRef.current);
+                confirmTimerRef.current = setTimeout(() => {
+                  setConfirmingDelete(false);
+                  confirmTimerRef.current = null;
+                }, DELETE_CONFIRM_TIMEOUT_MS);
+              }
+            }}
+            style={{
+              minWidth: MIN_BUTTON_SIZE_PX,
+              height: MIN_BUTTON_SIZE_PX,
+              padding: '0 10px',
+              border: `1px solid ${confirmingDelete ? UI_DESTRUCTIVE : UI_BORDER}`,
+              borderRadius: 4,
+              background: confirmingDelete ? UI_DESTRUCTIVE : 'transparent',
+              color: confirmingDelete ? '#FFFFFF' : UI_TEXT_PRIMARY,
+              cursor: 'pointer',
+              fontSize: 'inherit',
+              fontWeight: confirmingDelete ? 600 : 400,
+            }}
+            aria-label={confirmingDelete ? 'Confirmer la suppression' : ACTION_DELETE}
+            data-testid="context-delete"
+          >
+            {deleteConfirmLabel}
+          </button>
+        </>
       )}
     </div>
   );

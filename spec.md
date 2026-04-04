@@ -400,34 +400,31 @@ Conversion affichage :
 
 ### 6.9 Sélection et suppression
 
-**La sélection est un comportement transversal**, disponible dans tous les outils (pas un outil dédié). Un clic sur un élément existant le sélectionne **quand aucune action n'est en cours** dans l'outil actif. Plus précisément :
+**Outil Sélectionner** (icône curseur-flèche, dans le bloc utilitaire à droite de la barre d'outils avec Déplacer, toujours visible en Simplifié et Complet). Cet outil permet de sélectionner tout élément (point, segment, cercle) d'un simple clic pour voir ses propriétés dans le panneau latéral et accéder aux actions contextuelles. Particulièrement utile sur tablette où le hover n'existe pas. Raccourci clavier : `a` (quand les raccourcis sont activés).
+
+**La sélection reste aussi un comportement transversal** (cross-cutting), disponible dans les autres outils quand aucune action n'est en cours. Plus précisément :
 - **En mode Segment** : un clic sur un segment (pas un point) le sélectionne si l'outil est à l'état IDLE (pas de premier point posé, pas de chaînage actif). Un clic sur un point en IDLE commence un nouveau segment depuis ce point (§6.1), pas la sélection. **Pendant le chaînage**, aucune sélection n'est possible — tout clic est interprété comme continuation de la chaîne. Les **règles de snap normales** s'appliquent au clic (points existants > milieu de segment > grille > angle > alignement). Il n'y a pas de snap spécial « projection sur segment » — un clic près d'un segment snap au milieu si dans la tolérance 2a, sinon à la grille, sinon à la position du clic. L'enfant qui veut vérifier une mesure pendant le chaînage peut consulter le panneau latéral (toujours visible) sans interrompre le chaînage.
 - **En mode Cercle** : un clic sur un cercle existant le sélectionne si l'outil est à l'état IDLE (pas de centre posé).
 - **En mode Déplacer** : un clic sur un élément (point, segment, cercle) le sélectionne ET initie le déplacement pour les points. Pour sélectionner un segment ou cercle sans action, cliquer dessus.
 - **En mode Réflexion** : la sélection est gérée par le workflow de l'outil (§6.6).
+- **En mode Sélectionner** : tout clic sur un élément (point, segment, cercle) le sélectionne. Clic sur le vide déselectionne. Aucune restriction.
 
 **Barre d'actions contextuelle :**
 - Position : centrée au-dessus de l'élément sélectionné, avec un décalage de 8px. Si cette position dépasse le haut du canevas, la barre passe en dessous de l'élément. Si elle dépasse les bords latéraux, elle est poussée vers l'intérieur.
 - Pour un segment : la barre est centrée au milieu du segment.
 - Pour un point partagé par plusieurs segments : le clic sélectionne le **point** (pas un segment). Les actions contextuelles sont celles du point.
 - **Boutons par type d'élément** :
-  - Point : Verrouiller/Déverrouiller
-  - Segment : Fixer la longueur / Modifier la longueur
-  - Cercle : Fixer rayon
-- La suppression n'est **pas** dans la barre contextuelle — elle passe exclusivement par le mode poubelle (§6.9 Suppression) pour éviter les suppressions accidentelles.
+  - Point : Verrouiller/Déverrouiller | Supprimer
+  - Segment : Fixer la longueur / Modifier la longueur | Supprimer
+  - Cercle : Fixer rayon | Supprimer
+- Le bouton **Supprimer** est séparé des autres actions par un séparateur vertical (espacement >= 12px) et placé à l'extrémité droite de la barre.
 - Tous les boutons : 44×44px minimum.
 - Un seul élément est sélectionné à la fois. Cliquer sur un autre élément remplace la sélection (pas de multi-sélection dans le MVP).
 - Les mêmes actions sont aussi disponibles dans le panneau latéral droit (section contextuelle)
 
 **Suppression :**
-- **Bouton 🗑 Supprimer dans la barre d'actions** (en bas, à côté de Annuler/Rétablir). Fonctionne en **mode toggle** :
-  1. Clic sur 🗑 → entre en **mode suppression** (bouton fond rouge, curseur crosshair sur le canvas, barre de statut : « Supprimer — Clique sur un élément pour le supprimer »).
-  2. Clic sur un élément (point, segment, cercle) → l'élément est sélectionné (surbrillance) et la barre de statut affiche « Supprimer le point A? Clique à nouveau pour confirmer. » (micro-confirmation).
-  3. Clic à nouveau sur le même élément → suppression confirmée. Le mode suppression reste actif pour enchaîner les suppressions.
-  4. Clic sur un autre élément → change la cible (retour à l'étape 2).
-  5. Clic sur 🗑 à nouveau ou Escape → quitte le mode suppression.
-  Ce mode est le chemin principal de suppression — il est toujours visible et accessible quel que soit l'outil actif. Essentiel pour supprimer des points en mode Déplacer ou Segment, où un clic sur un point déclenche l'outil plutôt que la sélection.
-- **Micro-confirmation** (même pattern sur le bouton de la barre d'actions et sur celui de la barre contextuelle) : un premier clic change le bouton en état « Confirmer? » (fond rouge, texte blanc) pendant 3 secondes, puis revient à « Supprimer ». Un deuxième clic pendant le délai confirme la suppression. **Escape pendant l'état « Confirmer? »** annule la confirmation (ramène le bouton à « Supprimer ») sans monter dans la hiérarchie Escape — il résout l'état intermédiaire le plus local. Le prochain Escape suit la hiérarchie normale. Cela protège du clic accidentel (fréquent chez les TDC) sans la lourdeur d'un dialogue modal.
+- La suppression se fait via le bouton **Supprimer** dans la barre d'actions contextuelle, qui apparaît lorsqu'un élément est sélectionné.
+- **Micro-confirmation** : un premier clic change le bouton en formulation concrète (ex : « Effacer AB ? » pour un segment, « Effacer A ? » pour un point) avec fond rouge pendant 8 secondes, puis revient à « Supprimer ». Un deuxième clic pendant le délai confirme la suppression. Changer de sélection ou appuyer Escape annule la confirmation. Cela protège du clic accidentel (fréquent chez les TDC) sans la lourdeur d'un dialogue modal.
 - Touche Delete/Backspace sur un élément sélectionné → suppression directe (pas de micro-confirmation — le geste clavier est plus intentionnel qu'un clic errant). L'undo reste disponible dans tous les cas.
 - Supprimer un point supprime aussi tous les segments connectés à ce point
 - Supprimer un segment ne supprime **pas** ses points d'extrémité (ils deviennent des points libres)

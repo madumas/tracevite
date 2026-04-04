@@ -19,6 +19,7 @@ import { useFriezeTool } from './useFriezeTool';
 import { useSymmetryTool } from './useSymmetryTool';
 import { useRotationTool } from './useRotationTool';
 import { useHomothetyTool } from './useHomothetyTool';
+import { useSelectTool } from './useSelectTool';
 
 interface UseActiveToolOptions {
   state: ConstructionState;
@@ -40,6 +41,7 @@ export function useActiveTool({
   animateTransformations = false,
 }: UseActiveToolOptions): ToolHookResult {
   const active = state.activeTool;
+  const selectTool = useSelectTool({ state, dispatch, isActive: active === 'select' });
   const segmentTool = useSegmentTool({
     state,
     dispatch,
@@ -120,6 +122,8 @@ export function useActiveTool({
   });
 
   switch (state.activeTool) {
+    case 'select':
+      return selectTool;
     case 'segment':
       return segmentTool;
     case 'move':

@@ -15,6 +15,21 @@ const S = {
 } as const;
 const stroke = 'currentColor';
 
+/** Select: northwest cursor arrow */
+export function SelectIcon() {
+  return (
+    <svg {...S}>
+      <path
+        d="M5 2l10 10H9.5L13 17l-2 1-3.5-7L3 13z"
+        stroke={stroke}
+        strokeWidth="1.5"
+        strokeLinejoin="round"
+        fill="none"
+      />
+    </svg>
+  );
+}
+
 /** Segment: diagonal line with dots at endpoints */
 export function SegmentIcon() {
   return (

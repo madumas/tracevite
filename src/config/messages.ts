@@ -63,6 +63,8 @@ export const TOOL_POINT = 'Point';
 export const TOOL_CIRCLE = 'Cercle';
 export const TOOL_REFLECTION = 'Réflexion';
 export const TOOL_MOVE = 'Déplacer';
+export const TOOL_SELECT = 'Sélectionner';
+export const STATUS_SELECT_IDLE = 'Sélectionner — Clique sur un élément pour voir ses propriétés';
 export const TOOL_SNAP = 'Aimant';
 export const TOOL_COMPARE = 'Comparer';
 

@@ -69,6 +69,7 @@ export type DisplayUnit = 'cm' | 'mm';
 
 /** All available tool types. Only some active per milestone/level. */
 export type ToolType =
+  | 'select'
   | 'segment'
   | 'point'
   | 'circle'

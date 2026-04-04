@@ -44,15 +44,13 @@ import { PointLayer } from '@/components/PointLayer';
 import { CircleLayer } from '@/components/CircleLayer';
 import { NavigationControls } from '@/components/NavigationControls';
 import {
-  STATUS_DELETE_MODE,
-  STATUS_DELETE_CONFIRM,
   CONFIRM_NEW_TITLE,
   CONFIRM_NEW_SUBTITLE,
   CONFIRM_NEW_CANCEL,
   CONFIRM_NEW_CONFIRM,
 } from '@/config/messages';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
-import { hitTestElement } from '@/engine/hit-test';
+
 import { ConsigneBanner } from '@/components/ConsigneBanner';
 import { SlotManager } from '@/components/SlotManager';
 import { useSlotManager } from '@/hooks/useSlotManager';
@@ -83,6 +81,7 @@ const COMPOUND_TOOLS: readonly ToolType[] = [
 ];
 
 const TOOL_SHORTCUT_MAP: Record<string, ToolType> = {
+  a: 'select',
   s: 'segment',
   p: 'point',
   c: 'circle',
@@ -91,6 +90,7 @@ const TOOL_SHORTCUT_MAP: Record<string, ToolType> = {
 };
 
 const TOOL_DISPLAY_NAMES: Record<ToolType, string> = {
+  select: 'Sélectionner',
   segment: 'Segment',
   point: 'Point',
   circle: 'Cercle',
@@ -126,16 +126,16 @@ const SHIFT_CONSTRAINT_CURSOR = `url("data:image/svg+xml,${encodeURIComponent("<
 /** Canvas cursor based on active tool + interaction state (TDC affordance). */
 function getCanvasCursor(
   activeTool: ToolType,
-  deleteMode: boolean,
   isActiveGesture: boolean | undefined,
   isIdle: boolean,
   isHoveringElement: boolean,
   shiftConstraintActive: boolean,
 ): string {
-  if (deleteMode) return 'crosshair';
   if (shiftConstraintActive) return SHIFT_CONSTRAINT_CURSOR;
   if (isIdle && isHoveringElement) return 'pointer';
   switch (activeTool) {
+    case 'select':
+      return 'default';
     case 'segment':
     case 'point':
     case 'circle':
@@ -216,9 +216,6 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
       if (fatigueTimerRef.current) clearTimeout(fatigueTimerRef.current);
     };
   }, [preferences.fatigueReminderMinutes, showFatigueReminder]);
-
-  const [deleteMode, setDeleteMode] = useState(false);
-  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
 
   // RadiusInput state for circle radius/diameter fixing (spec §6.3)
   const [fixingCircleId, setFixingCircleId] = useState<string | null>(null);
@@ -360,30 +357,17 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
   useAutoSave(state, undoManager, slotManager.activeSlotId);
 
   // Pointer events — route to delete mode, selection, or tool
+  const handleDeleteElement = useCallback(
+    (elementId: string) => {
+      dispatch({ type: 'REMOVE_ELEMENT', elementId });
+      dispatch({ type: 'SET_SELECTED_ELEMENT', elementId: null });
+    },
+    [dispatch],
+  );
+
   const handleCanvasClick = useCallback(
     (mmPos: { x: number; y: number }) => {
       clearToast();
-      if (deleteMode) {
-        const hit = hitTestElement(mmPos, state);
-        if (hit) {
-          if (deleteConfirmId === hit.id) {
-            // Second click on same element → delete
-            dispatch({ type: 'REMOVE_ELEMENT', elementId: hit.id });
-            setDeleteConfirmId(null);
-            dispatch({ type: 'SET_SELECTED_ELEMENT', elementId: null });
-          } else {
-            // First click → select and ask for confirmation
-            dispatch({ type: 'SET_SELECTED_ELEMENT', elementId: hit.id });
-            setDeleteConfirmId(hit.id);
-          }
-        } else {
-          // Click empty space → exit delete mode entirely (more intuitive than just clearing)
-          setDeleteMode(false);
-          setDeleteConfirmId(null);
-          dispatch({ type: 'SET_SELECTED_ELEMENT', elementId: null });
-        }
-        return;
-      }
       // Normal mode: if tool is mid-action, forward to tool directly.
       // Compound tools that need clicks on elements get priority over selection.
       const toolNeedsElementClick = COMPOUND_TOOLS.includes(state.activeTool);
@@ -396,7 +380,7 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
         }
       }
     },
-    [deleteMode, deleteConfirmId, state, dispatch, selection, tool, clearToast],
+    [state, selection, tool, clearToast],
   );
 
   const handleCursorMove = useCallback(
@@ -429,17 +413,12 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
         selection.clearSelection();
         return;
       }
-      // Also exit delete mode when switching tools
-      if (deleteMode) {
-        setDeleteMode(false);
-        setDeleteConfirmId(null);
-      }
       tool.reset();
       selection.clearSelection();
       setShiftConstraintActive(false);
       dispatch({ type: 'SET_ACTIVE_TOOL', activeTool: t });
     },
-    [dispatch, tool, selection, state.activeTool, deleteMode],
+    [dispatch, tool, selection, state.activeTool],
   );
 
   const handleGridChange = useCallback(
@@ -500,10 +479,6 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
           setPanelCollapsed(true);
         } else if (showSlotManager) {
           setShowSlotManager(false);
-        } else if (deleteMode) {
-          setDeleteMode(false);
-          setDeleteConfirmId(null);
-          selection.clearSelection();
         } else if (state.selectedElementId) {
           selection.clearSelection();
         } else {
@@ -566,7 +541,6 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
     state.activeTool,
     state.snapEnabled,
     selection,
-    deleteMode,
     showSlotManager,
     showToast,
     isNarrow,
@@ -581,10 +555,6 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
         setShowSettings(false);
       } else if (showPrintDialog) {
         setShowPrintDialog(false);
-      } else if (deleteMode) {
-        setDeleteMode(false);
-        setDeleteConfirmId(null);
-        selection.clearSelection();
       } else if (state.selectedElementId) {
         selection.clearSelection();
       } else if (!tool.isIdle) {
@@ -594,7 +564,7 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
     };
     window.addEventListener('contextmenu', handler);
     return () => window.removeEventListener('contextmenu', handler);
-  }, [tool, showSettings, showPrintDialog, deleteMode, state.selectedElementId, selection]);
+  }, [tool, showSettings, showPrintDialog, state.selectedElementId, selection]);
 
   const [hasNewProperties, setHasNewProperties] = useState(false);
   const prevDerivedCountRef = useRef(0);
@@ -978,87 +948,71 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
         aria-live="polite"
         data-testid="status-bar"
       >
-        {deleteMode
-          ? deleteConfirmId
-            ? STATUS_DELETE_CONFIRM(
-                (() => {
-                  const pt = state.points.find((p) => p.id === deleteConfirmId);
-                  if (pt) return `le point ${pt.label}`;
-                  const seg = state.segments.find((s) => s.id === deleteConfirmId);
-                  if (seg) {
-                    const s = state.points.find((p) => p.id === seg.startPointId);
-                    const e = state.points.find((p) => p.id === seg.endPointId);
-                    return `le segment ${s?.label ?? ''}${e?.label ?? ''}`;
-                  }
-                  return "l'élément";
-                })(),
-              )
-            : STATUS_DELETE_MODE
-          : (() => {
-              const raw = tool.statusMessage;
-              const dashIdx = raw.indexOf(' — ');
-              if (dashIdx < 0) return raw; // hint messages without separator
-              const toolName = raw.slice(0, dashIdx);
-              const instruction = raw.slice(dashIdx + 3);
-              // Parse step progress from toolName (e.g. "Étape 1/2 — Segment")
-              const stepMatch = toolName.match(/(\d+)\/(\d+)/);
-              const stepCurrent = stepMatch ? parseInt(stepMatch[1]!, 10) : 0;
-              const stepTotal = stepMatch ? parseInt(stepMatch[2]!, 10) : 0;
+        {(() => {
+          const raw = tool.statusMessage;
+          const dashIdx = raw.indexOf(' — ');
+          if (dashIdx < 0) return raw; // hint messages without separator
+          const toolName = raw.slice(0, dashIdx);
+          const instruction = raw.slice(dashIdx + 3);
+          // Parse step progress from toolName (e.g. "Étape 1/2 — Segment")
+          const stepMatch = toolName.match(/(\d+)\/(\d+)/);
+          const stepCurrent = stepMatch ? parseInt(stepMatch[1]!, 10) : 0;
+          const stepTotal = stepMatch ? parseInt(stepMatch[2]!, 10) : 0;
 
-              return (
-                <>
-                  <span
-                    style={{
-                      background: UI_PRIMARY,
-                      color: '#FFF',
-                      padding: '1px 8px',
-                      borderRadius: 4,
-                      fontSize: 12 * effectiveFontScale,
-                      fontWeight: 600,
-                      marginRight: 6,
-                      whiteSpace: 'nowrap',
-                    }}
-                  >
-                    {stepTotal >= 2 && (
-                      <span style={{ marginRight: 5 }}>
-                        {Array.from({ length: stepTotal }, (_, i) => (
-                          <span
-                            key={i}
-                            style={{
-                              display: 'inline-block',
-                              width: 6,
-                              height: 6,
-                              borderRadius: '50%',
-                              background: i < stepCurrent ? '#FFF' : 'rgba(255,255,255,0.35)',
-                              margin: '0 1px',
-                            }}
-                          />
-                        ))}
-                      </span>
-                    )}
-                    {toolName}
+          return (
+            <>
+              <span
+                style={{
+                  background: UI_PRIMARY,
+                  color: '#FFF',
+                  padding: '1px 8px',
+                  borderRadius: 4,
+                  fontSize: 12 * effectiveFontScale,
+                  fontWeight: 600,
+                  marginRight: 6,
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                {stepTotal >= 2 && (
+                  <span style={{ marginRight: 5 }}>
+                    {Array.from({ length: stepTotal }, (_, i) => (
+                      <span
+                        key={i}
+                        style={{
+                          display: 'inline-block',
+                          width: 6,
+                          height: 6,
+                          borderRadius: '50%',
+                          background: i < stepCurrent ? '#FFF' : 'rgba(255,255,255,0.35)',
+                          margin: '0 1px',
+                        }}
+                      />
+                    ))}
                   </span>
-                  {instruction}
-                  {state.estimationMode && !estimationRevealed && (
-                    <span
-                      style={{
-                        background: '#FEF3C7',
-                        color: '#B45309',
-                        padding: '2px 10px',
-                        borderRadius: 4,
-                        fontSize: 12 * effectiveFontScale,
-                        fontWeight: 600,
-                        marginLeft: 8,
-                        whiteSpace: 'nowrap',
-                      }}
-                      data-testid="estimation-badge"
-                    >
-                      ◈ Estimation
-                    </span>
-                  )}
-                </>
-              );
-            })()}
+                )}
+                {toolName}
+              </span>
+              {instruction}
+              {state.estimationMode && !estimationRevealed && (
+                <span
+                  style={{
+                    background: '#FEF3C7',
+                    color: '#B45309',
+                    padding: '2px 10px',
+                    borderRadius: 4,
+                    fontSize: 12 * effectiveFontScale,
+                    fontWeight: 600,
+                    marginLeft: 8,
+                    whiteSpace: 'nowrap',
+                  }}
+                  data-testid="estimation-badge"
+                >
+                  ◈ Estimation
+                </span>
+              )}
+            </>
+          );
+        })()}
         {shiftConstraintActive && ' — Contrainte 15° active'}
         {figureClosedHint && (
           <span
@@ -1110,7 +1064,7 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
                 {forceShowLabels ? '✓ Mesures' : 'Mesures'}
               </button>
             )}
-            {!tool.isIdle && !deleteMode && (
+            {!tool.isIdle && (
               <button
                 onClick={() => tool.reset()}
                 style={{
@@ -1194,7 +1148,6 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
                 touchAction: 'none',
                 cursor: getCanvasCursor(
                   state.activeTool,
-                  deleteMode,
                   tool.isActiveGesture,
                   tool.isIdle,
                   !!selection.hoveredElement,
@@ -1295,7 +1248,6 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
              where clicking an element is a tool action, not a general selection */}
           {state.selectedElementId &&
             !COMPOUND_TOOLS.includes(state.activeTool) &&
-            !deleteMode &&
             !fixingSegmentId &&
             !fixingCircleId && (
               <ContextActionBar
@@ -1304,6 +1256,7 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
                 onToggleLock={handleToggleLock}
                 onFixCircleRadius={setFixingCircleId}
                 onFixSegmentLength={handleFixSegmentLength}
+                onDeleteElement={handleDeleteElement}
                 containerWidth={containerSize.width}
                 fontScale={effectiveFontScale}
               />
@@ -1589,14 +1542,8 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
         canUndo={canUndo}
         canRedo={canRedo}
         canPrint={hasElements}
-        deleteMode={deleteMode}
         onUndo={handleUndo}
         onRedo={handleRedo}
-        onToggleDeleteMode={() => {
-          setDeleteMode(!deleteMode);
-          setDeleteConfirmId(null);
-          if (deleteMode) selection.clearSelection();
-        }}
         onPrint={handlePrint}
         fontScale={effectiveFontScale}
         estimationMode={state.estimationMode}

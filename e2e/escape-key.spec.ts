@@ -22,22 +22,19 @@ test.describe('Escape key — hierarchical cancel (panic button)', () => {
     await expectSegmentCount(page, 0);
   });
 
-  test('exits delete mode', async ({ page }) => {
+  test('deselects element on Escape', async ({ page }) => {
     // Create a segment first
     await clickCanvas(page, 50, 50);
     await waitForStatus(page, /deuxième point/);
     await clickCanvas(page, 100, 50);
     await expectSegmentCount(page, 1);
 
-    // Enter delete mode
-    await clickAction(page, 'delete');
-    await waitForStatus(page, /Supprimer/);
+    // Select the segment via Select tool
+    await selectTool(page, 'select');
+    await clickCanvas(page, 75, 50);
 
-    // Press Escape — should exit delete mode
+    // Press Escape — should deselect
     await page.keyboard.press('Escape');
-
-    // Status should no longer show delete mode message
-    await waitForStatus(page, /Segment/);
 
     // Segment still exists
     await expectSegmentCount(page, 1);

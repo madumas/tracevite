@@ -1,6 +1,7 @@
 import type { Page } from '@playwright/test';
 
 export type ToolName =
+  | 'select'
   | 'segment'
   | 'point'
   | 'move'
@@ -17,7 +18,7 @@ export type ToolName =
   | 'compare'
   | 'frieze';
 
-export type ActionName = 'undo' | 'redo' | 'delete' | 'print' | 'new';
+export type ActionName = 'undo' | 'redo' | 'print' | 'new';
 
 export async function selectTool(page: Page, tool: ToolName): Promise<void> {
   await page.locator(`[data-testid="tool-${tool}"]`).click();

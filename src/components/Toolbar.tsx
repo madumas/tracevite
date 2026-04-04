@@ -5,6 +5,7 @@ import { UI_PRIMARY, UI_SURFACE, UI_BORDER, UI_TEXT_PRIMARY, TOOLBAR_HEIGHT } fr
 import { GeoMoloLogo } from './GeoMoloLogo';
 import { MIN_BUTTON_SIZE_PX, MIN_BUTTON_GAP_PX } from '@/config/accessibility';
 import {
+  SelectIcon,
   SegmentIcon,
   PointIcon,
   CircleIcon,
@@ -24,6 +25,7 @@ import {
   TOOL_SEGMENT,
   TOOL_POINT,
   TOOL_MOVE,
+  TOOL_SELECT,
   TOOL_CIRCLE,
   TOOL_REFLECTION,
   TOOL_COMPARE,
@@ -192,30 +194,6 @@ export const Toolbar = memo(function Toolbar({
             <CircleIcon /> <span className="tool-label">{TOOL_CIRCLE}</span>
           </button>
         )}
-
-        {/* ─ sep ─ */}
-        <div
-          style={{
-            width: 2,
-            height: 28,
-            background: UI_BORDER,
-            margin: '0 6px',
-            flexShrink: 0,
-            borderRadius: 1,
-            opacity: 0.6,
-          }}
-        />
-
-        {/* ═══ GROUP: Modifier ═══ */}
-        <button
-          ref={refIfActive('move')}
-          onClick={() => onToolChange('move')}
-          style={{ ...toolBtnBase, ...(activeTool === 'move' ? activeStyle : {}) }}
-          aria-pressed={activeTool === 'move'}
-          data-testid="tool-move"
-        >
-          <MoveIcon /> <span className="tool-label">{TOOL_MOVE}</span>
-        </button>
 
         {/* ─ sep ─ */}
         <div
@@ -421,7 +399,39 @@ export const Toolbar = memo(function Toolbar({
             );
           })()}
 
-        {/* Snap, grid, unit moved to ActionBar */}
+        {/* Spacer — pushes utility tools to the right */}
+        <div style={{ flexGrow: 1 }} />
+
+        {/* ═══ GROUP: Utilitaires (positions stables à droite) ═══ */}
+        <div
+          style={{
+            width: 2,
+            height: 28,
+            background: UI_BORDER,
+            margin: '0 6px',
+            flexShrink: 0,
+            borderRadius: 1,
+            opacity: 0.6,
+          }}
+        />
+        <button
+          ref={refIfActive('select')}
+          onClick={() => onToolChange('select')}
+          style={{ ...toolBtnBase, ...(activeTool === 'select' ? activeStyle : {}) }}
+          aria-pressed={activeTool === 'select'}
+          data-testid="tool-select"
+        >
+          <SelectIcon /> <span className="tool-label">{TOOL_SELECT}</span>
+        </button>
+        <button
+          ref={refIfActive('move')}
+          onClick={() => onToolChange('move')}
+          style={{ ...toolBtnBase, ...(activeTool === 'move' ? activeStyle : {}) }}
+          aria-pressed={activeTool === 'move'}
+          data-testid="tool-move"
+        >
+          <MoveIcon /> <span className="tool-label">{TOOL_MOVE}</span>
+        </button>
       </div>
       {/* end zone scrollable */}
 

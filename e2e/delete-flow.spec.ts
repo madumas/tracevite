@@ -1,6 +1,6 @@
-import { test } from '@playwright/test';
+import { test, expect } from '@playwright/test';
 import { clickCanvas, tapCanvas } from './helpers/canvas';
-import { clickAction, waitForStatus } from './helpers/toolbar';
+import { selectTool, waitForStatus } from './helpers/toolbar';
 import { expectPointCount, expectSegmentCount } from './helpers/assertions';
 
 test.beforeEach(async ({ page }) => {
@@ -8,55 +8,76 @@ test.beforeEach(async ({ page }) => {
   await page.waitForSelector('[data-testid="canvas-svg"]');
 });
 
-test.describe('Delete with micro-confirmation', () => {
-  test('deletes a point with micro-confirmation (two clicks)', async ({ page }, testInfo) => {
+test.describe('Delete via ContextActionBar micro-confirmation', () => {
+  test('deletes a segment with micro-confirmation (select + two clicks)', async ({
+    page,
+  }, testInfo) => {
     const isTouchProject = testInfo.project.name !== 'Desktop Chrome';
     const click = isTouchProject ? tapCanvas : clickCanvas;
 
     // Create a segment (2 points)
     await click(page, 50, 80);
     await waitForStatus(page, /deuxième point/);
-    await click(page, 100, 80);
+    await click(page, 150, 80);
     await expectSegmentCount(page, 1);
     await expectPointCount(page, 2);
 
-    // Enter delete mode
-    await clickAction(page, 'delete');
-    await waitForStatus(page, /Supprimer/);
+    // Switch to Select tool and click on segment midpoint to select it
+    await selectTool(page, 'select');
+    await click(page, 100, 80);
 
-    // First click on point A — shows confirmation
-    await click(page, 50, 80);
-    await waitForStatus(page, /confirmer/);
+    // ContextActionBar should appear with Supprimer button
+    const deleteBtn = page.locator('[data-testid="context-delete"]');
+    await expect(deleteBtn).toBeVisible({ timeout: 3000 });
+    await expect(deleteBtn).toHaveText('Supprimer');
 
-    // Second click on same point — confirm deletion (debounce bypassed)
-    await click(page, 50, 80);
+    // First click — shows confirmation with concrete label
+    await deleteBtn.click();
+    await expect(deleteBtn).toHaveText(/Effacer/);
 
-    // Point A and connected segment are deleted
-    await expectPointCount(page, 1);
+    // Second click — confirms deletion
+    await deleteBtn.click();
+
+    // Segment is deleted, points remain (spec: deleting segment keeps endpoints)
+    await expectSegmentCount(page, 0);
+    await expectPointCount(page, 2);
   });
 
-  test('cancels delete when clicking empty space', async ({ page }, testInfo) => {
+  test('confirmation resets when changing selection', async ({ page }, testInfo) => {
     const isTouchProject = testInfo.project.name !== 'Desktop Chrome';
     const click = isTouchProject ? tapCanvas : clickCanvas;
 
-    // Create a segment
+    // Create two segments
     await click(page, 50, 50);
     await waitForStatus(page, /deuxième point/);
-    await click(page, 100, 50);
+    await click(page, 150, 50);
     await expectSegmentCount(page, 1);
 
-    // Enter delete mode
-    await clickAction(page, 'delete');
-    await waitForStatus(page, /Supprimer/);
-
-    // Click on segment to select it
-    await click(page, 75, 50);
-    await waitForStatus(page, /confirmer/);
-
-    // Click on empty space instead of confirming
+    await click(page, 150, 50);
+    await waitForStatus(page, /deuxième point/);
     await click(page, 150, 150);
+    await expectSegmentCount(page, 2);
 
-    // Segment should still exist
-    await expectSegmentCount(page, 1);
+    // Select first segment
+    await selectTool(page, 'select');
+    await click(page, 100, 50);
+
+    const deleteBtn = page.locator('[data-testid="context-delete"]');
+    await expect(deleteBtn).toBeVisible({ timeout: 3000 });
+
+    // Start confirmation
+    await deleteBtn.click();
+    await expect(deleteBtn).toHaveText(/Effacer/);
+
+    // Click on second segment — should reset confirmation
+    await click(page, 150, 100);
+
+    // Delete button should show "Supprimer" again (not "Effacer...")
+    const newDeleteBtn = page.locator('[data-testid="context-delete"]');
+    await expect(newDeleteBtn).toBeVisible({ timeout: 3000 });
+    await expect(newDeleteBtn).toHaveText('Supprimer');
+
+    // Both segments still exist
+    await expectSegmentCount(page, 2);
   });
 });

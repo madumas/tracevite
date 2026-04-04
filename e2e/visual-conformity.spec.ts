@@ -137,16 +137,20 @@ test('visual conformity audit', async ({ page }, testInfo) => {
   // Additional screenshots for TDC clinical audit
   // =====================================================================
 
-  // --- 18: Delete micro-confirmation ---
-  // Ensure no overlay is blocking, then enter delete mode
+  // --- 18: Delete micro-confirmation (via ContextActionBar) ---
   await page.keyboard.press('Escape');
   await page.waitForTimeout(200);
-  await page.locator('[data-testid="action-delete"]').click({ force: true });
+  await page.locator('[data-testid="tool-select"]').click();
   await page.waitForTimeout(200);
-  await interact(85, 60); // click midpoint of segment AB
+  await interact(85, 60); // click midpoint of segment AB to select
   await page.waitForTimeout(300);
+  const delBtn = page.locator('[data-testid="context-delete"]');
+  if (await delBtn.isVisible()) {
+    await delBtn.click(); // trigger micro-confirmation
+    await page.waitForTimeout(300);
+  }
   await page.screenshot({ path: shot('18-delete-micro-confirm.png'), fullPage: true });
-  // Cancel delete mode
+  // Cancel by pressing Escape (deselects)
   await page.keyboard.press('Escape');
   await page.waitForTimeout(200);
 

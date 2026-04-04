@@ -3,7 +3,6 @@ import type { GridSize, DisplayUnit } from '@/model/types';
 import {
   ACTION_BAR_HEIGHT,
   UI_PRIMARY,
-  UI_DESTRUCTIVE,
   UI_SURFACE,
   UI_BORDER,
   UI_TEXT_PRIMARY,
@@ -14,7 +13,6 @@ import { MIN_BUTTON_SIZE_PX, MIN_BUTTON_GAP_PX } from '@/config/accessibility';
 import {
   ACTION_UNDO,
   ACTION_REDO,
-  ACTION_DELETE,
   ACTION_PRINT,
   ACTION_SCALE_NOTE,
   TOOL_SNAP,
@@ -25,7 +23,6 @@ import {
 import {
   UndoIcon,
   RedoIcon,
-  DeleteIcon,
   PrintIcon,
   SettingsIcon,
   FullscreenIcon,
@@ -38,10 +35,8 @@ interface ActionBarProps {
   readonly canUndo: boolean;
   readonly canRedo: boolean;
   readonly canPrint: boolean;
-  readonly deleteMode?: boolean;
   readonly onUndo: () => void;
   readonly onRedo: () => void;
-  readonly onToggleDeleteMode?: () => void;
   readonly onPrint: () => void;
   readonly fontScale?: number;
   readonly estimationMode?: boolean;
@@ -63,10 +58,8 @@ export const ActionBar = memo(function ActionBar({
   canUndo,
   canRedo,
   canPrint,
-  deleteMode,
   onUndo,
   onRedo,
-  onToggleDeleteMode,
   onPrint,
   fontScale = 1,
   estimationMode = false,
@@ -140,32 +133,6 @@ export const ActionBar = memo(function ActionBar({
         data-testid="action-redo"
       >
         <RedoIcon /> <span className="action-label">{ACTION_REDO}</span>
-      </button>
-
-      {/* ─ sep ─ */}
-      <div style={{ width: 1, height: 24, background: UI_BORDER, margin: '0 4px' }} />
-
-      {/* Delete mode toggle */}
-      <button
-        onClick={onToggleDeleteMode}
-        style={{
-          minWidth: MIN_BUTTON_SIZE_PX,
-          height: MIN_BUTTON_SIZE_PX,
-          padding: '0 10px',
-          border: `1px solid ${deleteMode ? UI_DESTRUCTIVE : UI_BORDER}`,
-          borderRadius: 4,
-          background: deleteMode ? UI_DESTRUCTIVE : UI_SURFACE,
-          color: deleteMode ? '#FFFFFF' : UI_TEXT_PRIMARY,
-          cursor: 'pointer',
-          fontSize: 'inherit',
-          fontWeight: deleteMode ? 600 : 400,
-        }}
-        aria-label={ACTION_DELETE}
-        title={ACTION_DELETE}
-        aria-pressed={deleteMode}
-        data-testid="action-delete"
-      >
-        <DeleteIcon /> <span className="action-label">{ACTION_DELETE}</span>
       </button>
 
       {/* ─ sep ─ */}
