@@ -210,6 +210,71 @@ export function groupParallelProperties(
   return [...grouped, ...other];
 }
 
+/**
+ * Group equal-length properties transitively: if AB=CD and CD=EF, produce one group AB=CD=EF.
+ * Uses union-find to merge connected segment IDs.
+ */
+export function groupEqualLengthProperties(
+  props: DetectedProperty[],
+  segments: readonly Segment[],
+  points: readonly Point[],
+): DetectedProperty[] {
+  const equal = props.filter((p) => p.type === 'equal_length');
+  const other = props.filter((p) => p.type !== 'equal_length');
+  if (equal.length <= 1) return props;
+
+  // Union-find
+  const parent = new Map<string, string>();
+  const find = (x: string): string => {
+    if (!parent.has(x)) parent.set(x, x);
+    if (parent.get(x) !== x) parent.set(x, find(parent.get(x)!));
+    return parent.get(x)!;
+  };
+  const union = (a: string, b: string) => {
+    parent.set(find(a), find(b));
+  };
+
+  for (const p of equal) {
+    const ids = p.involvedIds;
+    for (let i = 1; i < ids.length; i++) {
+      union(ids[0]!, ids[i]!);
+    }
+  }
+
+  // Collect groups
+  const groups = new Map<string, Set<string>>();
+  for (const p of equal) {
+    for (const id of p.involvedIds) {
+      const root = find(id);
+      if (!groups.has(root)) groups.set(root, new Set());
+      groups.get(root)!.add(id);
+    }
+  }
+
+  // Build grouped properties
+  const pointMap = new Map(points.map((pt) => [pt.id, pt]));
+  const segMap = new Map(segments.map((s) => [s.id, s]));
+  const grouped: DetectedProperty[] = [];
+
+  for (const memberIds of groups.values()) {
+    const ids = [...memberIds];
+    const labels = ids.map((id) => {
+      const seg = segMap.get(id);
+      if (!seg) return '??';
+      const s = pointMap.get(seg.startPointId);
+      const e = pointMap.get(seg.endPointId);
+      return s && e ? `${s.label}${e.label}` : '??';
+    });
+    grouped.push({
+      type: 'equal_length',
+      involvedIds: ids,
+      label: labels.join(' = '),
+    });
+  }
+
+  return [...other, ...grouped];
+}
+
 /** Detect segments that are chords of a circle (both endpoints on circumference). */
 function detectChords(
   segments: readonly Segment[],
@@ -283,6 +348,58 @@ export function detectSymmetryAxes(
   return results;
 }
 
+/**
+ * Group perpendicular properties by segment: AB ⊥ EF, AB ⊥ BH → AB ⊥ {EF, BH}.
+ * Groups by the first segment in each pair.
+ */
+export function groupPerpendicularProperties(
+  props: DetectedProperty[],
+  segments: readonly Segment[],
+  points: readonly Point[],
+): DetectedProperty[] {
+  const perp = props.filter((p) => p.type === 'perpendicular');
+  const other = props.filter((p) => p.type !== 'perpendicular');
+  if (perp.length <= 1) return props;
+
+  const pointMap = new Map(points.map((pt) => [pt.id, pt]));
+  const segMap = new Map(segments.map((s) => [s.id, s]));
+
+  const segLabel = (id: string) => {
+    const seg = segMap.get(id);
+    if (!seg) return '??';
+    const s = pointMap.get(seg.startPointId);
+    const e = pointMap.get(seg.endPointId);
+    return s && e ? `${s.label}${e.label}` : '??';
+  };
+
+  // Group by first segment ID
+  const groups = new Map<string, Set<string>>();
+  for (const p of perp) {
+    const [a, b] = p.involvedIds;
+    if (!a || !b) continue;
+    if (!groups.has(a)) groups.set(a, new Set());
+    groups.get(a)!.add(b);
+  }
+
+  // Merge: if a segment appears only as "other" in groups, skip its own group
+  const consumed = new Set<string>();
+  const grouped: DetectedProperty[] = [];
+
+  for (const [srcId, targets] of groups) {
+    if (consumed.has(srcId)) continue;
+    const allIds = [srcId, ...targets];
+    const targetLabels = [...targets].map(segLabel);
+    grouped.push({
+      type: 'perpendicular',
+      involvedIds: allIds,
+      label: `${segLabel(srcId)} ⊥ ${targetLabels.join(', ')}`,
+    });
+    consumed.add(srcId);
+  }
+
+  return [...other, ...grouped];
+}
+
 /** Detect all properties in the construction. */
 export function detectAllProperties(
   segments: readonly Segment[],
@@ -295,5 +412,7 @@ export function detectAllProperties(
     ...detectEqualLengths(segments, points),
     ...(circles ? detectChords(segments, points, circles) : []),
   ];
-  return groupParallelProperties(raw, segments, points);
+  const grouped = groupParallelProperties(raw, segments, points);
+  const grouped2 = groupEqualLengthProperties(grouped, segments, points);
+  return groupPerpendicularProperties(grouped2, segments, points);
 }

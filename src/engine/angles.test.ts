@@ -92,11 +92,20 @@ describe('detectAnglesAtVertex', () => {
     state = s3!.state;
 
     const angles = detectAnglesAtVertex(center.pointId, state);
-    expect(angles).toHaveLength(3);
+    // 3 rays: right(0°), up(90°), left(180°) → angles: 90°, 90°
+    // The 180° (plat) angle is filtered out in 3+ ray junctions (parasitic collinearity)
+    expect(angles).toHaveLength(2);
 
-    // Total should sum to 360°
-    const total = angles.reduce((sum, a) => sum + a.degrees, 0);
-    expect(total).toBeCloseTo(360);
+    // No reflex or flat angles should be returned in 3+ ray junctions
+    for (const a of angles) {
+      expect(a.classification).not.toBe('reflex');
+      expect(a.classification).not.toBe('plat');
+    }
+
+    // Both angles should be ~90°
+    for (const a of angles) {
+      expect(a.degrees).toBeCloseTo(90);
+    }
   });
 });
 

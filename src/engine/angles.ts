@@ -95,7 +95,9 @@ export function detectAnglesAtVertex(vertexId: string, state: ConstructionState)
     });
   }
 
-  return angles;
+  // Filter out reflex angles (> 180°) and parasitic flat angles (180°) in 3+ ray junctions
+  // Flat angles at 3+ ray junctions are collinearity artifacts, not meaningful geometry
+  return angles.filter((a) => a.classification !== 'reflex' && a.classification !== 'plat');
 }
 
 /**
