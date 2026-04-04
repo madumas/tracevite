@@ -149,6 +149,44 @@ export const SettingsDialog = memo(function SettingsDialog({
           </button>
         </div>
 
+        {/* ── Quick profile selector ──────────────────── */}
+        <div style={rowStyle}>
+          <span>Profil rapide</span>
+          <select
+            style={selectStyle}
+            defaultValue=""
+            onChange={(e) => {
+              const v = e.target.value;
+              if (v === 'standard') {
+                onToleranceChange('default');
+                onFontScaleChange(1);
+                onChainTimeoutChange(8000);
+                onSoundModeChange('reduced');
+              } else if (v === 'accrue') {
+                onToleranceChange('large');
+                onFontScaleChange(1.25);
+                onChainTimeoutChange(8000);
+                onSoundModeChange('reduced');
+              } else if (v === 'maximale') {
+                onToleranceChange('very_large');
+                onFontScaleChange(1.5);
+                onChainTimeoutChange(15000);
+                onSoundModeChange('reduced');
+                updatePref('highContrast', true);
+                updatePref('fatigueReminderMinutes', 15);
+              }
+              e.target.value = '';
+            }}
+          >
+            <option value="" disabled>
+              Choisir…
+            </option>
+            <option value="standard">Standard</option>
+            <option value="accrue">Accessibilité accrue</option>
+            <option value="maximale">Accessibilité maximale</option>
+          </select>
+        </div>
+
         {/* ── Section: Interaction ──────────────────────── */}
         <div
           style={{
@@ -193,9 +231,10 @@ export const SettingsDialog = memo(function SettingsDialog({
         </div>
 
         {/* ── Section: Affichage ──────────────────────── */}
+        <div style={{ height: 1, background: UI_BORDER, margin: '8px 0' }} />
         <div
           style={{
-            padding: '12px 0 4px',
+            padding: '4px 0 4px',
             fontSize: 11,
             fontWeight: 700,
             color: UI_TEXT_SECONDARY,
@@ -303,9 +342,10 @@ export const SettingsDialog = memo(function SettingsDialog({
         </div>
 
         {/* ── Section: Accessibilité ──────────────────── */}
+        <div style={{ height: 1, background: UI_BORDER, margin: '8px 0' }} />
         <div
           style={{
-            padding: '12px 0 4px',
+            padding: '4px 0 4px',
             fontSize: 11,
             fontWeight: 700,
             color: UI_TEXT_SECONDARY,
@@ -463,9 +503,37 @@ export const SettingsDialog = memo(function SettingsDialog({
         </div>
 
         <button
-          onClick={onClose}
+          onClick={() => {
+            onToleranceChange('default');
+            onChainTimeoutChange(8000);
+            onFontScaleChange(1);
+            onSoundModeChange('reduced');
+            onSoundGainChange(0.5);
+            onKeyboardShortcutsChange(false);
+            onPointToolVisibleChange(false);
+            onEstimationModeChange(false);
+            onCartesianModeChange('off');
+            onAutoIntersectionChange(true);
+            onClutterThresholdChange(0);
+          }}
           style={{
             marginTop: 16,
+            width: '100%',
+            padding: '8px 0',
+            background: 'transparent',
+            color: UI_TEXT_SECONDARY,
+            border: `1px solid ${UI_BORDER}`,
+            borderRadius: 4,
+            cursor: 'pointer',
+            fontSize: 13,
+          }}
+        >
+          Réinitialiser les paramètres
+        </button>
+        <button
+          onClick={onClose}
+          style={{
+            marginTop: 8,
             width: '100%',
             padding: '8px 0',
             background: UI_PRIMARY,

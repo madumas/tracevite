@@ -44,7 +44,7 @@ const DEFAULT_PREFERENCES: UserPreferences = {
   segmentColor: '#0a7e7a',
   highContrast: false,
   cursorSmoothing: false,
-  fatigueReminderMinutes: null,
+  fatigueReminderMinutes: 20, // 20 min default — TDC fatigue accommodation
   pageFormat: 'letter',
   reinforcedGrid: false,
   focusMode: false,

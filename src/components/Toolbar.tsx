@@ -1,4 +1,5 @@
 import { memo, useState, useEffect, useRef, useCallback } from 'react';
+import { useMediaQuery } from '@/hooks/useMediaQuery';
 import type { ToolType, DisplayMode } from '@/model/types';
 import { UI_PRIMARY, UI_SURFACE, UI_BORDER, UI_TEXT_PRIMARY, TOOLBAR_HEIGHT } from '@/config/theme';
 import { GeoMoloLogo } from './GeoMoloLogo';
@@ -75,6 +76,9 @@ export const Toolbar = memo(function Toolbar({
 }: ToolbarProps) {
   const [moreOpen, setMoreOpen] = useState(false);
   const isSimple = displayMode === 'simplifie';
+  const isNarrowToolbar = useMediaQuery('(max-width: 1200px)');
+  // In Complet mode on narrow screens, hide some tools behind "Plus d'outils"
+  const needsOverflow = isSimple || (!isSimple && isNarrowToolbar);
 
   // Reset "Plus d'outils" when switching display mode
   useEffect(() => setMoreOpen(false), [displayMode]);
@@ -144,7 +148,15 @@ export const Toolbar = memo(function Toolbar({
         {/* Separator */}
         {!demoMode && (
           <div
-            style={{ width: 1, height: 40, background: UI_BORDER, margin: '0 4px', flexShrink: 0 }}
+            style={{
+              width: 2,
+              height: 28,
+              background: UI_BORDER,
+              margin: '0 6px',
+              flexShrink: 0,
+              borderRadius: 1,
+              opacity: 0.6,
+            }}
           />
         )}
 
@@ -183,7 +195,15 @@ export const Toolbar = memo(function Toolbar({
 
         {/* ─ sep ─ */}
         <div
-          style={{ width: 1, height: 40, background: UI_BORDER, margin: '0 4px', flexShrink: 0 }}
+          style={{
+            width: 2,
+            height: 28,
+            background: UI_BORDER,
+            margin: '0 6px',
+            flexShrink: 0,
+            borderRadius: 1,
+            opacity: 0.6,
+          }}
         />
 
         {/* ═══ GROUP: Modifier ═══ */}
@@ -199,12 +219,20 @@ export const Toolbar = memo(function Toolbar({
 
         {/* ─ sep ─ */}
         <div
-          style={{ width: 1, height: 40, background: UI_BORDER, margin: '0 4px', flexShrink: 0 }}
+          style={{
+            width: 2,
+            height: 28,
+            background: UI_BORDER,
+            margin: '0 6px',
+            flexShrink: 0,
+            borderRadius: 1,
+            opacity: 0.6,
+          }}
         />
 
         {/* ═══ GROUP: Transformer ═══ */}
         {/* Perpendicular — behind "Plus d'outils" in simplifie */}
-        {(!isSimple || moreOpen) && (
+        {(!needsOverflow || moreOpen) && (
           <button
             ref={refIfActive('perpendicular')}
             onClick={() => onToolChange('perpendicular')}
@@ -216,7 +244,7 @@ export const Toolbar = memo(function Toolbar({
           </button>
         )}
         {/* Parallel — behind "Plus d'outils" in simplifie */}
-        {(!isSimple || moreOpen) && (
+        {(!needsOverflow || moreOpen) && (
           <button
             ref={refIfActive('parallel')}
             onClick={() => onToolChange('parallel')}
@@ -237,7 +265,7 @@ export const Toolbar = memo(function Toolbar({
           <ReflectionIcon /> <span className="tool-label">{TOOL_REFLECTION}</span>
         </button>
         {/* Reproduce — behind "Plus d'outils" in simplifie */}
-        {(!isSimple || moreOpen) && (
+        {(!needsOverflow || moreOpen) && (
           <button
             ref={refIfActive('reproduce')}
             onClick={() => onToolChange('reproduce')}
@@ -249,7 +277,7 @@ export const Toolbar = memo(function Toolbar({
           </button>
         )}
         {/* Frieze — behind "Plus d'outils" in simplifie */}
-        {(!isSimple || moreOpen) && (
+        {(!needsOverflow || moreOpen) && (
           <button
             ref={refIfActive('frieze')}
             onClick={() => onToolChange('frieze')}
@@ -298,15 +326,23 @@ export const Toolbar = memo(function Toolbar({
         )}
 
         {/* ─ sep ─ */}
-        {(!isSimple || moreOpen) && (
+        {(!needsOverflow || moreOpen) && (
           <div
-            style={{ width: 1, height: 40, background: UI_BORDER, margin: '0 4px', flexShrink: 0 }}
+            style={{
+              width: 2,
+              height: 28,
+              background: UI_BORDER,
+              margin: '0 6px',
+              flexShrink: 0,
+              borderRadius: 1,
+              opacity: 0.6,
+            }}
           />
         )}
 
         {/* ═══ GROUP: Vérifier ═══ */}
         {/* Compare — behind "Plus d'outils" in simplifie */}
-        {(!isSimple || moreOpen) && (
+        {(!needsOverflow || moreOpen) && (
           <button
             ref={refIfActive('compare')}
             onClick={() => onToolChange('compare')}
@@ -318,7 +354,7 @@ export const Toolbar = memo(function Toolbar({
           </button>
         )}
         {/* Symmetry — behind "Plus d'outils" in simplifie */}
-        {(!isSimple || moreOpen) && (
+        {(!needsOverflow || moreOpen) && (
           <button
             ref={refIfActive('symmetry')}
             onClick={() => onToolChange('symmetry')}
@@ -330,21 +366,34 @@ export const Toolbar = memo(function Toolbar({
           </button>
         )}
 
-        {/* "Plus d'outils" toggle (2e cycle only, spec §10) */}
-        {isSimple && (
-          <button
-            onClick={() => setMoreOpen(!moreOpen)}
-            style={{
-              ...toolBtnBase,
-              fontSize: 'inherit',
-              color: moreOpen ? UI_PRIMARY : UI_TEXT_PRIMARY,
-            }}
-            aria-expanded={moreOpen}
-            data-testid="more-tools"
-          >
-            ⋯
-          </button>
-        )}
+        {/* "Plus d'outils" toggle — simplifié always, complet on narrow screens */}
+        {needsOverflow &&
+          (() => {
+            const OVERFLOW_TOOLS: readonly ToolType[] = [
+              'perpendicular',
+              'parallel',
+              'reproduce',
+              'frieze',
+              'compare',
+              'symmetry',
+            ];
+            const activeInOverflow = OVERFLOW_TOOLS.includes(activeTool) && !moreOpen;
+            return (
+              <button
+                onClick={() => setMoreOpen(!moreOpen)}
+                style={{
+                  ...toolBtnBase,
+                  fontSize: 'inherit',
+                  color: moreOpen || activeInOverflow ? UI_PRIMARY : UI_TEXT_PRIMARY,
+                  fontWeight: activeInOverflow ? 700 : undefined,
+                }}
+                aria-expanded={moreOpen}
+                data-testid="more-tools"
+              >
+                {activeInOverflow ? '▸' : '⋯'}
+              </button>
+            );
+          })()}
 
         {/* Snap, grid, unit moved to ActionBar */}
       </div>
@@ -362,7 +411,15 @@ export const Toolbar = memo(function Toolbar({
       >
         {/* ─ sep ─ */}
         <div
-          style={{ width: 1, height: 40, background: UI_BORDER, margin: '0 4px', flexShrink: 0 }}
+          style={{
+            width: 2,
+            height: 28,
+            background: UI_BORDER,
+            margin: '0 6px',
+            flexShrink: 0,
+            borderRadius: 1,
+            opacity: 0.6,
+          }}
         />
         {!demoMode && onModeChange && <ModeSelector mode={displayMode} onChange={onModeChange} />}
       </div>

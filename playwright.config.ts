@@ -34,6 +34,7 @@ export default defineConfig({
       name: 'Mobile iPad',
       use: {
         ...devices['iPad Pro 11'],
+        deviceScaleFactor: 1, // Keep screenshots under 2000px for multi-image review
       },
     },
   ],

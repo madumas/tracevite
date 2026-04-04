@@ -304,7 +304,7 @@ export function SlotManager({
               </div>
 
               {/* Row 2: Actions */}
-              <div style={{ display: 'flex', gap: 4, marginTop: 6, justifyContent: 'flex-end' }}>
+              <div style={{ display: 'flex', gap: 8, marginTop: 6, justifyContent: 'flex-end' }}>
                 {slot.id !== activeSlotId && (
                   <button onClick={() => onSwitch(slot.id)} style={smallBtn}>
                     Ouvrir
