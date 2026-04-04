@@ -15,16 +15,16 @@ const S = {
 } as const;
 const stroke = 'currentColor';
 
-/** Select: northwest cursor arrow */
+/** Select: northwest cursor arrow (classic pointer) */
 export function SelectIcon() {
   return (
     <svg {...S}>
       <path
-        d="M5 2l10 10H9.5L13 17l-2 1-3.5-7L3 13z"
+        d="M4 2l1 15 4-4 3 5 2-1-3-5 5-1z"
+        fill={stroke}
         stroke={stroke}
-        strokeWidth="1.5"
+        strokeWidth="0.3"
         strokeLinejoin="round"
-        fill="none"
       />
     </svg>
   );

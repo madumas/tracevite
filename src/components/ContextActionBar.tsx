@@ -202,7 +202,7 @@ export function ContextActionBar({
       {/* Delete with micro-confirmation */}
       {onDeleteElement && (
         <>
-          <div style={{ width: 1, height: 24, background: UI_BORDER, margin: '0 6px' }} />
+          <div style={{ width: 1, alignSelf: 'stretch', background: UI_BORDER, margin: '6px' }} />
           <button
             onClick={() => {
               if (confirmingDelete) {
@@ -221,13 +221,13 @@ export function ContextActionBar({
               minWidth: MIN_BUTTON_SIZE_PX,
               height: MIN_BUTTON_SIZE_PX,
               padding: '0 10px',
-              border: `1px solid ${confirmingDelete ? UI_DESTRUCTIVE : UI_BORDER}`,
+              border: confirmingDelete ? `1px solid ${UI_DESTRUCTIVE}` : 'none',
               borderRadius: 4,
               background: confirmingDelete ? UI_DESTRUCTIVE : 'transparent',
-              color: confirmingDelete ? '#FFFFFF' : UI_TEXT_PRIMARY,
+              color: confirmingDelete ? '#FFFFFF' : UI_DESTRUCTIVE,
               cursor: 'pointer',
               fontSize: 'inherit',
-              fontWeight: confirmingDelete ? 600 : 400,
+              fontWeight: 500,
             }}
             aria-label={confirmingDelete ? 'Confirmer la suppression' : ACTION_DELETE}
             data-testid="context-delete"

@@ -6,6 +6,9 @@ import { hitTestPoint } from '@/engine/hit-test';
 import { findSnap, DEFAULT_TOLERANCES, scaleTolerances } from '@/engine/snap';
 import { TOLERANCE_PROFILES } from '@/config/accessibility';
 import { STATUS_MOVE_IDLE, STATUS_MOVE_PICKED } from '@/config/messages';
+
+const STATUS_MOVE_LOCKED =
+  'Déplacer — Ce point est verrouillé. Déverrouille-le d\u2019abord (outil Sélectionner).';
 import { MovePreview } from '@/components/MovePreview';
 
 type MovePhase = 'idle' | 'point_picked';
@@ -28,6 +31,7 @@ export function useMoveTool({
   const [_originalPosition, setOriginalPosition] = useState<{ x: number; y: number } | null>(null);
   const [cursorMm, setCursorMm] = useState<{ x: number; y: number } | null>(null);
   const [snapResult, setSnapResult] = useState<SnapResult | null>(null);
+  const [lockedHint, setLockedHint] = useState(false);
 
   const tolerances = useMemo(
     () => scaleTolerances(DEFAULT_TOLERANCES, TOLERANCE_PROFILES[state.toleranceProfile]),
@@ -51,7 +55,12 @@ export function useMoveTool({
         if (!pointId) return;
 
         const point = state.points.find((p) => p.id === pointId);
-        if (!point || point.locked) return; // Can't move locked points
+        if (!point) return;
+        if (point.locked) {
+          setLockedHint(true);
+          setTimeout(() => setLockedHint(false), 3000);
+          return;
+        }
 
         setPickedPointId(pointId);
         setOriginalPosition({ x: point.x, y: point.y });
@@ -91,7 +100,11 @@ export function useMoveTool({
   const pickedLabel = pickedPointId
     ? (state.points.find((p) => p.id === pickedPointId)?.label ?? '?')
     : '';
-  const statusMessage = phase === 'idle' ? STATUS_MOVE_IDLE : STATUS_MOVE_PICKED(pickedLabel);
+  const statusMessage = lockedHint
+    ? STATUS_MOVE_LOCKED
+    : phase === 'idle'
+      ? STATUS_MOVE_IDLE
+      : STATUS_MOVE_PICKED(pickedLabel);
 
   // Overlay: show the point at cursor position during pick-up
   const overlayElements = useMemo(() => {
