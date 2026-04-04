@@ -70,6 +70,20 @@ export function AboutDialog({ onClose }: AboutDialogProps) {
         </p>
 
         <div style={{ fontSize: 12, color: UI_TEXT_SECONDARY, marginBottom: 8 }}>
+          Appli sœur :{' '}
+          <a
+            href="https://resomolo.ca"
+            target="_blank"
+            rel="noopener"
+            style={{ color: UI_PRIMARY, fontWeight: 600 }}
+          >
+            ResoMolo
+          </a>
+          {' — '}
+          Modéliser des problèmes de maths visuellement
+        </div>
+
+        <div style={{ fontSize: 12, color: UI_TEXT_SECONDARY, marginBottom: 8 }}>
           Logiciel libre —{' '}
           <a
             href="https://github.com/madumas/geomolo"
