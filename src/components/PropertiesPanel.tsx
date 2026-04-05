@@ -59,7 +59,7 @@ export const PropertiesPanel = memo(function PropertiesPanel({
   onToggleShowAll,
   hiddenOps,
   onToggleOp,
-  onSetConsigne,
+  onSetConsigne: _onSetConsigne,
 }: PropertiesPanelProps) {
   const isLeft = panelPosition === 'left';
 
@@ -646,37 +646,7 @@ export const PropertiesPanel = memo(function PropertiesPanel({
           })}
       </AccordionSection>
 
-      {/* Notes — free text field for consigne or student response */}
-      <AccordionSection title={`Notes${state.consigne ? ' ●' : ''}`}>
-        <textarea
-          value={state.consigne ?? ''}
-          onChange={(e) => {
-            const val = e.target.value.slice(0, 1000);
-            onSetConsigne?.(val || null);
-          }}
-          placeholder="Consigne, réponse, notes..."
-          style={{
-            width: '100%',
-            minHeight: 48,
-            maxHeight: 120,
-            padding: '6px 8px',
-            fontSize: 12 * fontScale,
-            fontFamily: 'system-ui, sans-serif',
-            border: `1px solid ${UI_BORDER}`,
-            borderRadius: 4,
-            resize: 'vertical',
-            background: '#FAFCFF',
-            color: UI_TEXT_PRIMARY,
-            boxSizing: 'border-box',
-          }}
-          maxLength={1000}
-        />
-        {state.consigne && (
-          <div style={{ fontSize: 10, color: UI_TEXT_SECONDARY, marginTop: 2, textAlign: 'right' }}>
-            {state.consigne.length}/1000
-          </div>
-        )}
-      </AccordionSection>
+      {/* Notes section removed — text boxes are now placed directly on the canvas */}
     </div>
   );
 });

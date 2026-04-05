@@ -40,7 +40,12 @@ export function useActiveTool({
   viewport,
   shiftConstraintActive = false,
   animateTransformations = false,
-}: UseActiveToolOptions): ToolHookResult {
+}: UseActiveToolOptions): ToolHookResult & {
+  textEditingId: string | null;
+  textStartEditing: (id: string) => void;
+  textCommitEdit: (text: string) => void;
+  textCancelEdit: () => void;
+} {
   const active = state.activeTool;
   const selectTool = useSelectTool({ state, dispatch, isActive: active === 'select' });
   const segmentTool = useSegmentTool({
@@ -124,38 +129,48 @@ export function useActiveTool({
 
   const textTool = useTextTool({ state, dispatch, isActive: active === 'text' });
 
+  // Text tool methods are always available (for double-click editing from any tool)
+  const textFields = {
+    textEditingId: textTool.editingId,
+    textStartEditing: textTool.startEditing,
+    textCommitEdit: textTool.commitEdit,
+    textCancelEdit: textTool.cancelEdit,
+  };
+
+  const wrap = (t: ToolHookResult) => ({ ...t, ...textFields });
+
   switch (state.activeTool) {
     case 'select':
-      return selectTool;
+      return wrap(selectTool);
     case 'segment':
-      return segmentTool;
+      return wrap(segmentTool);
     case 'move':
-      return moveTool;
+      return wrap(moveTool);
     case 'circle':
-      return circleTool;
+      return wrap(circleTool);
     case 'reflection':
-      return reflectionTool;
+      return wrap(reflectionTool);
     case 'point':
-      return pointTool;
+      return wrap(pointTool);
     case 'reproduce':
-      return reproduceTool;
+      return wrap(reproduceTool);
     case 'perpendicular':
-      return perpendicularTool;
+      return wrap(perpendicularTool);
     case 'parallel':
-      return parallelTool;
+      return wrap(parallelTool);
     case 'translation':
-      return translationTool;
+      return wrap(translationTool);
     case 'compare':
-      return compareTool;
+      return wrap(compareTool);
     case 'frieze':
-      return friezeTool;
+      return wrap(friezeTool);
     case 'symmetry':
-      return symmetryTool;
+      return wrap(symmetryTool);
     case 'rotation':
-      return rotationTool;
+      return wrap(rotationTool);
     case 'homothety':
-      return homothetyTool;
+      return wrap(homothetyTool);
     case 'text':
-      return textTool;
+      return wrap(textTool);
   }
 }

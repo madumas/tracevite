@@ -173,16 +173,18 @@ export const Toolbar = memo(function Toolbar({
         >
           <SegmentIcon /> <span className="tool-label">{TOOL_SEGMENT}</span>
         </button>
-        {/* Text — always visible */}
-        <button
-          ref={refIfActive('text')}
-          onClick={() => onToolChange('text')}
-          style={{ ...toolBtnBase, ...(activeTool === 'text' ? activeStyle : {}) }}
-          aria-pressed={activeTool === 'text'}
-          data-testid="tool-text"
-        >
-          <TextIcon /> <span className="tool-label">Texte</span>
-        </button>
+        {/* Text — behind "Plus d'outils" */}
+        {(!needsOverflow || moreOpen) && (
+          <button
+            ref={refIfActive('text')}
+            onClick={() => onToolChange('text')}
+            style={{ ...toolBtnBase, ...(activeTool === 'text' ? activeStyle : {}) }}
+            aria-pressed={activeTool === 'text'}
+            data-testid="tool-text"
+          >
+            <TextIcon /> <span className="tool-label">Texte</span>
+          </button>
+        )}
         {/* Point — hidden by default, activable via settings (spec §6.2) */}
         {pointToolVisible && (
           <button
@@ -385,6 +387,7 @@ export const Toolbar = memo(function Toolbar({
         {needsOverflow &&
           (() => {
             const OVERFLOW_TOOLS: readonly ToolType[] = [
+              'text',
               'perpendicular',
               'parallel',
               'reproduce',

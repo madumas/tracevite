@@ -10,6 +10,7 @@ import { SnapFeedback } from '@/components/SnapFeedback';
 import { ContextActionBar } from '@/components/ContextActionBar';
 import { AngleLayer } from '@/components/AngleLayer';
 import { TextBoxLayer } from '@/components/TextBoxLayer';
+import { TextBoxEditor } from '@/components/TextBoxEditor';
 import { useActiveTool } from '@/hooks/useActiveTool';
 import { useSelection } from '@/hooks/useSelection';
 import { usePointerInteraction } from '@/hooks/usePointerInteraction';
@@ -1277,6 +1278,7 @@ function AppContent({ initialRegistry }: AppProps) {
                 viewport={viewport}
                 selectedElementId={state.selectedElementId}
                 fontScale={effectiveFontScale}
+                onDoubleClick={(id) => tool.textStartEditing(id)}
               />
 
               {/* Tool-specific overlays (ghost segment, ghost circle, etc.) */}
@@ -1286,6 +1288,25 @@ function AppContent({ initialRegistry }: AppProps) {
               <SnapFeedback snapResult={tool.snapResult} viewport={viewport} />
             </svg>
           </CanvasColorsProvider>
+
+          {/* Inline text editor overlay */}
+          {tool.textEditingId &&
+            (() => {
+              const tb = state.textBoxes.find((t) => t.id === tool.textEditingId);
+              const svgEl = document.querySelector(
+                `[data-testid="textbox-${tool.textEditingId}"] rect`,
+              );
+              if (!tb || !svgEl) return null;
+              const rect = svgEl.getBoundingClientRect();
+              return (
+                <TextBoxEditor
+                  initialText={tb.text}
+                  targetRect={rect}
+                  onCommit={(text) => tool.textCommitEdit(text)}
+                  onCancel={() => tool.textCancelEdit()}
+                />
+              );
+            })()}
 
           {/* Context action bar — hidden during compound tool workflows
              where clicking an element is a tool action, not a general selection */}

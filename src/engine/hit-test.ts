@@ -3,13 +3,13 @@
  * All inputs/outputs in mm. Priority: point > segment > circle.
  */
 
-import type { Point, Segment, Circle, ConstructionState } from '@/model/types';
+import type { Point, Segment, Circle, TextBox, ConstructionState } from '@/model/types';
 import { distance } from './geometry';
 import { pointOnSegmentProjection } from './geometry';
 import { SNAP_TOLERANCE_POINT_MM, SEGMENT_HIT_ZONE_MM } from '@/config/accessibility';
 
 export interface HitTestResult {
-  readonly type: 'point' | 'segment' | 'circle';
+  readonly type: 'point' | 'segment' | 'circle' | 'textbox';
   readonly id: string;
 }
 
@@ -107,5 +107,34 @@ export function hitTestElement(
   const circleId = hitTestCircle(cursor, state.circles, state.points);
   if (circleId) return { type: 'circle', id: circleId };
 
+  // Priority 4: TextBoxes (bounding box hit test)
+  const textBoxId = hitTestTextBox(cursor, state.textBoxes);
+  if (textBoxId) return { type: 'textbox', id: textBoxId };
+
+  return null;
+}
+
+/** Hit-test text boxes by bounding rectangle (approximate width from text length). */
+export function hitTestTextBox(
+  cursor: { readonly x: number; readonly y: number },
+  textBoxes: readonly TextBox[],
+): string | null {
+  const FONT_SIZE_MM = 3.5;
+  const PADDING_MM = 3;
+  for (let i = textBoxes.length - 1; i >= 0; i--) {
+    const tb = textBoxes[i]!;
+    const lines = (tb.text || '…').split('\n');
+    const longest = lines.reduce((a, b) => (a.length > b.length ? a : b), '');
+    const w = Math.max(30, longest.length * FONT_SIZE_MM * 0.55 + 6) + PADDING_MM * 2;
+    const h = lines.length * FONT_SIZE_MM * 1.4 + PADDING_MM * 2;
+    if (
+      cursor.x >= tb.x - PADDING_MM &&
+      cursor.x <= tb.x - PADDING_MM + w &&
+      cursor.y >= tb.y - PADDING_MM &&
+      cursor.y <= tb.y - PADDING_MM + h
+    ) {
+      return tb.id;
+    }
+  }
   return null;
 }
