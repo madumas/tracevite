@@ -37,10 +37,8 @@ test.describe('Numbered steps in status bar', () => {
     await interactCanvas(page, testInfo, 50, 50);
     await waitForStatus(page, /Étape 2\/3.*angle/);
 
-    // Click 90° preset → shows ghost preview, then confirm
+    // Click 90° preset → advances directly to phase 3
     await page.locator('button', { hasText: '90°' }).click();
-    await waitForStatus(page, /Aperçu/);
-    await page.locator('button:has-text("Confirmer")').click();
     await waitForStatus(page, /Étape 3\/3.*segment/);
   });
 

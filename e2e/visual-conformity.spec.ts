@@ -1324,18 +1324,11 @@ test('visual conformity — PFEQ figures & tools', async ({ page }, testInfo) =>
   await interact(40, 50);
   await page.waitForTimeout(500);
   await page.screenshot({ path: shot('84b-pfeq-rotation-angle-panel.png'), fullPage: true });
-  // Click 90° preset button → shows ghost preview
+  // Click 90° preset button → advances directly to select_figure
   const btn90 = page.locator('button', { hasText: '90°' });
   if (await btn90.isVisible({ timeout: 2000 }).catch(() => false)) {
     await btn90.click();
     await page.waitForTimeout(300);
-    await page.screenshot({ path: shot('84b2-pfeq-rotation-ghost-preview.png'), fullPage: true });
-    // Confirm the preview to advance to select_figure
-    const confirmBtn = page.locator('button:has-text("Confirmer")');
-    if (await confirmBtn.isVisible({ timeout: 1000 }).catch(() => false)) {
-      await confirmBtn.click();
-      await page.waitForTimeout(300);
-    }
     // Click on the triangle to rotate it
     await interact(60, 65);
     await page.waitForTimeout(500);
@@ -1365,18 +1358,11 @@ test('visual conformity — PFEQ figures & tools', async ({ page }, testInfo) =>
   await interact(40, 50);
   await page.waitForTimeout(500);
   await page.screenshot({ path: shot('85b-pfeq-homothetie-factor-panel.png'), fullPage: true });
-  // Click ×2 preset button → shows ghost preview
+  // Click ×2 preset button → advances directly to select_figure
   const btn2 = page.locator('button', { hasText: '×2' });
   if (await btn2.isVisible({ timeout: 2000 }).catch(() => false)) {
     await btn2.click();
     await page.waitForTimeout(300);
-    await page.screenshot({ path: shot('85b2-pfeq-homothetie-ghost-preview.png'), fullPage: true });
-    // Confirm the preview
-    const confirmBtn2 = page.locator('button:has-text("Confirmer")');
-    if (await confirmBtn2.isVisible({ timeout: 1000 }).catch(() => false)) {
-      await confirmBtn2.click();
-      await page.waitForTimeout(300);
-    }
     // Click on the triangle to scale it
     await interact(55, 62);
     await page.waitForTimeout(500);

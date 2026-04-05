@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { interactCanvas } from './helpers/canvas';
+import { openClassSettings } from './helpers/toolbar';
 import { expectSegmentCount } from './helpers/assertions';
 
 test.beforeEach(async ({ page }) => {
@@ -89,13 +90,13 @@ test.describe('Animate transformations toggle', () => {
 
 test.describe('Clutter threshold presets', () => {
   test('settings shows clutter threshold selector with named presets', async ({ page }) => {
-    await page.locator('[data-testid="settings-button"]').click();
-    await page.waitForTimeout(300);
+    await openClassSettings(page);
 
-    // Verify the select element with preset options exists in the page HTML
+    // Verify the clutter threshold selector with preset options
     const html = await page.content();
-    expect(html).toContain("Peu d'éléments");
-    expect(html).toContain('Construction complexe');
+    expect(html).toContain('Seuil de surcharge');
+    expect(html).toContain('3 segments');
+    expect(html).toContain('Toujours afficher');
 
     await page.keyboard.press('Escape');
   });

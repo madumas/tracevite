@@ -28,13 +28,10 @@ test.describe('Homothety (Agrandir/Réduire) tool', () => {
     await interactCanvas(page, testInfo, 40, 60);
     await waitForStatus(page, /Étape 2\/3.*facteur/);
 
-    // Phase 2: factor panel — click ×2 preset → shows ghost preview
+    // Phase 2: factor panel — click ×2 preset → advances directly to phase 3
     const btn2 = page.locator('button', { hasText: '×2' });
     await expect(btn2).toBeVisible({ timeout: 3000 });
     await btn2.click();
-    await waitForStatus(page, /Aperçu/);
-    // Confirm the preview
-    await page.locator('button:has-text("Confirmer")').click();
     await waitForStatus(page, /Étape 3\/3/);
 
     // Phase 3: click on the segment to scale
@@ -54,15 +51,13 @@ test.describe('Homothety (Agrandir/Réduire) tool', () => {
     await page.locator('[data-testid="tool-homothety"]').click();
     await interactCanvas(page, testInfo, 40, 60); // center
 
-    // Type factor + OK → shows ghost preview
+    // Type factor + OK → advances directly to phase 3
     const input = page.locator('#homothety-factor-input');
     await expect(input).toBeVisible({ timeout: 3000 });
     await input.fill('3');
 
     const okBtn = page.locator('button', { hasText: 'OK' });
     await okBtn.click();
-    await waitForStatus(page, /Aperçu/);
-    await page.locator('button:has-text("Confirmer")').click();
 
     await interactCanvas(page, testInfo, 60, 60);
     await page.waitForTimeout(1000);

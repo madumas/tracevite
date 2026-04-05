@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { interactCanvas } from './helpers/canvas';
-import { waitForStatus } from './helpers/toolbar';
+import { waitForStatus, openClassSettings, closeSettings } from './helpers/toolbar';
 import { expectSegmentCount } from './helpers/assertions';
 
 test.beforeEach(async ({ page }) => {
@@ -23,18 +23,14 @@ test.describe('Estimation mode hide and reveal', () => {
     expect(hasMeasurementBefore).toBe(true);
 
     // Open settings and enable estimation mode
-    await page.locator('[data-testid="settings-button"]').click();
-    const dialog = page.locator('[data-testid="settings-dialog"]');
-    await expect(dialog).toBeVisible({ timeout: 3000 });
+    const dialog = await openClassSettings(page);
 
     // Find the estimation checkbox by its label text and check it
-    const estimationRow = dialog.locator('div', { hasText: 'Mode estimation' }).last();
-    const checkbox = estimationRow.locator('input[type="checkbox"]');
-    await checkbox.check();
+    const estimationRow = page.getByText('Mode estimation').locator('..');
+    await estimationRow.locator('input[type="checkbox"]').check();
 
-    // Close settings by clicking the close button
-    await dialog.locator('button[aria-label="Fermer"]').click();
-    await expect(dialog).not.toBeVisible({ timeout: 3000 });
+    // Close settings
+    await closeSettings(page);
 
     // Verify: estimation badge visible, measurements hidden from canvas
     await expect(page.locator('[data-testid="estimation-badge"]')).toBeVisible({ timeout: 3000 });

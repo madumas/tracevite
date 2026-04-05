@@ -188,27 +188,24 @@ export function useTransformAnimation({
       );
     }
 
-    // Ghost circles at interpolated positions
+    // Ghost circles at interpolated positions (homothety scales radius, rotation/translation move center)
     for (const circle of circles) {
-      if (!animData.circleIds.includes(circle.id)) {
-        // For non-scaled circles (rotation, translation), just move the center
-        if (animData.pointIds.includes(circle.centerPointId)) {
-          const pos = animData.interpolatePosition(circle.centerPointId, animT);
-          const r = animData.interpolateRadius(circle.id, animT) || circle.radiusMm;
-          elements.push(
-            createElement('circle', {
-              key: `ghost-circle-${circle.id}`,
-              cx: (pos.x - viewport.panX) * pxPerMm,
-              cy: (pos.y - viewport.panY) * pxPerMm,
-              r: r * pxPerMm,
-              fill: 'none',
-              stroke: CANVAS_GUIDE,
-              strokeWidth: 1.5,
-              opacity: 0.4,
-              pointerEvents: 'none',
-            }),
-          );
-        }
+      if (animData.pointIds.includes(circle.centerPointId)) {
+        const pos = animData.interpolatePosition(circle.centerPointId, animT);
+        const r = animData.interpolateRadius(circle.id, animT) || circle.radiusMm;
+        elements.push(
+          createElement('circle', {
+            key: `ghost-circle-${circle.id}`,
+            cx: (pos.x - viewport.panX) * pxPerMm,
+            cy: (pos.y - viewport.panY) * pxPerMm,
+            r: r * pxPerMm,
+            fill: 'none',
+            stroke: CANVAS_GUIDE,
+            strokeWidth: 1.5,
+            opacity: 0.4,
+            pointerEvents: 'none',
+          }),
+        );
       }
     }
 

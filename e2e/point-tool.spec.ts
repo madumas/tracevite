@@ -1,6 +1,6 @@
 import { test } from '@playwright/test';
 import { interactCanvas } from './helpers/canvas';
-import { selectTool, waitForStatus } from './helpers/toolbar';
+import { selectTool, waitForStatus, openClassSettings } from './helpers/toolbar';
 import { expectPointCount, expectSegmentCount } from './helpers/assertions';
 
 test.beforeEach(async ({ page }) => {
@@ -8,11 +8,10 @@ test.beforeEach(async ({ page }) => {
   await page.waitForSelector('[data-testid="canvas-svg"]');
 
   // Point tool is hidden by default — enable via settings
-  await page.locator('[data-testid="settings-button"]').click();
-  await page.locator('[data-testid="settings-dialog"]').waitFor();
+  const dialog = await openClassSettings(page);
   const pointRow = page.getByText('Outil Point (visible)').locator('..');
   await pointRow.locator('input[type="checkbox"]').check();
-  await page.locator('[data-testid="settings-dialog"]').click({ position: { x: 5, y: 5 } });
+  await dialog.locator('button[aria-label="Fermer"]').click();
   await page.waitForTimeout(200);
 });
 

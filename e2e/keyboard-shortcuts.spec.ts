@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { waitForStatus } from './helpers/toolbar';
+import { waitForStatus, openClassSettings } from './helpers/toolbar';
 
 // Keyboard shortcuts are desktop-only (not relevant for touch)
 test.beforeEach(async ({ page }, testInfo) => {
@@ -11,14 +11,13 @@ test.beforeEach(async ({ page }, testInfo) => {
 test.describe('Keyboard shortcuts', () => {
   test('switches tools via letter keys when enabled', async ({ page }) => {
     // Enable keyboard shortcuts via settings
-    await page.locator('[data-testid="settings-button"]').click();
-    await page.locator('[data-testid="settings-dialog"]').waitFor();
+    const dialog = await openClassSettings(page);
 
-    const shortcutRow = page.getByText('Raccourcis clavier (lettres)').locator('..');
+    const shortcutRow = page.getByText('Raccourcis clavier').locator('..');
     await shortcutRow.locator('input[type="checkbox"]').check();
 
-    // Close settings by clicking overlay
-    await page.locator('[data-testid="settings-dialog"]').click({ position: { x: 5, y: 5 } });
+    // Close settings
+    await dialog.locator('button[aria-label="Fermer"]').click();
     await page.waitForTimeout(200);
 
     // Press 'v' → Move tool

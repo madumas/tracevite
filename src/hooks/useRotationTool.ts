@@ -21,7 +21,6 @@ import { CSS_PX_PER_MM } from '@/engine/viewport';
 import { CANVAS_GUIDE } from '@/config/theme';
 import { useTransformAnimation } from './useTransformAnimation';
 import { computeRotationAnimData } from '@/engine/transform-animation';
-import { rotatePoint } from '@/engine/rotation';
 
 type RotationPhase = 'set_center' | 'set_angle' | 'select_figure';
 
@@ -43,12 +42,8 @@ export function useRotationTool({
   const [phase, setPhase] = useState<RotationPhase>('set_center');
   const [center, setCenter] = useState<{ x: number; y: number } | null>(null);
   const [angleDeg, setAngleDeg] = useState<number | null>(null);
-  const [previewAngle, setPreviewAngle] = useState<number | null>(null);
   const [clockwise, setClockwise] = useState(true);
   const [snapResult, setSnapResult] = useState<SnapResult | null>(null);
-
-  // Effective preview angle with direction sign
-  const effectivePreview = previewAngle != null ? (clockwise ? previewAngle : -previewAngle) : null;
 
   const anim = useTransformAnimation({
     viewport,
@@ -67,13 +62,11 @@ export function useRotationTool({
     setPhase('set_center');
     setCenter(null);
     setAngleDeg(null);
-    setPreviewAngle(null);
     setSnapResult(null);
   }, []);
 
   const confirmAngle = useCallback((deg: number) => {
     setAngleDeg(deg);
-    setPreviewAngle(null);
     setPhase('select_figure');
   }, []);
 
@@ -173,24 +166,17 @@ export function useRotationTool({
       setAngleDeg(null);
       setPhase('set_angle');
     } else if (phase === 'set_angle') {
-      if (previewAngle != null) {
-        setPreviewAngle(null);
-      } else {
-        setCenter(null);
-        setPhase('set_center');
-      }
+      setCenter(null);
+      setPhase('set_center');
     }
-  }, [phase, previewAngle]);
+  }, [phase]);
 
   // Status message
   let statusMessage: string;
   if (phase === 'set_center') {
     statusMessage = 'Étape 1/3 — Rotation — Clique pour placer le centre de rotation';
   } else if (phase === 'set_angle') {
-    statusMessage =
-      previewAngle != null
-        ? `Aperçu de la rotation de ${previewAngle}° — Confirmer ou Annuler`
-        : "Étape 2/3 — Rotation — Choisis l'angle de rotation";
+    statusMessage = "Étape 2/3 — Rotation — Choisis l'angle de rotation";
   } else {
     statusMessage = 'Étape 3/3 — Rotation — Clique sur un segment pour faire tourner la figure.';
   }
@@ -229,50 +215,8 @@ export function useRotationTool({
         }),
       );
 
-      // Ghost preview when previewAngle is set (before confirmation)
-      if (phase === 'set_angle' && effectivePreview != null) {
-        const pointMap = new Map(state.points.map((p) => [p.id, p]));
-        for (const seg of state.segments) {
-          const start = pointMap.get(seg.startPointId);
-          const end = pointMap.get(seg.endPointId);
-          if (!start || !end) continue;
-          const r1 = rotatePoint(start, center, effectivePreview);
-          const r2 = rotatePoint(end, center, effectivePreview);
-          elements.push(
-            createElement('line', {
-              key: `ghost-rot-${seg.id}`,
-              x1: (r1.x - viewport.panX) * pxPerMm,
-              y1: (r1.y - viewport.panY) * pxPerMm,
-              x2: (r2.x - viewport.panX) * pxPerMm,
-              y2: (r2.y - viewport.panY) * pxPerMm,
-              stroke: CANVAS_GUIDE,
-              strokeWidth: 2,
-              strokeDasharray: '4 2',
-              opacity: 0.4,
-              paintOrder: 'stroke',
-              pointerEvents: 'none',
-            }),
-          );
-        }
-        // Ghost points
-        for (const pt of state.points) {
-          const rp = rotatePoint(pt, center, effectivePreview);
-          elements.push(
-            createElement('circle', {
-              key: `ghost-rot-pt-${pt.id}`,
-              cx: (rp.x - viewport.panX) * pxPerMm,
-              cy: (rp.y - viewport.panY) * pxPerMm,
-              r: 3,
-              fill: CANVAS_GUIDE,
-              opacity: 0.35,
-              pointerEvents: 'none',
-            }),
-          );
-        }
-      }
-
-      // Arc preview when angle is defined (confirmed or previewing)
-      const arcAngle = phase === 'select_figure' ? angleDeg : effectivePreview;
+      // Arc preview when angle is confirmed
+      const arcAngle = phase === 'select_figure' ? angleDeg : null;
       if (arcAngle != null) {
         const r = 20; // px
         const endRad = (arcAngle * Math.PI) / 180;
@@ -344,7 +288,7 @@ export function useRotationTool({
     }
 
     return elements.length > 0 ? elements : null;
-  }, [center, angleDeg, effectivePreview, phase, viewport, state.points, state.segments]);
+  }, [center, angleDeg, phase, viewport]);
 
   const mergedOverlay = useMemo(() => {
     const base = overlayElements
@@ -439,16 +383,16 @@ export function useRotationTool({
           'button',
           {
             key: `preset-${p.deg}`,
-            onClick: () => setPreviewAngle(p.deg),
+            onClick: () => confirmAngle(clockwise ? p.deg : -p.deg),
             style: {
               width: '100%',
               height: 44,
               padding: '0 12px',
-              border: previewAngle === p.deg ? '2px solid #0a7e7a' : '1px solid #D1D8E0',
+              border: '1px solid #D1D8E0',
               borderRadius: 6,
-              background: previewAngle === p.deg ? '#E0F2F1' : '#F5F7FA',
+              background: '#F5F7FA',
               cursor: 'pointer',
-              fontWeight: previewAngle === p.deg ? 700 : 500,
+              fontWeight: 500,
               fontSize: 13,
               display: 'flex',
               justifyContent: 'space-between',
@@ -481,10 +425,10 @@ export function useRotationTool({
         onKeyDown: (e: React.KeyboardEvent<HTMLInputElement>) => {
           if (e.key === 'Enter') {
             const val = parseFloat((e.target as HTMLInputElement).value.replace(',', '.'));
-            if (!isNaN(val) && val % 360 !== 0) setPreviewAngle(val % 360);
+            if (!isNaN(val) && val % 360 !== 0) confirmAngle(clockwise ? val % 360 : -(val % 360));
           }
         },
-        autoFocus: previewAngle == null,
+        autoFocus: true,
       }),
       createElement('span', { style: { fontSize: 14, color: '#4A5568' } }, '°'),
       createElement(
@@ -496,7 +440,8 @@ export function useRotationTool({
             ) as HTMLInputElement | null;
             if (input) {
               const val = parseFloat(input.value.replace(',', '.'));
-              if (!isNaN(val) && val % 360 !== 0) setPreviewAngle(val % 360);
+              if (!isNaN(val) && val % 360 !== 0)
+                confirmAngle(clockwise ? val % 360 : -(val % 360));
             }
           },
           style: {
@@ -504,8 +449,8 @@ export function useRotationTool({
             height: 44,
             border: '1px solid #0a7e7a',
             borderRadius: 6,
-            background: previewAngle != null ? '#F5F7FA' : '#0a7e7a',
-            color: previewAngle != null ? '#4A5568' : 'white',
+            background: '#0a7e7a',
+            color: 'white',
             cursor: 'pointer',
             fontWeight: 600,
             fontSize: 13,
@@ -514,53 +459,6 @@ export function useRotationTool({
         'OK',
       ),
     );
-
-    // Confirm/Cancel row when preview is active
-    const confirmRow =
-      previewAngle != null
-        ? createElement(
-            'div',
-            { style: { display: 'flex', gap: 8, marginTop: 4, width: '100%' } },
-            createElement(
-              'button',
-              {
-                onClick: () => confirmAngle(clockwise ? previewAngle : -previewAngle),
-                style: {
-                  minWidth: 44,
-                  height: 44,
-                  flex: 1,
-                  border: 'none',
-                  borderRadius: 6,
-                  background: '#0a7e7a',
-                  color: 'white',
-                  cursor: 'pointer',
-                  fontWeight: 600,
-                  fontSize: 13,
-                },
-              },
-              'Confirmer',
-            ),
-            createElement(
-              'button',
-              {
-                onClick: () => setPreviewAngle(null),
-                style: {
-                  minWidth: 44,
-                  height: 44,
-                  flex: 1,
-                  border: '1px solid #D1D8E0',
-                  borderRadius: 6,
-                  background: 'white',
-                  color: '#4A5568',
-                  cursor: 'pointer',
-                  fontWeight: 500,
-                  fontSize: 13,
-                },
-              },
-              'Annuler',
-            ),
-          )
-        : null;
 
     return createElement(
       'div',
@@ -587,9 +485,8 @@ export function useRotationTool({
       directionControl,
       presetList,
       inputRow,
-      confirmRow,
     );
-  }, [phase, isActive, previewAngle, clockwise, presets, confirmAngle]);
+  }, [phase, isActive, clockwise, presets, confirmAngle]);
 
   return {
     handleClick,
@@ -601,6 +498,6 @@ export function useRotationTool({
     snapResult,
     overlayElements: mergedOverlay,
     toolPanel,
-    isPreviewActive: previewAngle != null,
+    isPreviewActive: false,
   };
 }

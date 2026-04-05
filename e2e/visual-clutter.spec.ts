@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { interactCanvas } from './helpers/canvas';
-import { waitForStatus } from './helpers/toolbar';
+import { waitForStatus, openClassSettings, closeSettings } from './helpers/toolbar';
 import { expectSegmentCount, expectPointCount } from './helpers/assertions';
 
 test.beforeEach(async ({ page }) => {
@@ -46,12 +46,12 @@ test.describe('Visual clutter and overlapping labels', () => {
   test('point labels at nearby positions do not share identical coordinates', async ({
     page,
   }, testInfo) => {
-    // Create a small triangle (10mm sides — snaps to grid correctly)
+    // Create a small triangle (20mm sides — must exceed 15mm effective snap tolerance on 10mm grid)
     await interactCanvas(page, testInfo, 50, 80);
     await waitForStatus(page, /deuxième point/);
-    await interactCanvas(page, testInfo, 60, 80); // 10mm apart (snaps to different grid points)
+    await interactCanvas(page, testInfo, 70, 80); // 20mm apart
     await waitForStatus(page, /Continue/);
-    await interactCanvas(page, testInfo, 55, 70); // Close to both points
+    await interactCanvas(page, testInfo, 60, 62); // ~20mm from both endpoints
     await interactCanvas(page, testInfo, 50, 80); // Close triangle
 
     await expectSegmentCount(page, 3);
@@ -84,15 +84,15 @@ test.describe('Visual clutter and overlapping labels', () => {
   test('segment length labels on parallel close segments are offset correctly', async ({
     page,
   }, testInfo) => {
-    // Create two horizontal segments very close together (10mm apart)
+    // Create two horizontal segments 20mm apart (must exceed 15mm snap tolerance on 10mm grid)
     await interactCanvas(page, testInfo, 40, 80);
     await waitForStatus(page, /deuxième point/);
     await interactCanvas(page, testInfo, 120, 80);
     await page.keyboard.press('Escape');
 
-    await interactCanvas(page, testInfo, 40, 90);
+    await interactCanvas(page, testInfo, 40, 100);
     await waitForStatus(page, /deuxième point/);
-    await interactCanvas(page, testInfo, 120, 90);
+    await interactCanvas(page, testInfo, 120, 100);
     await page.keyboard.press('Escape');
 
     await expectSegmentCount(page, 2);
@@ -150,8 +150,11 @@ test.describe('Visual clutter and overlapping labels', () => {
   });
 
   test('short segment (5mm grid) still displays readable label', async ({ page }, testInfo) => {
-    // Switch to 5mm grid for finer resolution
-    await page.locator('[data-testid="grid-5"]').click();
+    // Switch to 5mm grid via settings
+    await openClassSettings(page);
+    const gridRow = page.getByText('Taille de la grille').locator('..');
+    await gridRow.locator('select').selectOption('5');
+    await closeSettings(page);
 
     // Create a short segment: 5mm (adjacent 5mm grid points)
     await interactCanvas(page, testInfo, 80, 80);
