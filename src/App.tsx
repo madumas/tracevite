@@ -1450,6 +1450,7 @@ function AppContent({ initialRegistry }: AppProps) {
                 return next;
               })
             }
+            onSetConsigne={(text) => dispatch({ type: 'SET_CONSIGNE', consigne: text })}
           />
         )}
         {isNarrow && (
@@ -1578,6 +1579,7 @@ function AppContent({ initialRegistry }: AppProps) {
                   return next;
                 })
               }
+              onSetConsigne={(text) => dispatch({ type: 'SET_CONSIGNE', consigne: text })}
               showAllProperties={showAllProps}
               onToggleShowAll={() => setShowAllProps(!showAllProps)}
             />
