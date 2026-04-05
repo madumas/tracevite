@@ -23,10 +23,9 @@ import type { ConstructionState } from '@/model/types';
 interface ShareDialogProps {
   readonly state: ConstructionState;
   readonly onClose: () => void;
-  readonly onPrint: () => void;
 }
 
-export function ShareDialog({ state, onClose, onPrint }: ShareDialogProps) {
+export function ShareDialog({ state, onClose }: ShareDialogProps) {
   const [linkCopied, setLinkCopied] = useState(false);
   const [qrCopied, setQrCopied] = useState(false);
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
@@ -297,30 +296,6 @@ export function ShareDialog({ state, onClose, onPrint }: ShareDialogProps) {
             </div>
           </>
         )}
-
-        {/* ── Section: Imprimer ── */}
-        <div style={{ borderTop: `1px solid ${UI_BORDER}`, paddingTop: 12 }}>
-          <button
-            onClick={() => {
-              onClose();
-              onPrint();
-            }}
-            style={{
-              width: '100%',
-              padding: '8px',
-              minHeight: MIN_BUTTON_SIZE_PX,
-              background: '#F5F7FA',
-              border: `1px solid ${UI_BORDER}`,
-              borderRadius: 4,
-              cursor: 'pointer',
-              fontSize: 13,
-              color: UI_TEXT_PRIMARY,
-              fontWeight: 500,
-            }}
-          >
-            Imprimer / PDF
-          </button>
-        </div>
       </div>
     </div>
   );

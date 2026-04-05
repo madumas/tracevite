@@ -1592,7 +1592,8 @@ function AppContent({ initialRegistry }: AppProps) {
         canRedo={canRedo}
         onUndo={handleUndo}
         onRedo={handleRedo}
-        onShare={() => setShowShareDialog(true)}
+        onPrint={handlePrint}
+        onShareLink={() => setShowShareDialog(true)}
         fontScale={effectiveFontScale}
         estimationMode={state.estimationMode}
         onToggleEstimation={() => setEstimationRevealed((prev) => !prev)}
@@ -1642,16 +1643,7 @@ function AppContent({ initialRegistry }: AppProps) {
         />
       )}
 
-      {showShareDialog && (
-        <ShareDialog
-          state={state}
-          onClose={() => setShowShareDialog(false)}
-          onPrint={() => {
-            setShowShareDialog(false);
-            handlePrint();
-          }}
-        />
-      )}
+      {showShareDialog && <ShareDialog state={state} onClose={() => setShowShareDialog(false)} />}
 
       {/* Hidden print SVG — visible only in @media print */}
       <PrintSvg

@@ -1,4 +1,4 @@
-import { memo } from 'react';
+import { memo, useState, useRef, useEffect } from 'react';
 import type { GridSize, DisplayUnit } from '@/model/types';
 import {
   ACTION_BAR_HEIGHT,
@@ -22,7 +22,6 @@ import {
 import {
   UndoIcon,
   RedoIcon,
-  PrintIcon,
   SettingsIcon,
   FullscreenIcon,
   ExitFullscreenIcon,
@@ -35,7 +34,8 @@ interface ActionBarProps {
   readonly canRedo: boolean;
   readonly onUndo: () => void;
   readonly onRedo: () => void;
-  readonly onShare: () => void;
+  readonly onPrint: () => void;
+  readonly onShareLink: () => void;
   readonly fontScale?: number;
   readonly estimationMode?: boolean;
   readonly onToggleEstimation?: () => void;
@@ -57,7 +57,8 @@ export const ActionBar = memo(function ActionBar({
   canRedo,
   onUndo,
   onRedo,
-  onShare,
+  onPrint,
+  onShareLink,
   fontScale = 1,
   estimationMode = false,
   onToggleEstimation,
@@ -298,27 +299,8 @@ export const ActionBar = memo(function ActionBar({
         </button>
       )}
 
-      {/* Share (replaces Print — print is now inside ShareDialog) */}
-      <button
-        onClick={onShare}
-        style={{
-          minWidth: MIN_BUTTON_SIZE_PX,
-          height: MIN_BUTTON_SIZE_PX,
-          padding: '0 14px',
-          border: 'none',
-          borderRadius: 4,
-          background: UI_PRIMARY,
-          color: '#FFFFFF',
-          cursor: 'pointer',
-          fontSize: 'inherit',
-          fontWeight: 500,
-        }}
-        aria-label="Partager"
-        title="Partager"
-        data-testid="action-share"
-      >
-        <PrintIcon /> <span className="action-label">Partager</span>
-      </button>
+      {/* Share menu popup (PDF + Lien & QR) */}
+      <ShareMenu onPrint={onPrint} onShareLink={onShareLink} />
 
       {/* ─ Right group: Settings, Aide, Fullscreen (round buttons like RésoMolo) ─ */}
 
@@ -401,3 +383,155 @@ export const ActionBar = memo(function ActionBar({
     </div>
   );
 });
+
+/** Share popup menu — calqué sur ResoMolo */
+function ShareMenu({ onPrint, onShareLink }: { onPrint: () => void; onShareLink: () => void }) {
+  const [open, setOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const handler = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener('pointerdown', handler);
+    return () => document.removeEventListener('pointerdown', handler);
+  }, [open]);
+
+  return (
+    <div ref={menuRef} style={{ position: 'relative' }}>
+      <button
+        onClick={() => setOpen(!open)}
+        style={{
+          minWidth: MIN_BUTTON_SIZE_PX,
+          height: MIN_BUTTON_SIZE_PX,
+          padding: '0 14px',
+          border: open ? `2px solid ${UI_PRIMARY}` : 'none',
+          borderRadius: 4,
+          background: open ? '#E0F2F1' : UI_PRIMARY,
+          color: open ? UI_PRIMARY : '#FFFFFF',
+          cursor: 'pointer',
+          fontSize: 'inherit',
+          fontWeight: 500,
+        }}
+        aria-label="Partager"
+        title="Partager"
+        aria-expanded={open}
+        data-testid="action-share"
+      >
+        <svg
+          width="14"
+          height="14"
+          viewBox="0 0 14 14"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.5"
+          style={{ verticalAlign: 'middle', marginRight: 4 }}
+        >
+          <path d="M2 8v4h10V8M7 1v8M4 4l3-3 3 3" />
+        </svg>
+        <span className="action-label">Partager</span>
+      </button>
+      {open && (
+        <div
+          style={{
+            position: 'absolute',
+            bottom: '100%',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            marginBottom: 8,
+            background: '#fff',
+            border: `1px solid ${UI_BORDER}`,
+            borderRadius: 10,
+            boxShadow: '0 4px 16px rgba(0,0,0,0.12)',
+            padding: 6,
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 4,
+            zIndex: 20,
+            minWidth: 180,
+          }}
+        >
+          <ShareRow
+            icon={<span style={{ fontSize: 13, fontWeight: 600 }}>PDF</span>}
+            label="Imprimer (PDF)"
+            onClick={() => {
+              onPrint();
+              setOpen(false);
+            }}
+          />
+          <ShareRow
+            icon={
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 14 14"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.5"
+              >
+                <path d="M6 8a3 3 0 004 1l2-2a3 3 0 00-4-4L6 5M8 6a3 3 0 00-4-1L2 7a3 3 0 004 4l2-2" />
+              </svg>
+            }
+            label="Lien & QR code"
+            onClick={() => {
+              onShareLink();
+              setOpen(false);
+            }}
+          />
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ShareRow({
+  icon,
+  label,
+  onClick,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: 10,
+        padding: '10px 14px',
+        minHeight: 48,
+        background: 'none',
+        border: 'none',
+        borderRadius: 6,
+        fontSize: 13,
+        color: UI_PRIMARY,
+        cursor: 'pointer',
+        width: '100%',
+        textAlign: 'left',
+      }}
+      onPointerEnter={(e) => {
+        (e.target as HTMLElement).style.background = '#E0F2F1';
+      }}
+      onPointerLeave={(e) => {
+        (e.target as HTMLElement).style.background = 'none';
+      }}
+    >
+      <span
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          width: 24,
+        }}
+      >
+        {icon}
+      </span>
+      {label}
+    </button>
+  );
+}
