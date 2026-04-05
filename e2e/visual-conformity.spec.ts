@@ -9,7 +9,7 @@ import fs from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { test, expect } from '@playwright/test';
 import { clickCanvas, moveOnCanvas, interactCanvas } from './helpers/canvas';
-import { waitForStatus, clickAction, selectTool } from './helpers/toolbar';
+import { waitForStatus, clickAction, selectTool, openClassSettings, closeSettings } from './helpers/toolbar';
 import { expectSegmentCount, expectPointCount } from './helpers/assertions';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -541,12 +541,20 @@ test('visual conformity audit', async ({ page }, testInfo) => {
   await page.waitForTimeout(200);
 
   // --- 43: Unit mm ---
-  await page.locator('[data-testid="unit-toggle"]').click({ force: true });
-  await page.waitForTimeout(300);
-  await page.screenshot({ path: shot('43-unit-mm.png'), fullPage: true });
-  // Restore cm
-  await page.locator('[data-testid="unit-toggle"]').click({ force: true });
-  await page.waitForTimeout(200);
+  {
+    const dialog = await openClassSettings(page);
+    const unitRow = page.getByText("Unité d'affichage").locator('..');
+    await unitRow.locator('select').selectOption('mm');
+    await closeSettings(page);
+    await page.waitForTimeout(300);
+    await page.screenshot({ path: shot('43-unit-mm.png'), fullPage: true });
+    // Restore cm
+    const dialog2 = await openClassSettings(page);
+    const unitRow2 = page.getByText("Unité d'affichage").locator('..');
+    await unitRow2.locator('select').selectOption('cm');
+    await closeSettings(page);
+    await page.waitForTimeout(200);
+  }
 
   // --- 44: Perpendicular tool result ---
   await selectTool(page, 'perpendicular');
@@ -804,6 +812,16 @@ test('visual conformity — PFEQ pedagogical', async ({ page }, testInfo) => {
   const shot = (name: string) => path.join(dir, name);
   const interact = (xMm: number, yMm: number) => interactCanvas(page, testInfo, xMm, yMm);
 
+  // On iPad, auto-saved panel state (bottom sheet) blocks toolbar after goto.
+  // Dismiss it with Escape before interacting with toolbar controls.
+  async function dismissBottomSheet() {
+    const p = page.locator('[data-testid="properties-panel"]');
+    if (await p.isVisible().catch(() => false)) {
+      await page.keyboard.press('Escape');
+      await page.waitForTimeout(200);
+    }
+  }
+
   // ── 60: Simple triangle with classification (Simplifié) ──
   await page.goto('/');
   await page.waitForSelector('[data-testid="canvas-svg"]');
@@ -843,9 +861,19 @@ test('visual conformity — PFEQ pedagogical', async ({ page }, testInfo) => {
   await panel.screenshot({ path: shot('60b-pfeq-triangle-panel.png') });
 
   // ── 61: Same triangle in Complet mode (angles with degrees) ──
+  // Close bottom sheet on iPad before switching mode (overlay blocks toolbar)
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(200);
   await page.locator('[data-testid="mode-selector"]').click();
   await page.locator('[data-testid="mode-option-complet"]').click();
   await page.waitForTimeout(300);
+  // Reopen panel for screenshot
+  if (!(await panel.isVisible())) {
+    const toggle61 = page.locator('[data-testid="panel-toggle"], [data-testid="panel-toggle-mobile"]');
+    await toggle61.click();
+    await panel.waitFor();
+    await page.waitForTimeout(300);
+  }
   await page.screenshot({ path: shot('61-pfeq-triangle-complet.png'), fullPage: true });
   await panel.screenshot({ path: shot('61b-pfeq-angles-degrees.png') });
 
@@ -853,6 +881,7 @@ test('visual conformity — PFEQ pedagogical', async ({ page }, testInfo) => {
   await page.goto('/');
   await page.waitForSelector('[data-testid="canvas-svg"]');
   await page.waitForTimeout(300);
+  await dismissBottomSheet();
   // Switch to complet
   await page.locator('[data-testid="mode-selector"]').click();
   await page.locator('[data-testid="mode-option-complet"]').click();
@@ -948,6 +977,12 @@ test('visual conformity — PFEQ figures & tools', async ({ page }, testInfo) =>
     await page.goto('/');
     await page.waitForSelector('[data-testid="canvas-svg"]');
     await page.waitForTimeout(300);
+    // Dismiss bottom sheet panel if auto-restored on iPad
+    const autoPanel = page.locator('[data-testid="properties-panel"]');
+    if (await autoPanel.isVisible().catch(() => false)) {
+      await page.keyboard.press('Escape');
+      await page.waitForTimeout(200);
+    }
     // Clear canvas if it has elements from previous test
     const newBtn = page.locator('[data-testid="action-new"]');
     if (await newBtn.isVisible()) {
@@ -961,26 +996,19 @@ test('visual conformity — PFEQ figures & tools', async ({ page }, testInfo) =>
     await page.locator('[data-testid="mode-selector"]').click();
     await page.locator('[data-testid="mode-option-complet"]').click();
     await page.waitForTimeout(300);
-    // Disable auto-intersection for clean figure tests
-    const settingsBtn = page.locator('[data-testid="settings-button"]');
-    if (await settingsBtn.isVisible()) {
-      await settingsBtn.click();
-      await page.waitForTimeout(200);
-      const aiCheckbox = page.locator('text=Intersections automatiques').locator('..').locator('input[type="checkbox"]');
-      if (await aiCheckbox.isVisible({ timeout: 1000 }).catch(() => false)) {
-        const checked = await aiCheckbox.isChecked();
-        if (checked) await aiCheckbox.click({ force: true });
-      }
-      await page.keyboard.press('Escape');
-      await page.waitForTimeout(200);
-    }
+    // Disable auto-intersection via class settings
+    const dialog = await openClassSettings(page);
+    const aiRow = page.getByText('Intersections automatiques').locator('..');
+    const aiCheckbox = aiRow.locator('input[type="checkbox"]');
+    if (await aiCheckbox.isChecked()) await aiCheckbox.uncheck();
+    await closeSettings(page);
   }
   async function openPanel() {
     const p = page.locator('[data-testid="properties-panel"]');
     if (!(await p.isVisible().catch(() => false))) {
-      const t = page.locator('[data-testid="panel-toggle"]');
-      if (await t.isVisible({ timeout: 2000 }).catch(() => false)) {
-        await t.click();
+      const t = page.locator('[data-testid="panel-toggle"], [data-testid="panel-toggle-mobile"]');
+      if (await t.first().isVisible({ timeout: 2000 }).catch(() => false)) {
+        await t.first().click();
         await p.waitFor({ timeout: 3000 }).catch(() => {});
       }
       await page.waitForTimeout(200);

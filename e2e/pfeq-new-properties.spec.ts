@@ -3,6 +3,8 @@ import { interactCanvas } from './helpers/canvas';
 import { waitForStatus } from './helpers/toolbar';
 import { expectSegmentCount } from './helpers/assertions';
 
+const PANEL_TOGGLE = '[data-testid="panel-toggle"], [data-testid="panel-toggle-mobile"]';
+
 test.beforeEach(async ({ page }) => {
   await page.goto('/');
   await page.waitForSelector('[data-testid="canvas-svg"]');
@@ -10,10 +12,16 @@ test.beforeEach(async ({ page }) => {
   await page.locator('[data-testid="mode-selector"]').click();
   await page.locator('[data-testid="mode-option-complet"]').click();
   await page.waitForTimeout(300);
-  // Open properties panel (collapsed by default when viewport height < 800)
-  await page.locator('[data-testid="panel-toggle"]').click();
-  await expect(page.locator('[data-testid="properties-panel"]')).toBeVisible({ timeout: 3000 });
 });
+
+/** Open the properties panel (needed AFTER canvas interactions on iPad where bottom sheet blocks canvas) */
+async function openPanel(page: import('@playwright/test').Page) {
+  const panel = page.locator('[data-testid="properties-panel"]');
+  if (!(await panel.isVisible().catch(() => false))) {
+    await page.locator(PANEL_TOGGLE).click();
+    await panel.waitFor({ timeout: 3000 });
+  }
+}
 
 test.describe('Convexity detection', () => {
   test('non-convex quadrilateral shows "(non convexe)" in panel', async ({ page }, testInfo) => {
@@ -33,7 +41,8 @@ test.describe('Convexity detection', () => {
     await page.keyboard.press('Escape');
     await page.waitForTimeout(500);
 
-    // Expand the "Propriétés" accordion section (collapsed by default, content not in DOM)
+    // Open panel and expand the "Propriétés" accordion section
+    await openPanel(page);
     await page.locator('[data-testid="accordion-Propriétés"]').click();
     const panel = page.locator('[data-testid="properties-panel"]');
     const panelText = await panel.textContent({ timeout: 3000 }) ?? '';
@@ -49,7 +58,8 @@ test.describe('Convexity detection', () => {
     await interactCanvas(page, testInfo, 50, 50); // close
     await page.keyboard.press('Escape');
 
-    // Expand the "Propriétés" accordion section
+    // Open panel and expand the "Propriétés" accordion section
+    await openPanel(page);
     await page.locator('[data-testid="accordion-Propriétés"]').click();
     const panel = page.locator('[data-testid="properties-panel"]');
     const panelText = await panel.textContent({ timeout: 3000 }) ?? '';
@@ -71,7 +81,8 @@ test.describe('Regular polygon classification', () => {
     await page.keyboard.press('Escape');
     await page.waitForTimeout(500);
 
-    // Expand the "Propriétés" accordion section
+    // Open panel and expand the "Propriétés" accordion section
+    await openPanel(page);
     await page.locator('[data-testid="accordion-Propriétés"]').click();
     const panel = page.locator('[data-testid="properties-panel"]');
     // Should detect as regular pentagon or at least as 5-sided polygon
@@ -95,7 +106,8 @@ test.describe('Chord detection', () => {
     await interactCanvas(page, testInfo, 80, 100); // bottom of circle
     await page.keyboard.press('Escape');
 
-    // Expand the "Propriétés" accordion section
+    // Open panel and expand the "Propriétés" accordion section
+    await openPanel(page);
     await page.locator('[data-testid="accordion-Propriétés"]').click();
     // Check for "corde" in properties panel
     const panel = page.locator('[data-testid="properties-panel"]');
@@ -128,7 +140,8 @@ test.describe('Symmetry axis as property', () => {
     await page.keyboard.press('Escape');
     await page.waitForTimeout(500);
 
-    // Expand the "Propriétés" accordion section
+    // Open panel and expand the "Propriétés" accordion section
+    await openPanel(page);
     await page.locator('[data-testid="accordion-Propriétés"]').click();
     const panel = page.locator('[data-testid="properties-panel"]');
     const panelText = await panel.textContent({ timeout: 3000 }) ?? '';

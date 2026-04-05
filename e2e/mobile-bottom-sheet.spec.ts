@@ -8,7 +8,7 @@ test.describe('Mobile bottom sheet panel', () => {
     await page.waitForSelector('[data-testid="canvas-svg"]');
 
     // Open panel
-    await page.locator('[data-testid="panel-toggle"]').click();
+    await page.locator('[data-testid="panel-toggle"], [data-testid="panel-toggle-mobile"]').click();
 
     // Bottom sheet should be visible with bottom: 0 positioning
     const panel = page.locator('[data-testid="properties-panel"]');
@@ -30,7 +30,7 @@ test.describe('Mobile bottom sheet panel', () => {
     await page.goto('/');
     await page.waitForSelector('[data-testid="canvas-svg"]');
 
-    await page.locator('[data-testid="panel-toggle"]').click();
+    await page.locator('[data-testid="panel-toggle"], [data-testid="panel-toggle-mobile"]').click();
     await expect(page.locator('[data-testid="properties-panel"]')).toBeVisible({ timeout: 3000 });
 
     // Click on backdrop area (top of screen, above the bottom sheet)
