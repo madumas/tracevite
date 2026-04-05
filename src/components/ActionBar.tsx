@@ -407,14 +407,13 @@ function ShareMenu({ onPrint, onShareLink }: { onPrint: () => void; onShareLink:
         style={{
           minWidth: MIN_BUTTON_SIZE_PX,
           height: MIN_BUTTON_SIZE_PX,
-          padding: '0 14px',
-          border: open ? `2px solid ${UI_PRIMARY}` : 'none',
+          padding: '0 10px',
+          border: `1px solid ${UI_BORDER}`,
           borderRadius: 4,
-          background: open ? '#E0F2F1' : UI_PRIMARY,
-          color: open ? UI_PRIMARY : '#FFFFFF',
+          background: UI_SURFACE,
+          color: UI_TEXT_PRIMARY,
           cursor: 'pointer',
           fontSize: 'inherit',
-          fontWeight: 500,
         }}
         aria-label="Partager"
         title="Partager"
