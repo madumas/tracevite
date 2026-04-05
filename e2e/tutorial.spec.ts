@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { interactCanvas } from './helpers/canvas';
-import { selectTool, waitForStatus } from './helpers/toolbar';
+import { selectTool, waitForStatus, clickAction } from './helpers/toolbar';
 import { expectSegmentCount } from './helpers/assertions';
 
 test.beforeEach(async ({ page }) => {
@@ -26,27 +26,54 @@ test.describe('Tutorial', () => {
     await page.locator('[data-testid="help-tutorial"]').click();
     await page.waitForTimeout(300);
 
-    // Status bar should have yellow background and "Tutoriel" badge
     const statusBar = page.locator('[data-testid="status-bar"]');
     await expect(statusBar).toContainText('Tutoriel');
     await expect(statusBar).toContainText('tracer un segment');
-
-    // Skip button should be in the status bar
     await expect(page.locator('[data-testid="tutorial-skip"]')).toBeVisible();
   });
 
-  test('advances on segment creation', async ({ page }, testInfo) => {
+  test('full 4-step flow: segment → undo → select+delete → finish', async ({
+    page,
+  }, testInfo) => {
     await page.locator('[data-testid="help-tutorial"]').click();
     await page.waitForTimeout(300);
+    const statusBar = page.locator('[data-testid="status-bar"]');
 
     // Step 1: create a segment
+    await expect(statusBar).toContainText('tracer un segment');
     await interactCanvas(page, testInfo, 50, 50);
     await interactCanvas(page, testInfo, 100, 50);
     await expectSegmentCount(page, 1);
 
-    // Status should advance to step 2 (undo instruction)
-    const statusBar = page.locator('[data-testid="status-bar"]');
+    // Step 2: undo
     await expect(statusBar).toContainText('Annuler', { timeout: 3000 });
+    await clickAction(page, 'undo');
+    await page.waitForTimeout(300);
+
+    // Step 3a: retrace a segment
+    await expect(statusBar).toContainText('Retrace', { timeout: 3000 });
+    await interactCanvas(page, testInfo, 50, 80);
+    await interactCanvas(page, testInfo, 100, 80);
+    await expectSegmentCount(page, 1);
+
+    // Step 3b: select and delete — switch to select tool, click segment, delete
+    await expect(statusBar).toContainText('Sélectionner', { timeout: 3000 });
+    await page.keyboard.press('Escape'); // exit chaining
+    await page.waitForTimeout(200);
+    await selectTool(page, 'select');
+    await page.waitForTimeout(200);
+    await interactCanvas(page, testInfo, 75, 80); // click segment to select
+    await page.waitForTimeout(500);
+    const deleteBtn = page.locator('[data-testid="context-delete"]');
+    await expect(deleteBtn).toBeVisible({ timeout: 3000 });
+    await deleteBtn.click(); // micro-confirmation step 1
+    await page.waitForTimeout(300);
+    await deleteBtn.click(); // micro-confirmation step 2 — deletes
+    await page.waitForTimeout(300);
+
+    // Step 4: finish
+    await expect(statusBar).toContainText('corriger', { timeout: 3000 });
+    await expect(page.locator('[data-testid="tutorial-finish"]')).toBeVisible();
   });
 
   test('skip returns to normal status', async ({ page }) => {
@@ -54,11 +81,9 @@ test.describe('Tutorial', () => {
     await page.waitForTimeout(300);
     await expect(page.locator('[data-testid="status-bar"]')).toContainText('Tutoriel');
 
-    // Click "Passer"
     await page.locator('[data-testid="tutorial-skip"]').click();
     await page.waitForTimeout(300);
 
-    // Status bar should return to normal tool message
     const statusBar = page.locator('[data-testid="status-bar"]');
     await expect(statusBar).not.toContainText('Tutoriel', { timeout: 3000 });
   });

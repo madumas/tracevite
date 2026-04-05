@@ -370,8 +370,8 @@ export const ActionBar = memo(function ActionBar({
             fontSize: 18,
             fontWeight: 700,
           }}
-          aria-label="Aide — tutoriel"
-          title="Aide — tutoriel"
+          aria-label="Aide"
+          title="Aide"
           data-testid="help-tutorial"
         >
           ?

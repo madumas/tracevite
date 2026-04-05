@@ -56,11 +56,12 @@ import { SlotManager } from '@/components/SlotManager';
 import { useSlotManager } from '@/hooks/useSlotManager';
 import { PrintDialog } from '@/components/PrintDialog';
 import { PrintSvg } from '@/components/PrintSvg';
-import { useTutorial, TUTORIAL_MESSAGES } from '@/hooks/useTutorial';
+import { useTutorial } from '@/hooks/useTutorial';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
 import type { ToolType, GridSize, DisplayUnit, DisplayMode } from '@/model/types';
 import { PreferencesProvider, usePreferences } from '@/model/preferences';
 import { AboutDialog } from '@/components/AboutDialog';
+import { HelpDialog } from '@/components/HelpDialog';
 import { FatigueReminder } from '@/components/FatigueReminder';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 
@@ -180,6 +181,7 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
   useEffect(() => setShowAllProps(false), [state.selectedElementId]);
   const [showSettings, setShowSettings] = useState(false);
   const [showAbout, setShowAbout] = useState(false);
+  const [showHelp, setShowHelp] = useState(false);
 
   const [estimationRevealed, setEstimationRevealed] = useState(false);
   const [forceShowLabels, setForceShowLabels] = useState(false);
@@ -966,8 +968,8 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
             >
               Tutoriel
             </span>
-            <span style={{ flex: 1 }}>{TUTORIAL_MESSAGES[tutorial.step as 1 | 2 | 3]}</span>
-            {tutorial.step === 3 && (
+            <span style={{ flex: 1 }}>{tutorial.currentMessage}</span>
+            {tutorial.step === 4 && (
               <button
                 onClick={tutorial.finish}
                 style={{
@@ -1626,7 +1628,7 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
         onToggleEstimation={() => setEstimationRevealed((prev) => !prev)}
         onShowSlotManager={() => setShowSlotManager(true)}
         onShowSettings={() => setShowSettings(true)}
-        onShowGuide={tutorial.start}
+        onShowGuide={() => tutorial.start()}
         onToggleDemoMode={() => {
           if (document.fullscreenElement) {
             document.exitFullscreen();
@@ -1794,6 +1796,20 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
 
       {/* About dialog */}
       {showAbout && <AboutDialog onClose={() => setShowAbout(false)} />}
+
+      {showHelp && (
+        <HelpDialog
+          onClose={() => setShowHelp(false)}
+          onStartTutorial={() => {
+            setShowHelp(false);
+            tutorial.start();
+          }}
+          onShowAbout={() => {
+            setShowHelp(false);
+            setShowAbout(true);
+          }}
+        />
+      )}
 
       {/* Fatigue reminder */}
       {showFatigueReminder && <FatigueReminder onDismiss={() => setShowFatigueReminder(false)} />}
