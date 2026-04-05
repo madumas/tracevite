@@ -87,7 +87,7 @@ export function reproduceElements(
       y: original.y + offsetY,
       label,
       locked: false,
-      ...(transformOperation ? { transformOperation } : {}),
+      ...(transformOperation ? { transformOperation, transformSourceId: pid } : {}),
       ...(groupIndex != null ? { transformGroupIndex: groupIndex } : {}),
     });
   }

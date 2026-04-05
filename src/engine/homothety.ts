@@ -60,7 +60,7 @@ export function scaleConstruction(
       y: scaled.y,
       label,
       locked: false,
-      ...(transformOperation ? { transformOperation } : {}),
+      ...(transformOperation ? { transformOperation, transformSourceId: pid } : {}),
     });
   }
 

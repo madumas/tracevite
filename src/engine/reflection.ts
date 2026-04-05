@@ -126,7 +126,7 @@ export function reflectConstruction(
       y: reflected.y,
       label,
       locked: false,
-      ...(transformOperation ? { transformOperation } : {}),
+      ...(transformOperation ? { transformOperation, transformSourceId: pid } : {}),
     });
   }
 

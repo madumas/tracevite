@@ -68,7 +68,7 @@ export function rotateConstruction(
       y: rotated.y,
       label,
       locked: false,
-      ...(transformOperation ? { transformOperation } : {}),
+      ...(transformOperation ? { transformOperation, transformSourceId: pid } : {}),
     });
   }
 

@@ -61,6 +61,8 @@ import { PrintDialog } from '@/components/PrintDialog';
 import { ShareDialog } from '@/components/ShareDialog';
 import { PrintSvg } from '@/components/PrintSvg';
 import { useTutorial } from '@/hooks/useTutorial';
+import { useTransformAnimation } from '@/hooks/useTransformAnimation';
+import { detectTransformInRedo, computeRedoAnimData } from '@/engine/detect-transform';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
 import type { ToolType, GridSize, DisplayUnit, DisplayMode } from '@/model/types';
 import { PreferencesProvider, usePreferences } from '@/model/preferences';
@@ -428,9 +430,47 @@ function AppContent({ initialRegistry }: AppProps) {
     [dispatch],
   );
 
+  // Redo animation hook — replays transformation animation on Redo (pedagogical demo)
+  const redoAnim = useTransformAnimation({
+    viewport,
+    animate: preferences.animateTransformations,
+    points: state.points,
+    segments: state.segments,
+    circles: state.circles,
+  });
+
   // Action bar handlers
-  const handleUndo = useCallback(() => dispatch({ type: 'UNDO' }), [dispatch]);
-  const handleRedo = useCallback(() => dispatch({ type: 'REDO' }), [dispatch]);
+  const handleUndo = useCallback(() => {
+    if (redoAnim.isAnimating) redoAnim.cancelAnimation();
+    dispatch({ type: 'UNDO' });
+  }, [dispatch, redoAnim]);
+
+  const handleRedo = useCallback(() => {
+    if (redoAnim.isAnimating) return; // Block rapid Redo during animation
+    if (!canRedo) return;
+
+    const futureState = undoManager.future[0];
+    if (!futureState || !preferences.animateTransformations) {
+      dispatch({ type: 'REDO' });
+      return;
+    }
+
+    const detection = detectTransformInRedo(undoManager.current, futureState);
+    if (!detection) {
+      dispatch({ type: 'REDO' });
+      return;
+    }
+
+    const animData = computeRedoAnimData(detection, undoManager.current, futureState);
+    if (!animData) {
+      dispatch({ type: 'REDO' });
+      return;
+    }
+
+    // Animate first, dispatch REDO in onComplete (same pattern as tool hooks)
+    const started = redoAnim.startAnimation(animData, () => dispatch({ type: 'REDO' }));
+    if (!started) dispatch({ type: 'REDO' });
+  }, [canRedo, undoManager, preferences.animateTransformations, dispatch, redoAnim]);
   const [showPrintDialog, setShowPrintDialog] = useState(false);
   const [printLandscape, setPrintLandscape] = useState(true);
   const [printIncludeMeasurements, setPrintIncludeMeasurements] = useState(true);
@@ -483,7 +523,7 @@ function AppContent({ initialRegistry }: AppProps) {
         !inInput
       ) {
         e.preventDefault();
-        if (canRedo) dispatch({ type: 'REDO' });
+        if (canRedo) handleRedo();
       }
       if ((e.ctrlKey || e.metaKey) && e.key === 'p') {
         e.preventDefault();
@@ -521,6 +561,7 @@ function AppContent({ initialRegistry }: AppProps) {
     canUndo,
     canRedo,
     dispatch,
+    handleRedo,
     hasElements,
     handlePrint,
     state.selectedElementId,
@@ -1284,6 +1325,9 @@ function AppContent({ initialRegistry }: AppProps) {
 
               {/* Tool-specific overlays (ghost segment, ghost circle, etc.) */}
               {tool.overlayElements}
+
+              {/* Redo animation overlay */}
+              {redoAnim.animationOverlay}
 
               {/* Snap feedback */}
               <SnapFeedback snapResult={tool.snapResult} viewport={viewport} />

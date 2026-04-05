@@ -11,6 +11,7 @@ export interface Point {
   readonly label: string; // "A", "B", ... "Z", "AA", "AB", ...
   readonly locked: boolean;
   readonly transformOperation?: string; // groups elements by transformation (e.g. "reflection-1698765432")
+  readonly transformSourceId?: string; // original point ID this was transformed from (for Redo animation)
   readonly transformGroupIndex?: number; // copy index within a frieze
 }
 
