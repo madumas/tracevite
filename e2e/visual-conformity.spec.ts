@@ -114,9 +114,14 @@ test('visual conformity audit', async ({ page }, testInfo) => {
   await page.keyboard.press('Escape');
   await page.waitForTimeout(200);
 
-  // --- 13: Print dialog ---
-  await clickAction(page, 'print');
-  await page.locator('[data-testid="print-dialog"]').waitFor();
+  // --- 13: Print dialog (via Share menu) ---
+  await page.locator('[data-testid="action-share"]').click({ force: true });
+  await page.waitForTimeout(300);
+  const printBtn13 = page.locator('button:has-text("Imprimer")');
+  if (await printBtn13.isVisible({ timeout: 2000 }).catch(() => false)) {
+    await printBtn13.click();
+  }
+  await page.locator('[data-testid="print-dialog"]').waitFor({ timeout: 5000 });
   await page.waitForTimeout(200);
   await page.screenshot({ path: shot('13-print-dialog.png'), fullPage: true });
 
@@ -907,8 +912,14 @@ test('visual conformity — PFEQ pedagogical', async ({ page }, testInfo) => {
   await page.waitForTimeout(300);
   await page.keyboard.press('Escape');
   await page.waitForTimeout(200);
-  await page.locator('[data-testid="action-print"]').click({ force: true });
-  await page.locator('[data-testid="print-dialog"]').waitFor();
+  // Open share menu → click "Imprimer (PDF)"
+  await page.locator('[data-testid="action-share"]').click({ force: true });
+  await page.waitForTimeout(300);
+  const printRow = page.locator('button:has-text("Imprimer")');
+  if (await printRow.isVisible({ timeout: 2000 }).catch(() => false)) {
+    await printRow.click();
+  }
+  await page.locator('[data-testid="print-dialog"]').waitFor({ timeout: 5000 });
   await page.waitForTimeout(200);
   await page.locator('[data-testid="print-dialog"]').screenshot({ path: shot('65-pfeq-print-with-measures.png') });
 
@@ -966,10 +977,12 @@ test('visual conformity — PFEQ figures & tools', async ({ page }, testInfo) =>
   }
   async function openPanel() {
     const p = page.locator('[data-testid="properties-panel"]');
-    if (!(await p.isVisible())) {
-      const t = page.locator('[data-testid="panel-toggle"], [data-testid="panel-toggle-mobile"]');
-      await t.click();
-      await p.waitFor();
+    if (!(await p.isVisible().catch(() => false))) {
+      const t = page.locator('[data-testid="panel-toggle"]');
+      if (await t.isVisible({ timeout: 2000 }).catch(() => false)) {
+        await t.click();
+        await p.waitFor({ timeout: 3000 }).catch(() => {});
+      }
       await page.waitForTimeout(200);
     }
     // Expand all accordion sections

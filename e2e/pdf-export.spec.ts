@@ -16,8 +16,10 @@ test.describe('PDF export', () => {
     await clickCanvas(page, 100, 50);
     await expectSegmentCount(page, 1);
 
-    // Open print dialog
-    await clickAction(page, 'print');
+    // Open print dialog via share menu
+    await page.locator('[data-testid="action-share"]').click({ force: true });
+    await page.waitForTimeout(300);
+    await page.locator('button:has-text("Imprimer")').click();
     await page.waitForSelector('[data-testid="print-dialog"]');
 
     // Intercept download and click PDF export
