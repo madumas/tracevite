@@ -10,6 +10,7 @@ interface TextBoxEditorProps {
   readonly initialText: string;
   readonly targetRect: DOMRect; // bounding rect of the SVG <rect> element
   readonly fontSize: number; // px, matching the SVG text size
+  readonly paddingPx: number; // px, matching the SVG rect internal padding
   readonly onCommit: (text: string) => void;
   readonly onCancel: () => void;
 }
@@ -18,6 +19,7 @@ export function TextBoxEditor({
   initialText,
   targetRect,
   fontSize,
+  paddingPx,
   onCommit,
   onCancel,
 }: TextBoxEditorProps) {
@@ -58,9 +60,9 @@ export function TextBoxEditor({
         position: 'fixed',
         left: targetRect.left,
         top: targetRect.top,
-        width: Math.max(200, targetRect.width + 4),
-        minHeight: Math.max(44, targetRect.height + 4),
-        padding: '2px 4px',
+        width: Math.max(200, targetRect.width),
+        minHeight: Math.max(44, targetRect.height),
+        padding: paddingPx,
         fontSize,
         lineHeight: 1.4,
         fontFamily: 'system-ui, sans-serif',

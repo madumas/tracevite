@@ -1312,10 +1312,12 @@ function AppContent({ initialRegistry }: AppProps) {
               const pxPerMm = viewport.zoom * CSS_PX_PER_MM;
               const fontSizeMm = Math.max(MIN_CANVAS_FONT_PX / pxPerMm, 3.5) * effectiveFontScale;
               const fontSizePx = fontSizeMm * pxPerMm;
+              const paddingPx = 3 * pxPerMm; // matches TextBoxLayer paddingPx
               return (
                 <TextBoxEditor
                   initialText={tb.text}
                   targetRect={rect}
+                  paddingPx={paddingPx}
                   fontSize={fontSizePx}
                   onCommit={(text) => tool.textCommitEdit(text)}
                   onCancel={() => tool.textCancelEdit()}
