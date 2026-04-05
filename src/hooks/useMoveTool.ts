@@ -31,6 +31,7 @@ export function useMoveTool({
   const [phase, setPhase] = useState<MovePhase>('idle');
   const [pickedPointId, setPickedPointId] = useState<string | null>(null);
   const [pickedTextBoxId, setPickedTextBoxId] = useState<string | null>(null);
+  const [pickOffset, setPickOffset] = useState<{ dx: number; dy: number }>({ dx: 0, dy: 0 });
   const [_originalPosition, setOriginalPosition] = useState<{ x: number; y: number } | null>(null);
   const [cursorMm, setCursorMm] = useState<{ x: number; y: number } | null>(null);
   const [snapResult, setSnapResult] = useState<SnapResult | null>(null);
@@ -75,6 +76,7 @@ export function useMoveTool({
           const tb = state.textBoxes.find((t) => t.id === tbId);
           if (!tb) return;
           setPickedTextBoxId(tbId);
+          setPickOffset({ dx: mmPos.x - tb.x, dy: mmPos.y - tb.y });
           setOriginalPosition({ x: tb.x, y: tb.y });
           setPhase('textbox_picked');
           return;
@@ -86,10 +88,9 @@ export function useMoveTool({
         dispatch({ type: 'MOVE_POINT', pointId: pickedPointId, x: target.x, y: target.y });
         reset();
       } else if (phase === 'textbox_picked' && pickedTextBoxId) {
-        // Put down the textbox (snap to grid)
-        const snap = findSnap(mmPos, state, tolerances);
-        const target = snap.snappedPosition;
-        dispatch({ type: 'MOVE_TEXT_BOX', id: pickedTextBoxId, x: target.x, y: target.y });
+        // Put down the textbox — apply pick offset so it drops where user expects
+        const adjusted = { x: mmPos.x - pickOffset.dx, y: mmPos.y - pickOffset.dy };
+        dispatch({ type: 'MOVE_TEXT_BOX', id: pickedTextBoxId, x: adjusted.x, y: adjusted.y });
         reset();
       }
     },
@@ -143,13 +144,16 @@ export function useMoveTool({
         viewport,
       });
     }
-    if (phase === 'textbox_picked' && pickedTextBoxId && cursorMm) {
-      const snappedPos = snapResult?.snappedPosition ?? cursorMm;
+    if (phase === 'textbox_picked' && pickedTextBoxId) {
       const tb = state.textBoxes.find((t) => t.id === pickedTextBoxId);
       if (!tb) return null;
+      // Apply pick offset so ghost stays under cursor at grab point
+      const pos = cursorMm
+        ? { x: cursorMm.x - pickOffset.dx, y: cursorMm.y - pickOffset.dy }
+        : { x: tb.x, y: tb.y }; // before first move: show at original position
       const pxPerMm = viewport.zoom * CSS_PX_PER_MM;
-      const sx = (snappedPos.x - viewport.panX) * pxPerMm;
-      const sy = (snappedPos.y - viewport.panY) * pxPerMm;
+      const sx = (pos.x - viewport.panX) * pxPerMm;
+      const sy = (pos.y - viewport.panY) * pxPerMm;
       const lines = (tb.text || '…').split('\n');
       // Match TextBoxLayer sizing exactly
       const fontSizeMm = Math.max(13 / pxPerMm, 3.5);
