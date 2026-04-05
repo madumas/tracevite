@@ -55,7 +55,6 @@ import {
 } from '@/config/messages';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
 
-import { ConsigneBanner } from '@/components/ConsigneBanner';
 import { SlotManager } from '@/components/SlotManager';
 import { useSlotManager } from '@/hooks/useSlotManager';
 import { PrintDialog } from '@/components/PrintDialog';
@@ -1174,14 +1173,6 @@ function AppContent({ initialRegistry }: AppProps) {
           }}
           data-testid="canvas-container"
         >
-          {/* Consigne banner — overlays top of canvas */}
-          {state.consigne && !consigneDismissed && (
-            <ConsigneBanner
-              consigne={state.consigne}
-              onDismiss={() => setConsigneDismissed(true)}
-            />
-          )}
-
           <CanvasColorsProvider value={canvasColors}>
             <svg
               width={svgWidth}
@@ -1665,12 +1656,6 @@ function AppContent({ initialRegistry }: AppProps) {
           }
         }}
         demoMode={demoMode}
-        snapEnabled={state.snapEnabled}
-        onSnapToggle={handleSnapToggle}
-        gridSizeMm={state.gridSizeMm}
-        onGridChange={handleGridChange}
-        displayUnit={state.displayUnit}
-        onUnitChange={handleUnitChange}
       />
 
       {showPrintDialog && (
@@ -1813,6 +1798,12 @@ function AppContent({ initialRegistry }: AppProps) {
           onClutterThresholdChange={(v) =>
             dispatch({ type: 'SET_CLUTTER_THRESHOLD', clutterThreshold: v })
           }
+          snapEnabled={state.snapEnabled}
+          onSnapToggle={handleSnapToggle}
+          gridSizeMm={state.gridSizeMm}
+          onGridChange={handleGridChange}
+          displayUnit={state.displayUnit}
+          onUnitChange={handleUnitChange}
           displayMode={state.displayMode}
           onClose={() => setShowSettings(false)}
         />

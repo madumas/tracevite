@@ -2,7 +2,7 @@ import { useState, useCallback, useMemo, createElement } from 'react';
 import type { ConstructionState, ViewportState, SnapResult } from '@/model/types';
 import type { ConstructionAction } from '@/model/reducer';
 import type { ToolHookResult } from './types';
-import { hitTestPoint } from '@/engine/hit-test';
+import { hitTestPoint, hitTestTextBox } from '@/engine/hit-test';
 import { findSnap, DEFAULT_TOLERANCES, scaleTolerances } from '@/engine/snap';
 import { TOLERANCE_PROFILES } from '@/config/accessibility';
 import { STATUS_MOVE_IDLE, STATUS_MOVE_PICKED } from '@/config/messages';
@@ -11,7 +11,7 @@ const STATUS_MOVE_LOCKED =
   'Déplacer — Ce point est verrouillé. Déverrouille-le d\u2019abord (outil Sélectionner).';
 import { MovePreview } from '@/components/MovePreview';
 
-type MovePhase = 'idle' | 'point_picked';
+type MovePhase = 'idle' | 'point_picked' | 'textbox_picked';
 
 interface UseMoveToolOptions {
   state: ConstructionState;
@@ -28,6 +28,7 @@ export function useMoveTool({
 }: UseMoveToolOptions): ToolHookResult {
   const [phase, setPhase] = useState<MovePhase>('idle');
   const [pickedPointId, setPickedPointId] = useState<string | null>(null);
+  const [pickedTextBoxId, setPickedTextBoxId] = useState<string | null>(null);
   const [_originalPosition, setOriginalPosition] = useState<{ x: number; y: number } | null>(null);
   const [cursorMm, setCursorMm] = useState<{ x: number; y: number } | null>(null);
   const [snapResult, setSnapResult] = useState<SnapResult | null>(null);
@@ -41,6 +42,7 @@ export function useMoveTool({
   const reset = useCallback(() => {
     setPhase('idle');
     setPickedPointId(null);
+    setPickedTextBoxId(null);
     setOriginalPosition(null);
     setCursorMm(null);
     setSnapResult(null);
@@ -52,25 +54,40 @@ export function useMoveTool({
       if (phase === 'idle') {
         // Try to pick up a point
         const pointId = hitTestPoint(mmPos, state.points);
-        if (!pointId) return;
-
-        const point = state.points.find((p) => p.id === pointId);
-        if (!point) return;
-        if (point.locked) {
-          setLockedHint(true);
-          setTimeout(() => setLockedHint(false), 3000);
+        if (pointId) {
+          const point = state.points.find((p) => p.id === pointId);
+          if (!point) return;
+          if (point.locked) {
+            setLockedHint(true);
+            setTimeout(() => setLockedHint(false), 3000);
+            return;
+          }
+          setPickedPointId(pointId);
+          setOriginalPosition({ x: point.x, y: point.y });
+          setPhase('point_picked');
           return;
         }
-
-        setPickedPointId(pointId);
-        setOriginalPosition({ x: point.x, y: point.y });
-        setPhase('point_picked');
+        // Try to pick up a textbox
+        const tbId = hitTestTextBox(mmPos, state.textBoxes);
+        if (tbId) {
+          const tb = state.textBoxes.find((t) => t.id === tbId);
+          if (!tb) return;
+          setPickedTextBoxId(tbId);
+          setOriginalPosition({ x: tb.x, y: tb.y });
+          setPhase('textbox_picked');
+          return;
+        }
       } else if (phase === 'point_picked' && pickedPointId) {
         // Put down the point
         const snap = findSnap(mmPos, state, tolerances, [pickedPointId]);
         const target = snap.snappedPosition;
-
         dispatch({ type: 'MOVE_POINT', pointId: pickedPointId, x: target.x, y: target.y });
+        reset();
+      } else if (phase === 'textbox_picked' && pickedTextBoxId) {
+        // Put down the textbox (snap to grid)
+        const snap = findSnap(mmPos, state, tolerances);
+        const target = snap.snappedPosition;
+        dispatch({ type: 'MOVE_TEXT_BOX', id: pickedTextBoxId, x: target.x, y: target.y });
         reset();
       }
     },
@@ -104,7 +121,9 @@ export function useMoveTool({
     ? STATUS_MOVE_LOCKED
     : phase === 'idle'
       ? STATUS_MOVE_IDLE
-      : STATUS_MOVE_PICKED(pickedLabel);
+      : phase === 'textbox_picked'
+        ? 'Déplacer — Clique pour déposer la zone de texte'
+        : STATUS_MOVE_PICKED(pickedLabel);
 
   // Overlay: show the point at cursor position during pick-up
   const overlayElements = useMemo(() => {
@@ -132,7 +151,9 @@ export function useMoveTool({
     statusMessage,
     snapResult: phase === 'point_picked' ? snapResult : null,
     overlayElements,
-    isActiveGesture: phase === 'point_picked' && !!pickedPointId && !!cursorMm,
+    isActiveGesture:
+      (phase === 'point_picked' && !!pickedPointId && !!cursorMm) ||
+      (phase === 'textbox_picked' && !!pickedTextBoxId),
     activePointId: phase === 'point_picked' ? pickedPointId : null,
   };
 }

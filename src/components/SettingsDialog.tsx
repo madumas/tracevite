@@ -4,7 +4,14 @@
  */
 
 import { memo, useEffect, useState } from 'react';
-import type { ToleranceProfile, ChainTimeout, FontScale, SoundMode } from '@/model/types';
+import type {
+  ToleranceProfile,
+  ChainTimeout,
+  FontScale,
+  SoundMode,
+  GridSize,
+  DisplayUnit,
+} from '@/model/types';
 import {
   UI_PRIMARY,
   UI_SURFACE,
@@ -39,6 +46,12 @@ interface SettingsDialogProps {
   readonly onAutoIntersectionChange: (v: boolean) => void;
   readonly clutterThreshold: number;
   readonly onClutterThresholdChange: (v: number) => void;
+  readonly snapEnabled: boolean;
+  readonly onSnapToggle: () => void;
+  readonly gridSizeMm: GridSize;
+  readonly onGridChange: (size: GridSize) => void;
+  readonly displayUnit: DisplayUnit;
+  readonly onUnitChange: (unit: DisplayUnit) => void;
   readonly displayMode: import('@/model/types').DisplayMode;
   readonly onClose: () => void;
 }
@@ -106,6 +119,12 @@ export const SettingsDialog = memo(function SettingsDialog({
   onAutoIntersectionChange,
   clutterThreshold,
   onClutterThresholdChange,
+  snapEnabled,
+  onSnapToggle,
+  gridSizeMm,
+  onGridChange,
+  displayUnit,
+  onUnitChange,
   displayMode,
   onClose,
 }: SettingsDialogProps) {
@@ -160,18 +179,27 @@ export const SettingsDialog = memo(function SettingsDialog({
             onChange={(e) => {
               const v = e.target.value;
               if (v === 'standard') {
+                if (!snapEnabled) onSnapToggle();
+                onGridChange(5);
+                onUnitChange('cm');
                 onToleranceChange('default');
                 onFontScaleChange(1);
                 onChainTimeoutChange(8000);
                 onSoundModeChange('reduced');
                 setActiveProfile('standard');
               } else if (v === 'accrue') {
+                if (!snapEnabled) onSnapToggle();
+                onGridChange(10);
+                onUnitChange('cm');
                 onToleranceChange('large');
                 onFontScaleChange(1.25);
                 onChainTimeoutChange(8000);
                 onSoundModeChange('reduced');
                 setActiveProfile('accrue');
               } else if (v === 'maximale') {
+                if (!snapEnabled) onSnapToggle();
+                onGridChange(20);
+                onUnitChange('cm');
                 onToleranceChange('very_large');
                 onFontScaleChange(1.5);
                 onChainTimeoutChange(15000);
@@ -401,6 +429,47 @@ export const SettingsDialog = memo(function SettingsDialog({
               </div>
             )}
 
+            {/* Grid size */}
+            <div style={rowStyle}>
+              <span>Taille de la grille</span>
+              <select
+                value={gridSizeMm}
+                onChange={(e) => onGridChange(Number(e.target.value) as GridSize)}
+                style={selectStyle}
+                disabled={prefs.lockedSettings.includes('gridSizeMm')}
+              >
+                <option value={5}>5 mm</option>
+                <option value={10}>1 cm</option>
+                <option value={20}>2 cm</option>
+              </select>
+            </div>
+
+            {/* Snap toggle */}
+            <div style={rowStyle}>
+              <span>Accrocher à la grille</span>
+              <input
+                type="checkbox"
+                checked={snapEnabled}
+                onChange={() => onSnapToggle()}
+                disabled={prefs.lockedSettings.includes('snapEnabled')}
+                style={{ width: 20, height: 20, cursor: 'pointer', minWidth: 44, minHeight: 44 }}
+              />
+            </div>
+
+            {/* Display unit */}
+            <div style={rowStyle}>
+              <span>Unité d'affichage</span>
+              <select
+                value={displayUnit}
+                onChange={(e) => onUnitChange(e.target.value as DisplayUnit)}
+                style={selectStyle}
+                disabled={prefs.lockedSettings.includes('displayUnit')}
+              >
+                <option value="cm">Centimètres (cm)</option>
+                <option value="mm">Millimètres (mm)</option>
+              </select>
+            </div>
+
             {/* Tolerance profile */}
             <div style={rowStyle}>
               <span>Tolérance de l'aimant</span>
@@ -521,6 +590,9 @@ export const SettingsDialog = memo(function SettingsDialog({
         <button
           onClick={() => {
             const locked = prefs.lockedSettings;
+            if (!locked.includes('snapEnabled') && !snapEnabled) onSnapToggle();
+            if (!locked.includes('gridSizeMm')) onGridChange(5);
+            if (!locked.includes('displayUnit')) onUnitChange('cm');
             if (!locked.includes('toleranceProfile')) onToleranceChange('default');
             if (!locked.includes('chainTimeoutMs')) onChainTimeoutChange(8000);
             onFontScaleChange(1);

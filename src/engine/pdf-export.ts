@@ -345,6 +345,18 @@ export function generatePDF(state: ConstructionState, options: PdfOptions): jsPD
     doc.text(point.label, tx(point.x) + 3, ty(point.y) - 3);
   }
 
+  // ── Text boxes ────────────────────────────────────
+  doc.setFontSize(10);
+  doc.setTextColor(0);
+  for (const tb of state.textBoxes) {
+    if (!tb.text) continue;
+    if (!isInPrintableArea(tb.x + offsetX, tb.y + offsetY, landscape, pageFormat)) continue;
+    const lines = tb.text.split('\n');
+    for (let i = 0; i < lines.length; i++) {
+      doc.text(lines[i]!, tx(tb.x), ty(tb.y) + i * 4 + 3);
+    }
+  }
+
   // ── Witness segment (50mm, bottom-right) ──────────
   const ws = witnessSegmentCoords(landscape, pageFormat);
   doc.setDrawColor(0);
