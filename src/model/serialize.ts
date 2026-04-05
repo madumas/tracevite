@@ -12,6 +12,7 @@ interface SerializedConstruction {
   points: ConstructionState['points'];
   segments: ConstructionState['segments'];
   circles: ConstructionState['circles'];
+  textBoxes?: ConstructionState['textBoxes'];
   settings: {
     gridSizeMm: ConstructionState['gridSizeMm'];
     snapEnabled: ConstructionState['snapEnabled'];
@@ -39,6 +40,7 @@ export function serializeState(state: ConstructionState): string {
     points: state.points,
     segments: state.segments,
     circles: state.circles,
+    textBoxes: state.textBoxes.length > 0 ? state.textBoxes : undefined,
     settings: {
       gridSizeMm: state.gridSizeMm,
       snapEnabled: state.snapEnabled,
@@ -103,6 +105,9 @@ export function deserializeState(json: string): ConstructionState {
     circles: Array.isArray(obj['circles'])
       ? (obj['circles'] as ConstructionState['circles'])
       : defaults.circles,
+    textBoxes: Array.isArray(obj['textBoxes'])
+      ? (obj['textBoxes'] as ConstructionState['textBoxes'])
+      : [],
     gridSizeMm: isValidGridSize(settings['gridSizeMm'])
       ? settings['gridSizeMm']
       : defaults.gridSizeMm,

@@ -19,6 +19,7 @@ import { useFriezeTool } from './useFriezeTool';
 import { useSymmetryTool } from './useSymmetryTool';
 import { useRotationTool } from './useRotationTool';
 import { useHomothetyTool } from './useHomothetyTool';
+import { useTextTool } from './useTextTool';
 import { useSelectTool } from './useSelectTool';
 
 interface UseActiveToolOptions {
@@ -121,6 +122,8 @@ export function useActiveTool({
     animateTransformations,
   });
 
+  const textTool = useTextTool({ state, dispatch, isActive: active === 'text' });
+
   switch (state.activeTool) {
     case 'select':
       return selectTool;
@@ -152,5 +155,7 @@ export function useActiveTool({
       return rotationTool;
     case 'homothety':
       return homothetyTool;
+    case 'text':
+      return textTool;
   }
 }

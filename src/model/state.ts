@@ -11,6 +11,7 @@ import type {
   ToolType,
   Point,
   Segment,
+  TextBox,
 } from './types';
 import { generateId, nextLabel } from './id';
 import { distance } from '@/engine/geometry';
@@ -22,6 +23,7 @@ export function createInitialState(): ConstructionState {
     points: [],
     segments: [],
     circles: [],
+    textBoxes: [],
     gridSizeMm: typeof window !== 'undefined' && window.innerWidth < 900 ? 10 : 5,
     snapEnabled: true,
     activeTool: 'segment',
@@ -492,4 +494,43 @@ export function togglePointLock(state: ConstructionState, pointId: string): Cons
     ...state,
     points: state.points.map((p) => (p.id === pointId ? { ...p, locked: !p.locked } : p)),
   };
+}
+
+// ── TextBox CRUD (pushed to undo) ─────────────────────────
+
+export function createTextBox(
+  state: ConstructionState,
+  x: number,
+  y: number,
+): { state: ConstructionState; textBoxId: string } {
+  const id = generateId();
+  const tb: TextBox = { id, x, y, text: '' };
+  return { state: { ...state, textBoxes: [...state.textBoxes, tb] }, textBoxId: id };
+}
+
+export function updateTextBox(
+  state: ConstructionState,
+  id: string,
+  text: string,
+): ConstructionState {
+  return {
+    ...state,
+    textBoxes: state.textBoxes.map((tb) => (tb.id === id ? { ...tb, text } : tb)),
+  };
+}
+
+export function moveTextBox(
+  state: ConstructionState,
+  id: string,
+  x: number,
+  y: number,
+): ConstructionState {
+  return {
+    ...state,
+    textBoxes: state.textBoxes.map((tb) => (tb.id === id ? { ...tb, x, y } : tb)),
+  };
+}
+
+export function deleteTextBox(state: ConstructionState, id: string): ConstructionState {
+  return { ...state, textBoxes: state.textBoxes.filter((tb) => tb.id !== id) };
 }

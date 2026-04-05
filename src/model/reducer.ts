@@ -92,6 +92,10 @@ export type ConstructionAction =
   | { type: 'TOGGLE_POINT_LOCK'; pointId: string }
   | { type: 'SET_HIDE_PROPERTIES'; hide: boolean }
   | { type: 'SET_CONSIGNE'; consigne: string | null }
+  | { type: 'CREATE_TEXT_BOX'; x: number; y: number }
+  | { type: 'UPDATE_TEXT_BOX'; id: string; text: string }
+  | { type: 'MOVE_TEXT_BOX'; id: string; x: number; y: number }
+  | { type: 'DELETE_TEXT_BOX'; id: string }
   | { type: 'SET_TOLERANCE_PROFILE'; toleranceProfile: ToleranceProfile }
   | { type: 'SET_CHAIN_TIMEOUT'; chainTimeoutMs: ChainTimeout }
   | { type: 'SET_FONT_SCALE'; fontScale: FontScale }
@@ -439,6 +443,26 @@ export function reduce(state: ReducerState, action: ConstructionAction): Reducer
 
     case 'TOGGLE_POINT_LOCK': {
       const newState = State.togglePointLock(current, action.pointId);
+      return { undoManager: Undo.pushState(undoManager, newState) };
+    }
+
+    case 'CREATE_TEXT_BOX': {
+      const result = State.createTextBox(current, action.x, action.y);
+      return { undoManager: Undo.pushState(undoManager, result.state) };
+    }
+
+    case 'UPDATE_TEXT_BOX': {
+      const newState = State.updateTextBox(current, action.id, action.text);
+      return { undoManager: Undo.pushState(undoManager, newState) };
+    }
+
+    case 'MOVE_TEXT_BOX': {
+      const newState = State.moveTextBox(current, action.id, action.x, action.y);
+      return { undoManager: Undo.pushState(undoManager, newState) };
+    }
+
+    case 'DELETE_TEXT_BOX': {
+      const newState = State.deleteTextBox(current, action.id);
       return { undoManager: Undo.pushState(undoManager, newState) };
     }
 

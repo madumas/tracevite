@@ -33,6 +33,14 @@ export interface Circle {
   readonly radiusMm: number;
 }
 
+/** A free-form text box placed on the canvas. */
+export interface TextBox {
+  readonly id: string;
+  readonly x: number; // mm, top-left
+  readonly y: number; // mm
+  readonly text: string;
+}
+
 /** Angle classification per PFEQ vocabulary. */
 export type AngleClassification = 'aigu' | 'droit' | 'obtus' | 'plat' | 'reflex';
 
@@ -84,7 +92,8 @@ export type ToolType =
   | 'frieze'
   | 'symmetry'
   | 'rotation'
-  | 'homothety';
+  | 'homothety'
+  | 'text';
 
 /** Selectable grid sizes in mm. */
 export type GridSize = 5 | 10 | 20;
@@ -112,6 +121,7 @@ export interface ConstructionState {
   readonly points: readonly Point[];
   readonly segments: readonly Segment[];
   readonly circles: readonly Circle[];
+  readonly textBoxes: readonly TextBox[];
   readonly gridSizeMm: GridSize;
   readonly snapEnabled: boolean;
   readonly activeTool: ToolType;

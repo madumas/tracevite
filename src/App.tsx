@@ -106,6 +106,7 @@ const TOOL_DISPLAY_NAMES: Record<ToolType, string> = {
   symmetry: 'Symétrie',
   rotation: 'Rotation',
   homothety: 'Agrandir/Réduire',
+  text: 'Texte',
 };
 
 import type { SlotRegistry } from '@/model/slots';
@@ -148,6 +149,7 @@ function getCanvasCursor(
     case 'symmetry':
     case 'rotation':
     case 'homothety':
+    case 'text':
       return 'crosshair';
     case 'move':
       return isActiveGesture ? 'grabbing' : 'grab';
