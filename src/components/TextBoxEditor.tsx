@@ -9,11 +9,18 @@ import { UI_PRIMARY } from '@/config/theme';
 interface TextBoxEditorProps {
   readonly initialText: string;
   readonly targetRect: DOMRect; // bounding rect of the SVG <rect> element
+  readonly fontSize: number; // px, matching the SVG text size
   readonly onCommit: (text: string) => void;
   readonly onCancel: () => void;
 }
 
-export function TextBoxEditor({ initialText, targetRect, onCommit, onCancel }: TextBoxEditorProps) {
+export function TextBoxEditor({
+  initialText,
+  targetRect,
+  fontSize,
+  onCommit,
+  onCancel,
+}: TextBoxEditorProps) {
   const [text, setText] = useState(initialText);
   const ref = useRef<HTMLTextAreaElement>(null);
 
@@ -54,7 +61,7 @@ export function TextBoxEditor({ initialText, targetRect, onCommit, onCancel }: T
         width: Math.max(200, targetRect.width + 20),
         minHeight: Math.max(44, targetRect.height + 10),
         padding: '4px 6px',
-        fontSize: 13,
+        fontSize,
         fontFamily: 'system-ui, sans-serif',
         border: `2px solid ${UI_PRIMARY}`,
         borderRadius: 4,

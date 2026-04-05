@@ -11,6 +11,8 @@ import { ContextActionBar } from '@/components/ContextActionBar';
 import { AngleLayer } from '@/components/AngleLayer';
 import { TextBoxLayer } from '@/components/TextBoxLayer';
 import { TextBoxEditor } from '@/components/TextBoxEditor';
+import { hitTestTextBox } from '@/engine/hit-test';
+import { MIN_CANVAS_FONT_PX } from '@/config/accessibility';
 import { useActiveTool } from '@/hooks/useActiveTool';
 import { useSelection } from '@/hooks/useSelection';
 import { usePointerInteraction } from '@/hooks/usePointerInteraction';
@@ -352,6 +354,14 @@ function AppContent({ initialRegistry }: AppProps) {
       if (!tool.isIdle || toolNeedsElementClick) {
         tool.handleClick(mmPos);
       } else {
+        // Select/Text tool: clicking a textbox opens the inline editor
+        if (state.activeTool === 'select' || state.activeTool === 'text') {
+          const tbId = hitTestTextBox(mmPos, state.textBoxes);
+          if (tbId) {
+            tool.textStartEditing(tbId);
+            return;
+          }
+        }
         const handled = selection.trySelect(mmPos);
         if (!handled) {
           tool.handleClick(mmPos);
@@ -1298,10 +1308,15 @@ function AppContent({ initialRegistry }: AppProps) {
               );
               if (!tb || !svgEl) return null;
               const rect = svgEl.getBoundingClientRect();
+              // Match SVG text font size: fontSizeMm * pxPerMm
+              const pxPerMm = viewport.zoom * CSS_PX_PER_MM;
+              const fontSizeMm = Math.max(MIN_CANVAS_FONT_PX / pxPerMm, 3.5) * effectiveFontScale;
+              const fontSizePx = fontSizeMm * pxPerMm;
               return (
                 <TextBoxEditor
                   initialText={tb.text}
                   targetRect={rect}
+                  fontSize={fontSizePx}
                   onCommit={(text) => tool.textCommitEdit(text)}
                   onCancel={() => tool.textCancelEdit()}
                 />
