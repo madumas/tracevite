@@ -18,7 +18,7 @@ describe('share encoding/decoding', () => {
     state = { ...state, consigne: 'Mesure les angles de ce triangle.' };
 
     const url = generateShareUrl(state);
-    const search = new URL(url).search;
+    const search = new URL(url).hash;
     const result = parseShareParam(search);
 
     expect(result).not.toBeNull();
@@ -39,7 +39,7 @@ describe('share encoding/decoding', () => {
     state = { ...state, consigne: 'Trace un carré de 4 cm.' };
 
     const url = generateShareUrl(state);
-    const result = parseShareParam(new URL(url).search);
+    const result = parseShareParam(new URL(url).hash);
 
     expect(result).not.toBeNull();
     expect(result!.points).toHaveLength(0);
@@ -53,7 +53,7 @@ describe('share encoding/decoding', () => {
     state = { ...a.state, points: a.state.points.map((p) => ({ ...p, locked: true })) };
 
     const url = generateShareUrl(state);
-    const result = parseShareParam(new URL(url).search);
+    const result = parseShareParam(new URL(url).hash);
 
     expect(result!.points[0]!.locked).toBe(true);
   });
@@ -63,7 +63,7 @@ describe('share encoding/decoding', () => {
     state = { ...state, displayMode: 'complet', gridSizeMm: 10 };
 
     const url = generateShareUrl(state);
-    const result = parseShareParam(new URL(url).search);
+    const result = parseShareParam(new URL(url).hash);
 
     expect(result!.displayMode).toBe('complet');
     expect(result!.gridSizeMm).toBe(10);
@@ -72,17 +72,17 @@ describe('share encoding/decoding', () => {
   it('preserves segment color override', () => {
     const state = createInitialState();
     const url = generateShareUrl(state, '#2E7D32');
-    const result = parseShareParam(new URL(url).search);
+    const result = parseShareParam(new URL(url).hash);
     expect(result!.segmentColor).toBe('#2E7D32');
   });
 
   it('returns null for missing param', () => {
     expect(parseShareParam('')).toBeNull();
-    expect(parseShareParam('?foo=bar')).toBeNull();
+    expect(parseShareParam('#foo=bar')).toBeNull();
   });
 
   it('returns null for corrupted data', () => {
-    expect(parseShareParam('?s=garbage')).toBeNull();
+    expect(parseShareParam('#s=garbage')).toBeNull();
   });
 
   it('generates URL under 2000 chars for simple construction', () => {

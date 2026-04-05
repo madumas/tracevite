@@ -23,9 +23,9 @@ import { createInitialState } from '@/model/state';
 import { parseShareParam, type SharedConstruction } from '@/engine/share';
 
 function parseUrlParams(): { shared: SharedConstruction | null } {
-  const shared = parseShareParam(window.location.search);
+  const shared = parseShareParam(window.location.hash);
 
-  if (shared || new URLSearchParams(window.location.search).toString()) {
+  if (shared) {
     window.history.replaceState(null, '', window.location.pathname);
   }
 

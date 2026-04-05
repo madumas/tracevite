@@ -60,8 +60,7 @@ export function generateShareUrl(state: ConstructionState, segmentColor?: string
   }
 
   const compressed = compressToEncodedURIComponent(JSON.stringify(payload));
-  url.searchParams.set('s', compressed);
-  return url.toString();
+  return url.toString() + '#s=' + compressed;
 }
 
 // === Decoding ===
@@ -76,10 +75,10 @@ export interface SharedConstruction {
   segmentColor?: string;
 }
 
-export function parseShareParam(search: string): SharedConstruction | null {
-  const params = new URLSearchParams(search);
-  const s = params.get('s');
-  if (s === null) return null;
+export function parseShareParam(hash: string): SharedConstruction | null {
+  if (!hash.startsWith('#s=')) return null;
+  const s = hash.slice(3); // strip '#s='
+  if (!s) return null;
 
   try {
     const json = decompressFromEncodedURIComponent(s);
