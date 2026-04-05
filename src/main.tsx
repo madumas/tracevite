@@ -12,8 +12,14 @@ if (
   navigator.serviceWorker?.getRegistrations().then((regs) => regs.forEach((r) => r.unregister()));
   caches.keys().then((keys) => keys.forEach((k) => caches.delete(k)));
 }
-import { migrateIfNeeded, loadSlotData } from '@/model/slot-persistence';
+import {
+  migrateIfNeeded,
+  loadSlotData,
+  saveSlotData,
+  saveRegistry,
+} from '@/model/slot-persistence';
 import type { SlotRegistry } from '@/model/slots';
+import { createSlot } from '@/model/slots';
 import type { ConstructionState } from '@/model/types';
 import type { UndoManager } from '@/model/undo';
 import { createUndoManager } from '@/model/undo';
@@ -48,7 +54,7 @@ async function boot() {
   let initialUndoManager: UndoManager = createUndoManager(initialState);
 
   if (urlParams.shared) {
-    // Shared construction from URL ?s= param
+    // Shared construction → create a new slot so existing work is preserved
     const s = urlParams.shared;
     initialState = {
       ...initialState,
@@ -60,6 +66,13 @@ async function boot() {
       gridSizeMm: s.gridSizeMm as 5 | 10 | 20,
     };
     initialUndoManager = createUndoManager(initialState);
+
+    const result = createSlot(registry, 'Construction partagée');
+    if (result) {
+      registry = result.registry;
+      await saveSlotData(result.slotId, initialState, initialUndoManager);
+      await saveRegistry(registry);
+    }
   } else if (registry.activeSlotId) {
     try {
       const slotData = await loadSlotData(registry.activeSlotId);

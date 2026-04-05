@@ -556,11 +556,19 @@ export function reduce(state: ReducerState, action: ConstructionAction): Reducer
       };
 
     // ── Undo/Redo ─────────────────────────────────────
-    case 'UNDO':
-      return { undoManager: Undo.undo(undoManager) };
+    case 'UNDO': {
+      const undone = Undo.undo(undoManager);
+      return {
+        undoManager: { ...undone, current: { ...undone.current, selectedElementId: null } },
+      };
+    }
 
-    case 'REDO':
-      return { undoManager: Undo.redo(undoManager) };
+    case 'REDO': {
+      const redone = Undo.redo(undoManager);
+      return {
+        undoManager: { ...redone, current: { ...redone.current, selectedElementId: null } },
+      };
+    }
 
     // ── Load / New ─────────────────────────────────────
     case 'LOAD_CONSTRUCTION':
