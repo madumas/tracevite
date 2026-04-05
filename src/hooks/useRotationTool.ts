@@ -44,7 +44,11 @@ export function useRotationTool({
   const [center, setCenter] = useState<{ x: number; y: number } | null>(null);
   const [angleDeg, setAngleDeg] = useState<number | null>(null);
   const [previewAngle, setPreviewAngle] = useState<number | null>(null);
+  const [clockwise, setClockwise] = useState(true);
   const [snapResult, setSnapResult] = useState<SnapResult | null>(null);
+
+  // Effective preview angle with direction sign
+  const effectivePreview = previewAngle != null ? (clockwise ? previewAngle : -previewAngle) : null;
 
   const anim = useTransformAnimation({
     viewport,
@@ -226,14 +230,14 @@ export function useRotationTool({
       );
 
       // Ghost preview when previewAngle is set (before confirmation)
-      if (phase === 'set_angle' && previewAngle != null) {
+      if (phase === 'set_angle' && effectivePreview != null) {
         const pointMap = new Map(state.points.map((p) => [p.id, p]));
         for (const seg of state.segments) {
           const start = pointMap.get(seg.startPointId);
           const end = pointMap.get(seg.endPointId);
           if (!start || !end) continue;
-          const r1 = rotatePoint(start, center, previewAngle);
-          const r2 = rotatePoint(end, center, previewAngle);
+          const r1 = rotatePoint(start, center, effectivePreview);
+          const r2 = rotatePoint(end, center, effectivePreview);
           elements.push(
             createElement('line', {
               key: `ghost-rot-${seg.id}`,
@@ -252,7 +256,7 @@ export function useRotationTool({
         }
         // Ghost points
         for (const pt of state.points) {
-          const rp = rotatePoint(pt, center, previewAngle);
+          const rp = rotatePoint(pt, center, effectivePreview);
           elements.push(
             createElement('circle', {
               key: `ghost-rot-pt-${pt.id}`,
@@ -268,7 +272,7 @@ export function useRotationTool({
       }
 
       // Arc preview when angle is defined (confirmed or previewing)
-      const arcAngle = phase === 'select_figure' ? angleDeg : previewAngle;
+      const arcAngle = phase === 'select_figure' ? angleDeg : effectivePreview;
       if (arcAngle != null) {
         const r = 20; // px
         const endRad = (arcAngle * Math.PI) / 180;
@@ -340,7 +344,7 @@ export function useRotationTool({
     }
 
     return elements.length > 0 ? elements : null;
-  }, [center, angleDeg, previewAngle, phase, viewport, state.points, state.segments]);
+  }, [center, angleDeg, effectivePreview, phase, viewport, state.points, state.segments]);
 
   const mergedOverlay = useMemo(() => {
     const base = overlayElements
@@ -357,47 +361,116 @@ export function useRotationTool({
     return all.length > 0 ? all : null;
   }, [overlayElements, anim.animationOverlay]);
 
+  // PFEQ preset labels
+  const presets: { deg: number; label: string }[] = useMemo(() => {
+    const isComplet = state.displayMode === 'complet';
+    return [
+      { deg: 90, label: isComplet ? 'Quart de tour (90°)' : 'Quart de tour' },
+      { deg: 180, label: isComplet ? 'Demi-tour (180°)' : 'Demi-tour' },
+      { deg: 270, label: isComplet ? 'Trois quarts de tour (270°)' : 'Trois quarts de tour' },
+      ...(isComplet
+        ? [
+            { deg: 60, label: '60°' },
+            { deg: 120, label: '120°' },
+          ]
+        : []),
+    ];
+  }, [state.displayMode]);
+
   // Floating angle input panel
   const toolPanel = useMemo(() => {
     if (phase !== 'set_angle' || !isActive) return undefined;
 
-    const presetRow = createElement(
+    // Direction segmented control
+    const directionControl = createElement(
       'div',
-      { style: { display: 'flex', gap: 8, flexWrap: 'wrap' as const } },
-      ...([60, 90, 120, 180, 270] as const).map((deg) =>
+      {
+        style: {
+          display: 'flex',
+          border: '1px solid #D1D8E0',
+          borderRadius: 6,
+          overflow: 'hidden' as const,
+          width: '100%',
+        },
+      },
+      createElement(
+        'button',
+        {
+          onClick: () => setClockwise(true),
+          style: {
+            flex: 1,
+            height: 44,
+            border: 'none',
+            background: clockwise ? '#0a7e7a' : '#F5F7FA',
+            color: clockwise ? 'white' : '#4A5568',
+            cursor: 'pointer',
+            fontWeight: 600,
+            fontSize: 13,
+          },
+        },
+        '↻ Horaire',
+      ),
+      createElement(
+        'button',
+        {
+          onClick: () => setClockwise(false),
+          style: {
+            flex: 1,
+            height: 44,
+            border: 'none',
+            borderLeft: '1px solid #D1D8E0',
+            background: !clockwise ? '#0a7e7a' : '#F5F7FA',
+            color: !clockwise ? 'white' : '#4A5568',
+            cursor: 'pointer',
+            fontWeight: 600,
+            fontSize: 13,
+          },
+        },
+        '↺ Antihoraire',
+      ),
+    );
+
+    // Preset list (vertical, full width)
+    const presetList = createElement(
+      'div',
+      { style: { display: 'flex', flexDirection: 'column' as const, gap: 4, width: '100%' } },
+      ...presets.map((p) =>
         createElement(
           'button',
           {
-            key: `preset-${deg}`,
-            onClick: () => setPreviewAngle(deg),
+            key: `preset-${p.deg}`,
+            onClick: () => setPreviewAngle(p.deg),
             style: {
-              minWidth: 44,
+              width: '100%',
               height: 44,
-              padding: '0 8px',
-              border: previewAngle === deg ? '2px solid #0a7e7a' : '1px solid #D1D8E0',
+              padding: '0 12px',
+              border: previewAngle === p.deg ? '2px solid #0a7e7a' : '1px solid #D1D8E0',
               borderRadius: 6,
-              background: previewAngle === deg ? '#E0F2F1' : '#F5F7FA',
+              background: previewAngle === p.deg ? '#E0F2F1' : '#F5F7FA',
               cursor: 'pointer',
-              fontWeight: previewAngle === deg ? 700 : 500,
+              fontWeight: previewAngle === p.deg ? 700 : 500,
               fontSize: 13,
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
             },
-            title: `${deg}°`,
           },
-          `${deg}°`,
+          createElement('span', null, p.label),
         ),
       ),
     );
 
+    // Free input row
     const inputRow = createElement(
       'div',
-      { style: { display: 'flex', gap: 8, alignItems: 'center' } },
+      { style: { display: 'flex', gap: 8, alignItems: 'center', width: '100%' } },
       createElement('input', {
         id: 'rotation-angle-input',
         type: 'text',
         inputMode: 'decimal',
-        placeholder: 'ex: 90',
+        placeholder: 'ex: 45',
         style: {
-          width: 70,
+          flex: 1,
           height: 44,
           border: '1px solid #D1D8E0',
           borderRadius: 6,
@@ -447,11 +520,11 @@ export function useRotationTool({
       previewAngle != null
         ? createElement(
             'div',
-            { style: { display: 'flex', gap: 8, marginTop: 4 } },
+            { style: { display: 'flex', gap: 8, marginTop: 4, width: '100%' } },
             createElement(
               'button',
               {
-                onClick: () => confirmAngle(previewAngle),
+                onClick: () => confirmAngle(clockwise ? previewAngle : -previewAngle),
                 style: {
                   minWidth: 44,
                   height: 44,
@@ -503,7 +576,7 @@ export function useRotationTool({
           flexDirection: 'column' as const,
           gap: 8,
           alignItems: 'center',
-          minWidth: 200,
+          minWidth: 220,
         },
       },
       createElement(
@@ -511,16 +584,12 @@ export function useRotationTool({
         { style: { fontWeight: 600, fontSize: 13, color: '#1A2433' } },
         'Angle de rotation',
       ),
-      presetRow,
+      directionControl,
+      presetList,
       inputRow,
-      createElement(
-        'div',
-        { style: { fontSize: 13, color: '#4A5568', marginTop: 2 } },
-        'Sens horaire ↻',
-      ),
       confirmRow,
     );
-  }, [phase, isActive, previewAngle, confirmAngle]);
+  }, [phase, isActive, previewAngle, clockwise, presets, confirmAngle]);
 
   return {
     handleClick,
