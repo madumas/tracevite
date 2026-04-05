@@ -6,6 +6,8 @@ import { hitTestPoint, hitTestTextBox } from '@/engine/hit-test';
 import { findSnap, DEFAULT_TOLERANCES, scaleTolerances } from '@/engine/snap';
 import { TOLERANCE_PROFILES } from '@/config/accessibility';
 import { STATUS_MOVE_IDLE, STATUS_MOVE_PICKED } from '@/config/messages';
+import { CSS_PX_PER_MM } from '@/engine/viewport';
+import { CANVAS_GHOST } from '@/config/theme';
 
 const STATUS_MOVE_LOCKED =
   'Déplacer — Ce point est verrouillé. Déverrouille-le d\u2019abord (outil Sélectionner).';
@@ -101,14 +103,16 @@ export function useMoveTool({
       if (pickedPointId) {
         const snap = findSnap(mmPos, state, tolerances, [pickedPointId]);
         setSnapResult(snap);
+      } else if (pickedTextBoxId) {
+        const snap = findSnap(mmPos, state, tolerances);
+        setSnapResult(snap);
       }
     },
-    [isActive, state, pickedPointId, tolerances],
+    [isActive, state, pickedPointId, pickedTextBoxId, tolerances],
   );
 
   const handleEscape = useCallback(() => {
-    if (phase === 'point_picked') {
-      // Return to original position (cancel move)
+    if (phase === 'point_picked' || phase === 'textbox_picked') {
       reset();
     }
   }, [phase, reset]);
@@ -125,22 +129,61 @@ export function useMoveTool({
         ? 'Déplacer — Clique pour déposer la zone de texte'
         : STATUS_MOVE_PICKED(pickedLabel);
 
-  // Overlay: show the point at cursor position during pick-up
+  // Overlay: show the element at cursor position during pick-up
   const overlayElements = useMemo(() => {
-    if (phase !== 'point_picked' || !pickedPointId || !cursorMm) return null;
-
-    const snappedPos = snapResult?.snappedPosition ?? cursorMm;
-    const point = state.points.find((p) => p.id === pickedPointId);
-    if (!point) return null;
-
-    return createElement(MovePreview, {
-      key: 'move-preview',
-      point,
-      previewPosition: snappedPos,
-      state,
-      viewport,
-    });
-  }, [phase, pickedPointId, cursorMm, snapResult, state, viewport]);
+    if (phase === 'point_picked' && pickedPointId && cursorMm) {
+      const snappedPos = snapResult?.snappedPosition ?? cursorMm;
+      const point = state.points.find((p) => p.id === pickedPointId);
+      if (!point) return null;
+      return createElement(MovePreview, {
+        key: 'move-preview',
+        point,
+        previewPosition: snappedPos,
+        state,
+        viewport,
+      });
+    }
+    if (phase === 'textbox_picked' && pickedTextBoxId && cursorMm) {
+      const snappedPos = snapResult?.snappedPosition ?? cursorMm;
+      const tb = state.textBoxes.find((t) => t.id === pickedTextBoxId);
+      if (!tb) return null;
+      const pxPerMm = viewport.zoom * CSS_PX_PER_MM;
+      const sx = (snappedPos.x - viewport.panX) * pxPerMm;
+      const sy = (snappedPos.y - viewport.panY) * pxPerMm;
+      const lines = (tb.text || '…').split('\n');
+      const fontSizePx = Math.max(13, 3.5 * pxPerMm);
+      const lineH = fontSizePx * 1.4;
+      return createElement(
+        'g',
+        { key: 'move-textbox-preview', opacity: 0.6 },
+        createElement('rect', {
+          x: sx - 8,
+          y: sy - 8,
+          width: Math.max(100, tb.text.length * fontSizePx * 0.35 + 20),
+          height: lines.length * lineH + 12,
+          rx: 3,
+          fill: 'white',
+          stroke: CANVAS_GHOST,
+          strokeWidth: 2,
+          strokeDasharray: '6 3',
+        }),
+        createElement(
+          'text',
+          {
+            x: sx,
+            y: sy + fontSizePx * 0.85,
+            fontSize: fontSizePx,
+            fontFamily: 'system-ui, sans-serif',
+            fill: CANVAS_GHOST,
+          },
+          ...lines.map((line, i) =>
+            createElement('tspan', { key: i, x: sx, dy: i === 0 ? 0 : lineH }, line),
+          ),
+        ),
+      );
+    }
+    return null;
+  }, [phase, pickedPointId, pickedTextBoxId, cursorMm, snapResult, state, viewport]);
 
   return {
     handleClick,
