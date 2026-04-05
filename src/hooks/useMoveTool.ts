@@ -151,16 +151,24 @@ export function useMoveTool({
       const sx = (snappedPos.x - viewport.panX) * pxPerMm;
       const sy = (snappedPos.y - viewport.panY) * pxPerMm;
       const lines = (tb.text || '…').split('\n');
-      const fontSizePx = Math.max(13, 3.5 * pxPerMm);
+      // Match TextBoxLayer sizing exactly
+      const fontSizeMm = Math.max(13 / pxPerMm, 3.5);
+      const fontSizePx = fontSizeMm * pxPerMm;
       const lineH = fontSizePx * 1.4;
+      const longestLine = lines.reduce((a, b) => (a.length > b.length ? a : b), '');
+      const widthMm = Math.max(30, longestLine.length * fontSizeMm * 0.55 + 6);
+      const widthPx = widthMm * pxPerMm;
+      const heightMm = lines.length * fontSizeMm * 1.4 + 3;
+      const heightPx = heightMm * pxPerMm;
+      const padPx = 3 * pxPerMm;
       return createElement(
         'g',
         { key: 'move-textbox-preview', opacity: 0.6 },
         createElement('rect', {
-          x: sx - 8,
-          y: sy - 8,
-          width: Math.max(100, tb.text.length * fontSizePx * 0.35 + 20),
-          height: lines.length * lineH + 12,
+          x: sx - padPx,
+          y: sy - padPx,
+          width: widthPx + padPx * 2,
+          height: heightPx + padPx,
           rx: 3,
           fill: 'white',
           stroke: CANVAS_GHOST,
