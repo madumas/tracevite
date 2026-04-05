@@ -82,6 +82,11 @@ export function useSelection({
         return false;
       }
 
+      // Move tool: let textbox clicks pass through so the tool can pick them up
+      if (hit?.type === 'textbox' && activeTool === 'move') {
+        return false;
+      }
+
       if (hit) {
         dispatch({ type: 'SET_SELECTED_ELEMENT', elementId: hit.id });
         return true;
