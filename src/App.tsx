@@ -1628,7 +1628,7 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
         onToggleEstimation={() => setEstimationRevealed((prev) => !prev)}
         onShowSlotManager={() => setShowSlotManager(true)}
         onShowSettings={() => setShowSettings(true)}
-        onShowGuide={() => tutorial.start()}
+        onShowGuide={() => setShowHelp(true)}
         onToggleDemoMode={() => {
           if (document.fullscreenElement) {
             document.exitFullscreen();

@@ -96,7 +96,7 @@ export function HelpDialog({ onClose, onStartTutorial, onShowAbout }: HelpDialog
         {/* Section 1: Tutoriel */}
         <div style={{ marginBottom: 16 }}>
           <p style={{ fontSize: 13, lineHeight: 1.5, margin: '0 0 12px', color: UI_TEXT_PRIMARY }}>
-            Apprends à tracer ton premier segment en 3 étapes.
+            Apprends à construire et corriger en quelques clics.
           </p>
           <button
             onClick={onStartTutorial}
