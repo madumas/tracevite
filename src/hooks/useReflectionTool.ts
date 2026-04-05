@@ -344,7 +344,7 @@ export function useReflectionTool({
     handleCursorMove,
     handleEscape,
     reset,
-    isIdle: false,
+    isIdle: phase === 'choose_axis',
     statusMessage,
     snapResult,
     overlayElements: mergedOverlay,
