@@ -20,22 +20,16 @@ import { createUndoManager } from '@/model/undo';
 import { createInitialState } from '@/model/state';
 
 // D1: Read URL params SYNCHRONOUSLY before createRoot
-function parseUrlParams(): { consigne: string | null; level: string | null } {
-  const params = new URLSearchParams(window.location.search);
-  let consigne = params.get('consigne');
-  const mode = params.get('mode');
-  const level = params.get('level');
+import { parseShareParam, type SharedConstruction } from '@/engine/share';
 
-  if (consigne) {
-    consigne = consigne.replace(/\|/g, '\n');
-    if (consigne.length > 1000) consigne = consigne.slice(0, 1000);
-  }
+function parseUrlParams(): { shared: SharedConstruction | null } {
+  const shared = parseShareParam(window.location.search);
 
-  if (params.toString()) {
+  if (shared || new URLSearchParams(window.location.search).toString()) {
     window.history.replaceState(null, '', window.location.pathname);
   }
 
-  return { consigne: consigne || null, level: mode || level };
+  return { shared };
 }
 
 const urlParams = parseUrlParams();
@@ -49,11 +43,24 @@ async function boot() {
     registry = { slots: [], activeSlotId: null, nextNumber: 1 };
   }
 
-  // Load the active slot's saved construction data
+  // Load construction: shared URL takes priority over saved slot
   let initialState: ConstructionState = createInitialState();
   let initialUndoManager: UndoManager = createUndoManager(initialState);
 
-  if (registry.activeSlotId) {
+  if (urlParams.shared) {
+    // Shared construction from URL ?s= param
+    const s = urlParams.shared;
+    initialState = {
+      ...initialState,
+      points: s.points,
+      segments: s.segments,
+      circles: s.circles,
+      consigne: s.consigne,
+      displayMode: s.displayMode,
+      gridSizeMm: s.gridSizeMm as 5 | 10 | 20,
+    };
+    initialUndoManager = createUndoManager(initialState);
+  } else if (registry.activeSlotId) {
     try {
       const slotData = await loadSlotData(registry.activeSlotId);
       if (slotData) {
@@ -107,8 +114,6 @@ async function boot() {
   createRoot(document.getElementById('root')!).render(
     <StrictMode>
       <App
-        initialConsigne={urlParams.consigne}
-        initialLevel={urlParams.level}
         initialRegistry={registry}
         initialState={initialState}
         initialUndoManager={initialUndoManager}

@@ -13,7 +13,6 @@ import { MIN_BUTTON_SIZE_PX, MIN_BUTTON_GAP_PX } from '@/config/accessibility';
 import {
   ACTION_UNDO,
   ACTION_REDO,
-  ACTION_PRINT,
   ACTION_SCALE_NOTE,
   TOOL_SNAP,
   GRID_5MM,
@@ -34,10 +33,9 @@ import {
 interface ActionBarProps {
   readonly canUndo: boolean;
   readonly canRedo: boolean;
-  readonly canPrint: boolean;
   readonly onUndo: () => void;
   readonly onRedo: () => void;
-  readonly onPrint: () => void;
+  readonly onShare: () => void;
   readonly fontScale?: number;
   readonly estimationMode?: boolean;
   readonly onToggleEstimation?: () => void;
@@ -57,10 +55,9 @@ interface ActionBarProps {
 export const ActionBar = memo(function ActionBar({
   canUndo,
   canRedo,
-  canPrint,
   onUndo,
   onRedo,
-  onPrint,
+  onShare,
   fontScale = 1,
   estimationMode = false,
   onToggleEstimation,
@@ -301,27 +298,26 @@ export const ActionBar = memo(function ActionBar({
         </button>
       )}
 
-      {/* Print */}
+      {/* Share (replaces Print — print is now inside ShareDialog) */}
       <button
-        onClick={onPrint}
-        disabled={!canPrint}
+        onClick={onShare}
         style={{
           minWidth: MIN_BUTTON_SIZE_PX,
           height: MIN_BUTTON_SIZE_PX,
           padding: '0 14px',
           border: 'none',
           borderRadius: 4,
-          background: canPrint ? UI_PRIMARY : UI_DISABLED_BG,
-          color: canPrint ? '#FFFFFF' : UI_DISABLED_TEXT,
-          cursor: canPrint ? 'pointer' : 'default',
+          background: UI_PRIMARY,
+          color: '#FFFFFF',
+          cursor: 'pointer',
           fontSize: 'inherit',
           fontWeight: 500,
         }}
-        aria-label={ACTION_PRINT}
-        title={ACTION_PRINT}
-        data-testid="action-print"
+        aria-label="Partager"
+        title="Partager"
+        data-testid="action-share"
       >
-        <PrintIcon /> <span className="action-label">{ACTION_PRINT}</span>
+        <PrintIcon /> <span className="action-label">Partager</span>
       </button>
 
       {/* ─ Right group: Settings, Aide, Fullscreen (round buttons like RésoMolo) ─ */}

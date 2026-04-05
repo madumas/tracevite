@@ -34,9 +34,9 @@ describe('App', () => {
     expect(screen.getByTestId('action-redo')).toBeDisabled();
   });
 
-  it('renders print button disabled when canvas is empty', () => {
+  it('renders share button', () => {
     render(<App />);
-    expect(screen.getByTestId('action-print')).toBeDisabled();
+    expect(screen.getByTestId('action-share')).toBeInTheDocument();
   });
 
   it('renders mode selector', () => {

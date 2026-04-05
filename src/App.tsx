@@ -55,6 +55,7 @@ import { ConsigneBanner } from '@/components/ConsigneBanner';
 import { SlotManager } from '@/components/SlotManager';
 import { useSlotManager } from '@/hooks/useSlotManager';
 import { PrintDialog } from '@/components/PrintDialog';
+import { ShareDialog } from '@/components/ShareDialog';
 import { PrintSvg } from '@/components/PrintSvg';
 import { useTutorial } from '@/hooks/useTutorial';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
@@ -113,8 +114,6 @@ import type { UndoManager } from '@/model/undo';
 import type { ConstructionState } from '@/model/types';
 
 interface AppProps {
-  initialConsigne?: string | null;
-  initialLevel?: string | null;
   initialRegistry?: SlotRegistry;
   initialState?: ConstructionState;
   initialUndoManager?: UndoManager;
@@ -155,7 +154,7 @@ function getCanvasCursor(
   }
 }
 
-function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps) {
+function AppContent({ initialRegistry }: AppProps) {
   const { state, canUndo, canRedo, undoManager } = useConstructionState();
   const dispatch = useConstructionDispatch();
   const preferences = usePreferences();
@@ -171,7 +170,7 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
   const { viewport, zoomIn, zoomOut, resetZoom, panUp, panDown, panLeft, panRight, pinchZoomPan } =
     useViewport(containerRef, containerSize);
   const [consigneDismissed, setConsigneDismissed] = useState(false);
-  const initializedRef = useRef(false);
+  // initializedRef removed — URL params now handled in main.tsx before mount
 
   const [showSlotManager, setShowSlotManager] = useState(false);
   const [showConfirmNew, setShowConfirmNew] = useState(false);
@@ -182,6 +181,7 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
   const [showSettings, setShowSettings] = useState(false);
   const [showAbout, setShowAbout] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
+  const [showShareDialog, setShowShareDialog] = useState(false);
 
   const [estimationRevealed, setEstimationRevealed] = useState(false);
   const [forceShowLabels, setForceShowLabels] = useState(false);
@@ -327,35 +327,6 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
       slotManager.createNewSlot(undefined, true); // keepCurrentState = true
     }
   }, [state.points.length, slotManager.activeSlotId, slotManager]);
-
-  // Apply URL params once at mount — create a new blank slot when consigne is present
-  useEffect(() => {
-    if (initializedRef.current) return;
-    initializedRef.current = true;
-
-    const mode =
-      initialLevel === '2e_cycle'
-        ? 'simplifie'
-        : initialLevel === '3e_cycle'
-          ? 'complet'
-          : initialLevel === 'simplifie'
-            ? 'simplifie'
-            : initialLevel === 'complet'
-              ? 'complet'
-              : null;
-
-    if (initialConsigne) {
-      (async () => {
-        await slotManager.createNewSlot();
-        dispatch({ type: 'SET_CONSIGNE', consigne: initialConsigne });
-        if (mode) {
-          dispatch({ type: 'SET_DISPLAY_MODE', displayMode: mode });
-        }
-      })();
-    } else if (mode) {
-      dispatch({ type: 'SET_DISPLAY_MODE', displayMode: mode });
-    }
-  }, [initialConsigne, initialLevel, dispatch, slotManager]);
 
   useAutoSave(state, undoManager, slotManager.activeSlotId);
 
@@ -1619,10 +1590,9 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
       <ActionBar
         canUndo={canUndo}
         canRedo={canRedo}
-        canPrint={hasElements}
         onUndo={handleUndo}
         onRedo={handleRedo}
-        onPrint={handlePrint}
+        onShare={() => setShowShareDialog(true)}
         fontScale={effectiveFontScale}
         estimationMode={state.estimationMode}
         onToggleEstimation={() => setEstimationRevealed((prev) => !prev)}
@@ -1668,6 +1638,17 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
           onRecenter={() => {
             // TODO: RECENTER_CONSTRUCTION action
             setShowPrintDialog(false);
+          }}
+        />
+      )}
+
+      {showShareDialog && (
+        <ShareDialog
+          state={state}
+          onClose={() => setShowShareDialog(false)}
+          onPrint={() => {
+            setShowShareDialog(false);
+            handlePrint();
           }}
         />
       )}
@@ -1817,22 +1798,12 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
   );
 }
 
-export function App({
-  initialConsigne,
-  initialLevel,
-  initialRegistry,
-  initialState,
-  initialUndoManager,
-}: AppProps) {
+export function App({ initialRegistry, initialState, initialUndoManager }: AppProps) {
   return (
     <ErrorBoundary>
       <PreferencesProvider>
         <ConstructionProvider initialState={initialState} initialUndoManager={initialUndoManager}>
-          <AppContent
-            initialConsigne={initialConsigne}
-            initialLevel={initialLevel}
-            initialRegistry={initialRegistry}
-          />
+          <AppContent initialRegistry={initialRegistry} />
         </ConstructionProvider>
       </PreferencesProvider>
     </ErrorBoundary>
