@@ -14,6 +14,7 @@ import {
 } from '@/config/theme';
 import { MIN_BUTTON_SIZE_PX } from '@/config/accessibility';
 import { usePreferences, useUpdatePreference, type SegmentColor } from '@/model/preferences';
+import { AccordionSection } from './AccordionSection';
 
 interface SettingsDialogProps {
   readonly toleranceProfile: ToleranceProfile;
@@ -188,50 +189,7 @@ export const SettingsDialog = memo(function SettingsDialog({
           </select>
         </div>
 
-        {/* ── Section: Interaction ──────────────────────── */}
-        <div
-          style={{
-            padding: '12px 0 4px',
-            fontSize: 11,
-            fontWeight: 700,
-            color: UI_TEXT_SECONDARY,
-            textTransform: 'uppercase',
-            letterSpacing: '0.5px',
-          }}
-        >
-          Interaction
-        </div>
-
-        {/* Tolerance profile */}
-        <div style={rowStyle}>
-          <span>Tolérance de l'aimant</span>
-          <select
-            value={toleranceProfile}
-            onChange={(e) => onToleranceChange(e.target.value as ToleranceProfile)}
-            style={selectStyle}
-          >
-            <option value="default">Standard</option>
-            <option value="large">Large (×1,5)</option>
-            <option value="very_large">Très large (×2)</option>
-          </select>
-        </div>
-
-        {/* Chain timeout */}
-        <div style={rowStyle}>
-          <span>Temps de chaînage</span>
-          <select
-            value={chainTimeoutMs}
-            onChange={(e) => onChainTimeoutChange(Number(e.target.value) as ChainTimeout)}
-            style={selectStyle}
-          >
-            <option value={5000}>5 secondes</option>
-            <option value={8000}>8 secondes</option>
-            <option value={15000}>15 secondes</option>
-            <option value={0}>Désactivé</option>
-          </select>
-        </div>
-
-        {/* ── Section: Affichage ──────────────────────── */}
+        {/* ── Section: Mes préférences ──────────────────── */}
         <div style={{ height: 1, background: UI_BORDER, margin: '8px 0' }} />
         <div
           style={{
@@ -243,7 +201,7 @@ export const SettingsDialog = memo(function SettingsDialog({
             letterSpacing: '0.5px',
           }}
         >
-          Affichage
+          Mes préférences
         </div>
 
         {/* Font scale */}
@@ -289,17 +247,6 @@ export const SettingsDialog = memo(function SettingsDialog({
             />
           </div>
         )}
-
-        {/* Keyboard shortcuts toggle */}
-        <div style={rowStyle}>
-          <span>Raccourcis clavier (lettres)</span>
-          <input
-            type="checkbox"
-            checked={keyboardShortcutsEnabled}
-            onChange={(e) => onKeyboardShortcutsChange(e.target.checked)}
-            style={{ width: 20, height: 20, cursor: 'pointer', minWidth: 44, minHeight: 44 }}
-          />
-        </div>
 
         {/* Panel position */}
         <div style={rowStyle}>
@@ -375,66 +322,6 @@ export const SettingsDialog = memo(function SettingsDialog({
           </select>
         </div>
 
-        {/* Estimation mode toggle */}
-        <div style={rowStyle}>
-          <span>Mode estimation (mesures masquées)</span>
-          <input
-            type="checkbox"
-            checked={estimationMode}
-            onChange={(e) => onEstimationModeChange(e.target.checked)}
-            style={{ width: 20, height: 20, cursor: 'pointer', minWidth: 44, minHeight: 44 }}
-          />
-        </div>
-
-        {/* Cartesian mode — complet only */}
-        {displayMode === 'complet' && (
-          <div style={rowStyle}>
-            <span>Plan cartésien</span>
-            <select
-              value={cartesianMode}
-              onChange={(e) =>
-                onCartesianModeChange(e.target.value as import('@/model/types').CartesianMode)
-              }
-              style={selectStyle}
-            >
-              <option value="off">Désactivé</option>
-              <option value="1quadrant">1er quadrant</option>
-              <option value="4quadrants">4 quadrants</option>
-            </select>
-          </div>
-        )}
-
-        {/* Auto-intersection toggle */}
-        <div style={rowStyle}>
-          <span>Intersections automatiques</span>
-          <input
-            type="checkbox"
-            checked={autoIntersection}
-            onChange={(e) => onAutoIntersectionChange(e.target.checked)}
-            style={{ width: 20, height: 20, cursor: 'pointer', minWidth: 44, minHeight: 44 }}
-          />
-        </div>
-
-        {/* Clutter threshold */}
-        <div style={rowStyle}>
-          <span>Seuil de surcharge visuelle</span>
-          <select
-            value={clutterThreshold}
-            onChange={(e) => onClutterThresholdChange(Number(e.target.value))}
-            style={{ height: MIN_BUTTON_SIZE_PX - 8, fontSize: 'inherit', cursor: 'pointer' }}
-          >
-            <option value={0}>Normal ({displayMode === 'simplifie' ? 5 : 6})</option>
-            <option value={3}>Peu d'éléments (3)</option>
-            <option value={4}>4 segments</option>
-            <option value={5}>5 segments</option>
-            <option value={6}>6 segments</option>
-            <option value={8}>8 segments</option>
-            <option value={10}>Construction complexe (10)</option>
-            <option value={15}>15 segments</option>
-            <option value={999}>Toujours afficher</option>
-          </select>
-        </div>
-
         {/* ── Sub-section: Visuel ──── */}
         <div
           style={{ fontSize: 10, color: UI_TEXT_SECONDARY, padding: '6px 0 2px', fontWeight: 600 }}
@@ -485,12 +372,6 @@ export const SettingsDialog = memo(function SettingsDialog({
           />
         </div>
 
-        {/* ── Sub-section: Moteur ──── */}
-        <div
-          style={{ fontSize: 10, color: UI_TEXT_SECONDARY, padding: '6px 0 2px', fontWeight: 600 }}
-        >
-          Moteur
-        </div>
         {/* Cursor smoothing — only when tolerance is very_large */}
         {toleranceProfile === 'very_large' && (
           <div style={rowStyle}>
@@ -504,30 +385,153 @@ export const SettingsDialog = memo(function SettingsDialog({
           </div>
         )}
 
-        {/* Point tool visible toggle */}
-        <div style={{ ...rowStyle, borderBottom: 'none' }}>
-          <span>Outil Point (visible)</span>
-          <input
-            type="checkbox"
-            checked={pointToolVisible}
-            onChange={(e) => onPointToolVisibleChange(e.target.checked)}
-            style={{ width: 20, height: 20, cursor: 'pointer', minWidth: 44, minHeight: 44 }}
-          />
+        {/* ── Section: Paramètres de classe (teacher-level) ──── */}
+        <div style={{ marginTop: 12 }}>
+          <AccordionSection title="🔒 Paramètres de classe">
+            {prefs.lockedSettings.length > 0 && (
+              <div
+                style={{
+                  fontSize: 11,
+                  color: UI_TEXT_SECONDARY,
+                  fontStyle: 'italic',
+                  marginBottom: 8,
+                }}
+              >
+                Choisi par ton enseignant(e)
+              </div>
+            )}
+
+            {/* Tolerance profile */}
+            <div style={rowStyle}>
+              <span>Tolérance de l'aimant</span>
+              <select
+                value={toleranceProfile}
+                onChange={(e) => onToleranceChange(e.target.value as ToleranceProfile)}
+                style={selectStyle}
+                disabled={prefs.lockedSettings.includes('toleranceProfile')}
+              >
+                <option value="default">Standard</option>
+                <option value="large">Large (×1,5)</option>
+                <option value="very_large">Très large (×2)</option>
+              </select>
+            </div>
+
+            {/* Chain timeout */}
+            <div style={rowStyle}>
+              <span>Temps de chaînage</span>
+              <select
+                value={chainTimeoutMs}
+                onChange={(e) => onChainTimeoutChange(Number(e.target.value) as ChainTimeout)}
+                style={selectStyle}
+                disabled={prefs.lockedSettings.includes('chainTimeoutMs')}
+              >
+                <option value={5000}>5 secondes</option>
+                <option value={8000}>8 secondes</option>
+                <option value={15000}>15 secondes</option>
+                <option value={0}>Désactivé</option>
+              </select>
+            </div>
+
+            {/* Keyboard shortcuts */}
+            <div style={rowStyle}>
+              <span>Raccourcis clavier</span>
+              <input
+                type="checkbox"
+                checked={keyboardShortcutsEnabled}
+                onChange={(e) => onKeyboardShortcutsChange(e.target.checked)}
+                disabled={prefs.lockedSettings.includes('keyboardShortcutsEnabled')}
+                style={{ width: 20, height: 20, cursor: 'pointer', minWidth: 44, minHeight: 44 }}
+              />
+            </div>
+
+            {/* Estimation mode */}
+            <div style={rowStyle}>
+              <span>Mode estimation</span>
+              <input
+                type="checkbox"
+                checked={estimationMode}
+                onChange={(e) => onEstimationModeChange(e.target.checked)}
+                disabled={prefs.lockedSettings.includes('estimationMode')}
+                style={{ width: 20, height: 20, cursor: 'pointer', minWidth: 44, minHeight: 44 }}
+              />
+            </div>
+
+            {/* Cartesian mode — complet only */}
+            {displayMode === 'complet' && (
+              <div style={rowStyle}>
+                <span>Plan cartésien</span>
+                <select
+                  value={cartesianMode}
+                  onChange={(e) =>
+                    onCartesianModeChange(e.target.value as import('@/model/types').CartesianMode)
+                  }
+                  style={selectStyle}
+                  disabled={prefs.lockedSettings.includes('cartesianMode')}
+                >
+                  <option value="off">Désactivé</option>
+                  <option value="1quadrant">1er quadrant</option>
+                  <option value="4quadrants">4 quadrants</option>
+                </select>
+              </div>
+            )}
+
+            {/* Auto-intersection */}
+            <div style={rowStyle}>
+              <span>Intersections automatiques</span>
+              <input
+                type="checkbox"
+                checked={autoIntersection}
+                onChange={(e) => onAutoIntersectionChange(e.target.checked)}
+                disabled={prefs.lockedSettings.includes('autoIntersection')}
+                style={{ width: 20, height: 20, cursor: 'pointer', minWidth: 44, minHeight: 44 }}
+              />
+            </div>
+
+            {/* Clutter threshold */}
+            <div style={rowStyle}>
+              <span>Seuil de surcharge</span>
+              <select
+                value={clutterThreshold}
+                onChange={(e) => onClutterThresholdChange(Number(e.target.value))}
+                style={{ height: MIN_BUTTON_SIZE_PX - 8, fontSize: 'inherit', cursor: 'pointer' }}
+                disabled={prefs.lockedSettings.includes('clutterThreshold')}
+              >
+                <option value={0}>Normal ({displayMode === 'simplifie' ? 5 : 6})</option>
+                <option value={3}>3 segments</option>
+                <option value={5}>5 segments</option>
+                <option value={8}>8 segments</option>
+                <option value={999}>Toujours afficher</option>
+              </select>
+            </div>
+
+            {/* Point tool visible */}
+            <div style={{ ...rowStyle, borderBottom: 'none' }}>
+              <span>Outil Point (visible)</span>
+              <input
+                type="checkbox"
+                checked={pointToolVisible}
+                onChange={(e) => onPointToolVisibleChange(e.target.checked)}
+                disabled={prefs.lockedSettings.includes('pointToolVisible')}
+                style={{ width: 20, height: 20, cursor: 'pointer', minWidth: 44, minHeight: 44 }}
+              />
+            </div>
+          </AccordionSection>
         </div>
 
         <button
           onClick={() => {
-            onToleranceChange('default');
-            onChainTimeoutChange(8000);
+            const locked = prefs.lockedSettings;
+            if (!locked.includes('toleranceProfile')) onToleranceChange('default');
+            if (!locked.includes('chainTimeoutMs')) onChainTimeoutChange(8000);
             onFontScaleChange(1);
             onSoundModeChange('reduced');
             onSoundGainChange(0.5);
-            onKeyboardShortcutsChange(false);
-            onPointToolVisibleChange(false);
-            onEstimationModeChange(false);
-            onCartesianModeChange('off');
-            onAutoIntersectionChange(true);
-            onClutterThresholdChange(0);
+            if (!locked.includes('keyboardShortcutsEnabled')) onKeyboardShortcutsChange(false);
+            if (!locked.includes('pointToolVisible')) onPointToolVisibleChange(false);
+            if (!locked.includes('estimationMode')) onEstimationModeChange(false);
+            if (!locked.includes('cartesianMode')) onCartesianModeChange('off');
+            if (!locked.includes('autoIntersection')) onAutoIntersectionChange(true);
+            if (!locked.includes('clutterThreshold')) onClutterThresholdChange(0);
           }}
           style={{
             marginTop: 16,

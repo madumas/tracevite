@@ -36,6 +36,7 @@ export interface SettingsProfile {
   readonly focusMode?: boolean;
   readonly reinforcedGrid?: boolean;
   readonly animateTransformations?: boolean;
+  readonly locked?: readonly string[];
 }
 
 /** Export current settings to JSON string. */
@@ -93,6 +94,7 @@ type MutableSettings = {
   focusMode?: boolean;
   reinforcedGrid?: boolean;
   animateTransformations?: boolean;
+  locked?: string[];
 };
 
 /** Import settings from JSON string. Returns partial settings to apply. */
@@ -192,6 +194,10 @@ export function importSettings(json: string): MutableSettings {
 
   if (typeof obj['animateTransformations'] === 'boolean') {
     result.animateTransformations = obj['animateTransformations'];
+  }
+
+  if (Array.isArray(obj['locked'])) {
+    result.locked = (obj['locked'] as unknown[]).filter((v): v is string => typeof v === 'string');
   }
 
   return result;

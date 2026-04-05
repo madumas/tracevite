@@ -35,6 +35,7 @@ export interface UserPreferences {
   readonly reinforcedGrid: boolean;
   readonly focusMode: boolean;
   readonly animateTransformations: boolean;
+  readonly lockedSettings: readonly string[]; // settings locked by teacher via .geomolo-config
 }
 
 // ── Defaults ─────────────────────────────────────────────
@@ -49,6 +50,7 @@ const DEFAULT_PREFERENCES: UserPreferences = {
   reinforcedGrid: false,
   focusMode: false,
   animateTransformations: false,
+  lockedSettings: [],
 };
 
 // ── localStorage persistence ─────────────────────────────
@@ -99,6 +101,9 @@ export function loadPreferences(): UserPreferences {
         typeof data.animateTransformations === 'boolean'
           ? data.animateTransformations
           : DEFAULT_PREFERENCES.animateTransformations,
+      lockedSettings: Array.isArray(data.lockedSettings)
+        ? (data.lockedSettings as string[]).filter((v) => typeof v === 'string')
+        : DEFAULT_PREFERENCES.lockedSettings,
     };
   } catch {
     return DEFAULT_PREFERENCES;
