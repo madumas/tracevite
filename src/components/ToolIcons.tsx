@@ -164,16 +164,28 @@ export function ParallelIcon() {
 export function TranslationIcon() {
   return (
     <svg {...S}>
-      <circle cx="4" cy="14" r="2" fill={stroke} />
-      <circle cx="16" cy="6" r="2" fill={stroke} opacity="0.5" />
-      <line x1="4" y1="14" x2="16" y2="6" stroke={stroke} strokeWidth="1.5" strokeDasharray="2 2" />
+      {/* Original shape */}
+      <rect x="2" y="8" width="5" height="5" stroke={stroke} strokeWidth="1.3" fill="none" />
+      {/* Arrow */}
+      <line x1="8" y1="10.5" x2="12.5" y2="10.5" stroke={stroke} strokeWidth="1.3" />
       <path
-        d="M13 4l3 2-3 2"
+        d="M11 8.5l2 2-2 2"
         stroke={stroke}
-        strokeWidth="1.5"
+        strokeWidth="1.3"
         strokeLinecap="round"
         strokeLinejoin="round"
         fill="none"
+      />
+      {/* Translated shape (ghost, same size) */}
+      <rect
+        x="14"
+        y="8"
+        width="5"
+        height="5"
+        stroke={stroke}
+        strokeWidth="1.3"
+        fill="none"
+        opacity="0.5"
       />
     </svg>
   );
@@ -183,58 +195,51 @@ export function TranslationIcon() {
 export function HomothetyIcon() {
   return (
     <svg {...S}>
-      <rect x="7" y="7" width="6" height="6" stroke={stroke} strokeWidth="1.5" fill="none" />
+      {/* Original shape */}
+      <rect x="4" y="4" width="5" height="5" stroke={stroke} strokeWidth="1.3" fill="none" />
+      {/* Enlarged image (ghost) */}
       <rect
-        x="3"
-        y="3"
-        width="14"
-        height="14"
+        x="6"
+        y="6"
+        width="10"
+        height="10"
         stroke={stroke}
-        strokeWidth="1.2"
-        strokeDasharray="2 2"
+        strokeWidth="1.3"
         fill="none"
         opacity="0.5"
       />
-      <circle cx="10" cy="10" r="1" fill={stroke} />
     </svg>
   );
 }
 
-/** Rotation: circular arrow around center point */
+/** Rotation: shape rotated around center point with curved arrow */
 export function RotationIcon() {
+  // Rotation 90° CCW around center (2,10)
+  // T1 right-angle at (5,7): legs 4 up + 3 right
+  // T2 right-angle at (5,13): legs 3 down + 4 right (axes swapped = 90° rotation)
   return (
     <svg {...S}>
-      <circle cx="10" cy="10" r="2" fill={stroke} />
-      <path
-        d="M10 3a7 7 0 0 1 6.06 3.5"
-        stroke={stroke}
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        fill="none"
-      />
-      <path
-        d="M14.5 3.5l1.56 3-3 1"
+      {/* Original triangle */}
+      <polygon points="5,3 8,7 5,7" stroke={stroke} strokeWidth="1.3" fill="none" />
+      {/* Rotated triangle (ghost) */}
+      <polygon
+        points="9,13 5,16 5,13"
         stroke={stroke}
         strokeWidth="1.3"
-        strokeLinecap="round"
-        strokeLinejoin="round"
         fill="none"
+        opacity="0.5"
       />
+      {/* 90° arc from T1 to T2 level, curving right (r=7, chord=10, 90° exact) */}
       <path
-        d="M10 17a7 7 0 0 1-6.06-3.5"
+        d="M12 5A7 7 0 0 1 12 15"
         stroke={stroke}
-        strokeWidth="1.5"
+        strokeWidth="1.2"
         strokeLinecap="round"
         fill="none"
       />
-      <path
-        d="M5.5 16.5l-1.56-3 3-1"
-        stroke={stroke}
-        strokeWidth="1.3"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        fill="none"
-      />
+      {/* Arrowhead at (12,15) — motion arrives going left-down */}
+      <path d="M12 15l3.5 -1" stroke={stroke} strokeWidth="1.5" strokeLinecap="round" fill="none" />
+      <path d="M12 15l0 -4" stroke={stroke} strokeWidth="1.5" strokeLinecap="round" fill="none" />
     </svg>
   );
 }
