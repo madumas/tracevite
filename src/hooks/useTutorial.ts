@@ -1,9 +1,16 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import type { ConstructionState } from '@/model/types';
 
 export type TutorialStep = 1 | 2 | 3 | 'post' | 'done';
 
-export function useTutorial(state: ConstructionState) {
+/** Tutorial step messages (exported for status bar rendering). */
+export const TUTORIAL_MESSAGES: Record<1 | 2 | 3, string> = {
+  1: 'Clique deux fois sur la grille pour tracer un segment.',
+  2: `Appuie ${typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.userAgent) ? 'Cmd' : 'Ctrl'}+Z ou clique « Annuler » pour revenir en arrière.`,
+  3: "C'est tout! Tu sais construire.",
+};
+
+export function useTutorial(state: ConstructionState, onStart?: () => void) {
   const [step, setStep] = useState<TutorialStep>('done');
   const prevPointsRef = useRef(state.points.length);
   const prevSegmentsRef = useRef(state.segments.length);
@@ -39,11 +46,12 @@ export function useTutorial(state: ConstructionState) {
     setStep('done');
   };
 
-  const start = () => {
+  const start = useCallback(() => {
     setStep(1);
     prevPointsRef.current = state.points.length;
     prevSegmentsRef.current = state.segments.length;
-  };
+    onStart?.();
+  }, [state.points.length, state.segments.length, onStart]);
 
   const isActive = step !== 'done';
 

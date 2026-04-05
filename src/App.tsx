@@ -56,8 +56,7 @@ import { SlotManager } from '@/components/SlotManager';
 import { useSlotManager } from '@/hooks/useSlotManager';
 import { PrintDialog } from '@/components/PrintDialog';
 import { PrintSvg } from '@/components/PrintSvg';
-import { TutorialOverlay } from '@/components/TutorialOverlay';
-import { useTutorial } from '@/hooks/useTutorial';
+import { useTutorial, TUTORIAL_MESSAGES } from '@/hooks/useTutorial';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
 import type { ToolType, GridSize, DisplayUnit, DisplayMode } from '@/model/types';
 import { PreferencesProvider, usePreferences } from '@/model/preferences';
@@ -246,7 +245,9 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
     return () => window.removeEventListener('blur', handleBlur);
   }, []);
 
-  const tutorial = useTutorial(state);
+  const tutorial = useTutorial(state, () => {
+    dispatch({ type: 'SET_ACTIVE_TOOL', activeTool: 'segment' });
+  });
 
   // Deep Freeze detection (spec §17.1)
   const [deepFreezeDetected, setDeepFreezeDetected] = useState(false);
@@ -938,9 +939,9 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
           display: 'flex',
           alignItems: 'center',
           padding: '0 12px',
-          background: STATUS_BAR_BG,
+          background: tutorial.isActive && tutorial.step !== 'post' ? '#FEF3C7' : STATUS_BAR_BG,
           borderBottom: '1px solid #D1D8E0',
-          borderLeft: `3px solid ${UI_PRIMARY}`,
+          borderLeft: `3px solid ${tutorial.isActive && tutorial.step !== 'post' ? '#D97706' : UI_PRIMARY}`,
           fontSize: 13 * effectiveFontScale,
           color: '#4A5568',
         }}
@@ -948,162 +949,220 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
         aria-live="polite"
         data-testid="status-bar"
       >
-        {(() => {
-          const raw = tool.statusMessage;
-          const dashIdx = raw.indexOf(' — ');
-          if (dashIdx < 0) return raw; // hint messages without separator
-          const toolName = raw.slice(0, dashIdx);
-          const instruction = raw.slice(dashIdx + 3);
-          // Parse step progress from toolName (e.g. "Étape 1/2 — Segment")
-          const stepMatch = toolName.match(/(\d+)\/(\d+)/);
-          const stepCurrent = stepMatch ? parseInt(stepMatch[1]!, 10) : 0;
-          const stepTotal = stepMatch ? parseInt(stepMatch[2]!, 10) : 0;
-
-          return (
-            <>
-              <span
-                style={{
-                  background: UI_PRIMARY,
-                  color: '#FFF',
-                  padding: '1px 8px',
-                  borderRadius: 4,
-                  fontSize: 12 * effectiveFontScale,
-                  fontWeight: 600,
-                  marginRight: 6,
-                  whiteSpace: 'nowrap',
-                }}
-              >
-                {stepTotal >= 2 && (
-                  <span style={{ marginRight: 5 }}>
-                    {Array.from({ length: stepTotal }, (_, i) => (
-                      <span
-                        key={i}
-                        style={{
-                          display: 'inline-block',
-                          width: 6,
-                          height: 6,
-                          borderRadius: '50%',
-                          background: i < stepCurrent ? '#FFF' : 'rgba(255,255,255,0.35)',
-                          margin: '0 1px',
-                        }}
-                      />
-                    ))}
-                  </span>
-                )}
-                {toolName}
-              </span>
-              {instruction}
-              {state.estimationMode && !estimationRevealed && (
-                <span
-                  style={{
-                    background: '#FEF3C7',
-                    color: '#B45309',
-                    padding: '2px 10px',
-                    borderRadius: 4,
-                    fontSize: 12 * effectiveFontScale,
-                    fontWeight: 600,
-                    marginLeft: 8,
-                    whiteSpace: 'nowrap',
-                  }}
-                  data-testid="estimation-badge"
-                >
-                  ◈ Estimation
-                </span>
-              )}
-            </>
-          );
-        })()}
-        {shiftConstraintActive && ' — Contrainte 15° active'}
-        {figureClosedHint && (
-          <span
-            style={{
-              marginLeft: 8,
-              fontSize: 12 * effectiveFontScale,
-              color: '#0a7e7a',
-              fontWeight: 600,
-              animation: 'figure-closed-flash 400ms ease-out',
-            }}
-          >
-            ✓ {figureClosedHint}
-          </span>
-        )}
-        {primeHint && (
-          <span
-            style={{
-              marginLeft: 8,
-              fontSize: 11 * effectiveFontScale,
-              color: UI_TEXT_SECONDARY,
-              fontStyle: 'italic',
-            }}
-          >
-            {primeHint}
-          </span>
-        )}
-        {/* Right-side buttons grouped in a single flex container */}
-        {(!tool.isIdle || cluttered || (!demoMode && state.consigne && consigneDismissed)) && (
-          <div style={{ marginLeft: 'auto', display: 'flex', gap: 4, alignItems: 'center' }}>
-            {cluttered && (
+        {/* Tutorial mode: show tutorial messages instead of tool status */}
+        {tutorial.isActive && tutorial.step !== 'post' && typeof tutorial.step === 'number' ? (
+          <>
+            <span
+              style={{
+                background: '#D97706',
+                color: '#FFF',
+                padding: '1px 8px',
+                borderRadius: 4,
+                fontSize: 12 * effectiveFontScale,
+                fontWeight: 600,
+                marginRight: 6,
+                whiteSpace: 'nowrap',
+              }}
+            >
+              Tutoriel
+            </span>
+            <span style={{ flex: 1 }}>{TUTORIAL_MESSAGES[tutorial.step as 1 | 2 | 3]}</span>
+            {tutorial.step === 3 && (
               <button
-                onClick={handleForceShowLabels}
+                onClick={tutorial.finish}
                 style={{
-                  padding: '2px 10px',
-                  background: forceShowLabels ? '#E8F0FA' : 'transparent',
-                  border: `1px solid ${forceShowLabels ? UI_PRIMARY : '#D1D8E0'}`,
-                  borderRadius: 4,
-                  cursor: 'pointer',
-                  fontSize: 12 * effectiveFontScale,
-                  fontWeight: 500,
-                  color: forceShowLabels ? UI_PRIMARY : '#4A5568',
-                  whiteSpace: 'nowrap',
-                  minHeight: 28,
-                  animation: clutterBtnPulse ? 'glow-pulse 0.6s ease-in-out 3' : undefined,
-                }}
-                data-testid="show-labels-btn"
-                title="Afficher les mesures sur le canevas"
-              >
-                {forceShowLabels ? '✓ Mesures' : 'Mesures'}
-              </button>
-            )}
-            {!tool.isIdle && (
-              <button
-                onClick={() => tool.reset()}
-                style={{
-                  padding: '2px 12px',
+                  minHeight: 32,
+                  padding: '0 12px',
                   background: UI_PRIMARY,
                   color: '#FFF',
                   border: 'none',
                   borderRadius: 4,
                   cursor: 'pointer',
-                  fontSize: 12 * effectiveFontScale,
                   fontWeight: 600,
-                  whiteSpace: 'nowrap',
-                  minHeight: 44,
-                  minWidth: 44,
+                  fontSize: 12,
+                  marginLeft: 8,
                 }}
-                data-testid="status-escape-btn"
+                data-testid="tutorial-finish"
               >
-                {state.activeTool === 'move' ? 'Annuler' : 'Terminer'}
+                Commencer
               </button>
             )}
-            {!demoMode && state.consigne && consigneDismissed && (
-              <button
-                onClick={() => setConsigneDismissed(false)}
+            <button
+              onClick={tutorial.skip}
+              style={{
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                color: '#B45309',
+                fontSize: 12,
+                marginLeft: 8,
+                whiteSpace: 'nowrap',
+              }}
+              data-testid="tutorial-skip"
+            >
+              Passer
+            </button>
+          </>
+        ) : (
+          <>
+            {(() => {
+              const raw = tool.statusMessage;
+              const dashIdx = raw.indexOf(' — ');
+              if (dashIdx < 0) return raw; // hint messages without separator
+              const toolName = raw.slice(0, dashIdx);
+              const instruction = raw.slice(dashIdx + 3);
+              // Parse step progress from toolName (e.g. "Étape 1/2 — Segment")
+              const stepMatch = toolName.match(/(\d+)\/(\d+)/);
+              const stepCurrent = stepMatch ? parseInt(stepMatch[1]!, 10) : 0;
+              const stepTotal = stepMatch ? parseInt(stepMatch[2]!, 10) : 0;
+
+              return (
+                <>
+                  <span
+                    style={{
+                      background: UI_PRIMARY,
+                      color: '#FFF',
+                      padding: '1px 8px',
+                      borderRadius: 4,
+                      fontSize: 12 * effectiveFontScale,
+                      fontWeight: 600,
+                      marginRight: 6,
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    {stepTotal >= 2 && (
+                      <span style={{ marginRight: 5 }}>
+                        {Array.from({ length: stepTotal }, (_, i) => (
+                          <span
+                            key={i}
+                            style={{
+                              display: 'inline-block',
+                              width: 6,
+                              height: 6,
+                              borderRadius: '50%',
+                              background: i < stepCurrent ? '#FFF' : 'rgba(255,255,255,0.35)',
+                              margin: '0 1px',
+                            }}
+                          />
+                        ))}
+                      </span>
+                    )}
+                    {toolName}
+                  </span>
+                  {instruction}
+                  {state.estimationMode && !estimationRevealed && (
+                    <span
+                      style={{
+                        background: '#FEF3C7',
+                        color: '#B45309',
+                        padding: '2px 10px',
+                        borderRadius: 4,
+                        fontSize: 12 * effectiveFontScale,
+                        fontWeight: 600,
+                        marginLeft: 8,
+                        whiteSpace: 'nowrap',
+                      }}
+                      data-testid="estimation-badge"
+                    >
+                      ◈ Estimation
+                    </span>
+                  )}
+                </>
+              );
+            })()}
+            {shiftConstraintActive && ' — Contrainte 15° active'}
+            {figureClosedHint && (
+              <span
                 style={{
-                  padding: '2px 8px',
-                  background: '#E6F1FB',
-                  border: '1px solid #C5D8EC',
-                  borderRadius: 4,
-                  cursor: 'pointer',
-                  fontSize: 11,
+                  marginLeft: 8,
+                  fontSize: 12 * effectiveFontScale,
                   color: '#0a7e7a',
-                  whiteSpace: 'nowrap',
+                  fontWeight: 600,
+                  animation: 'figure-closed-flash 400ms ease-out',
                 }}
-                data-testid="consigne-show"
               >
-                Voir la consigne
-              </button>
+                ✓ {figureClosedHint}
+              </span>
             )}
-          </div>
+            {primeHint && (
+              <span
+                style={{
+                  marginLeft: 8,
+                  fontSize: 11 * effectiveFontScale,
+                  color: UI_TEXT_SECONDARY,
+                  fontStyle: 'italic',
+                }}
+              >
+                {primeHint}
+              </span>
+            )}
+            {/* Right-side buttons grouped in a single flex container */}
+            {(!tool.isIdle || cluttered || (!demoMode && state.consigne && consigneDismissed)) && (
+              <div style={{ marginLeft: 'auto', display: 'flex', gap: 4, alignItems: 'center' }}>
+                {cluttered && (
+                  <button
+                    onClick={handleForceShowLabels}
+                    style={{
+                      padding: '2px 10px',
+                      background: forceShowLabels ? '#E8F0FA' : 'transparent',
+                      border: `1px solid ${forceShowLabels ? UI_PRIMARY : '#D1D8E0'}`,
+                      borderRadius: 4,
+                      cursor: 'pointer',
+                      fontSize: 12 * effectiveFontScale,
+                      fontWeight: 500,
+                      color: forceShowLabels ? UI_PRIMARY : '#4A5568',
+                      whiteSpace: 'nowrap',
+                      minHeight: 28,
+                      animation: clutterBtnPulse ? 'glow-pulse 0.6s ease-in-out 3' : undefined,
+                    }}
+                    data-testid="show-labels-btn"
+                    title="Afficher les mesures sur le canevas"
+                  >
+                    {forceShowLabels ? '✓ Mesures' : 'Mesures'}
+                  </button>
+                )}
+                {!tool.isIdle && (
+                  <button
+                    onClick={() => tool.reset()}
+                    style={{
+                      padding: '2px 12px',
+                      background: UI_PRIMARY,
+                      color: '#FFF',
+                      border: 'none',
+                      borderRadius: 4,
+                      cursor: 'pointer',
+                      fontSize: 12 * effectiveFontScale,
+                      fontWeight: 600,
+                      whiteSpace: 'nowrap',
+                      minHeight: 44,
+                      minWidth: 44,
+                    }}
+                    data-testid="status-escape-btn"
+                  >
+                    {state.activeTool === 'move' ? 'Annuler' : 'Terminer'}
+                  </button>
+                )}
+                {!demoMode && state.consigne && consigneDismissed && (
+                  <button
+                    onClick={() => setConsigneDismissed(false)}
+                    style={{
+                      padding: '2px 8px',
+                      background: '#E6F1FB',
+                      border: '1px solid #C5D8EC',
+                      borderRadius: 4,
+                      cursor: 'pointer',
+                      fontSize: 11,
+                      color: '#0a7e7a',
+                      whiteSpace: 'nowrap',
+                    }}
+                    data-testid="consigne-show"
+                  >
+                    Voir la consigne
+                  </button>
+                )}
+              </div>
+            )}
+          </>
         )}
       </div>
 
@@ -1358,14 +1417,31 @@ function AppContent({ initialConsigne, initialLevel, initialRegistry }: AppProps
             hidePanButtons={isNarrow}
           />
 
-          {/* Tutorial overlay */}
-          {tutorial.isActive && (
-            <TutorialOverlay
-              step={tutorial.step}
-              onSkip={tutorial.skip}
-              onFinish={tutorial.finish}
-              onDismissPost={tutorial.dismissPost}
-            />
+          {/* Post-tutorial message — central overlay for task initiation (TDC accommodation) */}
+          {tutorial.step === 'post' && (
+            <div
+              style={{
+                position: 'absolute',
+                inset: 0,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                pointerEvents: 'auto',
+                zIndex: 25,
+              }}
+              onClick={tutorial.dismissPost}
+              data-testid="tutorial-post"
+            >
+              <span
+                style={{
+                  fontSize: 18,
+                  color: '#7A8B99',
+                  pointerEvents: 'none',
+                }}
+              >
+                Clique n'importe où pour commencer!
+              </span>
+            </div>
           )}
         </div>
 
