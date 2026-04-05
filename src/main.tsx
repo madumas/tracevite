@@ -117,4 +117,6 @@ async function boot() {
   );
 }
 
-boot();
+boot().catch((err) => {
+  document.body.innerHTML = `<pre style="padding:20px;color:red;font-size:14px">Boot error:\n${err?.message}\n${err?.stack}</pre>`;
+});
