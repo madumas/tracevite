@@ -56,20 +56,22 @@ export function TextBoxEditor({
       placeholder="Texte..."
       style={{
         position: 'fixed',
-        left: targetRect.left - 2,
-        top: targetRect.top - 2,
-        width: Math.max(200, targetRect.width + 20),
-        minHeight: Math.max(44, targetRect.height + 10),
-        padding: '4px 6px',
+        left: targetRect.left,
+        top: targetRect.top,
+        width: Math.max(200, targetRect.width + 4),
+        minHeight: Math.max(44, targetRect.height + 4),
+        padding: '2px 4px',
         fontSize,
+        lineHeight: 1.4,
         fontFamily: 'system-ui, sans-serif',
         border: `2px solid ${UI_PRIMARY}`,
         borderRadius: 4,
         outline: 'none',
         resize: 'both',
         zIndex: 30,
-        background: 'white',
+        background: 'rgba(255,255,255,0.95)',
         boxSizing: 'border-box',
+        margin: 0,
       }}
     />
   );
