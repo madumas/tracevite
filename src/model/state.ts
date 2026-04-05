@@ -393,6 +393,30 @@ export function fixSegmentLength(
   };
 }
 
+/** Set per-circle color index. undefined = revert to global color. */
+export function setCircleColor(
+  state: ConstructionState,
+  circleId: string,
+  colorIndex: number | undefined,
+): ConstructionState {
+  return {
+    ...state,
+    circles: state.circles.map((c) => (c.id === circleId ? { ...c, colorIndex } : c)),
+  };
+}
+
+/** Set per-segment color index. undefined = revert to global color. */
+export function setSegmentColor(
+  state: ConstructionState,
+  segmentId: string,
+  colorIndex: number | undefined,
+): ConstructionState {
+  return {
+    ...state,
+    segments: state.segments.map((s) => (s.id === segmentId ? { ...s, colorIndex } : s)),
+  };
+}
+
 /** Remove fixedLength constraint from a segment. */
 export function unfixSegmentLength(state: ConstructionState, segmentId: string): ConstructionState {
   const segment = state.segments.find((s) => s.id === segmentId);

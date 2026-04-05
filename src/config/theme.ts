@@ -21,6 +21,8 @@ export const CANVAS_TRANSFORMED = '#6D28D9'; // violet — distinguishes transfo
 export const CANVAS_TRANSFORM_PALETTE = ['#6D28D9', '#2563EB', '#B45309'] as const;
 export const CANVAS_TRANSFORM_DASHES = [undefined, '10 5', '3 3'] as const;
 export const CANVAS_SELECTION_BG = '#CCE8E6';
+/** Per-segment color palette (manual coloring by student). WCAG AA on #FAFCFF. */
+export const SEGMENT_COLORS = ['#0a7e7a', '#0F6E56', '#6D28D9', '#C24B22'] as const;
 
 // ── UI colors ──────────────────────────────────────────────
 export const UI_BG = '#F5F7FA';

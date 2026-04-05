@@ -1,6 +1,6 @@
 import { memo } from 'react';
 import type { Circle, Point, ViewportState, DisplayUnit } from '@/model/types';
-import { useCanvasColors } from '@/config/theme';
+import { useCanvasColors, SEGMENT_COLORS } from '@/config/theme';
 import { MIN_CANVAS_FONT_PX, FOCUS_DIM_OPACITY } from '@/config/accessibility';
 import { CSS_PX_PER_MM } from '@/engine/viewport';
 import { formatLength } from '@/engine/format';
@@ -61,7 +61,11 @@ export const CircleLayer = memo(function CircleLayer({
               cy={cy}
               r={r}
               fill="none"
-              stroke={colors.segment}
+              stroke={
+                circle.colorIndex != null
+                  ? (SEGMENT_COLORS[circle.colorIndex] ?? colors.segment)
+                  : colors.segment
+              }
               strokeWidth={2}
               data-testid={`circle-${circle.id}`}
               data-element-id={circle.id}

@@ -25,6 +25,7 @@ export interface Segment {
   readonly isTransformed?: boolean; // true for segments created by transformations
   readonly transformOperation?: string; // groups elements by transformation
   readonly transformGroupIndex?: number; // copy index within a frieze
+  readonly colorIndex?: number; // 0-3, per-segment color override. undefined = global color
 }
 
 /** A circle defined by center and radius. */
@@ -32,6 +33,7 @@ export interface Circle {
   readonly id: string;
   readonly centerPointId: string;
   readonly radiusMm: number;
+  readonly colorIndex?: number; // 0-3, per-circle color override
 }
 
 /** A free-form text box placed on the canvas. */

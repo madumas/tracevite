@@ -346,6 +346,20 @@ function AppContent({ initialRegistry }: AppProps) {
     [dispatch],
   );
 
+  const handleSetSegmentColor = useCallback(
+    (segmentId: string, colorIndex: number | undefined) => {
+      dispatch({ type: 'SET_SEGMENT_COLOR', segmentId, colorIndex });
+    },
+    [dispatch],
+  );
+
+  const handleSetCircleColor = useCallback(
+    (circleId: string, colorIndex: number | undefined) => {
+      dispatch({ type: 'SET_CIRCLE_COLOR', circleId, colorIndex });
+    },
+    [dispatch],
+  );
+
   const handleCanvasClick = useCallback(
     (mmPos: { x: number; y: number }) => {
       clearToast();
@@ -1373,6 +1387,8 @@ function AppContent({ initialRegistry }: AppProps) {
                 onFixCircleRadius={setFixingCircleId}
                 onFixSegmentLength={handleFixSegmentLength}
                 onDeleteElement={handleDeleteElement}
+                onSetSegmentColor={handleSetSegmentColor}
+                onSetCircleColor={handleSetCircleColor}
                 containerWidth={containerSize.width}
                 fontScale={effectiveFontScale}
               />

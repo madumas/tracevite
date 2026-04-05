@@ -1,6 +1,12 @@
 import { useState, useEffect, useRef } from 'react';
 import type { ConstructionState, ViewportState, Segment } from '@/model/types';
-import { UI_SURFACE, UI_BORDER, UI_TEXT_PRIMARY, UI_DESTRUCTIVE } from '@/config/theme';
+import {
+  UI_SURFACE,
+  UI_BORDER,
+  UI_TEXT_PRIMARY,
+  UI_DESTRUCTIVE,
+  SEGMENT_COLORS,
+} from '@/config/theme';
 import { MIN_BUTTON_SIZE_PX, MIN_BUTTON_GAP_PX } from '@/config/accessibility';
 import { CSS_PX_PER_MM } from '@/engine/viewport';
 import { ACTION_DELETE } from '@/config/messages';
@@ -15,6 +21,8 @@ interface ContextActionBarProps {
   readonly onFixCircleRadius?: (circleId: string) => void;
   readonly onFixSegmentLength?: (segmentId: string) => void;
   readonly onDeleteElement?: (elementId: string) => void;
+  readonly onSetSegmentColor?: (segmentId: string, colorIndex: number | undefined) => void;
+  readonly onSetCircleColor?: (circleId: string, colorIndex: number | undefined) => void;
   readonly containerWidth?: number;
   readonly fontScale?: number;
 }
@@ -30,6 +38,8 @@ export function ContextActionBar({
   onFixCircleRadius,
   onFixSegmentLength,
   onDeleteElement,
+  onSetSegmentColor,
+  onSetCircleColor,
   containerWidth,
   fontScale = 1,
 }: ContextActionBarProps) {
@@ -101,7 +111,7 @@ export function ContextActionBar({
   // Only show if there are actions to display
   const hasActions =
     (point && onToggleLock) ||
-    (segment && onFixSegmentLength) ||
+    (segment && (onFixSegmentLength || onSetSegmentColor)) ||
     (circle && onFixCircleRadius) ||
     onDeleteElement;
   if (!hasActions) return null;
@@ -197,6 +207,41 @@ export function ContextActionBar({
         >
           Fixer rayon
         </button>
+      )}
+
+      {/* Per-element color pastilles */}
+      {((segment && onSetSegmentColor) || (circle && onSetCircleColor)) && (
+        <div style={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+          {SEGMENT_COLORS.map((color, i) => {
+            const currentIndex = segment ? segment.colorIndex : circle?.colorIndex;
+            return (
+              <button
+                key={color}
+                onClick={() => {
+                  const newIndex = currentIndex === i ? undefined : i;
+                  if (segment && onSetSegmentColor) onSetSegmentColor(segment.id, newIndex);
+                  else if (circle && onSetCircleColor) onSetCircleColor(circle.id, newIndex);
+                }}
+                style={{
+                  width: 28,
+                  height: 28,
+                  borderRadius: '50%',
+                  background: color,
+                  border: currentIndex === i ? '3px solid #1A2433' : '2px solid rgba(0,0,0,0.15)',
+                  cursor: 'pointer',
+                  padding: 0,
+                  minWidth: 44,
+                  minHeight: 44,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+                aria-label={`Couleur ${i + 1}`}
+                data-testid={`context-color-${i}`}
+              />
+            );
+          })}
+        </div>
       )}
 
       {/* Delete with micro-confirmation */}

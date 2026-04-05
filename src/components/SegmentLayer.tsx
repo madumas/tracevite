@@ -5,6 +5,7 @@ import {
   CANVAS_TRANSFORMED,
   CANVAS_TRANSFORM_PALETTE,
   CANVAS_TRANSFORM_DASHES,
+  SEGMENT_COLORS,
   useCanvasColors,
 } from '@/config/theme';
 import { MIN_CANVAS_FONT_PX, SEGMENT_HIT_ZONE_MM, FOCUS_DIM_OPACITY } from '@/config/accessibility';
@@ -190,7 +191,10 @@ export const SegmentLayer = memo(function SegmentLayer({
             {(() => {
               let stroke = segmentColor;
               let dashArray: string | undefined;
-              if (segment.isTransformed) {
+              if (segment.colorIndex != null) {
+                // Per-segment color (manual, student-chosen) — highest priority
+                stroke = SEGMENT_COLORS[segment.colorIndex] ?? segmentColor;
+              } else if (segment.isTransformed) {
                 if (segment.transformGroupIndex != null) {
                   const idx = segment.transformGroupIndex % CANVAS_TRANSFORM_PALETTE.length;
                   stroke = CANVAS_TRANSFORM_PALETTE[idx]!;

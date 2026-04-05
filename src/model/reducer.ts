@@ -37,6 +37,8 @@ export type ConstructionAction =
   | { type: 'UPDATE_POINT_POSITION'; pointId: string; x: number; y: number }
   | { type: 'FIX_SEGMENT_LENGTH'; segmentId: string; lengthMm: number }
   | { type: 'UNFIX_SEGMENT_LENGTH'; segmentId: string }
+  | { type: 'SET_SEGMENT_COLOR'; segmentId: string; colorIndex: number | undefined }
+  | { type: 'SET_CIRCLE_COLOR'; circleId: string; colorIndex: number | undefined }
   | { type: 'MOVE_POINT'; pointId: string; x: number; y: number }
   | { type: 'CREATE_CIRCLE'; centerPointId: string; radiusMm: number }
   | { type: 'SET_CIRCLE_RADIUS'; circleId: string; radiusMm: number }
@@ -248,6 +250,16 @@ export function reduce(state: ReducerState, action: ConstructionAction): Reducer
     case 'UNFIX_SEGMENT_LENGTH': {
       const newState = State.unfixSegmentLength(current, action.segmentId);
       if (newState === current) return state;
+      return { undoManager: Undo.pushState(undoManager, newState) };
+    }
+
+    case 'SET_SEGMENT_COLOR': {
+      const newState = State.setSegmentColor(current, action.segmentId, action.colorIndex);
+      return { undoManager: Undo.pushState(undoManager, newState) };
+    }
+
+    case 'SET_CIRCLE_COLOR': {
+      const newState = State.setCircleColor(current, action.circleId, action.colorIndex);
       return { undoManager: Undo.pushState(undoManager, newState) };
     }
 
