@@ -61,6 +61,7 @@ async function boot() {
       points: s.points,
       segments: s.segments,
       circles: s.circles,
+      textBoxes: s.textBoxes,
       consigne: s.consigne,
       displayMode: s.displayMode,
       gridSizeMm: s.gridSizeMm as 5 | 10 | 20,

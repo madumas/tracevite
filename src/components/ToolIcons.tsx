@@ -30,6 +30,26 @@ export function SelectIcon() {
   );
 }
 
+/** Text: stylized T for text tool */
+export function TextIcon() {
+  return (
+    <svg {...S}>
+      <text
+        x="7"
+        y="15"
+        fontSize="15"
+        fontWeight="700"
+        fontFamily="system-ui, sans-serif"
+        fill={stroke}
+        textAnchor="middle"
+      >
+        T
+      </text>
+      <line x1="2" y1="17" x2="12" y2="17" stroke={stroke} strokeWidth="1.5" />
+    </svg>
+  );
+}
+
 /** Segment: diagonal line with dots at endpoints */
 export function SegmentIcon() {
   return (

@@ -9,6 +9,7 @@ import { ActionBar } from '@/components/ActionBar';
 import { SnapFeedback } from '@/components/SnapFeedback';
 import { ContextActionBar } from '@/components/ContextActionBar';
 import { AngleLayer } from '@/components/AngleLayer';
+import { TextBoxLayer } from '@/components/TextBoxLayer';
 import { useActiveTool } from '@/hooks/useActiveTool';
 import { useSelection } from '@/hooks/useSelection';
 import { usePointerInteraction } from '@/hooks/usePointerInteraction';
@@ -1268,6 +1269,14 @@ function AppContent({ initialRegistry }: AppProps) {
                 activeVertexPointId={tool.activePointId ?? undefined}
                 angleLabelObstacles={angleLabelObstacles}
                 focusDimmedIds={focusDimmedIds}
+              />
+
+              {/* Text boxes */}
+              <TextBoxLayer
+                textBoxes={state.textBoxes}
+                viewport={viewport}
+                selectedElementId={state.selectedElementId}
+                fontScale={effectiveFontScale}
               />
 
               {/* Tool-specific overlays (ghost segment, ghost circle, etc.) */}

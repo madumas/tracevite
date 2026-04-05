@@ -6,6 +6,7 @@ import { GeoMoloLogo } from './GeoMoloLogo';
 import { MIN_BUTTON_SIZE_PX, MIN_BUTTON_GAP_PX } from '@/config/accessibility';
 import {
   SelectIcon,
+  TextIcon,
   SegmentIcon,
   PointIcon,
   CircleIcon,
@@ -171,6 +172,16 @@ export const Toolbar = memo(function Toolbar({
           data-testid="tool-segment"
         >
           <SegmentIcon /> <span className="tool-label">{TOOL_SEGMENT}</span>
+        </button>
+        {/* Text — always visible */}
+        <button
+          ref={refIfActive('text')}
+          onClick={() => onToolChange('text')}
+          style={{ ...toolBtnBase, ...(activeTool === 'text' ? activeStyle : {}) }}
+          aria-pressed={activeTool === 'text'}
+          data-testid="tool-text"
+        >
+          <TextIcon /> <span className="tool-label">Texte</span>
         </button>
         {/* Point — hidden by default, activable via settings (spec §6.2) */}
         {pointToolVisible && (

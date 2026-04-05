@@ -5,7 +5,14 @@
 
 import { compressToEncodedURIComponent, decompressFromEncodedURIComponent } from 'lz-string';
 import QRCode from 'qrcode';
-import type { Point, Segment, Circle, ConstructionState, DisplayMode } from '@/model/types';
+import type {
+  Point,
+  Segment,
+  Circle,
+  TextBox,
+  ConstructionState,
+  DisplayMode,
+} from '@/model/types';
 import { generateId } from '@/model/id';
 
 // === Compact payload format ===
@@ -17,11 +24,13 @@ interface SharePayload {
   p?: MinPoint[]; // points
   s?: MinSegment[]; // segments (index-based)
   r?: MinCircle[]; // circles
+  b?: MinTextBox[]; // textBoxes
   sc?: string; // segment color override (hex)
 }
 
 type MinPoint = [number, number, string] | [number, number, string, true]; // [x, y, label] or [x, y, label, locked]
 type MinSegment = [number, number]; // [startPointIndex, endPointIndex]
+type MinTextBox = [number, number, string]; // [x, y, text]
 type MinCircle = [number, number]; // [centerPointIndex, radiusMm]
 
 // === Encoding ===
@@ -59,6 +68,12 @@ export function generateShareUrl(state: ConstructionState, segmentColor?: string
     }
   }
 
+  if (state.textBoxes.length > 0) {
+    payload.b = state.textBoxes
+      .filter((tb) => tb.text)
+      .map((tb) => [Math.round(tb.x * 10) / 10, Math.round(tb.y * 10) / 10, tb.text]);
+  }
+
   const compressed = compressToEncodedURIComponent(JSON.stringify(payload));
   return url.toString() + '#s=' + compressed;
 }
@@ -69,6 +84,7 @@ export interface SharedConstruction {
   points: Point[];
   segments: Segment[];
   circles: Circle[];
+  textBoxes: TextBox[];
   consigne: string | null;
   displayMode: DisplayMode;
   gridSizeMm: number;
@@ -129,10 +145,18 @@ export function parseShareParam(hash: string): SharedConstruction | null {
       }
     }
 
+    const textBoxes: TextBox[] = [];
+    if (Array.isArray(data.b)) {
+      for (const mb of data.b) {
+        textBoxes.push({ id: generateId(), x: mb[0], y: mb[1], text: mb[2] });
+      }
+    }
+
     return {
       points,
       segments,
       circles,
+      textBoxes,
       consigne: data.t ?? null,
       displayMode: data.m === 'c' ? 'complet' : 'simplifie',
       gridSizeMm: data.g ?? 5,
