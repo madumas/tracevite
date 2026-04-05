@@ -36,11 +36,7 @@
     <title>GéoMolo</title>
   </head>
   <body>
-    <div id="root"><p style="padding:20px;font-size:16px">Chargement...</p></div>
-    <script>
-      window.onerror=function(m,s,l,c,e){document.body.innerHTML='<pre style="padding:20px;color:red">ERROR: '+m+'\n'+s+':'+l+'\n'+(e&&e.stack||'')+'</pre>';};
-      window.addEventListener('unhandledrejection',function(ev){document.body.innerHTML='<pre style="padding:20px;color:red">PROMISE: '+(ev.reason&&ev.reason.message||ev.reason)+'</pre>';});
-    </script>
+    <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
