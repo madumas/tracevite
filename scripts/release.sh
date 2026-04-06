@@ -73,7 +73,12 @@ git merge dev --no-edit
 echo -e "${GREEN}npm version ${BUMP}...${NC}"
 npm version "$BUMP" --no-git-tag-version
 NEW_VERSION=$(node -p "require('./package.json').version")
-git add package.json package-lock.json
+
+# Stamp version into docs HTML + regenerate PDFs
+echo -e "${GREEN}Docs: stamp v${NEW_VERSION} + PDFs...${NC}"
+node docs/generate-pdfs.mjs
+
+git add package.json package-lock.json public/docs/
 git commit -m "release: v${NEW_VERSION}"
 git tag "v${NEW_VERSION}"
 
