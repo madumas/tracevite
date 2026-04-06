@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://geomolo.ca/sitemap.xml

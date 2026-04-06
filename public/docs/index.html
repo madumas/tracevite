@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@600;800&display=swap" rel="stylesheet" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GéoMolo — Documentation</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+    color: #1A2433;
+    background: #F5F7FA;
+    min-height: 100vh;
+  }
+
+  .page {
+    max-width: 700px;
+    margin: 0 auto;
+    padding: 40px 20px;
+  }
+
+  .header {
+    text-align: center;
+    margin-bottom: 40px;
+  }
+  .logo {
+    font-family: 'Nunito Sans', 'Avenir Next', 'Segoe UI', system-ui, sans-serif;
+    font-size: 42px;
+    letter-spacing: -0.02em;
+    line-height: 1;
+  }
+  .logo-geo { font-weight: 600; color: #0a7e7a; }
+  .logo-molo { font-weight: 800; color: #0ea5a0; }
+  .subtitle {
+    font-size: 16px;
+    color: #7A8B99;
+    margin-top: 8px;
+  }
+
+  .cards {
+    display: grid;
+    gap: 16px;
+  }
+
+  .card {
+    background: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 10px;
+    padding: 20px 24px;
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    transition: box-shadow 0.15s;
+  }
+  .card:hover {
+    box-shadow: 0 2px 12px rgba(10, 126, 122, 0.12);
+    border-color: #0a7e7a;
+  }
+
+  .card-icon {
+    background: #E8F5F4;
+    color: #0a7e7a;
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    flex-shrink: 0;
+  }
+
+  .card-body { flex: 1; min-width: 0; }
+
+  .card-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: #1A2433;
+    margin-bottom: 4px;
+  }
+
+  .card-desc {
+    font-size: 13px;
+    color: #666;
+    line-height: 1.4;
+    margin-bottom: 10px;
+  }
+
+  .card-links {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .card-links a {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 13px;
+    font-weight: 600;
+    text-decoration: none;
+    padding: 4px 10px;
+    border-radius: 5px;
+    transition: background 0.1s;
+  }
+
+  .link-html {
+    color: #0a7e7a;
+    background: #E8F5F4;
+  }
+  .link-html:hover { background: #D0EDEC; }
+
+  .link-pdf {
+    color: #C24B22;
+    background: #FDF0EB;
+  }
+  .link-pdf:hover { background: #FAE0D5; }
+
+  .footer {
+    text-align: center;
+    margin-top: 40px;
+    font-size: 13px;
+    color: #7A8B99;
+  }
+  .footer a { color: #0a7e7a; text-decoration: none; }
+  .footer a:hover { text-decoration: underline; }
+</style>
+</head>
+<body>
+
+<div class="page">
+
+  <div class="header">
+    <div class="logo"><span class="logo-geo">Géo</span><span class="logo-molo">Molo</span></div>
+    <div class="subtitle">Documents d'accompagnement</div>
+  </div>
+
+  <div class="cards">
+
+    <div class="card">
+      <div class="card-icon">&#x1f4cb;</div>
+      <div class="card-body">
+        <div class="card-title">Fiche descriptive</div>
+        <div class="card-desc">Ce que fait l'outil, pourquoi il fonctionne pour les enfants qui ont des difficultés de traçage, et la référence technique complète (profils, compensations, limites).</div>
+        <div class="card-links">
+          <a href="fiche-descriptive.html" class="link-html">HTML</a>
+          <a href="GeoMolo-fiche-descriptive.pdf" class="link-pdf">PDF</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-icon">&#x1f9d1;&#x200d;&#x1f3eb;</div>
+      <div class="card-body">
+        <div class="card-title">Guide enseignant</div>
+        <div class="card-desc">Démarrage rapide en 2 pages : ouvrir l'outil, choisir le mode, partager une consigne, récupérer le travail, configurer l'évaluation et les profils d'accessibilité.</div>
+        <div class="card-links">
+          <a href="guide-enseignant.html" class="link-html">HTML</a>
+          <a href="GeoMolo-guide-enseignant.pdf" class="link-pdf">PDF</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-icon">&#x1f9e9;</div>
+      <div class="card-body">
+        <div class="card-title">Aide-mémoire enfant</div>
+        <div class="card-desc">4 actions essentielles avec captures d'écran. Format 1 page, plastifiable. Tracer, Annuler, Déplacer, Supprimer.</div>
+        <div class="card-links">
+          <a href="aide-memoire-enfant.html" class="link-html">HTML</a>
+          <a href="GeoMolo-aide-memoire.pdf" class="link-pdf">PDF</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-icon">&#x1f3e0;</div>
+      <div class="card-body">
+        <div class="card-title">Note pour les parents</div>
+        <div class="card-desc">Explication simple de l'outil pour les parents. À joindre dans un courriel ou dans l'agenda de l'élève.</div>
+        <div class="card-links">
+          <a href="GeoMolo-note-parent.html" class="link-html">HTML</a>
+          <a href="GeoMolo-note-parent.pdf" class="link-pdf">PDF</a>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="footer">
+    <a href="https://geomolo.ca">geomolo.ca</a> · info@allomolo.ca · <span class="doc-version">v0.14.0</span>
+  </div>
+
+</div>
+
+</body>
+</html>

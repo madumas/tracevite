@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@600;800&display=swap" rel="stylesheet" />
+<title>GéoMolo — Aide-mémoire</title>
+<style>
+  @page {
+    size: letter;
+    margin: 15mm;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+    color: #1A2433;
+    background: #fff;
+    width: 185.9mm;
+    margin: 0 auto;
+    padding: 10mm 0;
+  }
+
+  .header {
+    display: flex;
+    align-items: baseline;
+    justify-content: center;
+    gap: 3mm;
+    margin-bottom: 8mm;
+  }
+  .logo {
+    font-family: 'Nunito Sans', 'Avenir Next', 'Segoe UI', system-ui, sans-serif;
+    font-size: 32px;
+    letter-spacing: -0.02em;
+    line-height: 1;
+    white-space: nowrap;
+  }
+  .logo-geo { font-weight: 600; color: #0a7e7a; }
+  .logo-molo { font-weight: 800; color: #0ea5a0; }
+  h1 {
+    font-size: 24px;
+    color: #555;
+    font-weight: 400;
+  }
+
+  .cards {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 5mm;
+  }
+
+  .card {
+    border: 2px solid #0a7e7a;
+    border-radius: 10px;
+    padding: 5mm;
+    page-break-inside: avoid;
+    display: flex;
+    flex-direction: column;
+    gap: 3mm;
+  }
+
+  .card-header {
+    display: flex;
+    align-items: center;
+    gap: 3mm;
+  }
+
+  .card-number {
+    background: #0a7e7a;
+    color: #fff;
+    font-size: 22px;
+    font-weight: 700;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .card-title {
+    font-size: 22px;
+    font-weight: 700;
+    color: #0a7e7a;
+  }
+
+  .card-text {
+    font-size: 16px;
+    line-height: 1.4;
+    color: #333;
+  }
+
+  .card-img {
+    border: 1px solid #e0e0e0;
+    border-radius: 6px;
+    overflow: hidden;
+    background: #FAFCFF;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2mm;
+  }
+  .card-img img {
+    max-width: 100%;
+    max-height: 130px;
+    height: auto;
+    display: block;
+  }
+
+  .emergency {
+    margin-top: 6mm;
+    border: 3px solid #C82828;
+    border-radius: 10px;
+    padding: 5mm 6mm;
+    display: flex;
+    align-items: center;
+    gap: 4mm;
+  }
+  .emergency-icon {
+    background: #C82828;
+    color: #fff;
+    font-size: 22px;
+    font-weight: 700;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .emergency-title {
+    font-size: 22px;
+    font-weight: 700;
+    color: #C82828;
+    margin-bottom: 2px;
+  }
+  .emergency-text {
+    font-size: 16px;
+    color: #333;
+    line-height: 1.4;
+  }
+
+  .footer {
+    margin-top: 6mm;
+    text-align: center;
+    font-size: 13px;
+    color: #7A8B99;
+  }
+
+  @media print {
+    body { padding: 0; width: auto; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <span class="logo"><span class="logo-geo">Géo</span><span class="logo-molo">Molo</span></span>
+  <h1>Aide-mémoire</h1>
+</div>
+
+<div class="cards">
+
+  <div class="card">
+    <div class="card-header">
+      <div class="card-number">1</div>
+      <div class="card-title">Tracer</div>
+    </div>
+    <div class="card-text">
+      Clique sur la grille, puis clique une deuxième fois.
+    </div>
+    <div class="card-img">
+      <img src="images/aide-memoire-tracer.png"
+           alt="Un segment tracé entre les points A et B, 10,0 cm">
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <div class="card-number">2</div>
+      <div class="card-title">Oups!</div>
+    </div>
+    <div class="card-text">
+      Clique Annuler (en bas à gauche).
+    </div>
+    <div class="card-img">
+      <img src="images/aide-memoire-annuler.png"
+           alt="Le bouton Annuler dans la barre d'actions">
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <div class="card-number">3</div>
+      <div class="card-title">Déplacer</div>
+    </div>
+    <div class="card-text">
+      Clique sur Déplacer, clique sur un point, déplace-le, clique pour le poser.
+    </div>
+    <div class="card-img">
+      <img src="images/aide-memoire-deplacer.png"
+           alt="Le bouton Déplacer dans la barre d'outils">
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <div class="card-number">4</div>
+      <div class="card-title">Supprimer</div>
+    </div>
+    <div class="card-text">
+      Clique sur Sélectionner, clique sur un segment ou un point, puis clique Supprimer.
+    </div>
+    <div class="card-img">
+      <img src="images/aide-memoire-supprimer.png"
+           alt="Le bouton Supprimer dans la barre contextuelle">
+    </div>
+  </div>
+
+</div>
+
+<div class="emergency">
+  <div class="emergency-icon">!</div>
+  <div>
+    <div class="emergency-title">Au secours!</div>
+    <div class="emergency-text">
+      Appuie sur <strong>Échap</strong> (coin en haut à gauche du clavier).
+      Sur tablette, clique le bouton <strong>Terminer</strong> dans la barre verte.
+    </div>
+  </div>
+</div>
+
+<div class="footer">geomolo.ca · info@allomolo.ca · <span class="doc-version">v0.14.0</span></div>
+
+</body>
+</html>

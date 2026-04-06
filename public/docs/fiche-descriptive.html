@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@600;800&display=swap" rel="stylesheet" />
+<title>GéoMolo — Fiche descriptive</title>
+<style>
+  @page { size: letter; margin: 10mm 14mm; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+    color: #1A2433;
+    background: #fff;
+    max-width: 188mm;
+    margin: 0 auto;
+    font-size: 12px;
+    line-height: 1.4;
+  }
+
+  .header {
+    display: flex;
+    align-items: baseline;
+    justify-content: center;
+    gap: 3mm;
+    margin: 4mm 0 3mm;
+  }
+  .logo {
+    font-family: 'Nunito Sans', 'Avenir Next', 'Segoe UI', system-ui, sans-serif;
+    font-size: 24px;
+    letter-spacing: -0.02em;
+    line-height: 1;
+  }
+  .logo-geo { font-weight: 600; color: #0a7e7a; }
+  .logo-molo { font-weight: 800; color: #0ea5a0; }
+  h1 { font-size: 18px; color: #555; font-weight: 400; }
+
+  h2 {
+    font-size: 14px;
+    color: #0a7e7a;
+    border-bottom: 2px solid #0a7e7a;
+    padding-bottom: 1px;
+    margin: 4mm 0 2mm;
+  }
+  h3 {
+    font-size: 12px;
+    font-weight: 700;
+    color: #1A2433;
+    margin: 2.5mm 0 1mm;
+  }
+
+  p { margin-bottom: 1.5mm; }
+  ul, ol { padding-left: 5mm; margin-bottom: 1.5mm; }
+  li { margin-bottom: 1mm; }
+  strong { color: #0a7e7a; }
+
+  .page-break { page-break-before: always; }
+
+  .callout {
+    background: #E8F5F4;
+    border-left: 3px solid #0a7e7a;
+    padding: 2mm 3mm;
+    margin: 2mm 0;
+    border-radius: 0 4px 4px 0;
+  }
+
+  .category-box {
+    background: #F0F7F7;
+    border: 2px solid #0a7e7a;
+    border-radius: 6px;
+    padding: 2.5mm 4mm;
+    margin: 2mm 0 3mm;
+    font-size: 12.5px;
+  }
+  .category-box strong { font-size: 13px; }
+
+  .principles {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2mm 4mm;
+  }
+  .principle {
+    padding: 2mm 3mm;
+    border-left: 3px solid #0ea5a0;
+    background: #FAFCFF;
+    border-radius: 0 4px 4px 0;
+    page-break-inside: avoid;
+  }
+  .principle h3 {
+    color: #0a7e7a;
+    margin-bottom: 0.5mm;
+    font-size: 11.5px;
+  }
+  .principle p {
+    font-size: 11px;
+    margin-bottom: 0;
+    line-height: 1.35;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 11px;
+    margin: 2mm 0;
+  }
+  th {
+    background: #0a7e7a;
+    color: #fff;
+    padding: 2mm;
+    text-align: left;
+    font-weight: 600;
+  }
+  td {
+    padding: 1.5mm 2mm;
+    border-bottom: 1px solid #e0e0e0;
+  }
+  tr:nth-child(even) td { background: #F8FAFA; }
+
+  .two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 3mm;
+  }
+
+  .tech-list {
+    font-size: 11px;
+    line-height: 1.35;
+  }
+  .tech-list li { margin-bottom: 0.8mm; }
+
+  .not-list {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1mm 3mm;
+    font-size: 11px;
+    list-style: none;
+    padding: 0;
+  }
+  .not-list li::before {
+    content: "✕ ";
+    color: #C82828;
+    font-weight: 700;
+  }
+
+  .footer {
+    text-align: center;
+    font-size: 10px;
+    color: #7A8B99;
+    margin-top: 3mm;
+    padding-top: 2mm;
+    border-top: 1px solid #eee;
+  }
+
+  @media print { body { max-width: none; } }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════ PAGE 1 ═══════════════════ -->
+
+<div class="header">
+  <span class="logo"><span class="logo-geo">Géo</span><span class="logo-molo">Molo</span></span>
+  <h1>Fiche descriptive</h1>
+</div>
+
+<div class="category-box">
+  <strong>Catégorie d'aide :</strong> Mesure d'adaptation. Outil numérique qui compense la difficulté de traçage et de représentation en géométrie. Ne modifie pas les attentes du programme. L'outil retire la barrière motrice sans donner un avantage sur la compétence évaluée.
+</div>
+
+<h2>Ce que fait GéoMolo</h2>
+<p>GéoMolo est un outil numérique gratuit qui aide l'enfant à représenter des figures géométriques à l'écran quand le crayon, la règle ou le compas sont un obstacle. L'enfant décide quoi construire, où et comment; l'outil exécute le tracé. C'est aussi utile pour l'enfant qui sait quoi faire mais qui a de la difficulté à se mettre en action ou à organiser ses gestes.</p>
+
+<h2>Ce que l'enfant fait lui-même</h2>
+<ul>
+  <li>Décider quoi construire et pourquoi</li>
+  <li>Calculer le périmètre et l'aire (l'outil affiche les longueurs, pas les calculs)</li>
+  <li>Identifier les propriétés des figures (en activant <em>Masquer les propriétés</em>)</li>
+</ul>
+<div class="callout">
+  L'outil guide les étapes de construction en langage simple, mais ne dirige jamais le raisonnement. C'est la même logique qu'un traitement de texte qui remplace l'écriture manuscrite.
+</div>
+
+<h2>Pourquoi ça fonctionne pour cet enfant</h2>
+<p style="margin-bottom:2mm;">GéoMolo a été conçu spécifiquement pour les élèves qui ont des difficultés de traçage, de coordination ou de mise en action.</p>
+
+<div class="principles">
+  <div class="principle">
+    <h3>L'outil fait le geste, l'enfant fait le raisonnement</h3>
+    <p>Avec une règle, l'enfant doit simultanément tenir l'instrument, maintenir la pression, suivre une ligne et penser à sa construction. Quand le geste accapare toute l'attention, il n'en reste plus pour la géométrie.</p>
+  </div>
+  <div class="principle">
+    <h3>Cliquer, jamais glisser</h3>
+    <p>Chaque action se fait en deux clics distincts. Nulle part il n'y a de double-clic, de clic droit ou de geste de précision. Les raccourcis clavier sont désactivés par défaut.</p>
+  </div>
+  <div class="principle">
+    <h3>L'imprécision est pardonnée</h3>
+    <p>Le doigt peut atterrir à 7 mm de la cible et le point se place exactement où il faut. Un son et une vibration confirment que l'action a été comprise.</p>
+  </div>
+  <div class="principle">
+    <h3>Une seule chose à la fois</h3>
+    <p>La barre de statut dit exactement quoi faire maintenant. L'enfant n'a jamais besoin de retenir mentalement la séquence complète.</p>
+  </div>
+  <div class="principle">
+    <h3>Se tromper ne coûte rien</h3>
+    <p>100 niveaux d'annulation, micro-confirmation avant suppression, sauvegarde constante. Quand la peur de l'erreur disparaît, l'enfant ose essayer.</p>
+  </div>
+  <div class="principle">
+    <h3>Essayer sans risque</h3>
+    <p>Les transformations s'appliquent en un clic et se défont par Annuler. L'enfant essaie, voit, ajuste.</p>
+  </div>
+  <div class="principle">
+    <h3>L'écran montre juste ce qui compte</h3>
+    <p>L'outil cache les détails quand la construction se complexifie et regroupe les mesures dans un panneau à part.</p>
+  </div>
+  <div class="principle">
+    <h3>La complexité arrive quand l'enfant est prêt</h3>
+    <p>Mode Simplifié (2e cycle) ou Complet (3e cycle). Le vocabulaire est neutre, jamais « facile » ou « débutant ».</p>
+  </div>
+</div>
+<div class="principle" style="margin-top:2mm;">
+  <h3>Zéro obstacle avant de commencer</h3>
+  <p>Pas de compte, pas d'installation, ça marche hors ligne. Un enfant qui a déjà dépensé de l'énergie pour s'asseoir et ouvrir son Chromebook n'a pas besoin d'un mot de passe en plus.</p>
+</div>
+
+<h2>Fonctions utiles en classe</h2>
+<ul>
+  <li><strong>Outil Texte</strong> : annoter sa démarche ou écrire des observations directement sur la construction</li>
+  <li><strong>Partage</strong> : l'enseignant partage un lien ou un code QR. L'élève ouvre et travaille directement.</li>
+  <li><strong>Évaluation</strong> : <em>Masquer les propriétés</em> (l'élève identifie lui-même) ou <em>Mode estimation</em> (mesures cachées jusqu'à vérification)</li>
+  <li><strong>Plan cartésien</strong> : 1 ou 4 quadrants, pour les activités de repérage</li>
+  <li><strong>Impression 1:1</strong> : un segment de 5 cm à l'écran mesure 5 cm sur papier</li>
+</ul>
+
+<!-- ═══════════════════ PAGE 2 ═══════════════════ -->
+
+<div class="page-break"></div>
+
+<div class="header">
+  <span class="logo"><span class="logo-geo">Géo</span><span class="logo-molo">Molo</span></span>
+  <h1>Référence technique</h1>
+</div>
+
+<h2>Profils rapides</h2>
+<p>Trois profils préréglés dans Paramètres → Profil rapide. Chaque paramètre reste ajustable individuellement.</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Paramètre</th>
+      <th>Standard</th>
+      <th>Accessibilité accrue</th>
+      <th>Accessibilité maximale</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr><td>Tolérance de l'aimant</td><td>Normale (7 mm)</td><td>Large (10,5 mm)</td><td>Très large (14 mm)</td></tr>
+    <tr><td>Taille de police</td><td>1x</td><td>1,25x</td><td>1,5x</td></tr>
+    <tr><td>Grille</td><td>5 mm</td><td>1 cm</td><td>2 cm</td></tr>
+    <tr><td>Chaînage</td><td>8 s</td><td>8 s</td><td>15 s</td></tr>
+    <tr><td>Contraste élevé</td><td>Désactivé</td><td>Désactivé</td><td>Activé</td></tr>
+    <tr><td>Rappel de pause</td><td>20 min</td><td>20 min</td><td>15 min</td></tr>
+  </tbody>
+</table>
+<p style="font-size:10px; color:#666;">Les tolérances sont en mm physiques, indépendamment de la résolution d'écran.</p>
+
+<h2>Compensations techniques</h2>
+
+<div class="two-col">
+  <div>
+    <h3>Motricité et interaction</h3>
+    <ul class="tech-list">
+      <li>Zone de détection : 7 / 10,5 / 14 mm (configurable)</li>
+      <li>Seuil anti-tremblement : 1,5 mm physique</li>
+      <li>Délai anti-double-clic : 150 ms</li>
+      <li>Points affichés à 3 mm, police min. 13 px</li>
+      <li>Lissage du curseur (tolérance très large)</li>
+      <li>Rejet de paume sur tablette avec stylet</li>
+      <li>Zoom par pincement</li>
+    </ul>
+  </div>
+  <div>
+    <h3>Organisation et rétroaction</h3>
+    <ul class="tech-list">
+      <li>Chaînage de segments : 5 s / 8 s / 15 s / désactivé</li>
+      <li>Panneau latéral configurable gauche/droite</li>
+      <li>Vocabulaire contextuel auto (point→sommet, segment→côté)</li>
+      <li>Sons de rétroaction : désactivé / réduit / complet</li>
+      <li>Vibration haptique (30 ms) sur appareils compatibles</li>
+      <li>Rappel de pause : 20 / 25 / 30 min ou désactivé</li>
+      <li>100 niveaux d'annulation persistés</li>
+    </ul>
+  </div>
+</div>
+
+<h2>Ce que l'outil ne fait PAS</h2>
+<ul class="not-list">
+  <li>Ne calcule pas le périmètre ni l'aire</li>
+  <li>Ne valide pas la construction de l'élève</li>
+  <li>Ne remplace pas l'enseignement de la géométrie</li>
+  <li>Ne pose pas de diagnostic</li>
+  <li>Ne collecte aucune donnée</li>
+</ul>
+
+<h2>Compatibilité</h2>
+<p>Chromebook, iPad, ordinateur. Compatible stylet avec rejet de paume. Rien à installer. Fonctionne hors ligne. Aucun compte. Aucune collecte de données.</p>
+
+<div class="footer">
+  <strong>geomolo.ca</strong> · info@allomolo.ca · <span class="doc-version">v0.14.0</span>
+</div>
+
+</body>
+</html>

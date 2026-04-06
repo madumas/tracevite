@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@600;800&display=swap" rel="stylesheet" />
+<title>GéoMolo — Note pour les parents</title>
+<style>
+  @page { size: letter; margin: 20mm 20mm; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+    color: #1A2433;
+    background: #fff;
+    max-width: 170mm;
+    margin: 0 auto;
+    font-size: 14px;
+    line-height: 1.55;
+    padding: 10mm 0;
+  }
+
+  .header {
+    display: flex;
+    align-items: baseline;
+    justify-content: center;
+    gap: 3mm;
+    margin-bottom: 8mm;
+  }
+  .logo {
+    font-family: 'Nunito Sans', 'Avenir Next', 'Segoe UI', system-ui, sans-serif;
+    font-size: 30px;
+    letter-spacing: -0.02em;
+    line-height: 1;
+  }
+  .logo-geo { font-weight: 600; color: #0a7e7a; }
+  .logo-molo { font-weight: 800; color: #0ea5a0; }
+  h1 { font-size: 22px; color: #555; font-weight: 400; }
+
+  p { margin-bottom: 3mm; }
+
+  .help-box {
+    background: #F0F7F7;
+    border: 2px solid #0a7e7a;
+    border-radius: 8px;
+    padding: 4mm 5mm;
+    margin: 4mm 0;
+  }
+  .help-box strong {
+    display: block;
+    color: #0a7e7a;
+    font-size: 14px;
+    margin-bottom: 2mm;
+  }
+  .help-box ul {
+    padding-left: 5mm;
+    margin: 0;
+  }
+  .help-box li {
+    margin-bottom: 1.5mm;
+  }
+
+  .start-box {
+    background: #FAFCFF;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 3mm 5mm;
+    margin: 4mm 0;
+    text-align: center;
+    font-size: 15px;
+  }
+  .start-box strong { color: #0a7e7a; font-size: 16px; }
+
+  .info {
+    color: #555;
+    font-size: 13px;
+  }
+
+  .footer {
+    text-align: center;
+    font-size: 11px;
+    color: #7A8B99;
+    margin-top: 8mm;
+    padding-top: 3mm;
+    border-top: 1px solid #eee;
+  }
+
+  @media print { body { max-width: none; padding: 0; } }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <span class="logo"><span class="logo-geo">Géo</span><span class="logo-molo">Molo</span></span>
+  <h1>Note pour les parents</h1>
+</div>
+
+<p>GéoMolo est un outil gratuit qui aide votre enfant à représenter et tracer des figures géométriques à l'ordinateur, quand c'est difficile avec le crayon et les instruments (coordination, précision, mise en action).</p>
+
+<p>L'enfant fait le même raisonnement qu'avec une règle et un compas. L'outil l'aide seulement pour tracer et pour démarrer les étapes de sa construction. Il peut aussi écrire ses réponses directement sur sa figure.</p>
+
+<div class="help-box">
+  <strong>Comment l'outil aide concrètement :</strong>
+  <ul>
+    <li>Votre enfant clique pour placer des points, pas besoin de tracer un trait droit ou de tenir un compas stable</li>
+    <li>Si le clic n'est pas parfaitement précis, l'outil corrige tout seul</li>
+    <li>Chaque étape est indiquée clairement à l'écran</li>
+    <li>Annuler est toujours possible, se tromper ne fait pas perdre le travail</li>
+  </ul>
+</div>
+
+<div class="start-box">
+  <strong>Pour commencer :</strong> ouvrir <strong>geomolo.ca</strong> dans Chrome, Edge ou Safari. Rien à installer.
+</div>
+
+<p>Les constructions sont sauvegardées automatiquement dans le navigateur. L'outil fonctionne aussi sans connexion internet.</p>
+
+<p>Aucun compte, aucun mot de passe, aucune collecte de données.</p>
+
+<p>Si l'enseignant ou l'enseignante vous envoie un lien, votre enfant l'ouvre pour voir la consigne et la figure de départ, puis travaille directement dans son navigateur.</p>
+
+<p class="info">Des réglages d'accessibilité sont disponibles dans les Paramètres de l'outil (icône ⚙️) pour ajuster les zones de détection, la taille du texte et le contraste.</p>
+
+<div class="footer">
+  <strong>geomolo.ca</strong> · info@allomolo.ca · <span class="doc-version">v0.14.0</span>
+</div>
+
+</body>
+</html>

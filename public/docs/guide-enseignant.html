@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@600;800&display=swap" rel="stylesheet" />
+<title>GéoMolo — Guide enseignant — Démarrage rapide</title>
+<style>
+  @page { size: letter; margin: 12mm 15mm; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+    color: #1A2433;
+    background: #fff;
+    max-width: 185mm;
+    margin: 0 auto;
+    font-size: 13px;
+    line-height: 1.45;
+  }
+
+  .header {
+    display: flex;
+    align-items: baseline;
+    justify-content: center;
+    gap: 3mm;
+    margin: 5mm 0 4mm;
+  }
+  .logo {
+    font-family: 'Nunito Sans', 'Avenir Next', 'Segoe UI', system-ui, sans-serif;
+    font-size: 26px;
+    letter-spacing: -0.02em;
+    line-height: 1;
+    white-space: nowrap;
+  }
+  .logo-geo { font-weight: 600; color: #0a7e7a; }
+  .logo-molo { font-weight: 800; color: #0ea5a0; }
+  h1 {
+    font-size: 20px;
+    color: #555;
+    font-weight: 400;
+  }
+
+  h2 {
+    font-size: 16px;
+    color: #0a7e7a;
+    border-bottom: 2px solid #0a7e7a;
+    padding-bottom: 2px;
+    margin: 5mm 0 3mm;
+  }
+
+  h3 {
+    font-size: 13px;
+    font-weight: 700;
+    color: #1A2433;
+    margin: 3mm 0 1.5mm;
+  }
+
+  p, li { margin-bottom: 1.5mm; }
+  ul, ol { padding-left: 5mm; }
+  strong { color: #0a7e7a; }
+
+  .page-break { page-break-before: always; }
+
+  .two-col {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 4mm;
+    align-items: start;
+  }
+  .two-col-text { min-width: 0; }
+
+  .img-block {
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    overflow: hidden;
+    background: #FAFCFF;
+    margin: 2mm 0;
+  }
+  .img-block img {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+  .img-block.small { max-width: 240px; }
+  .img-block.medium { max-width: 400px; }
+  .img-block.inline {
+    display: inline-block;
+    vertical-align: middle;
+    max-width: 200px;
+    margin: 0 2mm;
+  }
+  .img-block.full { max-width: 100%; }
+
+  .img-row {
+    display: flex;
+    gap: 3mm;
+    margin: 2mm 0;
+  }
+  .img-row .img-block { flex: 1; }
+
+  .highlight {
+    background: #E8F5F4;
+    border-left: 3px solid #0a7e7a;
+    padding: 2mm 3mm;
+    margin: 2mm 0;
+    border-radius: 0 4px 4px 0;
+    font-size: 12.5px;
+  }
+
+  .footer {
+    text-align: center;
+    font-size: 11px;
+    color: #7A8B99;
+    margin-top: 5mm;
+    padding-top: 2mm;
+    border-top: 1px solid #eee;
+  }
+
+  ol.steps { counter-reset: step; list-style: none; padding-left: 0; }
+  ol.steps li {
+    counter-increment: step;
+    padding-left: 7mm;
+    position: relative;
+    margin-bottom: 2mm;
+  }
+  ol.steps li::before {
+    content: counter(step) ".";
+    position: absolute;
+    left: 0;
+    font-weight: 700;
+    color: #0a7e7a;
+  }
+
+  @media print {
+    body { max-width: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <span class="logo"><span class="logo-geo">Géo</span><span class="logo-molo">Molo</span></span>
+  <h1>Guide enseignant — Démarrage rapide</h1>
+</div>
+
+<!-- ════════════════════════════════════════ PAGE 1 ════════════════════════════════════════ -->
+
+<h2>Démarrer</h2>
+
+<h3>Ouvrir GéoMolo</h3>
+<p>Ouvrir <strong>geomolo.ca</strong> dans Chrome, Edge ou Safari sur le Chromebook, l'iPad ou l'ordinateur de l'élève. Rien à installer. L'outil fonctionne aussi hors ligne après la première visite.</p>
+
+<div class="img-block full">
+  <img src="images/guide-vue-ensemble.png" alt="Interface GéoMolo au premier lancement">
+</div>
+
+<div class="two-col">
+  <div class="two-col-text">
+    <h3>Choisir le mode d'affichage</h3>
+    <p>En haut à droite de la barre d'outils, un menu déroulant permet de choisir :</p>
+    <ul>
+      <li><strong>Simplifié</strong> : affichage essentiel (correspond au 2e cycle)</li>
+      <li><strong>Complet</strong> : toutes les mesures et outils (correspond au 3e cycle)</li>
+    </ul>
+    <p>Le mode Simplifié affiche les angles par classification (aigu, droit, obtus), sans mesure en degrés, conformément au programme du 2e cycle. Le mode Complet ajoute le cercle, la translation, la rotation, l'agrandissement et le plan cartésien. Le mode peut être changé à tout moment.</p>
+  </div>
+  <div class="img-block small">
+    <img src="images/guide-mode-selector.png" alt="Menu déroulant Simplifié / Complet">
+  </div>
+</div>
+
+<div class="highlight">
+  Le vocabulaire s'adapte automatiquement au contexte : un « point » devient « sommet » quand il fait partie d'une figure fermée, un « segment » devient « côté ». C'est le vocabulaire exact du programme.
+</div>
+
+<h3>Le tutoriel intégré</h3>
+<p>À la première utilisation, un tutoriel en 4 étapes guide l'élève directement dans la barre de statut (la barre verte sous les outils). L'élève apprend à tracer un segment, annuler, retracer et supprimer, en environ 30 secondes, par l'action.</p>
+
+<h3>La barre de statut</h3>
+<p>La barre sous les outils guide l'élève à chaque étape en langage simple :</p>
+<div class="img-block full">
+  <img src="images/guide-barre-statut.png" alt="Barre de statut montrant l'instruction en cours">
+</div>
+<p>L'élève n'a qu'à suivre l'instruction affichée.</p>
+
+<h3>Une construction simple</h3>
+<div class="img-block full">
+  <img src="images/guide-construction-simple.png" alt="Deux segments tracés avec mesures">
+</div>
+
+<!-- ════════════════════════════════════════ PAGE 2 ════════════════════════════════════════ -->
+
+<div class="page-break"></div>
+<h2>En classe</h2>
+
+<div class="two-col">
+  <div class="two-col-text">
+    <h3>Préparer et partager une consigne</h3>
+    <ol class="steps">
+      <li>Construire la figure de départ dans GéoMolo</li>
+      <li>Écrire la consigne avec l'outil <strong>Texte</strong> (bouton T; en mode Simplifié, cliquer d'abord <em>Plus d'outils</em>)</li>
+      <li>Cliquer <strong>Partager</strong> → <strong>Lien &amp; QR code</strong></li>
+      <li>Coller le lien dans Google Classroom ou Microsoft Teams, ou afficher le code QR au tableau</li>
+    </ol>
+    <p>L'élève ouvre le lien et voit la figure et la consigne. Il travaille directement dans son navigateur.</p>
+  </div>
+  <div class="img-block small">
+    <img src="images/guide-partager-menu.png" alt="Menu Partager avec options PDF et Lien & QR code">
+  </div>
+</div>
+
+<h3>Récupérer le travail de l'élève</h3>
+<ul>
+  <li><strong>PDF 1:1</strong> : l'élève clique <strong>Partager</strong> → <strong>Imprimer (PDF)</strong>. Un segment de 5 cm à l'écran mesure 5 cm sur papier.</li>
+  <li><strong>Fichier .geomolo</strong> : l'élève exporte sa construction (menu des constructions). Le fichier peut être rouvert dans GéoMolo.</li>
+</ul>
+
+<h3>Évaluation</h3>
+
+<p><strong>Masquer les propriétés</strong> (dans le panneau latéral <em>Propriétés</em>, à droite) : cache les propriétés détectées (parallélisme, perpendicularité, noms de figures). L'élève voit les segments et les mesures, mais doit identifier les propriétés lui-même.</p>
+<p style="font-size:12px; color:#666; margin-top:0;">Utilisation typique : évaluation des compétences en classification géométrique.</p>
+
+<div class="img-block full">
+  <img src="images/guide-proprietes-visibles.png" alt="Rectangle avec propriétés visibles et barre contextuelle">
+</div>
+
+<p><strong>Mode estimation</strong> (dans <strong>Paramètres</strong> ⚙️ → <em>Paramètres de classe</em>) : cache toutes les mesures. L'élève estime d'abord, puis clique « Vérifier » pour comparer avec les vraies valeurs.</p>
+<p style="font-size:12px; color:#666; margin-top:0;">Utilisation typique : développement du sens de la mesure.</p>
+
+<div class="highlight">
+  Ces deux modes permettent à l'élève d'utiliser GéoMolo en situation d'évaluation sans que l'outil ne donne les réponses à sa place.
+</div>
+
+<div class="two-col">
+  <div class="two-col-text">
+    <h3>Profils d'accessibilité</h3>
+    <p>Dans <strong>Paramètres</strong> → <strong>Profil rapide</strong>, trois profils préréglés :</p>
+    <ul>
+      <li><strong>Standard</strong> : réglages par défaut</li>
+      <li><strong>Accessibilité accrue</strong> : zones de détection plus larges, texte plus grand</li>
+      <li><strong>Accessibilité maximale</strong> : zones très larges, texte très grand, contraste élevé, rappel de pause</li>
+    </ul>
+    <p>Avant la première utilisation par un élève ayant des difficultés, sélectionner un profil dans les Paramètres. Observer l'élève pendant les premières utilisations pour ajuster le profil au besoin.</p>
+  </div>
+  <div class="img-block small">
+    <img src="images/guide-profils-rapides.png" alt="Paramètres avec sélecteur de profil rapide">
+  </div>
+</div>
+
+<div class="footer">
+  <strong>geomolo.ca</strong> · info@allomolo.ca · gratuit, aucun compte, aucune collecte de données · <span class="doc-version">v0.14.0</span>
+</div>
+
+</body>
+</html>
