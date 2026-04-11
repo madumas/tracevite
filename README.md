@@ -35,7 +35,7 @@ Contrôle la zone dans laquelle un clic « accroche » automatiquement un point 
 
 En cas de doute, commencer par « Large » et ajuster selon les frustrations observées.
 
-### Feedback sonore
+### Rétroaction sonore
 
 Trois modes selon la sensibilité de l'enfant :
 
@@ -119,7 +119,7 @@ L'enseignant ou le parent peut exporter un fichier `.geomolo-config` contenant t
 - Protection contre les double-clics accidentels
 - Annuler/rétablir sur 100+ niveaux — Escape comme bouton de secours
 - Pas de double-clic, pas de clic droit, pas de gestes de précision
-- Feedback sonore optionnel pour confirmer les actions
+- Rétroaction sonore optionnelle pour confirmer les actions
 
 ### Pédagogie et projection
 

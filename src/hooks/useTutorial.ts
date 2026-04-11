@@ -6,7 +6,7 @@ export type TutorialStep = 1 | 2 | 3 | 4 | 'post' | 'done';
 /** Tutorial step messages (exported for status bar rendering). */
 export const TUTORIAL_MESSAGES: Record<1 | 2 | 3 | 4, string> = {
   1: 'Clique deux fois sur la grille pour tracer un segment.',
-  2: `Appuie ${typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.userAgent) ? 'Cmd' : 'Ctrl'}+Z ou clique « Annuler » pour revenir en arrière.`,
+  2: 'Clique « Annuler » (en bas à gauche) pour revenir en arrière.',
   3: 'Retrace un segment.',
   4: "C'est tout! Tu sais construire et corriger.",
 };
