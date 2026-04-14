@@ -58,7 +58,10 @@ export function AboutDialog({ onClose }: AboutDialogProps) {
         role="dialog"
         aria-modal="true"
       >
-        <GeoMoloLogo height={40} />
+        <img src="/favicon.svg" alt="" width={64} height={64} style={{ marginBottom: 8 }} />
+        <div>
+          <GeoMoloLogo height={40} />
+        </div>
         <div style={{ height: 8 }} />
         <div style={{ fontSize: 12, color: UI_TEXT_SECONDARY, marginBottom: 16 }}>
           {__GIT_BRANCH__ === 'main' ? `v${__APP_VERSION__}` : `dev (${__BUILD_HASH__})`}
