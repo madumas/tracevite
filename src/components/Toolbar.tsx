@@ -144,6 +144,7 @@ export const Toolbar = memo(function Toolbar({
             }}
             aria-label="À propos de GéoMolo"
           >
+            <img src="/favicon.svg" alt="" width={28} height={28} style={{ marginRight: 4 }} />
             <GeoMoloLogo height={32} />
           </button>
         )}
