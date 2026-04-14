@@ -22,9 +22,9 @@
 
   .header {
     display: flex;
-    align-items: baseline;
-    justify-content: center;
-    gap: 3mm;
+    flex-direction: column;
+    align-items: center;
+    gap: 2mm;
     margin-bottom: 8mm;
   }
   .logo {
@@ -91,7 +91,7 @@
 <body>
 
 <div class="header">
-  <span class="logo"><span class="logo-geo">Géo</span><span class="logo-molo">Molo</span></span>
+  <span style="display:inline-flex;align-items:center;gap:8px"><img src="favicon.svg" alt="" width="36" height="36" /><span class="logo"><span class="logo-geo">Géo</span><span class="logo-molo">Molo</span></span></span>
   <h1>Note pour les parents</h1>
 </div>
 
