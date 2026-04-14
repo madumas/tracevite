@@ -67,7 +67,6 @@ import { useMediaQuery } from '@/hooks/useMediaQuery';
 import type { ToolType, GridSize, DisplayUnit, DisplayMode } from '@/model/types';
 import { PreferencesProvider, usePreferences } from '@/model/preferences';
 import { AboutDialog } from '@/components/AboutDialog';
-import { HelpDialog } from '@/components/HelpDialog';
 import { FatigueReminder } from '@/components/FatigueReminder';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 
@@ -187,7 +186,6 @@ function AppContent({ initialRegistry }: AppProps) {
   useEffect(() => setShowAllProps(false), [state.selectedElementId]);
   const [showSettings, setShowSettings] = useState(false);
   const [showAbout, setShowAbout] = useState(false);
-  const [showHelp, setShowHelp] = useState(false);
   const [showShareDialog, setShowShareDialog] = useState(false);
 
   const [estimationRevealed, setEstimationRevealed] = useState(false);
@@ -1701,7 +1699,8 @@ function AppContent({ initialRegistry }: AppProps) {
         onToggleEstimation={() => setEstimationRevealed((prev) => !prev)}
         onShowSlotManager={() => setShowSlotManager(true)}
         onShowSettings={() => setShowSettings(true)}
-        onShowGuide={() => setShowHelp(true)}
+        onStartTutorial={() => tutorial.start()}
+        onShowAbout={() => setShowAbout(true)}
         onToggleDemoMode={() => {
           if (document.fullscreenElement) {
             document.exitFullscreen();
@@ -1871,20 +1870,6 @@ function AppContent({ initialRegistry }: AppProps) {
 
       {/* About dialog */}
       {showAbout && <AboutDialog onClose={() => setShowAbout(false)} />}
-
-      {showHelp && (
-        <HelpDialog
-          onClose={() => setShowHelp(false)}
-          onStartTutorial={() => {
-            setShowHelp(false);
-            tutorial.start();
-          }}
-          onShowAbout={() => {
-            setShowHelp(false);
-            setShowAbout(true);
-          }}
-        />
-      )}
 
       {/* Fatigue reminder */}
       {showFatigueReminder && <FatigueReminder onDismiss={() => setShowFatigueReminder(false)} />}

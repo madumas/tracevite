@@ -19,6 +19,7 @@ select:focus-visible,
 
 /* Prevent double-tap zoom on iOS Safari (spec: no double-click anywhere) */
 body {
+  margin: 0;
   touch-action: manipulation;
   -webkit-touch-callout: none;
   -webkit-user-select: none;

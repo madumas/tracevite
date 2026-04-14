@@ -1,8 +1,8 @@
-import { memo, useState, useRef, useEffect } from 'react';
+import { memo, useState, useRef, useEffect, useCallback } from 'react';
 import {
-  ACTION_BAR_HEIGHT,
   UI_PRIMARY,
   UI_SURFACE,
+  UI_BG,
   UI_BORDER,
   UI_TEXT_PRIMARY,
   UI_DISABLED_BG,
@@ -31,7 +31,8 @@ interface ActionBarProps {
   readonly onToggleEstimation?: () => void;
   readonly onShowSlotManager?: () => void;
   readonly onShowSettings?: () => void;
-  readonly onShowGuide?: () => void;
+  readonly onStartTutorial?: () => void;
+  readonly onShowAbout?: () => void;
   readonly onToggleDemoMode?: () => void;
   readonly demoMode?: boolean;
 }
@@ -48,90 +49,61 @@ export const ActionBar = memo(function ActionBar({
   onToggleEstimation,
   onShowSlotManager,
   onShowSettings,
-  onShowGuide,
+  onStartTutorial,
+  onShowAbout,
   onToggleDemoMode,
   demoMode = false,
 }: ActionBarProps) {
   return (
     <div
       style={{
-        height: ACTION_BAR_HEIGHT,
         display: 'flex',
         alignItems: 'center',
-        padding: '0 8px',
-        background: UI_SURFACE,
+        padding: '6px 16px',
+        background: UI_BG,
         fontSize: 13 * fontScale,
         borderTop: `1px solid ${UI_BORDER}`,
         gap: MIN_BUTTON_GAP_PX,
+        flexShrink: 0,
       }}
       data-testid="action-bar"
       data-hide-labels={fontScale >= 1.25 ? 'true' : undefined}
     >
       {/* Undo */}
-      <button
+      <ActionBtn
         onClick={onUndo}
         disabled={!canUndo}
-        style={{
-          minWidth: MIN_BUTTON_SIZE_PX,
-          height: MIN_BUTTON_SIZE_PX,
-          padding: '0 10px',
-          border: `1px solid ${UI_BORDER}`,
-          borderRadius: 4,
-          background: canUndo ? '#E8F0FA' : UI_DISABLED_BG,
-          color: canUndo ? UI_TEXT_PRIMARY : UI_DISABLED_TEXT,
-          cursor: canUndo ? 'pointer' : 'default',
-          fontSize: 'inherit',
-        }}
         aria-label={ACTION_UNDO}
         title={ACTION_UNDO}
         data-testid="action-undo"
       >
         <UndoIcon /> <span className="action-label">{ACTION_UNDO}</span>
-      </button>
+      </ActionBtn>
 
       {/* Redo */}
-      <button
+      <ActionBtn
         onClick={onRedo}
         disabled={!canRedo}
-        style={{
-          minWidth: MIN_BUTTON_SIZE_PX,
-          height: MIN_BUTTON_SIZE_PX,
-          padding: '0 10px',
-          border: `1px solid ${UI_BORDER}`,
-          borderRadius: 4,
-          background: canRedo ? UI_SURFACE : UI_DISABLED_BG,
-          color: canRedo ? UI_TEXT_PRIMARY : UI_DISABLED_TEXT,
-          cursor: canRedo ? 'pointer' : 'default',
-          fontSize: 'inherit',
-        }}
         aria-label={ACTION_REDO}
         title={ACTION_REDO}
         data-testid="action-redo"
       >
         <RedoIcon /> <span className="action-label">{ACTION_REDO}</span>
-      </button>
+      </ActionBtn>
 
       {/* Estimation mode: Vérifier button */}
       {estimationMode && onToggleEstimation && (
-        <button
-          onClick={onToggleEstimation}
-          aria-label="Vérifier les mesures"
-          title="Vérifier les mesures"
-          style={{
-            minWidth: MIN_BUTTON_SIZE_PX,
-            height: MIN_BUTTON_SIZE_PX,
-            padding: '0 10px',
-            border: `1px solid ${UI_PRIMARY}`,
-            borderRadius: 4,
-            background: '#E8F0FA',
-            color: UI_PRIMARY,
-            cursor: 'pointer',
-            fontSize: 'inherit',
-            fontWeight: 600,
-          }}
-        >
-          Vérifier
-        </button>
+        <>
+          <Separator />
+          <ActionBtn
+            onClick={onToggleEstimation}
+            active
+            aria-label="Vérifier les mesures"
+            title="Vérifier les mesures"
+          >
+            Vérifier
+          </ActionBtn>
+        </>
       )}
 
       {/* Spacer */}
@@ -160,31 +132,22 @@ export const ActionBar = memo(function ActionBar({
 
       {/* Mes constructions */}
       {!demoMode && onShowSlotManager && (
-        <button
+        <ActionBtn
           onClick={onShowSlotManager}
-          style={{
-            minWidth: MIN_BUTTON_SIZE_PX,
-            height: MIN_BUTTON_SIZE_PX,
-            padding: '0 10px',
-            border: `1px solid ${UI_BORDER}`,
-            borderRadius: 4,
-            background: UI_SURFACE,
-            color: UI_TEXT_PRIMARY,
-            cursor: 'pointer',
-            fontSize: 'inherit',
-          }}
           aria-label="Mes constructions"
           title="Mes constructions"
           data-testid="slot-manager-btn"
         >
           <FolderIcon /> <span className="action-label">Mes constructions</span>
-        </button>
+        </ActionBtn>
       )}
 
       {/* Share menu popup (PDF + Lien & QR) */}
       <ShareMenu onPrint={onPrint} onShareLink={onShareLink} />
 
-      {/* ─ Right group: Settings, Aide, Fullscreen (round buttons like RésoMolo) ─ */}
+      <Separator />
+
+      {/* ─ Right group: Settings, Aide, Fullscreen (round buttons) ─ */}
 
       {/* Settings */}
       {!demoMode && onShowSettings && (
@@ -211,31 +174,9 @@ export const ActionBar = memo(function ActionBar({
         </button>
       )}
 
-      {/* Aide */}
-      {!demoMode && onShowGuide && (
-        <button
-          onClick={onShowGuide}
-          style={{
-            width: MIN_BUTTON_SIZE_PX,
-            height: MIN_BUTTON_SIZE_PX,
-            padding: 0,
-            border: `1px solid ${UI_PRIMARY}`,
-            borderRadius: '50%',
-            background: 'none',
-            color: UI_PRIMARY,
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: 18,
-            fontWeight: 700,
-          }}
-          aria-label="Aide"
-          title="Aide"
-          data-testid="help-tutorial"
-        >
-          ?
-        </button>
+      {/* Aide — dropdown menu */}
+      {!demoMode && onStartTutorial && (
+        <HelpMenu onStartTutorial={onStartTutorial} onShowAbout={onShowAbout} />
       )}
 
       {/* Fullscreen/Demo */}
@@ -266,7 +207,226 @@ export const ActionBar = memo(function ActionBar({
   );
 });
 
-/** Share popup menu — calqué sur ResoMolo */
+/* ── Reusable ActionBtn ──────────────────────────────────── */
+
+function ActionBtn({
+  children,
+  onClick,
+  disabled,
+  active,
+  title,
+  'aria-label': ariaLabel,
+  'data-testid': testId,
+}: {
+  children: React.ReactNode;
+  onClick: () => void;
+  disabled?: boolean;
+  active?: boolean;
+  title?: string;
+  'aria-label'?: string;
+  'data-testid'?: string;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: 4,
+        minWidth: MIN_BUTTON_SIZE_PX,
+        minHeight: MIN_BUTTON_SIZE_PX,
+        padding: '4px 10px',
+        border: `2px solid ${disabled ? UI_DISABLED_BG : active ? UI_PRIMARY : UI_BORDER}`,
+        borderRadius: 6,
+        background: active ? '#E8F0FA' : disabled ? UI_DISABLED_BG : UI_SURFACE,
+        color: active ? UI_PRIMARY : disabled ? UI_DISABLED_TEXT : UI_TEXT_PRIMARY,
+        cursor: disabled ? 'default' : 'pointer',
+        fontSize: 'inherit',
+        fontWeight: active ? 600 : 'normal',
+        opacity: disabled ? 0.5 : 1,
+      }}
+      aria-label={ariaLabel}
+      title={title}
+      data-testid={testId}
+    >
+      {children}
+    </button>
+  );
+}
+
+/* ── Separator ───────────────────────────────────────────── */
+
+function Separator() {
+  return (
+    <div
+      style={{
+        width: 1,
+        height: 24,
+        background: UI_BORDER,
+        margin: '0 4px',
+        flexShrink: 0,
+      }}
+    />
+  );
+}
+
+/* ── HelpMenu dropdown ───────────────────────────────────── */
+
+function HelpMenu({
+  onStartTutorial,
+  onShowAbout,
+}: {
+  onStartTutorial: () => void;
+  onShowAbout?: () => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const handler = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener('pointerdown', handler);
+    return () => document.removeEventListener('pointerdown', handler);
+  }, [open]);
+
+  useEffect(() => {
+    if (!open) return;
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setOpen(false);
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [open]);
+
+  const close = useCallback(() => setOpen(false), []);
+
+  return (
+    <div ref={menuRef} style={{ position: 'relative' }}>
+      <button
+        onClick={() => setOpen(!open)}
+        style={{
+          width: MIN_BUTTON_SIZE_PX,
+          height: MIN_BUTTON_SIZE_PX,
+          padding: 0,
+          border: `1px solid ${UI_PRIMARY}`,
+          borderRadius: '50%',
+          background: 'none',
+          color: UI_PRIMARY,
+          cursor: 'pointer',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          fontSize: 18,
+          fontWeight: 700,
+        }}
+        aria-label="Aide"
+        title="Aide"
+        aria-haspopup="true"
+        aria-expanded={open}
+        data-testid="help-tutorial"
+      >
+        ?
+      </button>
+      {open && (
+        <div
+          style={{
+            position: 'absolute',
+            bottom: '100%',
+            right: 0,
+            marginBottom: 8,
+            background: '#fff',
+            border: `1px solid ${UI_BORDER}`,
+            borderRadius: 10,
+            boxShadow: '0 4px 16px rgba(0,0,0,0.12)',
+            padding: 6,
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 4,
+            zIndex: 50,
+            minWidth: 200,
+          }}
+          role="menu"
+        >
+          <ShareRow
+            icon={
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 14 14"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.5"
+              >
+                <circle cx="7" cy="7" r="5.5" />
+                <path d="M5 5.5a2 2 0 013.5 1c0 1-1.5 1.2-1.5 2.2M7 10.5v.01" />
+              </svg>
+            }
+            label="Tutoriel"
+            onClick={() => {
+              onStartTutorial();
+              close();
+            }}
+          />
+          <div style={{ height: 1, background: UI_BORDER, margin: '2px 8px' }} />
+          <ShareRow
+            icon={
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 14 14"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.5"
+              >
+                <path d="M2 2h10v10H2zM2 5h10" />
+              </svg>
+            }
+            label="Documentation"
+            onClick={() => {
+              window.open('https://geomolo.ca/docs/', '_blank');
+              close();
+            }}
+          />
+          {onShowAbout && (
+            <>
+              <div style={{ height: 1, background: UI_BORDER, margin: '2px 8px' }} />
+              <ShareRow
+                icon={
+                  <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 14 14"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                  >
+                    <circle cx="7" cy="7" r="5.5" />
+                    <path d="M7 6v3.5M7 4.5v.01" />
+                  </svg>
+                }
+                label="À propos"
+                onClick={() => {
+                  onShowAbout();
+                  close();
+                }}
+              />
+            </>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ── Share popup menu ────────────────────────────────────── */
+
 function ShareMenu({ onPrint, onShareLink }: { onPrint: () => void; onShareLink: () => void }) {
   const [open, setOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -284,22 +444,10 @@ function ShareMenu({ onPrint, onShareLink }: { onPrint: () => void; onShareLink:
 
   return (
     <div ref={menuRef} style={{ position: 'relative' }}>
-      <button
+      <ActionBtn
         onClick={() => setOpen(!open)}
-        style={{
-          minWidth: MIN_BUTTON_SIZE_PX,
-          height: MIN_BUTTON_SIZE_PX,
-          padding: '0 10px',
-          border: `1px solid ${UI_BORDER}`,
-          borderRadius: 4,
-          background: UI_SURFACE,
-          color: UI_TEXT_PRIMARY,
-          cursor: 'pointer',
-          fontSize: 'inherit',
-        }}
         aria-label="Partager"
         title="Partager"
-        aria-expanded={open}
         data-testid="action-share"
       >
         <svg
@@ -314,7 +462,7 @@ function ShareMenu({ onPrint, onShareLink }: { onPrint: () => void; onShareLink:
           <path d="M2 8v4h10V8M7 1v8M4 4l3-3 3 3" />
         </svg>
         <span className="action-label">Partager</span>
-      </button>
+      </ActionBtn>
       {open && (
         <div
           style={{
@@ -368,6 +516,8 @@ function ShareMenu({ onPrint, onShareLink }: { onPrint: () => void; onShareLink:
   );
 }
 
+/* ── Shared menu row ─────────────────────────────────────── */
+
 function ShareRow({
   icon,
   label,
@@ -401,6 +551,7 @@ function ShareRow({
       onPointerLeave={(e) => {
         (e.target as HTMLElement).style.background = 'none';
       }}
+      role="menuitem"
     >
       <span
         style={{
