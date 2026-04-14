@@ -73,20 +73,6 @@ export function AboutDialog({ onClose }: AboutDialogProps) {
         </p>
 
         <div style={{ fontSize: 12, color: UI_TEXT_SECONDARY, marginBottom: 8 }}>
-          Appli sœur :{' '}
-          <a
-            href="https://resomolo.ca"
-            target="_blank"
-            rel="noopener"
-            style={{ color: UI_PRIMARY, fontWeight: 600 }}
-          >
-            ResoMolo
-          </a>
-          {' — '}
-          Modéliser des problèmes de maths visuellement
-        </div>
-
-        <div style={{ fontSize: 12, color: UI_TEXT_SECONDARY, marginBottom: 8 }}>
           Logiciel libre —{' '}
           <a
             href="https://github.com/madumas/geomolo"
@@ -116,8 +102,21 @@ export function AboutDialog({ onClose }: AboutDialogProps) {
           <CopyButton />
         </div>
 
+        <div style={{ fontSize: 12, color: UI_TEXT_SECONDARY, marginBottom: 12 }}>
+          Aussi par le même créateur :{' '}
+          <a
+            href="https://resomolo.ca"
+            target="_blank"
+            rel="noopener"
+            style={{ color: UI_PRIMARY, fontWeight: 600 }}
+          >
+            ResoMolo.ca
+          </a>{' '}
+          — modélisation de problèmes de maths
+        </div>
+
         <div style={{ fontSize: 11, color: UI_TEXT_SECONDARY, marginBottom: 16 }}>
-          Créé par un parent, pour son enfant, et tous ceux qui en ont besoin.
+          Créé par un parent, pour son enfant — et tous ceux qui en ont besoin.
         </div>
 
         <button
