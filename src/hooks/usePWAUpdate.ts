@@ -57,7 +57,19 @@ export function usePWAUpdate(): PWAUpdateState {
   return {
     needRefresh,
     updateSW: async () => {
-      await updater(true);
+      // Trigger the SW update path. vite-plugin-pwa is supposed to reload the
+      // page via `controllerchange`, but if no waiting worker is actually
+      // present (rare race / dev / unregistered SW) the call is a silent
+      // no-op and the user is stuck on the « Rechargement… » screen.
+      // We fire the update without awaiting and arm a hard fallback reload.
+      try {
+        void updater(true);
+      } catch {
+        /* ignore — fallback below will reload regardless */
+      }
+      window.setTimeout(() => {
+        window.location.reload();
+      }, 1500);
     },
   };
 }
