@@ -965,7 +965,8 @@ test('visual conformity — PFEQ pedagogical', async ({ page }, testInfo) => {
 
 // --- Separate test: PFEQ figures and tools ---
 test('visual conformity — PFEQ figures & tools', async ({ page }, testInfo) => {
-  test.setTimeout(180_000);
+  // Chromebook Touch simule un appareil lent — bump timeout pour ce projet.
+  test.setTimeout(testInfo.project.name === 'Chromebook Touch' ? 300_000 : 180_000);
   const dir = path.join(SCREENSHOT_BASE, projectDir(testInfo.project.name));
   await fs.mkdir(dir, { recursive: true });
   const shot = (name: string) => path.join(dir, name);

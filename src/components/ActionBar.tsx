@@ -369,6 +369,7 @@ function HelpMenu({
               </svg>
             }
             label="Tutoriel"
+            testId="help-start-tutorial"
             onClick={() => {
               onStartTutorial();
               close();
@@ -522,14 +523,17 @@ function ShareRow({
   icon,
   label,
   onClick,
+  testId,
 }: {
   icon: React.ReactNode;
   label: string;
   onClick: () => void;
+  testId?: string;
 }) {
   return (
     <button
       onClick={onClick}
+      data-testid={testId}
       style={{
         display: 'flex',
         alignItems: 'center',
