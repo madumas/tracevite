@@ -49,23 +49,37 @@ export default defineConfig({
   plugins: [
     react(),
     VitePWA({
-      registerType: 'autoUpdate',
+      registerType: 'prompt',
       workbox: {
-        globPatterns: ['**/*.{js,css,html,svg,png,ico,woff,woff2}'],
-        navigateFallbackDenylist: [/^\/docs\//],
+        globPatterns: ['**/*.{js,css,html,svg,png,ico,woff,woff2,json}'],
+        navigateFallbackDenylist: [/^\/docs(\/|$)/],
+        cleanupOutdatedCaches: true,
         runtimeCaching: [
           {
-            urlPattern: /^https:\/\/.*$/,
-            handler: 'CacheFirst',
+            urlPattern: /^https:\/\/fonts\.(googleapis|gstatic)\.com\//,
+            handler: 'StaleWhileRevalidate',
             options: {
-              cacheName: 'geomolo-cache',
-              expiration: { maxEntries: 50, maxAgeSeconds: 30 * 24 * 60 * 60 },
+              cacheName: 'google-fonts',
+              expiration: {
+                maxEntries: 10,
+                maxAgeSeconds: 365 * 24 * 60 * 60,
+              },
+              cacheableResponse: { statuses: [0, 200] },
             },
           },
         ],
       },
       manifest: false, // Use public/manifest.json directly
-      includeAssets: ['logo.svg'],
+      includeAssets: [
+        'logo.svg',
+        'favicon.svg',
+        'favicon.ico',
+        'favicon-32x32.png',
+        'apple-touch-icon.png',
+        'icon-192.png',
+        'icon-512.png',
+        'manifest.json',
+      ],
     }),
   ],
   resolve: {

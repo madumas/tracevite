@@ -64,7 +64,7 @@ export function AboutDialog({ onClose }: AboutDialogProps) {
         </div>
         <div style={{ height: 8 }} />
         <div style={{ fontSize: 12, color: UI_TEXT_SECONDARY, marginBottom: 16 }}>
-          {__GIT_BRANCH__ === 'main' ? `v${__APP_VERSION__}` : `dev (${__BUILD_HASH__})`}
+          {isProductionHost() ? `v${__APP_VERSION__}` : `dev (${__BUILD_HASH__})`}
         </div>
 
         <p style={{ fontSize: 13, lineHeight: 1.5, color: UI_TEXT_PRIMARY, margin: '0 0 16px' }}>
@@ -192,4 +192,15 @@ function CopyButton() {
 
 declare const __APP_VERSION__: string;
 declare const __BUILD_HASH__: string;
-declare const __GIT_BRANCH__: string;
+
+/**
+ * Detect production via hostname to avoid false "dev" labels when
+ * CF_PAGES_BRANCH is something other than "main" (hotfix branches,
+ * preview promotions, detached HEAD builds).
+ */
+function isProductionHost(): boolean {
+  if (typeof window === 'undefined') return false;
+  const host = window.location.hostname;
+  // "geomolo.ca" or any non-"dev." subdomain of geomolo.ca
+  return host === 'geomolo.ca' || (host.endsWith('.geomolo.ca') && !host.startsWith('dev.'));
+}
