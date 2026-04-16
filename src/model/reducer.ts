@@ -14,15 +14,38 @@ import type {
   SoundMode,
 } from './types';
 import type { UndoManager } from './undo';
+import type { TextBox, ConstructionState } from './types';
 import * as State from './state';
 import * as Undo from './undo';
-import { reflectConstruction } from '@/engine/reflection';
+import { reflectConstruction, reflectPoint } from '@/engine/reflection';
 import { generateId } from './id';
 import { reproduceElements, reproduceFrieze } from '@/engine/reproduce';
-import { rotateConstruction } from '@/engine/rotation';
-import { scaleConstruction } from '@/engine/homothety';
+import { rotateConstruction, rotatePoint } from '@/engine/rotation';
+import { scaleConstruction, scalePoint } from '@/engine/homothety';
 import { pointOnSegmentProjection, segmentIntersection } from '@/engine/geometry';
 import { MIN_POINT_DISTANCE_MM } from '@/config/accessibility';
+
+/**
+ * Apply a 2D transform to a set of textBoxes, creating new textBoxes with
+ * transformed positions but **unchanged text**. Accessibility rule (ergo +
+ * pédago + UX reviews, QA 1.16): the glyphs themselves must stay readable —
+ * we never mirror, rotate or scale the font. Only the anchor point moves.
+ */
+function transformTextBoxes(
+  state: ConstructionState,
+  textBoxIds: readonly string[] | undefined,
+  transform: (p: { x: number; y: number }) => { x: number; y: number },
+): TextBox[] {
+  if (!textBoxIds || textBoxIds.length === 0) return [];
+  const result: TextBox[] = [];
+  for (const id of textBoxIds) {
+    const src = state.textBoxes.find((t) => t.id === id);
+    if (!src) continue;
+    const pos = transform({ x: src.x, y: src.y });
+    result.push({ id: generateId(), x: pos.x, y: pos.y, text: src.text });
+  }
+  return result;
+}
 
 // ── Action types ──────────────────────────────────────────
 
@@ -47,6 +70,7 @@ export type ConstructionAction =
       pointIds: string[];
       segmentIds: string[];
       circleIds?: string[];
+      textBoxIds?: readonly string[];
       axisP1: { x: number; y: number };
       axisP2: { x: number; y: number };
     }
@@ -56,6 +80,7 @@ export type ConstructionAction =
       pointIds: readonly string[];
       segmentIds: readonly string[];
       circleIds: readonly string[];
+      textBoxIds?: readonly string[];
       offsetX: number;
       offsetY: number;
     }
@@ -64,6 +89,7 @@ export type ConstructionAction =
       pointIds: readonly string[];
       segmentIds: readonly string[];
       circleIds: readonly string[];
+      textBoxIds?: readonly string[];
       vector1: { dx: number; dy: number };
       count1: number;
       vector2?: { dx: number; dy: number };
@@ -74,6 +100,7 @@ export type ConstructionAction =
       pointIds: readonly string[];
       segmentIds: readonly string[];
       circleIds: readonly string[];
+      textBoxIds?: readonly string[];
       center: { x: number; y: number };
       angleDeg: number;
     }
@@ -82,6 +109,7 @@ export type ConstructionAction =
       pointIds: readonly string[];
       segmentIds: readonly string[];
       circleIds: readonly string[];
+      textBoxIds?: readonly string[];
       center: { x: number; y: number };
       factor: number;
     }
@@ -305,11 +333,17 @@ export function reduce(state: ReducerState, action: ConstructionAction): Reducer
         })
         .filter(Boolean) as (typeof current.circles)[number][];
 
+      // Reflect textBoxes: position mirrors across axis, text stays readable.
+      const newTextBoxes = transformTextBoxes(current, action.textBoxIds, (p) =>
+        reflectPoint(p, action.axisP1, action.axisP2),
+      );
+
       const newState: typeof current = {
         ...current,
         points: [...current.points, ...newPoints],
         segments: [...current.segments, ...newSegments],
         circles: [...current.circles, ...newCircles],
+        textBoxes: [...current.textBoxes, ...newTextBoxes],
       };
       return { undoManager: Undo.pushState(undoManager, newState) };
     }
@@ -328,11 +362,35 @@ export function reduce(state: ReducerState, action: ConstructionAction): Reducer
         opId,
       );
       if (result.points.length === 0) return state;
+
+      // Frieze textBoxes: replicate at each translated copy (skip the (0,0) unit
+      // copy, same convention as reproduceFrieze).
+      const friezeTextBoxes: TextBox[] = [];
+      if (action.textBoxIds && action.textBoxIds.length > 0) {
+        const v1 = action.vector1;
+        const v2 = action.vector2 ?? { dx: 0, dy: 0 };
+        const c2 = action.vector2 ? (action.count2 ?? 1) : 1;
+        for (let i = 0; i < action.count1; i++) {
+          for (let j = 0; j < c2; j++) {
+            if (i === 0 && j === 0) continue;
+            const dx = i * v1.dx + j * v2.dx;
+            const dy = i * v1.dy + j * v2.dy;
+            friezeTextBoxes.push(
+              ...transformTextBoxes(current, action.textBoxIds, (p) => ({
+                x: p.x + dx,
+                y: p.y + dy,
+              })),
+            );
+          }
+        }
+      }
+
       const newState: typeof current = {
         ...current,
         points: [...current.points, ...result.points],
         segments: [...current.segments, ...result.segments],
         circles: [...current.circles, ...result.circles],
+        textBoxes: [...current.textBoxes, ...friezeTextBoxes],
       };
       return { undoManager: Undo.pushState(undoManager, newState) };
     }
@@ -350,11 +408,16 @@ export function reduce(state: ReducerState, action: ConstructionAction): Reducer
         undefined,
         opId,
       );
+      const newTextBoxes = transformTextBoxes(current, action.textBoxIds, (p) => ({
+        x: p.x + action.offsetX,
+        y: p.y + action.offsetY,
+      }));
       const newState: typeof current = {
         ...current,
         points: [...current.points, ...result.points],
         segments: [...current.segments, ...result.segments],
         circles: [...current.circles, ...result.circles],
+        textBoxes: [...current.textBoxes, ...newTextBoxes],
       };
       return { undoManager: Undo.pushState(undoManager, newState) };
     }
@@ -370,11 +433,16 @@ export function reduce(state: ReducerState, action: ConstructionAction): Reducer
         action.angleDeg,
         opId,
       );
+      // Rotate textBox anchor positions but leave glyphs horizontal (readable).
+      const newTextBoxes = transformTextBoxes(current, action.textBoxIds, (p) =>
+        rotatePoint(p, action.center, action.angleDeg),
+      );
       const newState: typeof current = {
         ...current,
         points: [...current.points, ...result.points],
         segments: [...current.segments, ...result.segments],
         circles: [...current.circles, ...result.circles],
+        textBoxes: [...current.textBoxes, ...newTextBoxes],
       };
       return { undoManager: Undo.pushState(undoManager, newState) };
     }
@@ -390,11 +458,17 @@ export function reduce(state: ReducerState, action: ConstructionAction): Reducer
         action.factor,
         opId,
       );
+      // Scale textBox anchor position but keep the font size fixed (>13px
+      // minimum accessibility — we don't honour factor on the glyph itself).
+      const newTextBoxes = transformTextBoxes(current, action.textBoxIds, (p) =>
+        scalePoint(p, action.center, action.factor),
+      );
       const newState: typeof current = {
         ...current,
         points: [...current.points, ...result.points],
         segments: [...current.segments, ...result.segments],
         circles: [...current.circles, ...result.circles],
+        textBoxes: [...current.textBoxes, ...newTextBoxes],
       };
       return { undoManager: Undo.pushState(undoManager, newState) };
     }
