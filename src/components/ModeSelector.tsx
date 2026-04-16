@@ -29,8 +29,19 @@ export function ModeSelector({ mode, onChange }: ModeSelectorProps) {
   const [open, setOpen] = useState(false);
   const [focusIndex, setFocusIndex] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
 
   const currentMode = MODES.find((m) => m.value === mode) ?? MODES[0]!;
+
+  /** Select a value and return focus to the toggle button (keyboard a11y — QA 4.6). */
+  const selectAndClose = useCallback(
+    (value: DisplayMode) => {
+      onChange(value);
+      setOpen(false);
+      buttonRef.current?.focus();
+    },
+    [onChange],
+  );
 
   useEffect(() => {
     if (!open) return;
@@ -64,21 +75,22 @@ export function ModeSelector({ mode, onChange }: ModeSelectorProps) {
           break;
         case 'Enter':
           e.preventDefault();
-          onChange(MODES[focusIndex]!.value);
-          setOpen(false);
+          selectAndClose(MODES[focusIndex]!.value);
           break;
         case 'Escape':
           e.preventDefault();
           setOpen(false);
+          buttonRef.current?.focus();
           break;
       }
     },
-    [open, focusIndex, onChange],
+    [open, focusIndex, selectAndClose],
   );
 
   return (
     <div ref={containerRef} style={{ position: 'relative' }}>
       <button
+        ref={buttonRef}
         onClick={() => setOpen(!open)}
         onKeyDown={handleKeyDown}
         role="combobox"
@@ -135,11 +147,8 @@ export function ModeSelector({ mode, onChange }: ModeSelectorProps) {
               key={m.value}
               role="option"
               aria-selected={m.value === mode}
-              onClick={() => {
-                onChange(m.value);
-                setOpen(false);
-              }}
-              onMouseEnter={() => setFocusIndex(index)}
+              onClick={() => selectAndClose(m.value)}
+              onPointerEnter={() => setFocusIndex(index)}
               style={{
                 padding: '8px 12px',
                 cursor: 'pointer',

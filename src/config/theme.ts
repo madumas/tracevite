@@ -24,6 +24,15 @@ export const CANVAS_SELECTION_BG = '#CCE8E6';
 /** Per-segment color palette (manual coloring by student). WCAG AA on #FAFCFF. */
 export const SEGMENT_COLORS = ['#0a7e7a', '#0F6E56', '#6D28D9', '#C24B22'] as const;
 
+/**
+ * Palette used to distinguish groups of parallel segments visually (QA 4.4).
+ * Each color is WCAG AA compatible against CANVAS_BG (#FAFCFF) and is paired
+ * with a shape marker (chevrons in SegmentLayer) so the encoding does not
+ * rely on color alone — required for color-blind students and the PFEQ
+ * « ne jamais dépendre uniquement de la couleur » accessibility rule.
+ */
+export const CANVAS_PARALLEL_PALETTE = ['#7A8B99', '#C24B22', '#7C3AED', '#2E7D32'] as const;
+
 // ── UI colors ──────────────────────────────────────────────
 export const UI_BG = '#F5F7FA';
 export const UI_SURFACE = '#FFFFFF';

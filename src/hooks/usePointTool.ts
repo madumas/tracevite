@@ -11,6 +11,7 @@ import type { ToolHookResult } from './types';
 import { findSnap, DEFAULT_TOLERANCES, scaleTolerances } from '@/engine/snap';
 import { TOLERANCE_PROFILES } from '@/config/accessibility';
 import { STATUS_POINT_IDLE } from '@/config/messages';
+import { detectAllFaces } from '@/engine/figures';
 
 interface UsePointToolOptions {
   state: ConstructionState;
@@ -58,6 +59,10 @@ export function usePointTool({
     setSnapResult(null);
   }, []);
 
+  // Context-sensitive « Sommet » vs « Point » (QA 4.1): as soon as at least one
+  // closed figure exists, new clicks are more likely « sommets » in PFEQ parlance.
+  const inFigureContext = useMemo(() => detectAllFaces(state).length > 0, [state]);
+
   return useMemo(
     () => ({
       handleClick,
@@ -65,10 +70,10 @@ export function usePointTool({
       handleEscape,
       reset,
       isIdle: true,
-      statusMessage: STATUS_POINT_IDLE,
+      statusMessage: STATUS_POINT_IDLE(inFigureContext),
       snapResult,
       overlayElements: null,
     }),
-    [handleClick, handleCursorMove, handleEscape, reset, snapResult],
+    [handleClick, handleCursorMove, handleEscape, reset, snapResult, inFigureContext],
   );
 }

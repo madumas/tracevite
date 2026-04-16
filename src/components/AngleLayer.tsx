@@ -68,7 +68,6 @@ export const AngleLayer = memo(function AngleLayer({
     // Group visible angle indices by vertex
     const vertexGroups = new Map<string, number[]>();
     angles.forEach((angle, idx) => {
-      if (angle.classification === 'reflex') return;
       if (angle.classification === 'plat') return; // plat labels add no value in push-out context
       if (angle.classification === 'droit') return; // right angles use square, no text
       const group = vertexGroups.get(angle.vertexPointId) ?? [];
@@ -139,7 +138,6 @@ export const AngleLayer = memo(function AngleLayer({
   {
     const vertexCounter = new Map<string, number>();
     angles.forEach((angle, idx) => {
-      if (angle.classification === 'reflex') return;
       const n = vertexCounter.get(angle.vertexPointId) ?? 0;
       angleArcRadius.set(idx, ARC_RADIUS_PX + n * ARC_STAGGER_PX);
       vertexCounter.set(angle.vertexPointId, n + 1);
@@ -158,8 +156,7 @@ export const AngleLayer = memo(function AngleLayer({
         if (activeGestureHideAll) return null;
         if (activeVertexPointId && angle.vertexPointId !== activeVertexPointId) return null;
 
-        // Filter reflex angles — removed from MVP (spec: "hors programme primaire")
-        if (angle.classification === 'reflex') return null;
+        // Angle rentrant (reflex) is already filtered upstream in detectAnglesAtVertex.
         // Filter flat angles in Simplifié mode (spec: "plat hidden in Simplifié")
         if (displayMode === 'simplifie' && angle.classification === 'plat') return null;
 

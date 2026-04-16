@@ -5,6 +5,7 @@ import {
   CANVAS_TRANSFORMED,
   CANVAS_TRANSFORM_PALETTE,
   CANVAS_TRANSFORM_DASHES,
+  CANVAS_PARALLEL_PALETTE,
   SEGMENT_COLORS,
   useCanvasColors,
 } from '@/config/theme';
@@ -50,7 +51,8 @@ export const SegmentLayer = memo(function SegmentLayer({
   const pointMap = new Map(points.map((p) => [p.id, p]));
 
   // Build parallel pair colors: each pair of parallel segments gets a distinct color
-  const PARALLEL_COLORS = ['#7A8B99', '#C24B22', '#7C3AED', '#2E7D32'];
+  // (centralised in theme.ts so the palette stays WCAG-AA-verified).
+  const PARALLEL_COLORS = CANVAS_PARALLEL_PALETTE;
   const parallelSegColor = new Map<string, string>();
   const parallelChevronCount = new Map<string, number>();
   const parallelGroups: string[][] = [];

@@ -36,6 +36,13 @@ export interface UserPreferences {
   readonly focusMode: boolean;
   readonly animateTransformations: boolean;
   readonly lockedSettings: readonly string[]; // settings locked by teacher via .geomolo-config
+  /**
+   * Open/closed state of each accordion section, keyed by stable id.
+   * Persisted globally (not per-slot) — neuropsy/UX reviews: reduces the
+   * re-planning cost of reopening the same sections every session for
+   * students with executive-function difficulties (UDL 3.0, CAST 2024).
+   */
+  readonly accordionState: Readonly<Record<string, boolean>>;
 }
 
 // ── Defaults ─────────────────────────────────────────────
@@ -51,6 +58,7 @@ const DEFAULT_PREFERENCES: UserPreferences = {
   focusMode: false,
   animateTransformations: false,
   lockedSettings: [],
+  accordionState: {},
 };
 
 // ── localStorage persistence ─────────────────────────────
@@ -104,6 +112,14 @@ export function loadPreferences(): UserPreferences {
       lockedSettings: Array.isArray(data.lockedSettings)
         ? (data.lockedSettings as string[]).filter((v) => typeof v === 'string')
         : DEFAULT_PREFERENCES.lockedSettings,
+      accordionState:
+        data.accordionState && typeof data.accordionState === 'object'
+          ? (Object.fromEntries(
+              Object.entries(data.accordionState as Record<string, unknown>).filter(
+                ([, v]) => typeof v === 'boolean',
+              ),
+            ) as Record<string, boolean>)
+          : DEFAULT_PREFERENCES.accordionState,
     };
   } catch {
     return DEFAULT_PREFERENCES;

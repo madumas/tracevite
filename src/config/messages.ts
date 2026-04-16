@@ -22,7 +22,58 @@ export const STATUS_REFLECTION_AXIS =
   "Réflexion — Clique deux points pour tracer l'axe de réflexion";
 export const STATUS_REFLECTION_SELECT = 'Réflexion — Clique sur une figure pour la refléter';
 
-export const STATUS_POINT_IDLE = 'Point — Clique pour placer un point';
+/**
+ * Status for the Point tool in idle state. Context-sensitive (QA 4.1):
+ * when a closed figure exists on the canvas, the PFEQ term « Sommet » becomes
+ * more precise than the generic « Point » — this matches the vocabulary
+ * already used by PropertiesPanel and ContextActionBar for consistency.
+ */
+export const STATUS_POINT_IDLE = (inFigureContext = false): string =>
+  inFigureContext ? 'Sommet — Clique pour placer un sommet' : 'Point — Clique pour placer un point';
+
+// ── Status bar — advanced tools (QA 4.5) ──────────────────
+// These are used when the tool hook does not compute its own contextual
+// message. The "Étape X/N" prefix supports sequencing/executive function
+// for students with DCD. "Agrandir" rather than "Homothétie" in Simplifié
+// to match PFEQ primary vocabulary (« homothétie » appears only in 3e cycle).
+
+export const STATUS_PERPENDICULAR_SEGMENT = 'Étape 1/2 — Perpendiculaire — Clique sur un segment';
+export const STATUS_PERPENDICULAR_POINT =
+  'Étape 2/2 — Perpendiculaire — Clique sur un point de départ';
+
+export const STATUS_PARALLEL_SEGMENT = 'Étape 1/2 — Parallèle — Clique sur un segment';
+export const STATUS_PARALLEL_POINT = 'Étape 2/2 — Parallèle — Clique sur un point de départ';
+
+export const STATUS_TRANSLATION_FIGURE = 'Étape 1/3 — Translation — Clique la figure à déplacer';
+export const STATUS_TRANSLATION_FROM =
+  'Étape 2/3 — Translation — Clique le point de départ de la flèche';
+export const STATUS_TRANSLATION_TO =
+  "Étape 3/3 — Translation — Clique le point d'arrivée de la flèche";
+
+export const STATUS_ROTATION_FIGURE = 'Étape 1/3 — Rotation — Clique la figure à tourner';
+export const STATUS_ROTATION_CENTER = 'Étape 2/3 — Rotation — Clique le centre de rotation';
+export const STATUS_ROTATION_ANGLE = "Étape 3/3 — Rotation — Choisis l'angle";
+
+export const STATUS_HOMOTHETY_FIGURE_SIMPLE = 'Étape 1/3 — Agrandir — Clique la figure';
+export const STATUS_HOMOTHETY_FIGURE_COMPLET =
+  'Étape 1/3 — Agrandir (homothétie) — Clique la figure';
+export const STATUS_HOMOTHETY_CENTER = 'Étape 2/3 — Agrandir — Clique le centre';
+export const STATUS_HOMOTHETY_FACTOR = 'Étape 3/3 — Agrandir — Choisis la grandeur';
+
+export const STATUS_SYMMETRY_FIGURE = 'Étape 1/2 — Symétrie — Clique la figure';
+export const STATUS_SYMMETRY_AXIS = "Étape 2/2 — Symétrie — Clique deux points pour l'axe";
+
+export const STATUS_COMPARE_A = 'Étape 1/2 — Comparer — Clique la première figure';
+export const STATUS_COMPARE_B = 'Étape 2/2 — Comparer — Clique la deuxième figure';
+
+export const STATUS_REPRODUCE_SELECT = 'Étape 1/2 — Reproduire — Clique la figure à copier';
+export const STATUS_REPRODUCE_PLACE = 'Étape 2/2 — Reproduire — Clique où placer la copie';
+
+export const STATUS_FRIEZE_UNIT = 'Étape 1/3 — Frise — Clique la figure de base';
+export const STATUS_FRIEZE_VECTOR1 = 'Étape 2/3 — Frise — Trace la flèche de répétition';
+export const STATUS_FRIEZE_VECTOR2 = 'Étape 3/3 — Frise — Trace la deuxième flèche (ou passe)';
+
+export const STATUS_TEXT_PLACE = 'Texte — Clique où tu veux écrire';
 
 // ── Length input ───────────────────────────────────────────
 
