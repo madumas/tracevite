@@ -1540,6 +1540,11 @@ Les questions suivantes ont été posées, débattues et tranchées définitivem
 - Undo de « Nouvelle construction » : **mémoire volatile** (perdu à la fermeture du navigateur).
 - URL de partage `#s=...` : **crée un nouveau créneau**. Si plein : message.
 
+### Rotation — convention de sens
+- L'outil Rotation expose **deux boutons explicites** dans son panneau : « ↻ Horaire » (sens aiguilles de montre) et « ↺ Antihoraire » (trigonométrique). Le sens est **toujours affiché** avec icône + texte, jamais implicite.
+- Default primaire : **horaire**. Alignement pédagogique : les enfants connaissent les aiguilles d'une montre avant la convention trigonométrique. L'antihoraire (standard math / secondaire) reste accessible en un clic pour préparer la transition curriculaire.
+- Le signe de `angleDeg` envoyé au reducer suit la convention mathématique (positif = CCW) ; l'UI applique la négation quand l'utilisateur choisit horaire (`confirmAngle(clockwise ? v : -v)`).
+
 ### Sons
 - 3 modes : **Off / Réduits / Complets**. Gain défaut 50%. Web Audio API synthèse.
 - Debounce 150ms à l'entrée dans la zone de snap. Pas de design sonore spécialisé TSA.

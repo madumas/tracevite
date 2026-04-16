@@ -57,9 +57,10 @@ export function AboutDialog({ onClose }: AboutDialogProps) {
         onClick={(e) => e.stopPropagation()}
         role="dialog"
         aria-modal="true"
+        aria-labelledby="about-title"
       >
         <img src="/favicon.svg" alt="" width={64} height={64} style={{ marginBottom: 8 }} />
-        <div>
+        <div id="about-title">
           <GeoMoloLogo height={40} />
         </div>
         <div style={{ height: 8 }} />

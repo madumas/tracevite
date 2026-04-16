@@ -27,6 +27,11 @@ import {
   UI_TEXT_SECONDARY,
   STATUS_BAR_HEIGHT,
   STATUS_BAR_BG,
+  BANNER_ALERT_BG,
+  BANNER_ALERT_BORDER,
+  ACCENT_AMBER,
+  ACCENT_AMBER_DARK,
+  ACCENT_AMBER_BG,
   getCanvasColors,
   CanvasColorsProvider,
 } from '@/config/theme';
@@ -928,8 +933,8 @@ function AppContent({ initialRegistry }: AppProps) {
             alignItems: 'center',
             gap: 8,
             padding: '6px 12px',
-            background: '#FEE2E2',
-            borderBottom: '1px solid #FECACA',
+            background: BANNER_ALERT_BG,
+            borderBottom: `1px solid ${BANNER_ALERT_BORDER}`,
             fontSize: 13,
             fontFamily: 'system-ui, sans-serif',
           }}
@@ -991,9 +996,12 @@ function AppContent({ initialRegistry }: AppProps) {
           display: 'flex',
           alignItems: 'center',
           padding: '0 12px',
-          background: tutorial.isActive && tutorial.step !== 'post' ? '#FEF3C7' : STATUS_BAR_BG,
+          background:
+            tutorial.isActive && tutorial.step !== 'post' ? ACCENT_AMBER_BG : STATUS_BAR_BG,
           borderBottom: '1px solid #D1D8E0',
-          borderLeft: `3px solid ${tutorial.isActive && tutorial.step !== 'post' ? '#D97706' : UI_PRIMARY}`,
+          borderLeft: `3px solid ${
+            tutorial.isActive && tutorial.step !== 'post' ? ACCENT_AMBER : UI_PRIMARY
+          }`,
           fontSize: 13 * effectiveFontScale,
           color: '#4A5568',
         }}
@@ -1006,7 +1014,7 @@ function AppContent({ initialRegistry }: AppProps) {
           <>
             <span
               style={{
-                background: '#D97706',
+                background: ACCENT_AMBER,
                 color: '#FFF',
                 padding: '1px 8px',
                 borderRadius: 4,
@@ -1045,7 +1053,7 @@ function AppContent({ initialRegistry }: AppProps) {
                 background: 'none',
                 border: 'none',
                 cursor: 'pointer',
-                color: '#B45309',
+                color: ACCENT_AMBER_DARK,
                 fontSize: 12,
                 marginLeft: 8,
                 whiteSpace: 'nowrap',
@@ -1105,8 +1113,8 @@ function AppContent({ initialRegistry }: AppProps) {
                   {state.estimationMode && !estimationRevealed && (
                     <span
                       style={{
-                        background: '#FEF3C7',
-                        color: '#B45309',
+                        background: ACCENT_AMBER_BG,
+                        color: ACCENT_AMBER_DARK,
                         padding: '2px 10px',
                         borderRadius: 4,
                         fontSize: 12 * effectiveFontScale,

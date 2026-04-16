@@ -47,6 +47,22 @@ export const UI_TEXT_SECONDARY = '#4A5568';
 export const UI_BORDER = '#D1D8E0';
 export const UI_FOCUS = '#0a7e7a';
 
+// ── Semantic banner / accent palettes (QA 4.7) ────────────
+// Grouped by purpose so App.tsx stops hardcoding ad-hoc hex triples.
+//
+// Alert banner (Deep Freeze) — soft red background, slightly saturated border.
+export const BANNER_ALERT_BG = '#FEE2E2';
+export const BANNER_ALERT_BORDER = '#FECACA';
+//
+// Amber attention palette (tutorial, estimation) — warm but non-destructive.
+export const ACCENT_AMBER = '#D97706';
+export const ACCENT_AMBER_DARK = '#B45309';
+export const ACCENT_AMBER_BG = '#FEF3C7';
+//
+// Info palette (consigne banner).
+export const BANNER_INFO_BG = '#E6F1FB';
+export const BANNER_INFO_BORDER = '#C5D8EC';
+
 // ── Layout dimensions (px) ─────────────────────────────────
 export const TOOLBAR_HEIGHT = 64;
 export const STATUS_BAR_HEIGHT = 44;
