@@ -9,3 +9,5 @@ coverage/
 e2e/screenshots/
 .DS_Store
 .claude/
+.vite/
+docs/images/
