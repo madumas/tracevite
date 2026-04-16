@@ -7,7 +7,7 @@ import { useState, useCallback, useMemo, createElement } from 'react';
 import type { ConstructionState, ViewportState, SnapResult } from '@/model/types';
 import type { ConstructionAction } from '@/model/reducer';
 import type { ToolHookResult } from './types';
-import { hitTestSegment, hitTestCircle } from '@/engine/hit-test';
+import { hitTestSegment, hitTestCircle, getHitTestTolerances } from '@/engine/hit-test';
 import { findSnap, DEFAULT_TOLERANCES, scaleTolerances } from '@/engine/snap';
 import { TOLERANCE_PROFILES } from '@/config/accessibility';
 import { constrainAxisAngle } from '@/engine/reflection';
@@ -86,9 +86,11 @@ export function useReflectionTool({
       const snap = findSnap(mmPos, state, tolerances);
       const snapped = snap.snappedPosition;
 
+      const hitTol = getHitTestTolerances(state.toleranceProfile);
+
       if (phase === 'choose_axis') {
         // Check if click is on a segment body → use as axis
-        const segId = hitTestSegment(mmPos, state.segments, state.points);
+        const segId = hitTestSegment(mmPos, state.segments, state.points, hitTol.segmentMm);
         if (segId) {
           const seg = state.segments.find((s) => s.id === segId);
           if (seg) {
@@ -123,7 +125,7 @@ export function useReflectionTool({
         if (!axisP1 || !axisP2) return;
 
         // Hit-test: segment > circle. Points are not reflectable on their own.
-        const segId = hitTestSegment(mmPos, state.segments, state.points);
+        const segId = hitTestSegment(mmPos, state.segments, state.points, hitTol.segmentMm);
         if (segId) {
           const figure = findFigureForSegment(segId);
 
@@ -182,7 +184,7 @@ export function useReflectionTool({
           return;
         }
 
-        const circleId = hitTestCircle(mmPos, state.circles, state.points);
+        const circleId = hitTestCircle(mmPos, state.circles, state.points, hitTol.circleMm);
         if (circleId && !anim.isAnimating) {
           const circle = state.circles.find((c) => c.id === circleId);
           if (circle) {

@@ -35,15 +35,17 @@ export function compareFiguresByTranslation(
   pointIdsB: readonly string[],
   points: readonly Point[],
 ): ComparisonResult {
-  const n = pointIdsA.length;
   const pointMap = new Map(points.map((p) => [p.id, p]));
-  const ptsA = pointIdsA.map((id) => pointMap.get(id)!);
-  const ptsB = pointIdsB.map((id) => pointMap.get(id)!);
+  // Filter out stale ids (point removed between figure capture and comparison —
+  // otherwise distance() crashes on undefined). (QA 3.23)
+  const ptsA = pointIdsA.map((id) => pointMap.get(id)).filter((p): p is Point => !!p);
+  const ptsB = pointIdsB.map((id) => pointMap.get(id)).filter((p): p is Point => !!p);
+  const n = ptsA.length;
 
   // Different vertex count → not isometric, but compute translation for ghost overlay
-  if (n !== pointIdsB.length || n === 0) {
-    const tx = n > 0 && pointIdsB.length > 0 ? centroid(ptsB).x - centroid(ptsA).x : 0;
-    const ty = n > 0 && pointIdsB.length > 0 ? centroid(ptsB).y - centroid(ptsA).y : 0;
+  if (n !== ptsB.length || n === 0) {
+    const tx = n > 0 && ptsB.length > 0 ? centroid(ptsB).x - centroid(ptsA).x : 0;
+    const ty = n > 0 && ptsB.length > 0 ? centroid(ptsB).y - centroid(ptsA).y : 0;
     return {
       isIsometric: false,
       maxDeviationMm: Infinity,

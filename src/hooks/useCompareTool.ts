@@ -8,7 +8,7 @@ import { useState, useCallback, useMemo, createElement } from 'react';
 import type { ConstructionState, ViewportState, SnapResult } from '@/model/types';
 import type { ConstructionAction } from '@/model/reducer';
 import type { ToolHookResult } from './types';
-import { hitTestSegment, hitTestCircle } from '@/engine/hit-test';
+import { hitTestSegment, hitTestCircle, getHitTestTolerances } from '@/engine/hit-test';
 import { detectAllFaces, classifyFigures, type Figure } from '@/engine/figures';
 import type { Circle } from '@/model/types';
 import { compareFiguresByTranslation, type ComparisonResult } from '@/engine/comparison';
@@ -54,9 +54,10 @@ export function useCompareTool({
       }
 
       let figure: Figure | undefined;
+      const tol = getHitTestTolerances(state.toleranceProfile);
 
       // Hit-test circle first (single center point → guaranteed mismatch vs polygons)
-      const circleId = hitTestCircle(mmPos, state.circles, state.points);
+      const circleId = hitTestCircle(mmPos, state.circles, state.points, tol.circleMm);
       if (circleId) {
         const circle = state.circles.find((c) => c.id === circleId) as Circle;
         figure = {
@@ -71,7 +72,7 @@ export function useCompareTool({
 
       if (!figure) {
         // Hit-test segment
-        const segId = hitTestSegment(mmPos, state.segments, state.points);
+        const segId = hitTestSegment(mmPos, state.segments, state.points, tol.segmentMm);
         if (!segId) return;
 
         // Find closed figure containing this segment

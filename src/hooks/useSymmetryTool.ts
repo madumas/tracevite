@@ -10,7 +10,7 @@ import { useState, useCallback, useMemo, createElement } from 'react';
 import type { ConstructionState, ViewportState, SnapResult } from '@/model/types';
 import type { ConstructionAction } from '@/model/reducer';
 import type { ToolHookResult } from './types';
-import { hitTestSegment, hitTestCircle } from '@/engine/hit-test';
+import { hitTestSegment, hitTestCircle, getHitTestTolerances } from '@/engine/hit-test';
 import { findConnectedElements } from '@/engine/reproduce';
 import { findSnap, DEFAULT_TOLERANCES, scaleTolerances } from '@/engine/snap';
 import { TOLERANCE_PROFILES } from '@/config/accessibility';
@@ -80,10 +80,11 @@ export function useSymmetryTool({
         // Check if clicking near an existing point → prefer manual axis (2 clicks)
         const snap = findSnap(mmPos, state, tolerances);
         const clickedOnPoint = snap.snapType === 'point';
+        const hitTol = getHitTestTolerances(state.toleranceProfile);
 
         if (!clickedOnPoint) {
           // Try to hit an existing segment → use as axis
-          const segId = hitTestSegment(mmPos, state.segments, state.points);
+          const segId = hitTestSegment(mmPos, state.segments, state.points, hitTol.segmentMm);
           if (segId) {
             const seg = state.segments.find((s) => s.id === segId);
             if (seg) {
@@ -107,9 +108,12 @@ export function useSymmetryTool({
         setAxisP2(p2);
         setPhase('select_figure');
       } else if (phase === 'select_figure' && axisP1 && axisP2) {
+        const hitTol = getHitTestTolerances(state.toleranceProfile);
         // Click on a segment or circle to select the figure to verify
-        const segId = hitTestSegment(mmPos, state.segments, state.points);
-        const circleHitId = !segId ? hitTestCircle(mmPos, state.circles, state.points) : null;
+        const segId = hitTestSegment(mmPos, state.segments, state.points, hitTol.segmentMm);
+        const circleHitId = !segId
+          ? hitTestCircle(mmPos, state.circles, state.points, hitTol.circleMm)
+          : null;
 
         if (segId || circleHitId) {
           // Find connected figure

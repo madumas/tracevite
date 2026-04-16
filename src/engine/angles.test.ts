@@ -39,9 +39,8 @@ describe('classifyAngle', () => {
     expect(classifyAngle(120)).toBe('obtus');
   });
 
-  it('classifies reflex at 270°', () => {
-    expect(classifyAngle(270)).toBe('reflex');
-  });
+  // Angle rentrant (reflex) is out of primary curriculum and no longer a
+  // classification — detectAnglesAtVertex filters reflex angles upstream.
 });
 
 describe('detectAnglesAtVertex', () => {
@@ -96,9 +95,8 @@ describe('detectAnglesAtVertex', () => {
     // The 180° (plat) angle is filtered out in 3+ ray junctions (parasitic collinearity)
     expect(angles).toHaveLength(2);
 
-    // No reflex or flat angles should be returned in 3+ ray junctions
+    // No flat angles returned in 3+ ray junctions (reflex angles filtered upstream).
     for (const a of angles) {
-      expect(a.classification).not.toBe('reflex');
       expect(a.classification).not.toBe('plat');
     }
 

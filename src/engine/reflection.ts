@@ -32,17 +32,72 @@ export function reflectPoint(
   };
 }
 
+/** Max number of trailing primes before switching to numeric subscripts. */
+const MAX_PRIMES = 2;
+/** Unicode subscript digits 1-9 (0 is only needed past 10 transformations). */
+const SUBSCRIPT_DIGITS = [
+  '\u2080',
+  '\u2081',
+  '\u2082',
+  '\u2083',
+  '\u2084',
+  '\u2085',
+  '\u2086',
+  '\u2087',
+  '\u2088',
+  '\u2089',
+] as const;
+
+function toSubscript(n: number): string {
+  return String(n)
+    .split('')
+    .map((d) => SUBSCRIPT_DIGITS[parseInt(d, 10)] ?? d)
+    .join('');
+}
+
+/** Base label without any primes or numeric subscripts (e.g. "A''" → "A", "A₁" → "A"). */
+function stripDecoration(label: string): string {
+  let base = label;
+  while (base.endsWith("'")) base = base.slice(0, -1);
+  // Trim trailing subscript digits.
+  while (base.length > 0 && SUBSCRIPT_DIGITS.includes(base[base.length - 1] as never)) {
+    base = base.slice(0, -1);
+  }
+  return base;
+}
+
 /**
- * Generate prime label: "A" → "A'", "A'" → "A''", etc.
- * Prime notation reserved for reflections (spec §6.6).
+ * Generate a transformation label:
+ *   A  → A'
+ *   A' → A''
+ *   A''→ A₁  (overflow — readability limit, avoids A'''… mush)
+ *   A₁ → A₂, A₂ → A₃, ...
+ *
+ * Rationale (neuropsy review): ≥ 3 primes are hard to count visually for
+ * students with DCD / working-memory deficits. Numeric subscripts are also
+ * the standard notation used later in secondary school, so they prepare
+ * the curriculum transition.
  */
 export function generatePrimeLabel(label: string, existingLabels: readonly string[]): string {
-  let candidate = label + "'";
   const used = new Set(existingLabels);
-  while (used.has(candidate)) {
-    candidate += "'";
+  const base = stripDecoration(label);
+
+  // Try prime notation up to MAX_PRIMES trailing primes.
+  for (let n = 1; n <= MAX_PRIMES; n++) {
+    const candidate = base + "'".repeat(n);
+    if (!used.has(candidate)) return candidate;
   }
-  return candidate;
+
+  // All primes exhausted — switch to numeric subscript: find smallest free Nᵢ.
+  for (let i = 1; i <= 99; i++) {
+    const candidate = base + toSubscript(i);
+    if (!used.has(candidate)) return candidate;
+  }
+
+  // Last-resort fallback: legacy behavior.
+  let fallback = label + "'";
+  while (used.has(fallback)) fallback += "'";
+  return fallback;
 }
 
 /**

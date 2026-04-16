@@ -7,6 +7,20 @@ import { generateId, nextLabel } from '@/model/id';
 import { distance } from './geometry';
 
 /**
+ * Allowed homothety factor range (QA 3.22). Factor=0 collapses the figure to
+ * the center (pedagogical nonsense); |factor| > 10 drags geometry off-canvas.
+ * Negative factor is intentionally accepted — it produces a rotation of 180°.
+ */
+export const MIN_HOMOTHETY_FACTOR = 0.1;
+export const MAX_HOMOTHETY_FACTOR = 10;
+
+export function isValidHomothetyFactor(factor: number): boolean {
+  if (!Number.isFinite(factor)) return false;
+  const abs = Math.abs(factor);
+  return abs >= MIN_HOMOTHETY_FACTOR && abs <= MAX_HOMOTHETY_FACTOR;
+}
+
+/**
  * Scale a point relative to a center by the given factor.
  * factor > 1 = agrandissement, 0 < factor < 1 = réduction.
  */

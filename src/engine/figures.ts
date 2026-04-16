@@ -5,6 +5,11 @@
 
 import type { ConstructionState, DisplayMode, Point } from '@/model/types';
 import { distance } from './geometry';
+import {
+  PARALLEL_TOLERANCE_DEG,
+  RIGHT_ANGLE_TOLERANCE_DEG,
+  EQUAL_LENGTH_TOLERANCE_MM,
+} from '@/config/accessibility';
 
 /** Height data for triangle/parallelogram (complet mode). */
 export interface FigureHeight {
@@ -167,15 +172,25 @@ export function detectAllFaces(state: ConstructionState): string[][] {
     }
   }
 
-  // Filter exterior face and degenerate, then deduplicate same-vertex-set faces.
-  // Self-intersecting faces (e.g. bowties) have near-zero shoelace area due to
-  // winding cancellation — keep them if they have enough edges to be meaningful.
+  // Filter exterior face and degenerate, then deduplicate by edge-set rather
+  // than vertex-set. Two distinct planar faces can share the same vertex set
+  // (e.g. two triangles on 4 vertices in a complete graph), and the previous
+  // sort+join key dropped one of them. Edge-set keeps both. (QA 3.19)
   const seen = new Set<string>();
+  const edgeSetKey = (face: string[]): string => {
+    const edges: string[] = [];
+    for (let k = 0; k < face.length; k++) {
+      const a = face[k]!;
+      const b = face[(k + 1) % face.length]!;
+      edges.push(a < b ? `${a}|${b}` : `${b}|${a}`);
+    }
+    return edges.sort().join(',');
+  };
   return faces.filter((face, i) => {
     if (i === maxIdx) return false; // exterior face
     const area = Math.abs(shoelaceArea(face, pointMap));
     if (area < 1 && !isSelfIntersecting(face, pointMap)) return false; // degenerate (< 1mm²)
-    const key = [...face].sort().join(',');
+    const key = edgeSetKey(face);
     if (seen.has(key)) return false;
     seen.add(key);
     return true;
@@ -275,10 +290,13 @@ export function classifyTriangle(
   displayMode: DisplayMode,
 ): string {
   const sortedSides = [...sides].sort((a, b) => a - b);
-  const hasRightAngle = angles.some((a) => a >= 89.5 && a <= 90.5);
-  const equalPairs = countEqualPairs(sortedSides);
-  const isEquilateral = equalPairs === 3;
-  const isIsosceles = equalPairs >= 1;
+  const hasRightAngle = angles.some(
+    (a) => a >= 90 - RIGHT_ANGLE_TOLERANCE_DEG && a <= 90 + RIGHT_ANGLE_TOLERANCE_DEG,
+  );
+  // Équilatéral: all three sides within EQUAL_LENGTH_TOLERANCE_MM of the mean.
+  const isEquilateral = allSidesEqualWithinTol(sortedSides);
+  // Isocèle: at least one pair of sides equal within tolerance.
+  const isIsosceles = countEqualPairs(sortedSides) >= 1;
 
   if (displayMode === 'complet') {
     // Cumulative classification
@@ -306,8 +324,13 @@ export function classifyQuadrilateral(
   angles: number[],
   facePoints: Point[],
 ): string {
-  const allRightAngles = angles.every((a) => a >= 89.5 && a <= 90.5);
-  const allEqualSides = countEqualPairs(sides) >= 6;
+  const allRightAngles = angles.every(
+    (a) => a >= 90 - RIGHT_ANGLE_TOLERANCE_DEG && a <= 90 + RIGHT_ANGLE_TOLERANCE_DEG,
+  );
+  // Losange/carré: use mean-based tolerance (tolerates 0.5-0.8mm motor jitter
+  // on individual sides). Previous C(4,2)=6 pair-counting failed on imperfect
+  // losanges that visually were clearly intended as such.
+  const allEqualSides = allSidesEqualWithinTol(sides);
   const parallelPairs = countParallelOppositeSides(facePoints);
 
   if (allRightAngles && allEqualSides) return 'Carré';
@@ -389,11 +412,25 @@ function computeInteriorAngles(face: string[], pointMap: Map<string, Point>): nu
   });
 }
 
+/**
+ * True when every side is within ±EQUAL_LENGTH_TOLERANCE_MM of the mean.
+ * Robust against the cumulative-noise bug in countEqualPairs: a losange
+ * drawn with 0.5–0.8mm jitter on each side was previously mis-classified
+ * because pair-counting demands C(n,2) exact matches, whereas the mean
+ * test simply asks « est-ce que tous les côtés sont à 1mm près de la
+ * même longueur ».
+ */
+function allSidesEqualWithinTol(sides: number[]): boolean {
+  if (sides.length === 0) return true;
+  const mean = sides.reduce((s, v) => s + v, 0) / sides.length;
+  return sides.every((s) => Math.abs(s - mean) <= EQUAL_LENGTH_TOLERANCE_MM);
+}
+
 function countEqualPairs(sides: number[]): number {
   let count = 0;
   for (let i = 0; i < sides.length; i++) {
     for (let j = i + 1; j < sides.length; j++) {
-      if (Math.abs(sides[i]! - sides[j]!) <= 1) count++;
+      if (Math.abs(sides[i]! - sides[j]!) <= EQUAL_LENGTH_TOLERANCE_MM) count++;
     }
   }
   return count;
@@ -403,7 +440,7 @@ function countEqualPairs(sides: number[]): number {
 function countParallelOppositeSides(facePoints: Point[]): number {
   if (facePoints.length !== 4) return 0;
 
-  const PARALLEL_TOL = 0.5; // degrees
+  const PARALLEL_TOL = PARALLEL_TOLERANCE_DEG;
   let pairs = 0;
 
   // Side 0-1 vs side 2-3 (opposite sides in a quadrilateral)

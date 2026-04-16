@@ -2,7 +2,7 @@ import { useState, useCallback, useMemo, createElement } from 'react';
 import type { ConstructionState, ViewportState, SnapResult } from '@/model/types';
 import type { ConstructionAction } from '@/model/reducer';
 import type { ToolHookResult } from './types';
-import { hitTestPoint, hitTestTextBox } from '@/engine/hit-test';
+import { hitTestPoint, hitTestTextBox, getHitTestTolerances } from '@/engine/hit-test';
 import { findSnap, DEFAULT_TOLERANCES, scaleTolerances } from '@/engine/snap';
 import { TOLERANCE_PROFILES } from '@/config/accessibility';
 import { STATUS_MOVE_IDLE, STATUS_MOVE_PICKED } from '@/config/messages';
@@ -55,8 +55,9 @@ export function useMoveTool({
     (mmPos: { x: number; y: number }) => {
       if (!isActive) return;
       if (phase === 'idle') {
+        const hitTol = getHitTestTolerances(state.toleranceProfile);
         // Try to pick up a point
-        const pointId = hitTestPoint(mmPos, state.points);
+        const pointId = hitTestPoint(mmPos, state.points, hitTol.pointMm);
         if (pointId) {
           const point = state.points.find((p) => p.id === pointId);
           if (!point) return;
@@ -71,7 +72,7 @@ export function useMoveTool({
           return;
         }
         // Try to pick up a textbox
-        const tbId = hitTestTextBox(mmPos, state.textBoxes);
+        const tbId = hitTestTextBox(mmPos, state.textBoxes, hitTol.textBoxPaddingMm);
         if (tbId) {
           const tb = state.textBoxes.find((t) => t.id === tbId);
           if (!tb) return;

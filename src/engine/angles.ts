@@ -4,18 +4,25 @@
  */
 
 import type { ConstructionState, AngleInfo, AngleClassification, DisplayMode } from '@/model/types';
-import { CLUTTER_THRESHOLDS } from '@/config/accessibility';
+import { CLUTTER_THRESHOLDS, RIGHT_ANGLE_TOLERANCE_DEG } from '@/config/accessibility';
+
+const FLAT_TOL = RIGHT_ANGLE_TOLERANCE_DEG; // same ±0.5° convention for "plat"
 
 /**
  * Classify an angle in degrees using spec priority:
- * right [89.5, 90.5] > flat [179.5, 180.5] > acute ]0, 89.5[ > obtuse ]90.5, 179.5[
+ * right [90 ± t] > flat [180 ± t] > acute ]0, 90 − t[ > obtuse ]90 + t, 180 − t[
+ * (t = RIGHT_ANGLE_TOLERANCE_DEG = 0.5°)
+ *
+ * Input is expected in [0, 180] (classifyAngle never receives reflex angles —
+ * detectAnglesAtVertex normalizes to ≤180°). Values > 180 would indicate a bug
+ * in the caller; we still map them to 'obtus' as a conservative fallback.
  */
 export function classifyAngle(degrees: number): AngleClassification {
-  if (degrees >= 89.5 && degrees <= 90.5) return 'droit';
-  if (degrees >= 179.5 && degrees <= 180.5) return 'plat';
-  if (degrees > 0 && degrees < 89.5) return 'aigu';
-  if (degrees > 90.5 && degrees < 179.5) return 'obtus';
-  if (degrees > 180.5) return 'reflex';
+  if (degrees >= 90 - RIGHT_ANGLE_TOLERANCE_DEG && degrees <= 90 + RIGHT_ANGLE_TOLERANCE_DEG)
+    return 'droit';
+  if (degrees >= 180 - FLAT_TOL && degrees <= 180 + FLAT_TOL) return 'plat';
+  if (degrees > 0 && degrees < 90 - RIGHT_ANGLE_TOLERANCE_DEG) return 'aigu';
+  if (degrees > 90 + RIGHT_ANGLE_TOLERANCE_DEG) return 'obtus';
   return 'aigu'; // fallback for ~0°
 }
 
@@ -62,7 +69,10 @@ export function detectAnglesAtVertex(vertexId: string, state: ConstructionState)
     if (diff < 0) diff += 2 * Math.PI;
     if (diff > Math.PI) diff = 2 * Math.PI - diff;
     const degrees = diff * (180 / Math.PI);
-    if (degrees < 0.1) return [];
+    // Filter parasitic near-zero angles (jitter from imperfect snap on near-parallel
+    // segments). 0.5° aligns with the droit/plat tolerances and matches typical TDC
+    // motor jitter characteristics; any angle below that is noise.
+    if (degrees < 0.5) return [];
     return [
       {
         vertexPointId: vertexId,
@@ -84,7 +94,12 @@ export function detectAnglesAtVertex(vertexId: string, state: ConstructionState)
     if (diff < 0) diff += 2 * Math.PI;
 
     const degrees = diff * (180 / Math.PI);
-    if (degrees < 0.1) continue;
+    if (degrees < 0.5) continue;
+
+    // Angle rentrant (reflex > 180°) — out of primary curriculum, skip entirely.
+    // detectAnglesAtVertex at 3+ ray junctions can produce these; the 2-ray path
+    // already normalizes to ≤180°.
+    if (degrees > 180 + FLAT_TOL) continue;
 
     angles.push({
       vertexPointId: vertexId,
@@ -95,9 +110,9 @@ export function detectAnglesAtVertex(vertexId: string, state: ConstructionState)
     });
   }
 
-  // Filter out reflex angles (> 180°) and parasitic flat angles (180°) in 3+ ray junctions
-  // Flat angles at 3+ ray junctions are collinearity artifacts, not meaningful geometry
-  return angles.filter((a) => a.classification !== 'reflex' && a.classification !== 'plat');
+  // Filter parasitic flat angles (180°) in 3+ ray junctions —
+  // they are collinearity artifacts, not meaningful geometry.
+  return angles.filter((a) => a.classification !== 'plat');
 }
 
 /**

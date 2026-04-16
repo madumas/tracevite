@@ -7,7 +7,7 @@ import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import type { ConstructionState } from '@/model/types';
 import type { ConstructionAction } from '@/model/reducer';
 import type { ToolHookResult } from './types';
-import { hitTestTextBox } from '@/engine/hit-test';
+import { hitTestTextBox, getHitTestTolerances } from '@/engine/hit-test';
 
 interface UseTextToolOptions {
   state: ConstructionState;
@@ -31,8 +31,9 @@ export function useTextTool({
   const handleClick = useCallback(
     (mmPos: { x: number; y: number }) => {
       if (!isActive || editingId) return;
+      const hitTol = getHitTestTolerances(state.toleranceProfile);
       // Check if clicking an existing textbox → edit it
-      const hitId = hitTestTextBox(mmPos, state.textBoxes);
+      const hitId = hitTestTextBox(mmPos, state.textBoxes, hitTol.textBoxPaddingMm);
       if (hitId) {
         setEditingId(hitId);
         return;

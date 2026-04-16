@@ -47,6 +47,10 @@ export function segmentGridCrossings(
 ): { x: number; y: number }[] {
   const dx = p2.x - p1.x;
   const dy = p2.y - p1.y;
+  // Guard against near-zero-length segments — the per-axis EPS check below is
+  // too loose and would produce NaN crossings on 1e-5 mm segments that briefly
+  // appear during drag transitions. (QA 3.18)
+  if (Math.abs(dx) < 0.01 && Math.abs(dy) < 0.01) return [];
   const crossings: { x: number; y: number; t: number }[] = [];
   const EPS = 1e-9;
 
@@ -188,8 +192,14 @@ export function segmentIntersection(
   const t = ((p3.x - p1.x) * dy2 - (p3.y - p1.y) * dx2) / denom;
   const u = ((p3.x - p1.x) * dy1 - (p3.y - p1.y) * dx1) / denom;
 
-  // Must be strictly interior (not at endpoints)
-  if (t <= 0 || t >= 1 || u <= 0 || u >= 1) return null;
+  // Accept intersections in [-EPS, 1+EPS] on both parameters. T-junctions
+  // (u=0 or u=1) were previously rejected by strict `<= 0 || >= 1`, which
+  // silently broke auto-intersection for very common configurations (e.g. a
+  // new segment ending exactly on an existing segment body). The
+  // `minDistFromEndpoint` check below still rejects intersections that
+  // coincide with existing endpoints.
+  const EPS = 1e-6;
+  if (t < -EPS || t > 1 + EPS || u < -EPS || u > 1 + EPS) return null;
 
   const ix = p1.x + t * dx1;
   const iy = p1.y + t * dy1;
@@ -218,7 +228,14 @@ export function perpendicularDirection(
   const dx = refP2.x - refP1.x;
   const dy = refP2.y - refP1.y;
   const len = Math.sqrt(dx * dx + dy * dy);
-  if (len === 0) return { dx: 0, dy: -1 };
+  if (len === 0) {
+    // Degenerate reference (zero-length segment) — should never happen in the
+    // UI paths but can briefly appear during transient drags. Log a warning so
+    // the caller can be investigated, and return a stable default. (QA 3.11)
+
+    console.warn('[geomolo] perpendicularDirection on zero-length segment');
+    return { dx: 0, dy: -1 };
+  }
   // Rotate 90° counterclockwise
   return { dx: -dy / len, dy: dx / len };
 }
@@ -234,7 +251,12 @@ export function parallelDirection(
   const dx = refP2.x - refP1.x;
   const dy = refP2.y - refP1.y;
   const len = Math.sqrt(dx * dx + dy * dy);
-  if (len === 0) return { dx: 1, dy: 0 };
+  if (len === 0) {
+    // See perpendicularDirection — same rationale. (QA 3.11)
+
+    console.warn('[geomolo] parallelDirection on zero-length segment');
+    return { dx: 1, dy: 0 };
+  }
   return { dx: dx / len, dy: dy / len };
 }
 

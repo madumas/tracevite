@@ -11,7 +11,7 @@ import { ContextActionBar } from '@/components/ContextActionBar';
 import { AngleLayer } from '@/components/AngleLayer';
 import { TextBoxLayer } from '@/components/TextBoxLayer';
 import { TextBoxEditor } from '@/components/TextBoxEditor';
-import { hitTestTextBox } from '@/engine/hit-test';
+import { hitTestTextBox, getHitTestTolerances } from '@/engine/hit-test';
 import { MIN_CANVAS_FONT_PX } from '@/config/accessibility';
 import { useActiveTool } from '@/hooks/useActiveTool';
 import { useSelection } from '@/hooks/useSelection';
@@ -69,6 +69,10 @@ import { PreferencesProvider, usePreferences } from '@/model/preferences';
 import { AboutDialog } from '@/components/AboutDialog';
 import { FatigueReminder } from '@/components/FatigueReminder';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
+import { usePWAUpdate } from '@/hooks/usePWAUpdate';
+import { UpdateToast } from '@/components/UpdateToast';
+import { useTabSync } from '@/hooks/useTabSync';
+import { DuplicateTabBlocker } from '@/components/DuplicateTabBlocker';
 
 /** Tools where clicking an element is a tool action, not a general selection.
  * Used to (1) forward clicks to the tool and (2) hide ContextActionBar. */
@@ -314,6 +318,14 @@ function AppContent({ initialRegistry }: AppProps) {
     activeTool: state.activeTool,
   });
 
+  // PWA update toast — only surfaces when tool is idle, preventing accidental
+  // clicks on "Recharger" during a two-click gesture.
+  const pwaUpdate = usePWAUpdate();
+  const [pwaDismissed, setPwaDismissed] = useState(false);
+
+  // Multi-tab guard (QA 1.10): if a second tab detects us, block the UI.
+  const { isDuplicate: isDuplicateTab } = useTabSync();
+
   // Slot manager
   const slotManager = useSlotManager({
     initialRegistry: initialRegistry ?? { slots: [], activeSlotId: null, nextNumber: 1 },
@@ -369,7 +381,8 @@ function AppContent({ initialRegistry }: AppProps) {
       } else {
         // Select/Text tool: clicking a textbox opens the inline editor
         if (state.activeTool === 'select' || state.activeTool === 'text') {
-          const tbId = hitTestTextBox(mmPos, state.textBoxes);
+          const hitTol = getHitTestTolerances(state.toleranceProfile);
+          const tbId = hitTestTextBox(mmPos, state.textBoxes, hitTol.textBoxPaddingMm);
           if (tbId) {
             tool.textStartEditing(tbId);
             return;
@@ -1685,7 +1698,16 @@ function AppContent({ initialRegistry }: AppProps) {
         </div>
       )}
 
-      {/* PWA update prompt (spec §4.1.2) */}
+      {/* PWA update prompt (spec §4.1.2 + QA 2.1) — shown only when tool is idle */}
+      <UpdateToast
+        visible={pwaUpdate.needRefresh && !pwaDismissed && tool.isIdle}
+        onReload={pwaUpdate.updateSW}
+        onDismiss={() => setPwaDismissed(true)}
+      />
+
+      {/* Multi-tab guard (QA 1.10): blocks the UI if we're the duplicate tab */}
+      {isDuplicateTab && <DuplicateTabBlocker />}
+
       {/* Action Bar */}
       <ActionBar
         canUndo={canUndo}

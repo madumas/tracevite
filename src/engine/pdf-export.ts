@@ -80,12 +80,17 @@ export function generatePDF(state: ConstructionState, options: PdfOptions): jsPD
   }
 
   // ── Consigne (optional, top of page) ──────────────
+  // Placed inside the printable area (y = MARGIN_MM + 5mm baseline) rather than
+  // at MARGIN_MM − 3 which fell in the imprinter's unprintable zone on older
+  // school printers. Downstream content placement already respects MARGIN_MM so
+  // no additional offset is needed for short consignes; long consignes that wrap
+  // to multiple lines are handled by jsPDF's maxWidth flow.
   if (includeConsigne && state.consigne) {
     doc.setFontSize(9);
     doc.setTextColor(80);
     doc.setFont('helvetica', 'italic');
     const consigneText = `Consigne : ${state.consigne}`;
-    doc.text(consigneText, MARGIN_MM, MARGIN_MM - 3, { maxWidth: pw });
+    doc.text(consigneText, MARGIN_MM, MARGIN_MM + 5, { maxWidth: pw });
     doc.setFont('helvetica', 'normal');
   }
 
@@ -388,7 +393,7 @@ export function constructionBoundingBox(state: ConstructionState): {
   width: number;
   height: number;
 } | null {
-  if (state.points.length === 0) return null;
+  if (state.points.length === 0 && state.textBoxes.length === 0) return null;
 
   let minX = Infinity,
     minY = Infinity,
@@ -410,6 +415,22 @@ export function constructionBoundingBox(state: ConstructionState): {
     if (center.y - c.radiusMm < minY) minY = center.y - c.radiusMm;
     if (center.x + c.radiusMm > maxX) maxX = center.x + c.radiusMm;
     if (center.y + c.radiusMm > maxY) maxY = center.y + c.radiusMm;
+  }
+
+  // Include text boxes — otherwise textBoxes placed outside the points'
+  // bounding box are silently dropped from the PDF (isInPrintableArea rejects
+  // them once the construction is re-centered).
+  const FONT_SIZE_MM = 3.5;
+  const PADDING_MM = 3;
+  for (const tb of state.textBoxes) {
+    const lines = (tb.text || '…').split('\n');
+    const longest = lines.reduce((a, b) => (a.length > b.length ? a : b), '');
+    const w = Math.max(30, longest.length * FONT_SIZE_MM * 0.55 + 6) + PADDING_MM * 2;
+    const h = lines.length * FONT_SIZE_MM * 1.4 + PADDING_MM * 2;
+    if (tb.x - PADDING_MM < minX) minX = tb.x - PADDING_MM;
+    if (tb.y - PADDING_MM < minY) minY = tb.y - PADDING_MM;
+    if (tb.x - PADDING_MM + w > maxX) maxX = tb.x - PADDING_MM + w;
+    if (tb.y - PADDING_MM + h > maxY) maxY = tb.y - PADDING_MM + h;
   }
 
   return { minX, minY, maxX, maxY, width: maxX - minX, height: maxY - minY };

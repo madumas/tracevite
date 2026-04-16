@@ -12,7 +12,7 @@ import { useState, useCallback, useMemo, createElement } from 'react';
 import type { ConstructionState, ViewportState, SnapResult } from '@/model/types';
 import type { ConstructionAction } from '@/model/reducer';
 import type { ToolHookResult } from './types';
-import { hitTestSegment, hitTestCircle } from '@/engine/hit-test';
+import { hitTestSegment, hitTestCircle, getHitTestTolerances } from '@/engine/hit-test';
 import { findSnap, DEFAULT_TOLERANCES, scaleTolerances } from '@/engine/snap';
 import { TOLERANCE_PROFILES } from '@/config/accessibility';
 import { findConnectedElements } from '@/engine/reproduce';
@@ -79,8 +79,11 @@ export function useHomothetyTool({
         setCenter(snapped);
         setPhase('set_factor');
       } else if (phase === 'select_figure' && center && factor != null && !anim.isAnimating) {
-        const segId = hitTestSegment(mmPos, state.segments, state.points);
-        const circleHitId = !segId ? hitTestCircle(mmPos, state.circles, state.points) : null;
+        const hitTol = getHitTestTolerances(state.toleranceProfile);
+        const segId = hitTestSegment(mmPos, state.segments, state.points, hitTol.segmentMm);
+        const circleHitId = !segId
+          ? hitTestCircle(mmPos, state.circles, state.points, hitTol.circleMm)
+          : null;
         if (!segId && !circleHitId) return;
 
         let pointIds: string[];

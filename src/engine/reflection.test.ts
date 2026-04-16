@@ -42,8 +42,16 @@ describe('generatePrimeLabel', () => {
     expect(generatePrimeLabel('A', ["A'"])).toBe("A''");
   });
 
-  it('adds triple prime when double exists', () => {
-    expect(generatePrimeLabel('A', ["A'", "A''"])).toBe("A'''");
+  it('switches to numeric subscript after MAX_PRIMES=2 primes exist', () => {
+    // Neuropsy-review convention (QA 3.21): ≥3 primes are hard to count for
+    // DCD/working-memory profiles, and subscripts prepare the secondary-school
+    // notation. Rule: A, A', A'', then A₁, A₂, …
+    expect(generatePrimeLabel('A', ["A'", "A''"])).toBe('A\u2081');
+    expect(generatePrimeLabel('A', ["A'", "A''", 'A\u2081'])).toBe('A\u2082');
+  });
+
+  it('strips existing subscript before generating next', () => {
+    expect(generatePrimeLabel('A\u2081', ["A'", "A''", 'A\u2081'])).toBe('A\u2082');
   });
 });
 

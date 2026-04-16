@@ -224,7 +224,7 @@ export function findSnap(
           // Normalize to [-180, 180]
           diff = ((diff + 540) % 360) - 180;
           const absDiff = Math.abs(diff);
-          if (absDiff <= bestGuideDiff && absDiff > 0.01) {
+          if (absDiff < bestGuideDiff && absDiff > 0.01) {
             bestGuideDiff = absDiff;
             bestGuideAngle = targetAngle;
             bestGuideType = 'parallel';
@@ -238,7 +238,7 @@ export function findSnap(
           let diff = currentAngleDeg - targetAngle;
           diff = ((diff + 540) % 360) - 180;
           const absDiff = Math.abs(diff);
-          if (absDiff <= bestGuideDiff && absDiff > 0.01) {
+          if (absDiff < bestGuideDiff && absDiff > 0.01) {
             bestGuideDiff = absDiff;
             bestGuideAngle = targetAngle;
             bestGuideType = 'perpendicular';

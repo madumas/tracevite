@@ -9,6 +9,18 @@ import type { ToleranceProfile } from '@/model/types';
 /** Drag threshold: movement < this from pointerdown = click, not drag. */
 export const DRAG_THRESHOLD_MM = 1.5;
 
+/**
+ * Parallel detection tolerance (angle between directions, degrees).
+ * Also used as the half-width of the "droit" (right angle) classification interval.
+ */
+export const PARALLEL_TOLERANCE_DEG = 0.5;
+
+/** Right-angle detection tolerance — angle must be in [90 ± RIGHT_ANGLE_TOLERANCE_DEG]. */
+export const RIGHT_ANGLE_TOLERANCE_DEG = 0.5;
+
+/** Equal-length tolerance (mm) for figure classification and congruence marks. */
+export const EQUAL_LENGTH_TOLERANCE_MM = 1;
+
 /** Snap zone: existing points. */
 export const SNAP_TOLERANCE_POINT_MM = 7;
 

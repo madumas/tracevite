@@ -11,7 +11,7 @@ import { useState, useCallback, useMemo, createElement } from 'react';
 import type { ConstructionState, ViewportState, SnapResult } from '@/model/types';
 import type { ConstructionAction } from '@/model/reducer';
 import type { ToolHookResult } from './types';
-import { hitTestSegment } from '@/engine/hit-test';
+import { hitTestSegment, getHitTestTolerances } from '@/engine/hit-test';
 import { findSnap, DEFAULT_TOLERANCES, scaleTolerances } from '@/engine/snap';
 import { TOLERANCE_PROFILES } from '@/config/accessibility';
 import {
@@ -73,7 +73,8 @@ export function useConstrainedLineTool({
       if (!isActive) return;
 
       if (phase === 'select_reference') {
-        const segId = hitTestSegment(mmPos, state.segments, state.points);
+        const hitTol = getHitTestTolerances(state.toleranceProfile);
+        const segId = hitTestSegment(mmPos, state.segments, state.points, hitTol.segmentMm);
         if (!segId) return;
 
         const seg = state.segments.find((s) => s.id === segId);

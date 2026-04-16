@@ -7,10 +7,13 @@ import type { Point, Segment, Circle, DetectedProperty, ConstructionState } from
 import { segmentAngle, distance } from './geometry';
 import { checkSymmetry } from './reflection';
 import type { Figure } from './figures';
+import {
+  PARALLEL_TOLERANCE_DEG,
+  RIGHT_ANGLE_TOLERANCE_DEG,
+  EQUAL_LENGTH_TOLERANCE_MM,
+} from '@/config/accessibility';
 
-const PARALLEL_TOLERANCE_DEG = 0.5;
-const PERPENDICULAR_TOLERANCE_DEG = 0.5; // [89.5, 90.5]
-const EQUAL_LENGTH_TOLERANCE_MM = 1;
+const PERPENDICULAR_TOLERANCE_DEG = RIGHT_ANGLE_TOLERANCE_DEG;
 
 /**
  * Normalized direction in [0, 180) — AB and BA give same value.
