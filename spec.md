@@ -536,9 +536,7 @@ Exemple visuel du dropdown ouvert :
 **Champ `consigne` :**
 - Optionnel, type `string`, maximum 1000 caractères (les consignes multi-étapes en contexte scolaire dépassent facilement 500 caractères)
 - Lecture seule pour l'enfant (non modifiable dans l'interface)
-- Défini par l'enseignant via :
-  1. Le champ `consigne` dans un fichier `.geomolo` (voir §17.2)
-  2. Le paramètre URL `?consigne=` (voir §8.0.2)
+- Défini par l'enseignant via le champ `consigne` dans un fichier `.geomolo` (voir §17.2) ou via le lien de partage `#s=...` (voir §17.3)
 - Sauvegardé dans IndexedDB avec la construction (si l'enfant ferme et revient, la consigne est toujours visible)
 - Non inclus dans l'historique undo/redo (ce n'est pas une action de l'enfant)
 - Non imprimé dans le PDF par défaut (le PDF est la figure construite par l'enfant, pas l'énoncé de l'exercice)
@@ -557,34 +555,6 @@ Exemple visuel du dropdown ouvert :
 - La barre de statut conserve sa fonction de séquençage (outil actif + prochaine action) sans modification
 
 **Note de conception :** le bandeau doit être visuellement distinct de la barre de statut pour éviter la confusion. La couleur de fond bleu pâle (vs. gris pâle de la barre de statut) et le préfixe « Consigne : » en gras assurent cette distinction. L'enfant TDC doit pouvoir ignorer la consigne une fois lue — le bandeau ne pulse pas et n'attire pas l'attention de façon répétée.
-
-### 8.0.2 Lien d'exercice par URL
-
-L'enseignant peut partager un lien GéoMolo avec une consigne pré-remplie et un mode d'affichage via des paramètres URL. Cela permet le partage via Google Classroom, Microsoft Teams, ou tout autre plateforme sans nécessiter de téléchargement de fichier.
-
-**Paramètres URL supportés :**
-- `consigne` : texte de la consigne, encodé URL (ex : `?consigne=Construis+un+carr%C3%A9+de+4+cm`). Maximum 1000 caractères après décodage. Au-delà, tronqué silencieusement. **Retours à la ligne** : supportés via `%0A` (encodage URL standard de `\n`) **et** via le caractère `|` (pipe) comme alias. Le pipe est converti en retour à la ligne après décodage URL. Cela permet à l'enseignant de taper facilement des consignes multi-étapes : `?consigne=Étape+1|Étape+2|Étape+3` au lieu de `?consigne=Étape+1%0AÉtape+2%0AÉtape+3`. Le `\n` dans les fichiers `.geomolo` JSON reste le séparateur standard (pas de conversion pipe).
-- `mode` : `simplifie` ou `complet`. Si présent, définit le mode d'affichage initial (remplace le mode par défaut mais ne verrouille pas — l'enfant peut changer).
-- `level` : `2e_cycle` ou `3e_cycle`. **Rétrocompatibilité** : accepté comme alias — `2e_cycle` est converti en `simplifie`, `3e_cycle` en `complet`. Si `mode` et `level` sont présents, `mode` a priorité.
-
-**Exemple de lien complet :**
-`https://geomolo.ca/?consigne=Construis+un+rectangle+de+4+cm+%C3%97+6+cm&mode=simplifie`
-
-**Comportement au chargement :**
-1. L'application détecte les paramètres URL au démarrage
-2. Si `consigne` est présent : la construction courante est auto-sauvegardée dans son créneau existant, puis un **nouveau créneau** est créé avec une construction vide et cette consigne (même comportement que « Nouvelle construction »). L'ancienne construction reste accessible dans « Mes constructions ». **Si les 50 créneaux sont pleins** : message « Tu as 50 constructions sauvegardées. Exporte ou supprime une construction dans "Mes constructions" pour ouvrir cet exercice. » avec bouton direct vers « Mes constructions ». L'enfant peut re-cliquer le lien Classroom après avoir libéré un créneau.
-3. Si `mode` (ou `level` en rétrocompatibilité) est présent et valide : le sélecteur de mode est positionné sur la valeur indiquée
-4. Les paramètres URL sont **consommés une seule fois** : après le chargement, l'URL est nettoyée via `history.replaceState()` (sans paramètres). Un rechargement de la page restaure la construction depuis IndexedDB (avec sa consigne), pas depuis l'URL
-5. Si `consigne` est présent mais l'URL est rechargée après nettoyage : la consigne est déjà sauvegardée dans le créneau IndexedDB — rien ne se passe
-
-**Sécurité :**
-- Le texte de la consigne est affiché via `textContent` (pas `innerHTML`) — aucun risque d'injection HTML/XSS
-- Les paramètres inconnus sont ignorés silencieusement (forward-compatible)
-- Longueur totale de l'URL limitée par le navigateur (~2000 caractères). La consigne de 500 caractères + le domaine + les autres paramètres tiennent largement
-
-**Limites (pas dans le scope) :**
-- Pas de pré-chargement d'une figure via URL (pour partager un exercice avec une figure de départ, utiliser un fichier `.geomolo`)
-- Pas de « lien de retour » pour que l'enfant soumette sa construction à l'enseignant (nécessiterait un backend, voir §18)
 
 ### 8.1 Longueurs
 - Chaque segment affiche sa longueur au milieu du segment, légèrement décalé
@@ -1233,9 +1203,8 @@ Le MVP a été développé en 3 jalons itératifs — **tous complétés** :
     - **Étape 4** : « C'est tout! Tu sais construire. » avec bouton « Commencer ».
     - **Après le tutoriel** : si aucune consigne n'est présente, afficher un **message central semi-transparent** sur le canevas vide : « Clique n'importe où pour commencer! » (police 18px, couleur gris moyen, `pointer-events: none`). Le message disparaît au premier clic sur le canevas. **Note de conception :** pour un enfant TDC avec des difficultés d'initiation de tâche (très fréquent), un canevas vide est paralysant. La barre de statut guide déjà l'enfant, mais c'est du texte périphérique — le message central agit comme un pont entre le tutoriel et l'autonomie.
     **Implémentation** : les messages du tutoriel s'affichent dans la barre de statut existante avec un style distinct (fond jaune, badge « Tutoriel », bouton « Passer » à droite). L'outil Segment est activé automatiquement au démarrage du tutoriel. Pas d'overlay semi-transparent — les messages dans la barre de statut évitent la redondance et le chevauchement avec le toolPanel (rotation/homothétie).
-    Un bouton « Passer » est disponible à chaque étape pour les enfants déjà familiers. **Si un paramètre URL `?consigne=` est présent au premier lancement**, le tutoriel s'affiche d'abord (4 étapes, ~20s), puis la consigne apparaît dans son bandeau après complétion ou « Passer ». La détection « premier lancement » est un flag booléen dans IndexedDB. Le panneau latéral est **fermé par défaut au premier lancement** et reste fermé jusqu'à ce que l'enfant l'ouvre. **Note de conception :** un tutoriel par l'action est plus efficace qu'un tutoriel par la lecture pour les profils TDC+TDAH (~50% de comorbidité). L'enfant vit l'instruction plutôt que de la lire. L'introduction progressive réduit la surcharge de choix.
-24. Bandeau de consigne d'exercice : affichage d'une instruction textuelle optionnelle définie par l'enseignant (via fichier `.geomolo` ou paramètre URL). Voir §8.0.1
-25. Paramètres URL (`?consigne=`, `?level=`) pour le partage de liens d'exercice via plateformes scolaires (Google Classroom, Teams). Voir §8.0.2
+    Un bouton « Passer » est disponible à chaque étape pour les enfants déjà familiers. La détection « premier lancement » est un flag booléen dans IndexedDB. Le panneau latéral est **fermé par défaut au premier lancement** et reste fermé jusqu'à ce que l'enfant l'ouvre. **Note de conception :** un tutoriel par l'action est plus efficace qu'un tutoriel par la lecture pour les profils TDC+TDAH (~50% de comorbidité). L'enfant vit l'instruction plutôt que de la lire. L'introduction progressive réduit la surcharge de choix.
+24. Bandeau de consigne d'exercice : affichage d'une instruction textuelle optionnelle définie par l'enseignant (via fichier `.geomolo`). Voir §8.0.1
 
 ### Version 2
 
@@ -1501,7 +1470,7 @@ Pour distribuer un exercice qui inclut une figure pré-tracée (ex. : « Voici u
 3. Déposer le fichier `.geomolo` sur la plateforme de partage de l'école (Google Drive, OneDrive, Teams, Google Classroom — en pièce jointe ou lien de téléchargement)
 4. L'élève télécharge le fichier et l'ouvre dans GéoMolo (bouton « Ouvrir... »). La figure et la consigne sont restaurées.
 
-**Note :** le partage d'une figure de départ via un lien URL (sans fichier) n'est pas supporté dans la version actuelle. Pour les exercices sans figure de départ (consigne textuelle seulement), utiliser le lien URL avec le paramètre `?consigne=` (§8.0.2).
+**Note :** le partage d'un lien URL direct inclut toujours une figure (via le fragment `#s=...` généré par « Partager »). Pour des exercices sans figure de départ, exporter un fichier `.geomolo` avec uniquement le champ `consigne` rempli.
 
 ### Impression — Workflow recommandé
 
@@ -1569,7 +1538,7 @@ Les questions suivantes ont été posées, débattues et tranchées définitivem
 - Export .geomolo : **sans historique undo** (migration triviale, fichier ~20Ko).
 - Deep Freeze : flag dans IndexedDB + localStorage. Heuristique, pas garanti 100%.
 - Undo de « Nouvelle construction » : **mémoire volatile** (perdu à la fermeture du navigateur).
-- URL ?consigne= : **crée un nouveau créneau**. Si plein : message.
+- URL de partage `#s=...` : **crée un nouveau créneau**. Si plein : message.
 
 ### Sons
 - 3 modes : **Off / Réduits / Complets**. Gain défaut 50%. Web Audio API synthèse.

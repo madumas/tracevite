@@ -76,13 +76,7 @@ Trois niveaux : 1× (par défaut), 1,25× et 1,5×. Augmenter si l'enfant doit s
 
 ### Consigne d'exercice
 
-L'enseignant peut transmettre une consigne directement dans l'URL :
-
-```
-https://geomolo.ca/?consigne=Trace un triangle rectangle isocèle&mode=complet
-```
-
-L'élève ouvre le lien et voit la consigne en bannière. Un nouveau slot vierge est créé automatiquement — le travail précédent est préservé.
+L'enseignant peut transmettre une consigne via un fichier `.geomolo` préparé : la consigne s'affiche en bannière au-dessus du canvas. Pour les exercices avec figure de départ, utiliser le partage d'URL (`#s=...`) qui inclut automatiquement la consigne.
 
 ### Profils de paramètres
 
@@ -138,7 +132,7 @@ L'enseignant ou le parent peut exporter un fichier `.geomolo-config` contenant t
 - Segment-témoin de 5 cm pour vérification d'échelle
 - Sauvegarde automatique (IndexedDB) avec constructions multiples et miniatures
 - Export/import de fichiers `.geomolo` (JSON) pour la portabilité (les fichiers `.tracevite` restent acceptés pour compatibilité)
-- Consigne d'exercice via fichier ou paramètre URL (`?consigne=&mode=`)
+- Consigne d'exercice via fichier `.geomolo` ou URL de partage `#s=...`
 - PWA installable avec mode hors-ligne (Service Worker)
 
 ## Confidentialité
