@@ -329,7 +329,7 @@ function AppContent({ initialRegistry }: AppProps) {
   const [pwaDismissed, setPwaDismissed] = useState(false);
 
   // Multi-tab guard (QA 1.10): if a second tab detects us, block the UI.
-  const { isDuplicate: isDuplicateTab } = useTabSync();
+  const { isDuplicate: isDuplicateTab, takeOver: takeOverTab } = useTabSync();
 
   // Slot manager
   const slotManager = useSlotManager({
@@ -1714,7 +1714,7 @@ function AppContent({ initialRegistry }: AppProps) {
       />
 
       {/* Multi-tab guard (QA 1.10): blocks the UI if we're the duplicate tab */}
-      {isDuplicateTab && <DuplicateTabBlocker />}
+      {isDuplicateTab && <DuplicateTabBlocker onTakeOver={takeOverTab} />}
 
       {/* Action Bar */}
       <ActionBar
