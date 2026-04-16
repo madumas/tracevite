@@ -44,8 +44,8 @@ export interface TextBox {
   readonly text: string;
 }
 
-/** Angle classification per PFEQ vocabulary. */
-export type AngleClassification = 'aigu' | 'droit' | 'obtus' | 'plat' | 'reflex';
+/** Angle classification per PFEQ vocabulary. Angle rentrant (>180°) is out of primary curriculum. */
+export type AngleClassification = 'aigu' | 'droit' | 'obtus' | 'plat';
 
 /** Detected angle at a vertex (computed, not serialized). */
 export interface AngleInfo {
@@ -133,6 +133,8 @@ export interface ConstructionState {
   readonly selectedElementId: string | null;
   readonly consigne: string | null;
   readonly hideProperties: boolean;
+  /** True once the user has explicitly toggled hideProperties. Prevents SET_DISPLAY_MODE from overriding their choice. */
+  readonly hidePropertiesUserSet: boolean;
   readonly toleranceProfile: ToleranceProfile;
   readonly chainTimeoutMs: ChainTimeout;
   readonly fontScale: FontScale;

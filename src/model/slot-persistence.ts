@@ -4,12 +4,13 @@
  * Migration from single-key format (Jalon A/B) to multi-slot.
  */
 
-import { get, set, del } from 'idb-keyval';
+import { get, set, del, keys as idbKeys } from 'idb-keyval';
 import type { ConstructionState } from './types';
 import type { UndoManager } from './undo';
 import type { SlotRegistry } from './slots';
 import { createEmptyRegistry, createSlot } from './slots';
 import { serializeState, deserializeState } from './serialize';
+import { LAUNCHED_FLAG_IDB, LAUNCHED_FLAG_LS } from './persistence';
 
 // ── Keys ──────────────────────────────────────────────────
 
@@ -20,6 +21,11 @@ const SLOT_UNDO_PREFIX = 'geomolo_undo_';
 // localStorage mirror keys (same names — localStorage and IDB are separate namespaces)
 const LS_REGISTRY_KEY = 'geomolo_registry';
 const LS_SLOT_DATA_PREFIX = 'geomolo_slot_';
+/** LS mirror for a truncated undo envelope (beforeunload safety, 1.9). */
+const LS_SLOT_UNDO_PREFIX = 'geomolo_undo_';
+
+/** Max past/future states written to localStorage during sync save. IDB keeps the full history. */
+const SYNC_UNDO_MAX_DEPTH = 20;
 
 // Legacy keys from TraceVite branding
 const LEGACY_REGISTRY_KEY = 'tracevite_registry';
@@ -101,19 +107,43 @@ export async function saveSlotData(
   await Promise.all([
     set(SLOT_DATA_PREFIX + slotId, serialized),
     set(SLOT_UNDO_PREFIX + slotId, undoData),
+    // Deep Freeze detection: IDB flag is written on every save. When IDB is wiped
+    // (Deep Freeze) but localStorage survives, detectLaunchStatus() reports `deep_freeze`.
+    set(LAUNCHED_FLAG_IDB, true),
   ]);
 
   // Mirror construction data to localStorage (undo skipped — too large)
   lsSet(LS_SLOT_DATA_PREFIX + slotId, serialized);
+  lsSet(LAUNCHED_FLAG_LS, 'true');
 }
 
 /**
  * Synchronous localStorage-only save for beforeunload.
  * IDB writes are async and may not complete before page unloads.
+ *
+ * Writes:
+ *   1. construction data
+ *   2. truncated undo envelope (last SYNC_UNDO_MAX_DEPTH past + all future)
+ *      — full IDB history is large; LS quota is tight. If quota fails, silent.
  */
-export function saveSlotDataSync(slotId: string, state: ConstructionState): void {
+export function saveSlotDataSync(
+  slotId: string,
+  state: ConstructionState,
+  undoManager?: UndoManager,
+): void {
   const serialized = serializeState(state);
   lsSet(LS_SLOT_DATA_PREFIX + slotId, serialized);
+  lsSet(LAUNCHED_FLAG_LS, 'true');
+
+  if (undoManager) {
+    try {
+      const past = undoManager.past.slice(-SYNC_UNDO_MAX_DEPTH).map(serializeState);
+      const future = undoManager.future.map(serializeState);
+      lsSet(LS_SLOT_UNDO_PREFIX + slotId, JSON.stringify({ past, future, truncated: true }));
+    } catch {
+      // Serialization failure — skip undo mirror, core construction already saved
+    }
+  }
 }
 
 export async function loadSlotData(slotId: string): Promise<{
@@ -138,19 +168,26 @@ export async function loadSlotData(slotId: string): Promise<{
     if (!serialized) return null;
 
     const state = deserializeState(serialized);
-    const undoData =
+    let undoData =
       (await get<string>(SLOT_UNDO_PREFIX + slotId)) ??
       (await get<string>(LEGACY_SLOT_UNDO_PREFIX + slotId));
+
+    // Fallback: beforeunload-only LS mirror (truncated undo envelope, 1.9)
+    if (!undoData) {
+      undoData = lsGet(LS_SLOT_UNDO_PREFIX + slotId) ?? undefined;
+    }
+
     let past: ConstructionState[] = [];
     let future: ConstructionState[] = [];
 
     if (undoData) {
       try {
         const parsed = JSON.parse(undoData) as { past: string[]; future: string[] };
-        past = parsed.past.map(deserializeState);
-        future = parsed.future.map(deserializeState);
+        // Per-item catch so that a single corrupt state doesn't wipe all 99 others.
+        past = safeDeserializeStates(parsed.past);
+        future = safeDeserializeStates(parsed.future);
       } catch {
-        // Corrupted undo — start fresh
+        // Corrupted undo envelope — start fresh
       }
     }
 
@@ -158,6 +195,20 @@ export async function loadSlotData(slotId: string): Promise<{
   } catch {
     return null;
   }
+}
+
+function safeDeserializeStates(items: unknown[]): ConstructionState[] {
+  if (!Array.isArray(items)) return [];
+  const result: ConstructionState[] = [];
+  for (const item of items) {
+    if (typeof item !== 'string') continue;
+    try {
+      result.push(deserializeState(item));
+    } catch {
+      // Skip individual corrupt state; keep others
+    }
+  }
+  return result;
 }
 
 export async function deleteSlotData(slotId: string): Promise<void> {
@@ -168,6 +219,39 @@ export async function deleteSlotData(slotId: string): Promise<void> {
     del(LEGACY_SLOT_UNDO_PREFIX + slotId),
   ]);
   lsRemove(LS_SLOT_DATA_PREFIX + slotId);
+  lsRemove(LS_SLOT_UNDO_PREFIX + slotId);
+}
+
+/**
+ * Delete IDB slot/undo keys whose slotId is not present in the registry.
+ * Does NOT touch localStorage — LS quota pressure is handled separately.
+ */
+async function purgeOrphanSlotKeys(registry: SlotRegistry): Promise<void> {
+  const validIds = new Set(registry.slots.map((s) => s.id));
+  const allKeys = await idbKeys();
+  const delPromises: Promise<void>[] = [];
+
+  for (const key of allKeys) {
+    if (typeof key !== 'string') continue;
+    for (const prefix of [
+      SLOT_DATA_PREFIX,
+      SLOT_UNDO_PREFIX,
+      LEGACY_SLOT_DATA_PREFIX,
+      LEGACY_SLOT_UNDO_PREFIX,
+    ]) {
+      if (key.startsWith(prefix)) {
+        const slotId = key.slice(prefix.length);
+        if (slotId && !validIds.has(slotId)) {
+          delPromises.push(del(key));
+        }
+        break;
+      }
+    }
+  }
+
+  if (delPromises.length > 0) {
+    await Promise.all(delPromises);
+  }
 }
 
 // ── Migration ─────────────────────────────────────────────
@@ -180,7 +264,15 @@ export async function deleteSlotData(slotId: string): Promise<void> {
 export async function migrateIfNeeded(): Promise<SlotRegistry> {
   // Check if registry already exists
   const existing = await loadRegistry();
-  if (existing) return existing;
+  if (existing) {
+    // Clean up orphaned slot keys that no longer belong to any registry entry.
+    // These accumulate when the registry was wiped (legacy migration, Deep
+    // Freeze partial-wipe) but the per-slot IDB entries survived.
+    await purgeOrphanSlotKeys(existing).catch(() => {
+      /* non-critical — storage cleanup */
+    });
+    return existing;
+  }
 
   // Check for legacy single-key data
   const legacyData = await get<string>(LEGACY_CONSTRUCTION_KEY);

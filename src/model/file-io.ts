@@ -73,14 +73,29 @@ export function importFromTracevite(json: string): ConstructionState {
   return state;
 }
 
-/** Sanitize a filename: spaces → dashes, remove special chars. */
+/**
+ * Sanitize a filename for cross-OS safety while preserving French typography.
+ * Strips only truly unsafe OS-reserved characters (<>:"/\|?*\0-\x1f). Preserves
+ * apostrophes (both straight ' and typographic ’), accents, spaces (converted
+ * to dashes), dots (converted to _ to avoid double-extension confusion).
+ *
+ * Previously a restrictive whitelist silently dropped the typographic
+ * apostrophe from names like « Construction d’Alice » — producing
+ * « Construction-dAlice » on disk.
+ */
 export function sanitizeFilename(name: string): string {
-  return (
-    name
-      .replace(/\s+/g, '-')
-      .replace(/[^a-zA-Z0-9àâäéèêëïîôùûüÿçÀÂÄÉÈÊËÏÎÔÙÛÜŸÇ\-_]/g, '')
-      .slice(0, 100) || 'construction'
-  );
+  const cleaned = name
+    // Replace OS-reserved characters with underscore (control chars are
+    // intentional — filesystems reject them in file names).
+    // eslint-disable-next-line no-control-regex
+    .replace(/[<>:"/\\|?*\x00-\x1f]/g, '_')
+    // Replace remaining whitespace runs with dashes
+    .replace(/\s+/g, '-')
+    // Replace literal dots (file extension confusion) with underscore
+    .replace(/\./g, '_')
+    .trim()
+    .slice(0, 100);
+  return cleaned || 'construction';
 }
 
 /** Map import error codes to French messages. */

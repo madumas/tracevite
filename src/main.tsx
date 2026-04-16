@@ -99,7 +99,17 @@ async function boot() {
   }
   if ('launchQueue' in window) {
     try {
+      // Race between the consumer callback (fast path when a file is dispatched) and
+      // a 500ms fallback timer. 100ms was too tight on slower PWA boots — the
+      // callback could fire after createRoot had already captured a stale initialState.
       await new Promise<void>((resolve) => {
+        let resolved = false;
+        const done = () => {
+          if (resolved) return;
+          resolved = true;
+          resolve();
+        };
+
         (window as unknown as { launchQueue: LaunchQueue }).launchQueue.setConsumer(
           async (launchParams) => {
             if (launchParams.files?.length) {
@@ -114,11 +124,12 @@ async function boot() {
                 // Invalid file — continue with default state
               }
             }
-            resolve();
+            done();
           },
         );
-        // If consumer is never called (no file), resolve after a short timeout
-        setTimeout(resolve, 100);
+
+        // Fallback: no file dispatched within 500ms (typical: < 20ms on fast paths).
+        setTimeout(done, 500);
       });
     } catch {
       // launchQueue not supported properly

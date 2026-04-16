@@ -19,6 +19,7 @@ interface SerializedConstruction {
     displayMode: ConstructionState['displayMode'];
     displayUnit: ConstructionState['displayUnit'];
     hideProperties: ConstructionState['hideProperties'];
+    hidePropertiesUserSet?: ConstructionState['hidePropertiesUserSet'];
     toleranceProfile?: ConstructionState['toleranceProfile'];
     chainTimeoutMs?: ConstructionState['chainTimeoutMs'];
     fontScale?: ConstructionState['fontScale'];
@@ -29,6 +30,7 @@ interface SerializedConstruction {
     estimationMode?: ConstructionState['estimationMode'];
     cartesianMode?: ConstructionState['cartesianMode'];
     autoIntersection?: ConstructionState['autoIntersection'];
+    clutterThreshold?: ConstructionState['clutterThreshold'];
   };
   consigne: string | null;
 }
@@ -47,6 +49,7 @@ export function serializeState(state: ConstructionState): string {
       displayMode: state.displayMode,
       displayUnit: state.displayUnit,
       hideProperties: state.hideProperties,
+      hidePropertiesUserSet: state.hidePropertiesUserSet || undefined,
       toleranceProfile: state.toleranceProfile !== 'default' ? state.toleranceProfile : undefined,
       chainTimeoutMs: state.chainTimeoutMs !== 8000 ? state.chainTimeoutMs : undefined,
       fontScale: state.fontScale !== 1 ? state.fontScale : undefined,
@@ -56,7 +59,8 @@ export function serializeState(state: ConstructionState): string {
       pointToolVisible: state.pointToolVisible || undefined,
       estimationMode: state.estimationMode || undefined,
       cartesianMode: state.cartesianMode !== 'off' ? state.cartesianMode : undefined,
-      autoIntersection: state.autoIntersection || undefined,
+      autoIntersection: state.autoIntersection !== true ? state.autoIntersection : undefined,
+      clutterThreshold: state.clutterThreshold > 0 ? state.clutterThreshold : undefined,
     },
     consigne: state.consigne,
   };
@@ -81,6 +85,10 @@ export function deserializeState(json: string): ConstructionState {
   // Version check
   if (typeof obj['version'] !== 'number') {
     throw new Error('MISSING_VERSION');
+  }
+
+  if (obj['version'] < 1) {
+    throw new Error('VERSION_INVALID');
   }
 
   if (obj['version'] > FILE_VERSION) {
@@ -124,13 +132,27 @@ export function deserializeState(json: string): ConstructionState {
       typeof settings['hideProperties'] === 'boolean'
         ? settings['hideProperties']
         : defaults.hideProperties,
-    toleranceProfile: defaults.toleranceProfile,
-    chainTimeoutMs: defaults.chainTimeoutMs,
-    fontScale: defaults.fontScale,
-    keyboardShortcutsEnabled: defaults.keyboardShortcutsEnabled,
-    soundMode: defaults.soundMode,
-    soundGain: defaults.soundGain,
-    pointToolVisible: defaults.pointToolVisible,
+    hidePropertiesUserSet:
+      typeof settings['hidePropertiesUserSet'] === 'boolean'
+        ? settings['hidePropertiesUserSet']
+        : defaults.hidePropertiesUserSet,
+    toleranceProfile: isValidToleranceProfile(settings['toleranceProfile'])
+      ? settings['toleranceProfile']
+      : defaults.toleranceProfile,
+    chainTimeoutMs: isValidChainTimeout(settings['chainTimeoutMs'])
+      ? settings['chainTimeoutMs']
+      : defaults.chainTimeoutMs,
+    fontScale: isValidFontScale(settings['fontScale']) ? settings['fontScale'] : defaults.fontScale,
+    keyboardShortcutsEnabled:
+      typeof settings['keyboardShortcutsEnabled'] === 'boolean'
+        ? settings['keyboardShortcutsEnabled']
+        : defaults.keyboardShortcutsEnabled,
+    soundMode: isValidSoundMode(settings['soundMode']) ? settings['soundMode'] : defaults.soundMode,
+    soundGain: isValidGain(settings['soundGain']) ? settings['soundGain'] : defaults.soundGain,
+    pointToolVisible:
+      typeof settings['pointToolVisible'] === 'boolean'
+        ? settings['pointToolVisible']
+        : defaults.pointToolVisible,
     estimationMode:
       typeof settings['estimationMode'] === 'boolean'
         ? settings['estimationMode']
@@ -144,10 +166,32 @@ export function deserializeState(json: string): ConstructionState {
         ? settings['autoIntersection']
         : defaults.autoIntersection,
     clutterThreshold:
-      typeof settings['clutterThreshold'] === 'number'
+      typeof settings['clutterThreshold'] === 'number' &&
+      Number.isFinite(settings['clutterThreshold']) &&
+      settings['clutterThreshold'] >= 0
         ? settings['clutterThreshold']
         : defaults.clutterThreshold,
   };
+}
+
+function isValidToleranceProfile(v: unknown): v is 'default' | 'large' | 'very_large' {
+  return v === 'default' || v === 'large' || v === 'very_large';
+}
+
+function isValidChainTimeout(v: unknown): v is 0 | 5000 | 8000 | 15000 {
+  return v === 0 || v === 5000 || v === 8000 || v === 15000;
+}
+
+function isValidFontScale(v: unknown): v is 1 | 1.25 | 1.5 {
+  return v === 1 || v === 1.25 || v === 1.5;
+}
+
+function isValidSoundMode(v: unknown): v is 'off' | 'reduced' | 'full' {
+  return v === 'off' || v === 'reduced' || v === 'full';
+}
+
+function isValidGain(v: unknown): v is number {
+  return typeof v === 'number' && Number.isFinite(v) && v >= 0 && v <= 1;
 }
 
 function isValidGridSize(v: unknown): v is 5 | 10 | 20 {

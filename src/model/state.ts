@@ -24,7 +24,10 @@ export function createInitialState(): ConstructionState {
     segments: [],
     circles: [],
     textBoxes: [],
-    gridSizeMm: typeof window !== 'undefined' && window.innerWidth < 900 ? 10 : 5,
+    // Desktop-first default. Mobile users may change via settings. Not dependent
+    // on window.innerWidth so that imported files and reloads produce a stable
+    // and reproducible state regardless of viewport size. (QA 3.25)
+    gridSizeMm: 5,
     snapEnabled: true,
     activeTool: 'segment',
     displayMode: 'simplifie',
@@ -32,6 +35,7 @@ export function createInitialState(): ConstructionState {
     selectedElementId: null,
     consigne: null,
     hideProperties: true, // default hidden in simplifié — child identifies properties themselves
+    hidePropertiesUserSet: false,
     toleranceProfile: 'default',
     chainTimeoutMs: 8000,
     fontScale: 1,

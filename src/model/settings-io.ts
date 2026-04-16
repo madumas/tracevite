@@ -114,9 +114,18 @@ export function importSettings(json: string): MutableSettings {
 
   const result: MutableSettings = {};
 
-  // Accept new displayMode or legacy schoolLevel
-  if (obj['displayMode'] === 'simplifie' || obj['displayMode'] === 'complet') {
-    result.displayMode = obj['displayMode'];
+  // Accept new displayMode or legacy schoolLevel.
+  // When both are present, prefer displayMode (v2 source of truth) and warn —
+  // a hybrid file likely came from a buggy third-party exporter. (QA 1.19)
+  const hasDisplayMode = obj['displayMode'] === 'simplifie' || obj['displayMode'] === 'complet';
+  const hasSchoolLevel = obj['schoolLevel'] === '3e_cycle' || obj['schoolLevel'] === '2e_cycle';
+  if (hasDisplayMode && hasSchoolLevel) {
+    console.warn(
+      '[geomolo] Settings file has both displayMode and schoolLevel; using displayMode.',
+    );
+  }
+  if (hasDisplayMode) {
+    result.displayMode = obj['displayMode'] as 'simplifie' | 'complet';
   } else if (obj['schoolLevel'] === '3e_cycle') {
     result.displayMode = 'complet';
   } else if (obj['schoolLevel'] === '2e_cycle') {
@@ -159,7 +168,12 @@ export function importSettings(json: string): MutableSettings {
     result.soundMode = obj['soundMode'] as SoundMode;
   }
 
-  if (typeof obj['soundGain'] === 'number' && obj['soundGain'] >= 0 && obj['soundGain'] <= 1) {
+  if (
+    typeof obj['soundGain'] === 'number' &&
+    Number.isFinite(obj['soundGain']) &&
+    obj['soundGain'] >= 0 &&
+    obj['soundGain'] <= 1
+  ) {
     result.soundGain = obj['soundGain'];
   }
 

@@ -150,13 +150,15 @@ export function useSlotManager({
             dispatch({ type: 'NEW_CONSTRUCTION' });
           }
         } else {
-          // No slots left — create a new one
+          // No slots left — create a new one and make it active
           const result = createSlot(newRegistry);
           if (result) {
-            newRegistry = result.registry;
+            newRegistry = setActiveSlot(result.registry, result.slotId);
             onBeforeSwitch();
             dispatch({ type: 'NEW_CONSTRUCTION' });
           }
+          // If createSlot fails (quota), activeSlotId stays null — caller should see no slot
+          // is active and re-initialize. Extremely unlikely since we just freed a slot.
         }
       }
 

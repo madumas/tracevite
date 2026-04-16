@@ -413,10 +413,14 @@ export function reduce(state: ReducerState, action: ConstructionAction): Reducer
 
     case 'SET_DISPLAY_MODE': {
       const updated = State.setDisplayMode(current, action.displayMode);
+      // Respect user's explicit toggle; otherwise apply mode default (épuré in Simplifié)
+      const hideProperties = current.hidePropertiesUserSet
+        ? current.hideProperties
+        : action.displayMode === 'simplifie';
       return {
         undoManager: Undo.updateCurrent(undoManager, {
           ...updated,
-          hideProperties: action.displayMode === 'simplifie',
+          hideProperties,
         }),
       };
     }
@@ -445,13 +449,23 @@ export function reduce(state: ReducerState, action: ConstructionAction): Reducer
         ),
       };
 
-    case 'SET_SELECTED_ELEMENT':
+    case 'SET_SELECTED_ELEMENT': {
+      // Validate that the id refers to an element that actually exists — the
+      // reducer should never hold a phantom selection that the UI then tries
+      // to render action buttons for. (QA 1.20)
+      const id = action.elementId;
+      if (id !== null) {
+        const exists =
+          current.points.some((p) => p.id === id) ||
+          current.segments.some((s) => s.id === id) ||
+          current.circles.some((c) => c.id === id) ||
+          current.textBoxes.some((t) => t.id === id);
+        if (!exists) return state;
+      }
       return {
-        undoManager: Undo.updateCurrent(
-          undoManager,
-          State.setSelectedElement(current, action.elementId),
-        ),
+        undoManager: Undo.updateCurrent(undoManager, State.setSelectedElement(current, id)),
       };
+    }
 
     case 'TOGGLE_POINT_LOCK': {
       const newState = State.togglePointLock(current, action.pointId);
@@ -480,7 +494,11 @@ export function reduce(state: ReducerState, action: ConstructionAction): Reducer
 
     case 'SET_HIDE_PROPERTIES':
       return {
-        undoManager: Undo.updateCurrent(undoManager, { ...current, hideProperties: action.hide }),
+        undoManager: Undo.updateCurrent(undoManager, {
+          ...current,
+          hideProperties: action.hide,
+          hidePropertiesUserSet: true,
+        }),
       };
 
     case 'SET_CONSIGNE':
@@ -568,17 +586,34 @@ export function reduce(state: ReducerState, action: ConstructionAction): Reducer
       };
 
     // ── Undo/Redo ─────────────────────────────────────
+    // Preserve `activeTool` from the current state rather than the historical
+    // snapshot. Otherwise an undo after LOAD_CONSTRUCTION could surface an
+    // unexpected tool (e.g. « reflection » mid-session) to the child. (QA 1.15)
     case 'UNDO': {
       const undone = Undo.undo(undoManager);
       return {
-        undoManager: { ...undone, current: { ...undone.current, selectedElementId: null } },
+        undoManager: {
+          ...undone,
+          current: {
+            ...undone.current,
+            selectedElementId: null,
+            activeTool: current.activeTool,
+          },
+        },
       };
     }
 
     case 'REDO': {
       const redone = Undo.redo(undoManager);
       return {
-        undoManager: { ...redone, current: { ...redone.current, selectedElementId: null } },
+        undoManager: {
+          ...redone,
+          current: {
+            ...redone.current,
+            selectedElementId: null,
+            activeTool: current.activeTool,
+          },
+        },
       };
     }
 
@@ -595,6 +630,10 @@ export function reduce(state: ReducerState, action: ConstructionAction): Reducer
           snapEnabled: current.snapEnabled,
           displayMode: current.displayMode,
           displayUnit: current.displayUnit,
+          // Preserve user accessibility toggles (student reglages)
+          hideProperties: current.hideProperties,
+          hidePropertiesUserSet: current.hidePropertiesUserSet,
+          estimationMode: current.estimationMode,
           toleranceProfile: current.toleranceProfile,
           chainTimeoutMs: current.chainTimeoutMs,
           fontScale: current.fontScale,
@@ -605,6 +644,7 @@ export function reduce(state: ReducerState, action: ConstructionAction): Reducer
           cartesianMode: current.cartesianMode,
           autoIntersection: current.autoIntersection,
           clutterThreshold: current.clutterThreshold,
+          // consigne is NOT preserved — teacher assignment resets for new construction
         }),
       };
     }

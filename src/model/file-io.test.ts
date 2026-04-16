@@ -104,8 +104,19 @@ describe('sanitizeFilename', () => {
     expect(sanitizeFilename('Construction 1')).toBe('Construction-1');
   });
 
-  it('removes special characters', () => {
-    expect(sanitizeFilename('Mon fichier @#$!')).toBe('Mon-fichier-');
+  it('preserves French typographic apostrophe', () => {
+    // Previous implementation silently stripped U+2019 → « Construction-dAlice »;
+    // the fix keeps user-recognizable names.
+    expect(sanitizeFilename("Construction d'Alice")).toBe("Construction-d'Alice");
+    expect(sanitizeFilename('Construction d\u2019Alice')).toBe('Construction-d\u2019Alice');
+  });
+
+  it('replaces OS-reserved characters with underscore', () => {
+    expect(sanitizeFilename('file<>:"/\\|?*name')).toBe('file_________name');
+  });
+
+  it('replaces dots with underscore to avoid double-extension confusion', () => {
+    expect(sanitizeFilename('my.file.name')).toBe('my_file_name');
   });
 
   it('truncates to 100 chars', () => {
