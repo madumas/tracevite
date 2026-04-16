@@ -126,17 +126,21 @@ export function chooseAngleLabelPosition(
   labelWidth: number,
   labelHeight: number,
   obstacles: readonly Obstacle[],
+  /** CSS zoom factor — radii scale inversely so the label stays roughly the
+   * same physical distance from the vertex regardless of zoom. (QA 3.16) */
+  zoom: number = 1,
 ): { radius: number; angle: number } {
-  const RADII = [34, 48, 62];
+  const zoomDivisor = Math.max(0.1, zoom);
+  const RADII = [34 / zoomDivisor, 48 / zoomDivisor, 62 / zoomDivisor];
   const ANGLE_OFFSETS = [0, -0.26, 0.26]; // ~±15°
   const halfW = labelWidth / 2;
   const halfH = labelHeight / 2;
 
   if (obstacles.length === 0) {
-    return { radius: 34, angle: midAngle };
+    return { radius: RADII[0]!, angle: midAngle };
   }
 
-  let bestRadius = 34;
+  let bestRadius = RADII[0]!;
   let bestAngle = midAngle;
   let bestScore = Infinity;
 

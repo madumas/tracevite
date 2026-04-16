@@ -253,6 +253,11 @@ export function useFriezeTool({
 
   const handleValidate = useCallback(() => {
     if (!selected || !vector1 || anim.isAnimating) return;
+    // Defensive: reject a zero-length vector1 — the frieze would produce N
+    // copies stacked on top of each other, wasting undo history. vector2 can
+    // be zero (means « pas de deuxième axe »); the tool hook handles that
+    // case by setting count2=1 in the dispatch below. (QA 3.24)
+    if (Math.abs(vector1.dx) < 0.01 && Math.abs(vector1.dy) < 0.01) return;
 
     const doDispatch = () => {
       dispatch({

@@ -501,7 +501,34 @@ function segmentsIntersect(
   if (((d1 > 0 && d2 < 0) || (d1 < 0 && d2 > 0)) && ((d3 > 0 && d4 < 0) || (d3 < 0 && d4 > 0))) {
     return true;
   }
+
+  // Collinear overlap: cross products collapse to zero when the segments lie on
+  // the same line. The strict-inequality test above misses perfect bowtie
+  // configurations (QA 3.7) — fall through to a bounding-box overlap check.
+  const EPS = 1e-9;
+  if (
+    Math.abs(d1) < EPS &&
+    Math.abs(d2) < EPS &&
+    Math.abs(d3) < EPS &&
+    Math.abs(d4) < EPS &&
+    bboxOverlap(a, b)
+  ) {
+    return true;
+  }
+
   return false;
+}
+
+function bboxOverlap(
+  a: { x1: number; y1: number; x2: number; y2: number },
+  b: { x1: number; y1: number; x2: number; y2: number },
+): boolean {
+  return (
+    Math.min(a.x1, a.x2) <= Math.max(b.x1, b.x2) &&
+    Math.max(a.x1, a.x2) >= Math.min(b.x1, b.x2) &&
+    Math.min(a.y1, a.y2) <= Math.max(b.y1, b.y2) &&
+    Math.max(a.y1, a.y2) >= Math.min(b.y1, b.y2)
+  );
 }
 
 function cross(

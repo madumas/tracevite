@@ -305,15 +305,44 @@ export function checkSymmetry(
     }
   }
 
-  // Verify bijection: each matchedId must be unique
+  // Verify bijection: each matchedId must be unique. When the naive greedy
+  // pass collides (e.g. an isocèle triangle with the axis near one of the
+  // non-symmetric vertices), try all permutations to see if any valid
+  // matching exists within tolerance before declaring failure. Brute force
+  // is fine for primary-school figures (n ≤ 8 → 40 320 cases). (QA 3.14)
   if (isSymmetric) {
     const matchedIds = new Set<string>();
+    let collision = false;
     for (const corr of correspondences) {
       if (matchedIds.has(corr.matchedId)) {
-        isSymmetric = false;
+        collision = true;
         break;
       }
       matchedIds.add(corr.matchedId);
+    }
+    if (collision) {
+      const recovered = tryPermutationMatching(targetPoints, axisP1, axisP2, toleranceMm);
+      if (recovered) {
+        correspondences.length = 0;
+        maxDeviation = 0;
+        for (const { originalId, matchedId, deviationMm } of recovered) {
+          correspondences.push({ originalId, matchedId, deviationMm });
+          if (deviationMm > maxDeviation) maxDeviation = deviationMm;
+        }
+      } else {
+        isSymmetric = false;
+      }
+    }
+  }
+
+  // Cumulative-deviation guard (QA 3.17): even when each individual point
+  // fits within tolerance, a large total deviation indicates a visually non-
+  // symmetric figure (e.g. 10 points each off by 0.9 mm). Reject when the
+  // average deviation uses more than half of the budget.
+  if (isSymmetric && targetPoints.length > 0) {
+    const sumDev = correspondences.reduce((s, c) => s + c.deviationMm, 0);
+    if (sumDev > toleranceMm * 0.5 * targetPoints.length) {
+      isSymmetric = false;
     }
   }
 
@@ -345,4 +374,58 @@ export function checkSymmetry(
   }
 
   return { isSymmetric, maxDeviationMm: maxDeviation, correspondences };
+}
+
+/**
+ * Brute-force every permutation of target points → reflected points to find a
+ * valid bijective matching within tolerance. Falls back gracefully for n > 8
+ * where enumerating 40 320+ permutations is too expensive. (QA 3.14)
+ */
+function tryPermutationMatching(
+  targetPoints: readonly Point[],
+  axisP1: { x: number; y: number },
+  axisP2: { x: number; y: number },
+  toleranceMm: number,
+): Array<{ originalId: string; matchedId: string; deviationMm: number }> | null {
+  const n = targetPoints.length;
+  if (n === 0 || n > 8) return null;
+
+  const reflected = targetPoints.map((p) => reflectPoint(p, axisP1, axisP2));
+  const indices = Array.from({ length: n }, (_, i) => i);
+  let best: Array<{ originalId: string; matchedId: string; deviationMm: number }> | null = null;
+  let bestMax = Infinity;
+
+  const permute = (arr: number[], start: number) => {
+    if (start === arr.length) {
+      let ok = true;
+      let maxDev = 0;
+      const result: Array<{ originalId: string; matchedId: string; deviationMm: number }> = [];
+      for (let i = 0; i < n; i++) {
+        const d = distance(reflected[i]!, targetPoints[arr[i]!]!);
+        if (d > toleranceMm) {
+          ok = false;
+          break;
+        }
+        if (d > maxDev) maxDev = d;
+        result.push({
+          originalId: targetPoints[i]!.id,
+          matchedId: targetPoints[arr[i]!]!.id,
+          deviationMm: d,
+        });
+      }
+      if (ok && maxDev < bestMax) {
+        best = result;
+        bestMax = maxDev;
+      }
+      return;
+    }
+    for (let i = start; i < arr.length; i++) {
+      [arr[start]!, arr[i]!] = [arr[i]!, arr[start]!];
+      permute(arr, start + 1);
+      [arr[start]!, arr[i]!] = [arr[i]!, arr[start]!];
+    }
+  };
+
+  permute(indices, 0);
+  return best;
 }

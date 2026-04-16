@@ -121,7 +121,15 @@ export const AngleLayer = memo(function AngleLayer({
         const labelText = `${Math.round(angle.degrees)}°`;
         const labelW = labelText.length * fontSize * 0.6;
 
-        const pos = chooseAngleLabelPosition(sx, sy, midAngle, labelW, labelH, placedObs);
+        const pos = chooseAngleLabelPosition(
+          sx,
+          sy,
+          midAngle,
+          labelW,
+          labelH,
+          placedObs,
+          viewport.zoom,
+        );
         angleLabelPositions.set(idx, pos);
 
         // Add this label as obstacle for subsequent angles at this vertex
